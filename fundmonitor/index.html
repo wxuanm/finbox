@@ -978,6 +978,16 @@
             localStorage.setItem('fund-monitor-lang', currentLang);
             applyLanguage();
             applyTheme();
+            
+            // Re-render modal if open
+            const modal = document.getElementById('analysisModal');
+            const content = document.getElementById('analysisContent');
+            if (modal && modal.classList.contains('show') && content && content.innerHTML.trim() !== '') {
+                const codeBadge = content.querySelector('.code-badge');
+                if (codeBadge) {
+                    navigateToAnalysis(codeBadge.textContent);
+                }
+            }
         }
 
         const STORAGE_KEY = 'fund-monitor-saved-codes';
@@ -1198,47 +1208,143 @@
             updateDashboardStats();
         }
 
+        function formatRet(val) {
+            if (!val || val === '---' || val === 'N/A') return '<span class="neutral">--</span>';
+            const num = parseFloat(val.replace('%', ''));
+            if (isNaN(num)) return `<span class="neutral">${val}</span>`;
+            const cls = num > 0 ? 'positive' : (num < 0 ? 'negative' : 'neutral');
+            const prefix = num > 0 ? '+' : '';
+            return `<span class="${cls}">${prefix}${num.toFixed(2)}%</span>`;
+        }
+
         function navigateToAnalysis(code) {
             const modal = document.getElementById('analysisModal');
-            const frame = document.getElementById('analysisFrame');
+            const content = document.getElementById('analysisContent');
             const loader = document.getElementById('modalLoader');
             
             // 重置状态
-            frame.classList.remove('loaded');
+            content.style.display = 'none';
+            content.style.opacity = '0';
+            content.innerHTML = '';
             loader.classList.remove('hidden');
-            
-            // 构建带状态的 URL
-            const url = new URL('Fund Performance Analysis.html', window.location.href);
-            url.searchParams.set('fundCode', code);
-            url.searchParams.set('theme', currentTheme); // 透传当前主题
-            url.searchParams.set('lang', currentLang);   // 透传当前语言
-            
-            frame.src = url.toString();
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
-        }
 
-        function handleIframeLoad() {
-            const frame = document.getElementById('analysisFrame');
-            const loader = document.getElementById('modalLoader');
-            // 确保 src 有内容才视作有效加载
-            if (frame.src && frame.src !== window.location.href) {
+            // Fetch native data
+            const script = document.createElement('script');
+            script.src = `/api/fundgz?code=${code}&t=1&rt=${Date.now()}`;
+            
+            // Generate native UI on load
+            script.onload = () => {
+                if (typeof fundinfo_yjpj !== 'undefined') {
+                    const data = fundinfo_yjpj;
+                    const jdsy = data.jdsy && data.jdsy[0] ? data.jdsy[0].split(',') : [];
+                    const lsndsy = data.lsndsy && data.lsndsy[0] ? data.lsndsy[0] : {};
+                    const dtsy = data.dtsy && data.dtsy[0] ? data.dtsy[0].split(',') : [];
+                    const jjpj = data.jjpj && data.jjpj[0] ? data.jjpj[0].split(',') : [];
+
+                    const [
+                        fundCode = code, name = '-', estDate = '-', 
+                        ytd = '-', w1 = '-', m1 = '-', m3 = '-', m6 = '-', y1 = '-', 
+                        y2 = '-', y3 = '-', y5 = '-', inc = '-'
+                    ] = jdsy;
+
+                    const curYear = new Date().getFullYear();
+                    const dict = i18n[currentLang];
+                    const stars = jjpj.find(r => r.trim() !== '') || '无评级';
+
+                    content.innerHTML = `
+                        <div class="analysis-header">
+                            <div class="analysis-title">
+                                <h4>
+                                    <span class="code-badge">${fundCode}</span> 
+                                    ${name}
+                                </h4>
+                                <span class="est-date">${dict.anaEst}: ${estDate}</span>
+                            </div>
+                            <div class="analysis-rating" title="晨星评级">${stars}</div>
+                        </div>
+                        
+                        <div class="analysis-grid">
+                            <div class="analysis-card">
+                                <h5>${dict.anaShortTerm}</h5>
+                                <ul class="data-list">
+                                    <li class="data-item"><span>${dict.period1w}</span>${formatRet(w1)}</li>
+                                    <li class="data-item"><span>${dict.period1m}</span>${formatRet(m1)}</li>
+                                    <li class="data-item"><span>${dict.period3m}</span>${formatRet(m3)}</li>
+                                    <li class="data-item"><span>${dict.period6m}</span>${formatRet(m6)}</li>
+                                    <li class="data-item"><span>${dict.periodYtd}</span>${formatRet(ytd)}</li>
+                                    <li class="data-item"><span>${dict.period1y}</span>${formatRet(y1)}</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="analysis-card">
+                                <h5>${dict.anaLongTerm}</h5>
+                                <ul class="data-list">
+                                    <li class="data-item"><span>${dict.period2y}</span>${formatRet(y2)}</li>
+                                    <li class="data-item"><span>${dict.period3y}</span>${formatRet(y3)}</li>
+                                    <li class="data-item"><span>${dict.period5y}</span>${formatRet(y5)}</li>
+                                    <li class="data-item"><span>${dict.periodInc}</span>${formatRet(inc)}</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="analysis-card">
+                                <h5>${dict.anaAnnual}</h5>
+                                <ul class="data-list">
+                                    <li class="data-item"><span>${curYear - 1}</span>${formatRet(lsndsy[(curYear - 1).toString()])}</li>
+                                    <li class="data-item"><span>${curYear - 2}</span>${formatRet(lsndsy[(curYear - 2).toString()])}</li>
+                                    <li class="data-item"><span>${curYear - 3}</span>${formatRet(lsndsy[(curYear - 3).toString()])}</li>
+                                    <li class="data-item"><span>${curYear - 4}</span>${formatRet(lsndsy[(curYear - 4).toString()])}</li>
+                                </ul>
+                            </div>
+
+                            <div class="analysis-card">
+                                <h5>${dict.anaFI}</h5>
+                                <ul class="data-list">
+                                    <li class="data-item"><span>${dict.period1y}</span>${formatRet(dtsy[0])}</li>
+                                    <li class="data-item"><span>${dict.period2y}</span>${formatRet(dtsy[1])}</li>
+                                    <li class="data-item"><span>${dict.period3y}</span>${formatRet(dtsy[2])}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Show content, hide loader
+                    loader.classList.add('hidden');
+                    content.style.display = 'block';
+                    // Trigger reflow to animate opacity
+                    void content.offsetWidth;
+                    content.style.opacity = '1';
+                } else {
+                    loader.classList.add('hidden');
+                    content.style.display = 'block';
+                    content.style.opacity = '1';
+                    content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[currentLang].fetchError}</div>`;
+                }
+                delete window.fundinfo_yjpj;
+                script.remove();
+            };
+            
+            script.onerror = () => {
                 loader.classList.add('hidden');
-                frame.classList.add('loaded');
-            }
+                content.style.display = 'block';
+                content.style.opacity = '1';
+                content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[currentLang].fetchError}</div>`;
+                script.remove();
+            };
+            document.head.appendChild(script);
         }
 
         function closeModal(event) {
             if (event && event.target !== document.getElementById('analysisModal') && event.currentTarget !== event.target) return;
             const modal = document.getElementById('analysisModal');
-            const frame = document.getElementById('analysisFrame');
+            const content = document.getElementById('analysisContent');
             
             modal.classList.remove('show');
             document.body.style.overflow = '';
             
             setTimeout(() => {
-                frame.src = '';
-                frame.classList.remove('loaded');
+                content.innerHTML = '';
             }, 300);
         }
 
