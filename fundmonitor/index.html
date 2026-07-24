@@ -592,6 +592,23 @@
             flex: 1;
             width: 100%;
             background: var(--surface-strong);
+            position: relative;
+        }
+
+        .modal-loader {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-strong);
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .modal-body iframe {
@@ -599,6 +616,26 @@
             height: 100%;
             border: none;
             background: transparent;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-body iframe.loaded {
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            .modal-container {
+                width: 100vw;
+                height: 100vh;
+                max-width: none;
+                border-radius: 0;
+                border: none;
+                transform: translateY(100%);
+            }
+            .modal-backdrop.show .modal-container {
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -795,6 +832,13 @@
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-i18n-placeholder');
                 if (i18n[currentLang][key]) el.placeholder = i18n[currentLang][key];
+            });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (i18n[currentLang][key]) {
+                    el.title = i18n[currentLang][key];
+                    if(el.getAttribute('aria-label')) el.setAttribute('aria-label', i18n[currentLang][key]);
+                }
             });
             
             const langBtn = document.getElementById('langBtn');
@@ -1175,13 +1219,16 @@
 
     <!-- Analysis Modal -->
     <div id="analysisModal" class="modal-backdrop" onclick="closeModal(event)">
-        <div class="modal-container" onclick="event.stopPropagation()">
+        <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <h3 id="modalTitle" data-i18n="modalTitle">基金深度分析</h3>
-                <button class="modal-close" onclick="closeModal()" title="关闭">✖</button>
+                <button class="modal-close" onclick="closeModal()" data-i18n-title="closeBtnTitle" title="关闭" aria-label="Close">✖</button>
             </div>
             <div class="modal-body">
-                <iframe id="analysisFrame" src=""></iframe>
+                <div id="modalLoader" class="modal-loader">
+                    <div class="loader"></div>
+                </div>
+                <iframe id="analysisFrame" src="" onload="handleIframeLoad()"></iframe>
             </div>
         </div>
     </div>
