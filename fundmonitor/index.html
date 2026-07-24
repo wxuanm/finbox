@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基金实时监控面板</title>
+    <title id="pageTitle">基金实时监控面板</title>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -46,6 +46,7 @@
         }
 
         .hero {
+            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -437,15 +438,43 @@
                 grid-template-columns: 1fr;
             }
         }
+    
+        .lang-btn {
+            position: absolute;
+            top: 28px;
+            right: 28px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--primary-color);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .lang-btn:hover {
+            background: #fff;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        @media (max-width: 640px) {
+            .lang-btn {
+                top: 18px;
+                right: 18px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="page-shell">
         <section class="hero">
+            <button id="langBtn" class="lang-btn" onclick="toggleLang()">English</button>
             <div class="hero-copy">
-                <div class="hero-badge">实时净值 · 东方财富数据源</div>
-                <h1>基金实时监控面板</h1>
-                <p>聚焦净值、估算涨幅与基金经理信息，用更清晰的视觉层级和更高效的表格浏览体验，帮助你快速发现重点基金动态。</p>
+                <div class="hero-badge" data-i18n="heroBadge">实时净值监控</div>
+                <h1 data-i18n="heroTitle">基金实时监控面板</h1>
+                <p data-i18n="heroDesc">聚焦净值、估算涨幅与基金经理信息，用更清晰的视觉层级和更高效的表格浏览体验，帮助你快速发现重点基金动态。</p>
             </div>
         </section>
 
@@ -453,32 +482,32 @@
             <section class="panel controls-panel">
                 <div class="section-heading">
                     <div>
-                        <h2>监控列表</h2>
-                        <span>支持批量输入基金代码，使用英文逗号分隔</span>
+                        <h2 data-i18n="monitorList">监控列表</h2>
+                        <span data-i18n="monitorListSub">支持批量输入基金代码，使用英文逗号分隔</span>
                     </div>
                 </div>
                 <div class="controls">
                     <div class="input-wrap">
-                        <input type="text" id="fundCodeInput" placeholder="例如：217021, 161725, 004233">
+                        <input type="text" id="fundCodeInput" data-i18n-placeholder="inputPlaceholder" placeholder="例如：217021, 161725, 004233">
                     </div>
-                    <button id="addFundBtn" onclick="addFundCodes()">添加基金</button>
-                    <button class="secondary-btn" onclick="refreshData()">刷新全部</button>
+                    <button id="addFundBtn" onclick="addFundCodes()" data-i18n="addFundBtn">添加基金</button>
+                    <button class="secondary-btn" onclick="refreshData()" data-i18n="refreshBtn">刷新全部</button>
                 </div>
                 <div class="stats-strip">
                     <div class="stat-card">
-                        <span class="stat-label">监控总数</span>
+                        <span class="stat-label" data-i18n="statTotal">监控总数</span>
                         <strong class="stat-value" id="fundCountStat">0</strong>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-label">上涨基金</span>
+                        <span class="stat-label" data-i18n="statPositive">上涨基金</span>
                         <strong class="stat-value" id="positiveCountStat">0</strong>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-label">下跌基金</span>
+                        <span class="stat-label" data-i18n="statNegative">下跌基金</span>
                         <strong class="stat-value" id="negativeCountStat">0</strong>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-label">最新刷新</span>
+                        <span class="stat-label" data-i18n="statLastRefresh">最新刷新</span>
                         <strong class="stat-value" id="lastRefreshStat">--:--</strong>
                     </div>
                 </div>
@@ -487,26 +516,26 @@
             <section class="panel table-panel">
                 <div class="table-toolbar">
                     <div>
-                        <h2>基金行情明细</h2>
-                        <p>双击任意行可跳转基金分析页，点击列头支持排序。</p>
+                        <h2 data-i18n="tableTitle">基金行情明细</h2>
+                        <p data-i18n="tableSub">双击任意行可跳转基金分析页，点击列头支持排序。</p>
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table id="fundTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0)">代码<span class="sort-icon"></span></th>
-                                <th onclick="sortTable(1)">名称<span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(2)">估算净值<span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(3)">估算涨幅<span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(4)">净值<span class="sort-icon"></span></th>
-                                <th onclick="sortTable(5)">净值日期<span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(6)">累计净值<span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(7)">净值涨幅<span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(8)">前一净值<span class="sort-icon"></span></th>
-                                <th onclick="sortTable(9)">前一净值日期<span class="sort-icon"></span></th>
-                                <th onclick="sortTable(10)">基金经理<span class="sort-icon"></span></th>
-                                <th>操作</th>
+                                <th onclick="sortTable(0)"><span data-i18n="colCode">代码</span><span class="sort-icon"></span></th>
+                                <th onclick="sortTable(1)"><span data-i18n="colName">名称</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(2)"><span data-i18n="colEstNav">估算净值</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(3)"><span data-i18n="colEstChange">估算涨幅</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(4)"><span data-i18n="colNav">净值</span><span class="sort-icon"></span></th>
+                                <th onclick="sortTable(5)"><span data-i18n="colNavDate">净值日期</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(6)"><span data-i18n="colAccNav">累计净值</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(7)"><span data-i18n="colNavChange">净值涨幅</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(8)"><span data-i18n="colPrevNav">前一净值</span><span class="sort-icon"></span></th>
+                                <th onclick="sortTable(9)"><span data-i18n="colPrevNavDate">前一净值日期</span><span class="sort-icon"></span></th>
+                                <th onclick="sortTable(10)"><span data-i18n="colManager">基金经理</span><span class="sort-icon"></span></th>
+                                <th><span data-i18n="colAction">操作</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -518,6 +547,128 @@
     </div>
 
     <script>
+        
+        const i18n = {
+            zh: {
+                title: "基金实时监控面板",
+                heroBadge: "实时净值监控",
+                heroTitle: "基金实时监控面板",
+                heroDesc: "聚焦净值、估算涨幅与基金经理信息，用更清晰的视觉层级和更高效的表格浏览体验，帮助你快速发现重点基金动态。",
+                monitorList: "监控列表",
+                monitorListSub: "支持批量输入基金代码，使用英文逗号分隔",
+                inputPlaceholder: "例如：217021, 161725, 004233",
+                addFundBtn: "添加基金",
+                refreshBtn: "刷新全部",
+                statTotal: "监控总数",
+                statPositive: "上涨基金",
+                statNegative: "下跌基金",
+                statLastRefresh: "最新刷新",
+                tableTitle: "基金行情明细",
+                tableSub: "双击任意行可跳转基金分析页，点击列头支持排序。",
+                colCode: "代码",
+                colName: "名称",
+                colEstNav: "估算净值",
+                colEstChange: "估算涨幅",
+                colNav: "净值",
+                colNavDate: "净值日期",
+                colAccNav: "累计净值",
+                colNavChange: "净值涨幅",
+                colPrevNav: "前一净值",
+                colPrevNavDate: "前一净值日期",
+                colManager: "基金经理",
+                colAction: "操作",
+                loading: "加载中...",
+                waiting: "等待行情返回",
+                fetchError: "数据加载失败",
+                removeTitle: "移除基金",
+                emptyState: '输入基金代码后开始监控。<br><span style="color: var(--muted-text); font-size: 13px;">支持批量添加，建议优先关注核心持仓与观察名单。</span>',
+                langSwitch: "English",
+                codePrefix: "代码"
+            },
+            en: {
+                title: "Fund Real-time Monitor",
+                heroBadge: "Real-time NAV Monitor",
+                heroTitle: "Fund Real-time Monitor",
+                heroDesc: "Focus on NAV, estimated growth, and manager info. Clear visual hierarchy and efficient table layout help you discover key fund dynamics quickly.",
+                monitorList: "Watchlist",
+                monitorListSub: "Support batch input of fund codes, separated by commas",
+                inputPlaceholder: "e.g., 217021, 161725, 004233",
+                addFundBtn: "Add Fund",
+                refreshBtn: "Refresh",
+                statTotal: "Monitored",
+                statPositive: "Rising",
+                statNegative: "Falling",
+                statLastRefresh: "Last Update",
+                tableTitle: "Fund Market Details",
+                tableSub: "Double-click any row for analysis, click column headers to sort.",
+                colCode: "Code",
+                colName: "Name",
+                colEstNav: "Est. NAV",
+                colEstChange: "Est. Change",
+                colNav: "NAV",
+                colNavDate: "NAV Date",
+                colAccNav: "Acc. NAV",
+                colNavChange: "NAV Change",
+                colPrevNav: "Prev. NAV",
+                colPrevNavDate: "Prev. Date",
+                colManager: "Manager",
+                colAction: "Action",
+                loading: "Loading...",
+                waiting: "Waiting for data",
+                fetchError: "Data fetch failed",
+                removeTitle: "Remove Fund",
+                emptyState: 'Enter fund codes to start monitoring.<br><span style="color: var(--muted-text); font-size: 13px;">Batch addition supported. Recommended to focus on core holdings.</span>',
+                langSwitch: "中文",
+                codePrefix: "Code"
+            }
+        };
+
+        let currentLang = localStorage.getItem('fund-monitor-lang') || 'zh';
+
+        function applyLanguage() {
+            document.getElementById('pageTitle').textContent = i18n[currentLang].title;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang][key]) el.innerHTML = i18n[currentLang][key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (i18n[currentLang][key]) el.placeholder = i18n[currentLang][key];
+            });
+            
+            const langBtn = document.getElementById('langBtn');
+            if (langBtn) langBtn.textContent = i18n[currentLang].langSwitch;
+
+            checkEmptyState(); // Refresh empty state message
+
+            // Update existing rows
+            Array.from(tableBody.rows).forEach(row => {
+                if (row.classList.contains('loading')) {
+                    const nameMain = row.querySelector('.name-main');
+                    const nameSub = row.querySelector('.name-sub');
+                    if (nameMain) nameMain.textContent = i18n[currentLang].loading;
+                    if (nameSub) nameSub.textContent = i18n[currentLang].waiting;
+                } else if (row.classList.contains('error-row')) {
+                    const errorMsg = row.querySelector('.error-message');
+                    if (errorMsg) errorMsg.textContent = i18n[currentLang].fetchError;
+                } else if (!row.querySelector('td[colspan="12"]')) {
+                    const nameSub = row.querySelector('.name-sub');
+                    if (nameSub) {
+                        const code = row.id.replace('fund-', '');
+                        nameSub.textContent = `${i18n[currentLang].codePrefix} ${code}`;
+                    }
+                }
+                const removeBtn = row.querySelector('.remove-btn');
+                if (removeBtn) removeBtn.title = i18n[currentLang].removeTitle;
+            });
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('fund-monitor-lang', currentLang);
+            applyLanguage();
+        }
+
         const STORAGE_KEY = 'fund-monitor-saved-codes';
         let fundCodes = new Set();
         let currentSortColumn = -1;
@@ -575,7 +726,7 @@
             nameCell.innerHTML = `
                 <div class="name-cell">
                     <span class="name-main" title="${fundName || ''}">${fundName || '-'}</span>
-                    <span class="name-sub">代码 ${fundCode || code}</span>
+                    <span class="name-sub">${i18n[currentLang].codePrefix} ${fundCode || code}</span>
                 </div>
             `;
             nameCell.title = fundName || '';
@@ -637,7 +788,7 @@
             const row = document.getElementById(`fund-${code}`);
             if (row) {
                 row.classList.add('error-row');
-                row.cells[1].innerHTML = `<span class="error-message">数据加载失败</span>`;
+                row.cells[1].innerHTML = `<span class="error-message">${i18n[currentLang].fetchError}</span>`;
                 row.cells[2].textContent = '-';
                 row.cells[3].textContent = '-';
                 row.cells[4].textContent = '-';
@@ -661,8 +812,8 @@
                 <td><span class="code-badge">${code}</span></td>
                 <td>
                     <div class="name-cell">
-                        <span class="name-main">加载中...</span>
-                        <span class="name-sub">等待行情返回</span>
+                        <span class="name-main">${i18n[currentLang].loading}</span>
+                        <span class="name-sub">${i18n[currentLang].waiting}</span>
                     </div>
                 </td>
                 <td class="numerical"><div class="loader"></div></td>
@@ -674,7 +825,7 @@
                 <td class="numerical">-</td>
                 <td>-</td>
                 <td>-</td>
-                <td><button class="remove-btn" onclick="removeFund('${code}')" title="移除基金">✖</button></td>
+                <td><button class="remove-btn" onclick="removeFund('${code}')" title="${i18n[currentLang].removeTitle}">✖</button></td>
             `;
             checkEmptyState();
             updateDashboardStats();
@@ -773,7 +924,7 @@
                 const cell = row.insertCell(0);
                 cell.colSpan = 12;
                 cell.style.textAlign = 'center';
-                cell.innerHTML = '输入基金代码后开始监控。<br><span style="color: var(--muted-text); font-size: 13px;">支持批量添加，建议优先关注核心持仓与观察名单。</span>';
+                cell.innerHTML = i18n[currentLang].emptyState;
             } else {
                 const emptyRow = tableBody.querySelector('td[colspan="12"]');
                 if (emptyRow) emptyRow.parentElement.remove();
@@ -844,7 +995,7 @@
         });
 
         // Initial setup
-        document.addEventListener('DOMContentLoaded', () => {
+            applyLanguage();
             updateAddButtonState();
             checkEmptyState();
             updateDashboardStats();
