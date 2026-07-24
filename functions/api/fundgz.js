@@ -2,13 +2,14 @@ export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
+  const t = url.searchParams.get('t') || '0';
 
   if (!code) {
     return new Response("Missing fund code", { status: 400 });
   }
 
   // 组装真实的东方财富数据源 URL
-  const targetUrl = `https://fund.eastmoney.com/Data/FundCompare_Interface.aspx?t=0&bzdm=${code}&rt=${Date.now()}`;
+  const targetUrl = `https://fund.eastmoney.com/Data/FundCompare_Interface.aspx?t=${t}&bzdm=${code}&rt=${Date.now()}`;
 
   try {
     // 由 Cloudflare 的服务器发起请求

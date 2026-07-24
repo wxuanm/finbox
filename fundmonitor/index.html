@@ -620,6 +620,79 @@
             transition: opacity 0.4s ease;
         }
 
+        
+        /* Native Analysis Modal Styles */
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .analysis-title h4 {
+            margin: 0 0 8px;
+            font-size: 24px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .analysis-title .est-date {
+            font-size: 13px;
+            color: var(--muted-text);
+            font-weight: normal;
+        }
+        .analysis-rating {
+            color: #ffc107;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .analysis-card {
+            background: var(--stat-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+        }
+        .analysis-card h5 {
+            margin: 0 0 16px;
+            font-size: 15px;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-soft);
+            padding-bottom: 8px;
+            display: inline-block;
+        }
+        .data-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .data-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .data-item span:first-child {
+            font-size: 12px;
+            color: var(--muted-text);
+        }
+        .data-item span:last-child {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .data-item .positive { color: var(--positive-color); }
+        .data-item .negative { color: var(--negative-color); }
+        .data-item .neutral { color: var(--text-color); }
+
         .modal-body iframe.loaded {
             opacity: 1;
         }
@@ -758,10 +831,26 @@
                 removeTitle: "移除基金",
                 emptyState: '输入基金代码后开始监控。<br><span style="color: var(--muted-text); font-size: 13px;">支持批量添加，建议优先关注核心持仓与观察名单。</span>',
                 langSwitch: "English",
+                
                 codePrefix: "代码",
-                modalTitle: "基金深度分析",
+                closeBtnTitle: "关闭",
                 themeDark: "切换到暗黑模式",
-                themeLight: "切换到浅色模式"
+                themeLight: "切换到浅色模式",
+                anaEst: "成立日期",
+                anaShortTerm: "短期收益率",
+                anaLongTerm: "中长期收益率",
+                anaAnnual: "历史年度收益率",
+                anaFI: "定投收益率",
+                periodYtd: "今年以来",
+                period1w: "近1周",
+                period1m: "近1月",
+                period3m: "近3月",
+                period6m: "近6月",
+                period1y: "近1年",
+                period2y: "近2年",
+                period3y: "近3年",
+                period5y: "近5年",
+                periodInc: "成立以来"
             },
             en: {
                 title: "Fund Real-time Monitor",
@@ -797,10 +886,26 @@
                 removeTitle: "Remove Fund",
                 emptyState: 'Enter fund codes to start monitoring.<br><span style="color: var(--muted-text); font-size: 13px;">Batch addition supported. Recommended to focus on core holdings.</span>',
                 langSwitch: "中文",
+                
                 codePrefix: "Code",
-                modalTitle: "Fund Deep Analysis",
+                closeBtnTitle: "Close",
                 themeDark: "Switch to Dark Mode",
-                themeLight: "Switch to Light Mode"
+                themeLight: "Switch to Light Mode",
+                anaEst: "Est. Date",
+                anaShortTerm: "Short-term Returns",
+                anaLongTerm: "Long-term Returns",
+                anaAnnual: "Annual Returns",
+                anaFI: "Fixed Inv. Returns",
+                periodYtd: "YTD",
+                period1w: "1 Week",
+                period1m: "1 Month",
+                period3m: "3 Months",
+                period6m: "6 Months",
+                period1y: "1 Year",
+                period2y: "2 Years",
+                period3y: "3 Years",
+                period5y: "5 Years",
+                periodInc: "Since Inception"
             }
         };
 
@@ -1274,11 +1379,13 @@
                 <h3 id="modalTitle" data-i18n="modalTitle">基金深度分析</h3>
                 <button class="modal-close" onclick="closeModal()" data-i18n-title="closeBtnTitle" title="关闭" aria-label="Close">✖</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="overflow-y: auto; padding: 24px;">
                 <div id="modalLoader" class="modal-loader">
                     <div class="loader"></div>
                 </div>
-                <iframe id="analysisFrame" src="" onload="handleIframeLoad()"></iframe>
+                <div id="analysisContent" class="analysis-content" style="display: none; opacity: 0; transition: opacity 0.4s ease;">
+                    <!-- Native content will be rendered here -->
+                </div>
             </div>
         </div>
     </div>
