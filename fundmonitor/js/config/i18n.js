@@ -8,7 +8,7 @@ export const i18n = {
         monitorListSub: "支持批量输入基金代码，使用英文逗号分隔",
         inputPlaceholder: "例如：217021, 161725, 004233",
         addFundBtn: "添加基金",
-        refreshBtn: "刷新全部",
+        refreshBtn: "刷新",
         statTotal: "监控总数",
         statPositive: "上涨基金",
         statNegative: "下跌基金",

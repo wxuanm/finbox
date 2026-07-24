@@ -4,39 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">基金实时监控面板</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
     <div class="page-shell">
+        <header class="global-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="hero-badge" data-i18n="heroBadge">实时净值监控</div>
+                <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: var(--secondary-color); letter-spacing: -0.01em;" data-i18n="heroTitle">基金实时监控面板</h1>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button id="themeBtn" class="action-btn" onclick="toggleTheme()" title="切换主题">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+                <button id="langBtn" class="action-btn" onclick="toggleLang()">EN</button>
+                
+                <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 4px;"></div>
+                
+                <button class="primary-btn icon-action-btn" onclick="promptAddGroup()" data-i18n-title="addGroupTitle" title="新建分组" aria-label="新建分组">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+                <button class="secondary-btn icon-action-btn" onclick="refreshData()" data-i18n-title="refreshBtn" title="刷新" aria-label="刷新">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
+            </div>
+        </header>
+
         <div class="dashboard-grid">
             <section class="panel unified-panel">
-                <div class="unified-header">
-                    <div class="header-left">
-                        <div class="hero-badge" data-i18n="heroBadge">实时净值监控</div>
-                        <h1 data-i18n="heroTitle">基金实时监控面板</h1>
+                <div class="dashboard-stats-grid" style="padding: 24px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; border-bottom: 1px solid var(--border-color); background: linear-gradient(180deg, var(--hero-bg), var(--surface-color));">
+                    <div class="stat-card">
+                        <div class="stat-title" data-i18n="statTotal">监控总数</div>
+                        <div class="stat-value" id="fundCountStat">0</div>
                     </div>
-                    <div class="header-right">
-                        <div class="mini-stats">
-                            <div class="stat-item"><span data-i18n="statTotal">监控总数</span> <strong id="fundCountStat">0</strong></div>
-                            <div class="stat-item"><span data-i18n="statPositive">上涨基金</span> <strong id="positiveCountStat">0</strong></div>
-                            <div class="stat-item"><span data-i18n="statNegative">下跌基金</span> <strong id="negativeCountStat">0</strong></div>
-                            <div class="stat-item"><span data-i18n="statLastRefresh">最新刷新</span> <strong id="lastRefreshStat">--:--</strong></div>
-                        </div>
-                        <div class="header-actions">
-                            <button id="themeBtn" class="action-btn" onclick="toggleTheme()" title="切换主题">🌙</button>
-                            <button id="langBtn" class="action-btn" onclick="toggleLang()">EN</button>
-                        </div>
+                    <div class="stat-card positive-card">
+                        <div class="stat-title" data-i18n="statPositive">上涨基金</div>
+                        <div class="stat-value positive" id="positiveCountStat">0</div>
                     </div>
-                </div>
-
-                <div class="controls-toolbar">
-                    <div class="left-actions">
-                        <button class="primary-btn" onclick="promptAddGroup()">➕ <span data-i18n="addGroupTitle">新建分组</span></button>
-                        <button class="secondary-btn" onclick="refreshData()" data-i18n="refreshBtn">刷新全部</button>
+                    <div class="stat-card negative-card">
+                        <div class="stat-title" data-i18n="statNegative">下跌基金</div>
+                        <div class="stat-value negative" id="negativeCountStat">0</div>
                     </div>
-                    <div class="toolbar-hint">
-                        💡 <span data-i18n="tableSub">双击任意行可跳转基金分析页，点击列头支持排序。</span>
+                    <div class="stat-card">
+                        <div class="stat-title" data-i18n="statLastRefresh">最新刷新</div>
+                        <div class="stat-value" id="lastRefreshStat" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">--:--</div>
                     </div>
                 </div>
 
@@ -44,17 +59,14 @@
                     <table id="fundTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0)"><span data-i18n="colCode">代码</span><span class="sort-icon"></span></th>
-                                <th onclick="sortTable(1)"><span data-i18n="colName">名称</span><span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(2)"><span data-i18n="colEstNav">估算净值</span><span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(3)"><span data-i18n="colEstChange">估算涨幅</span><span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(4)"><span data-i18n="colNav">净值</span><span class="sort-icon"></span></th>
-                                <th onclick="sortTable(5)"><span data-i18n="colNavDate">净值日期</span><span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(6)"><span data-i18n="colAccNav">累计净值</span><span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(7)"><span data-i18n="colNavChange">净值涨幅</span><span class="sort-icon"></span></th>
-                                <th class="numerical" onclick="sortTable(8)"><span data-i18n="colPrevNav">前一净值</span><span class="sort-icon"></span></th>
-                                <th onclick="sortTable(9)"><span data-i18n="colPrevNavDate">前一净值日期</span><span class="sort-icon"></span></th>
-                                <th onclick="sortTable(10)"><span data-i18n="colManager">基金经理</span><span class="sort-icon"></span></th>
+                                <th onclick="sortTable(0)"><span data-i18n="colName">名称</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(1)"><span data-i18n="colEstNav">估算净值</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(2)"><span data-i18n="colEstChange">估算涨幅</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(3)"><span data-i18n="colNav">净值</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(4)"><span data-i18n="colAccNav">累计净值</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(5)"><span data-i18n="colNavChange">净值涨幅</span><span class="sort-icon"></span></th>
+                                <th class="numerical" onclick="sortTable(6)"><span data-i18n="colPrevNav">前一净值</span><span class="sort-icon"></span></th>
+                                <th onclick="sortTable(7)"><span data-i18n="colManager">基金经理</span><span class="sort-icon"></span></th>
                                 <th><span data-i18n="colAction">操作</span></th>
                             </tr>
                         </thead>
@@ -72,7 +84,9 @@
         <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <h3 id="modalTitle" data-i18n="modalTitle">基金深度分析</h3>
-                <button class="modal-close" onclick="closeModal()" data-i18n-title="closeBtnTitle" title="关闭" aria-label="Close">✖</button>
+                <button class="modal-close" onclick="closeModal()" data-i18n-title="closeBtnTitle" title="关闭" aria-label="Close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             <div class="modal-body" style="overflow-y: auto; padding: 24px;">
                 <div id="modalLoader" class="modal-loader">

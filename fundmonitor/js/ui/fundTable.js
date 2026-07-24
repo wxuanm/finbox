@@ -15,7 +15,7 @@ export function checkEmptyState() {
             emptyTbody.className = 'empty-state-tbody';
             const row = emptyTbody.insertRow();
             const cell = row.insertCell(0);
-            cell.colSpan = 12;
+            cell.colSpan = 9;
             table.appendChild(emptyTbody);
         }
         emptyTbody.rows[0].cells[0].innerHTML = i18n[state.currentLang].emptyState;
@@ -53,7 +53,7 @@ export function getOrCreateGroupBody(groupId) {
         headerRow.className = 'group-header';
         headerRow.onclick = () => toggleGroup(groupId);
         headerRow.innerHTML = `
-            <td colspan="12">
+            <td colspan="9">
                 <div class="group-header-content">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div class="group-title-wrap">
@@ -63,10 +63,10 @@ export function getOrCreateGroupBody(groupId) {
                         <span class="group-count">0 ${i18n[state.currentLang].items}</span>
                     </div>
                     <div class="group-actions" onclick="event.stopPropagation()">
-                        <button onclick="showInlineAdd('${groupId}')" data-i18n-title="addBtn" title="${i18n[state.currentLang].addBtn}">➕ <span data-i18n="addBtn">${i18n[state.currentLang].addBtn}</span></button>
+                        <button onclick="showInlineAdd('${groupId}')" data-i18n-title="addBtn" title="${i18n[state.currentLang].addBtn}"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg> <span data-i18n="addBtn">${i18n[state.currentLang].addBtn}</span></button>
                         ${groupId !== 'default' ? `
-                            <button onclick="promptRenameGroup('${groupId}')" data-i18n-title="renameBtn" title="${i18n[state.currentLang].renameBtn}">✎ <span data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</span></button>
-                            <button class="delete-btn" onclick="deleteGroup('${groupId}')" data-i18n-title="deleteBtn" title="${i18n[state.currentLang].deleteBtn}">✖ <span data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</span></button>
+                            <button onclick="promptRenameGroup('${groupId}')" data-i18n-title="renameBtn" title="${i18n[state.currentLang].renameBtn}"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> <span data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</span></button>
+                            <button class="delete-btn" onclick="deleteGroup('${groupId}')" data-i18n-title="deleteBtn" title="${i18n[state.currentLang].deleteBtn}"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg> <span data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</span></button>
                         ` : ''}
                     </div>
                 </div>
@@ -95,7 +95,7 @@ export function showInlineAdd(groupId) {
     const tr = document.createElement('tr');
     tr.className = 'inline-add-row';
     tr.innerHTML = `
-        <td colspan="12" class="inline-add-cell">
+        <td colspan="9" class="inline-add-cell">
             <div class="inline-add-wrap">
                 <input type="text" id="inlineAdd-${groupId}" data-i18n-placeholder="inputPlaceholder" placeholder="${i18n[state.currentLang].inputPlaceholder}" onkeydown="if(event.key==='Enter') submitInlineAdd('${groupId}')">
                 <button class="primary-btn mini-btn" onclick="submitInlineAdd('${groupId}')" data-i18n="addBtn">${i18n[state.currentLang].addBtn}</button>
@@ -151,7 +151,7 @@ export function updateFundRow(code, fields) {
         fundManager
     ] = fields;
 
-    const nameCell = row.cells[1];
+    const nameCell = row.cells[0];
     nameCell.innerHTML = `
         <div class="name-cell">
             <span class="name-main" title="${fundName || ''}">${fundName || '-'}</span>
@@ -160,16 +160,22 @@ export function updateFundRow(code, fields) {
     `;
     nameCell.title = fundName || '';
 
-    row.cells[2].innerHTML = `<span class="value-chip">${estimatedNav || '-'}</span>`;
-    row.cells[3].innerHTML = formatChangeCell(estimatedChange);
-    row.cells[4].innerHTML = `<span class="value-chip">${unitNav || '-'}</span>`;
-    row.cells[5].textContent = unitNavDate || '-';
-    row.cells[6].innerHTML = `<span class="value-chip">${accumulatedNav || '-'}</span>`;
-    row.cells[7].innerHTML = formatChangeCell(navChange);
-    row.cells[8].innerHTML = `<span class="value-chip">${previousNav || '-'}</span>`;
-    row.cells[9].textContent = previousNavDate || '-';
+    row.cells[1].innerHTML = `<span class="value-chip">${estimatedNav || '-'}</span>`;
+    row.cells[2].innerHTML = formatChangeCell(estimatedChange);
+    row.cells[3].innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+            <span class="value-chip">${unitNav || '-'}</span>
+            <span class="name-sub" style="font-size: 11px;">${unitNavDate || '-'}</span>
+        </div>`;
+    row.cells[4].innerHTML = `<span class="value-chip">${accumulatedNav || '-'}</span>`;
+    row.cells[5].innerHTML = formatChangeCell(navChange);
+    row.cells[6].innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+            <span class="value-chip">${previousNav || '-'}</span>
+            <span class="name-sub" style="font-size: 11px;">${previousNavDate || '-'}</span>
+        </div>`;
 
-    const managerCell = row.cells[10];
+    const managerCell = row.cells[7];
     managerCell.innerHTML = `<span class="manager-pill" title="${fundManager || ''}">${fundManager || '-'}</span>`;
     managerCell.title = fundManager || '';
 
@@ -186,23 +192,20 @@ export function addRow(code) {
     row.ondblclick = () => navigateToAnalysis(code);
     
     row.innerHTML = `
-        <td><span class="code-badge">${code}</span></td>
         <td>
             <div class="name-cell">
                 <span class="name-main">${i18n[state.currentLang].loading}</span>
-                <span class="name-sub">${i18n[state.currentLang].waiting}</span>
+                <span class="name-sub">${code}</span>
             </div>
         </td>
         <td class="numerical"><div class="loader"></div></td>
         <td class="numerical">-</td>
         <td class="numerical">-</td>
-        <td>-</td>
         <td class="numerical">-</td>
         <td class="numerical">-</td>
         <td class="numerical">-</td>
         <td>-</td>
-        <td>-</td>
-        <td><button class="remove-btn" onclick="removeFund('${code}')" title="${i18n[state.currentLang].removeTitle}">✖</button></td>
+        <td><button class="remove-btn" onclick="removeFund('${code}')" title="${i18n[state.currentLang].removeTitle}"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button></td>
     `;
     tableBody.appendChild(row);
     checkEmptyState();

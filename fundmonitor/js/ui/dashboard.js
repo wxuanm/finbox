@@ -9,8 +9,8 @@ export function updateDashboardStats() {
     const dataRows = Array.from(table.querySelectorAll('tr[id^="fund-"]'));
     fundCountStat.textContent = String(state.fundCodes.size);
 
-    const positiveCount = dataRows.filter(row => row.cells[3] && row.cells[3].querySelector('.positive')).length;
-    const negativeCount = dataRows.filter(row => row.cells[3] && row.cells[3].querySelector('.negative')).length;
+    const positiveCount = dataRows.filter(row => row.cells[2] && row.cells[2].querySelector('.positive')).length;
+    const negativeCount = dataRows.filter(row => row.cells[2] && row.cells[2].querySelector('.negative')).length;
 
     positiveCountStat.textContent = String(positiveCount);
     negativeCountStat.textContent = String(negativeCount);
