@@ -605,7 +605,7 @@
 
             const script = document.createElement('script');
             script.id = `fund-script-${code}`;
-            script.src = `https://fund.eastmoney.com/Data/FundCompare_Interface.aspx?t=0&bzdm=${code}&rt=${Date.now()}`;
+            script.src = `/api/fundgz?code=${code}&rt=${Date.now()}`;
             script.onload = () => {
                 if (window.fundinfo) {
                     const payloadText = `var fundinfo = ${JSON.stringify(window.fundinfo)};`;
