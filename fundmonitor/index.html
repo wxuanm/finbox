@@ -1103,7 +1103,7 @@
             loader.classList.remove('hidden');
             
             // 构建带状态的 URL
-            const url = new URL('Fund Performance Analysis.html', window.location.origin + window.location.pathname);
+            const url = new URL('Fund Performance Analysis.html', window.location.href);
             url.searchParams.set('fundCode', code);
             url.searchParams.set('theme', currentTheme); // 透传当前主题
             url.searchParams.set('lang', currentLang);   // 透传当前语言
