@@ -9,29 +9,24 @@
 </head>
 <body>
     <div class="page-shell">
-        <section class="hero">
-            <div class="hero-copy">
-                <div class="hero-badge" data-i18n="heroBadge">实时净值监控</div>
-                <h1 data-i18n="heroTitle">基金实时监控面板</h1>
-                <p data-i18n="heroDesc">聚焦净值、估算涨幅与基金经理信息，用更清晰的视觉层级和更高效的表格浏览体验，帮助你快速发现重点基金动态。</p>
-            </div>
-            <div class="header-actions">
-                <button id="themeBtn" class="action-btn" onclick="toggleTheme()" title="切换主题">🌙</button>
-                <button id="langBtn" class="action-btn" onclick="toggleLang()">English</button>
-            </div>
-        </section>
-
         <div class="dashboard-grid">
             <section class="panel unified-panel">
                 <div class="unified-header">
-                    <div class="section-heading">
-                        <h2 data-i18n="tableTitle">基金行情明细</h2>
+                    <div class="header-left">
+                        <div class="hero-badge" data-i18n="heroBadge">实时净值监控</div>
+                        <h1 data-i18n="heroTitle">基金实时监控面板</h1>
                     </div>
-                    <div class="mini-stats">
-                        <div class="stat-item"><span data-i18n="statTotal">监控总数</span> <strong id="fundCountStat">0</strong></div>
-                        <div class="stat-item"><span data-i18n="statPositive">上涨基金</span> <strong id="positiveCountStat">0</strong></div>
-                        <div class="stat-item"><span data-i18n="statNegative">下跌基金</span> <strong id="negativeCountStat">0</strong></div>
-                        <div class="stat-item"><span data-i18n="statLastRefresh">最新刷新</span> <strong id="lastRefreshStat">--:--</strong></div>
+                    <div class="header-right">
+                        <div class="mini-stats">
+                            <div class="stat-item"><span data-i18n="statTotal">监控总数</span> <strong id="fundCountStat">0</strong></div>
+                            <div class="stat-item"><span data-i18n="statPositive">上涨基金</span> <strong id="positiveCountStat">0</strong></div>
+                            <div class="stat-item"><span data-i18n="statNegative">下跌基金</span> <strong id="negativeCountStat">0</strong></div>
+                            <div class="stat-item"><span data-i18n="statLastRefresh">最新刷新</span> <strong id="lastRefreshStat">--:--</strong></div>
+                        </div>
+                        <div class="header-actions">
+                            <button id="themeBtn" class="action-btn" onclick="toggleTheme()" title="切换主题">🌙</button>
+                            <button id="langBtn" class="action-btn" onclick="toggleLang()">EN</button>
+                        </div>
                     </div>
                 </div>
 

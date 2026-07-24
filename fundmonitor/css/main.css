@@ -118,12 +118,33 @@
         }
 
         .unified-header {
-            padding: 22px 22px 0 22px;
+            padding: 24px 24px 0 24px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
             gap: 16px;
+        }
+
+        .header-left h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--secondary-color);
+            letter-spacing: -0.01em;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         .mini-stats {
@@ -524,6 +545,8 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            border-left: 1px solid var(--border-color);
+            padding-left: 16px;
         }
         .action-btn {
             padding: 6px 14px;
