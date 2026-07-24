@@ -25,10 +25,7 @@
             <section class="panel unified-panel">
                 <div class="unified-header">
                     <div class="section-heading">
-                        <div>
-                            <h2 data-i18n="tableTitle">基金行情明细</h2>
-                            <p data-i18n="tableSub" style="margin: 6px 0 0; color: var(--muted-text); font-size: 13px;">双击任意行可跳转基金分析页，点击列头支持排序。</p>
-                        </div>
+                        <h2 data-i18n="tableTitle">基金行情明细</h2>
                     </div>
                     <div class="mini-stats">
                         <div class="stat-item"><span data-i18n="statTotal">监控总数</span> <strong id="fundCountStat">0</strong></div>
@@ -42,6 +39,9 @@
                     <div class="left-actions">
                         <button class="primary-btn" onclick="promptAddGroup()">➕ <span data-i18n="addGroupTitle">新建分组</span></button>
                         <button class="secondary-btn" onclick="refreshData()" data-i18n="refreshBtn">刷新全部</button>
+                    </div>
+                    <div class="toolbar-hint">
+                        💡 <span data-i18n="tableSub">双击任意行可跳转基金分析页，点击列头支持排序。</span>
                     </div>
                 </div>
 
