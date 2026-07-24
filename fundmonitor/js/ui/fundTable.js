@@ -6,16 +6,128 @@ import { navigateToAnalysis } from './modal.js';
 import { saveFundCodes } from '../utils/storage.js';
 
 export function checkEmptyState() {
-    const tableBody = document.getElementById('fundTable').tBodies[0];
-    if (tableBody.rows.length === 0) {
-        const row = tableBody.insertRow();
-        const cell = row.insertCell(0);
-        cell.colSpan = 12;
-        cell.style.textAlign = 'center';
-        cell.innerHTML = i18n[state.currentLang].emptyState;
+    const table = document.getElementById('fundTable');
+    let emptyTbody = table.querySelector('.empty-state-tbody');
+    
+    if (state.fundCodes.size === 0) {
+        if (!emptyTbody) {
+            emptyTbody = document.createElement('tbody');
+            emptyTbody.className = 'empty-state-tbody';
+            const row = emptyTbody.insertRow();
+            const cell = row.insertCell(0);
+            cell.colSpan = 12;
+            table.appendChild(emptyTbody);
+        }
+        emptyTbody.rows[0].cells[0].innerHTML = i18n[state.currentLang].emptyState;
     } else {
-        const emptyRow = tableBody.querySelector('td[colspan="12"]');
-        if (emptyRow) emptyRow.parentElement.remove();
+        if (emptyTbody) emptyTbody.remove();
+    }
+}
+
+export function updateGroupCounts() {
+    const table = document.getElementById('fundTable');
+    const tbodies = table.querySelectorAll('tbody.group-section');
+    tbodies.forEach(tbody => {
+        const rows = tbody.querySelectorAll('tr[id^="fund-"]');
+        const countSpan = tbody.querySelector('.group-count');
+        if (countSpan) countSpan.textContent = `${rows.length} ${i18n[state.currentLang].items}`;
+    });
+}
+
+export function getOrCreateGroupBody(groupId) {
+    const table = document.getElementById('fundTable');
+    let tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    if (!tbody) {
+        tbody = document.createElement('tbody');
+        tbody.setAttribute('data-group', groupId);
+        tbody.className = 'group-section';
+        
+        if (state.groupExpanded && state.groupExpanded[groupId] === false) {
+            tbody.classList.add('collapsed');
+        }
+
+        const displayName = groupId === 'default' ? i18n[state.currentLang].defaultGroup : groupId;
+        const defaultNameAttr = groupId === 'default' ? 'data-i18n="defaultGroup"' : '';
+
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'group-header';
+        headerRow.onclick = () => toggleGroup(groupId);
+        headerRow.innerHTML = `
+            <td colspan="12">
+                <div class="group-header-content">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="group-title-wrap">
+                            <span class="expander">▼</span>
+                            <strong class="group-name" ${defaultNameAttr}>${displayName}</strong>
+                        </div>
+                        <span class="group-count">0 ${i18n[state.currentLang].items}</span>
+                    </div>
+                    <div class="group-actions" onclick="event.stopPropagation()">
+                        <button onclick="showInlineAdd('${groupId}')" data-i18n-title="addBtn" title="${i18n[state.currentLang].addBtn}">➕ <span data-i18n="addBtn">${i18n[state.currentLang].addBtn}</span></button>
+                        ${groupId !== 'default' ? `
+                            <button onclick="promptRenameGroup('${groupId}')" data-i18n-title="renameBtn" title="${i18n[state.currentLang].renameBtn}">✎ <span data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</span></button>
+                            <button class="delete-btn" onclick="deleteGroup('${groupId}')" data-i18n-title="deleteBtn" title="${i18n[state.currentLang].deleteBtn}">✖ <span data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</span></button>
+                        ` : ''}
+                    </div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(headerRow);
+        table.appendChild(tbody);
+    }
+    return tbody;
+}
+
+export function showInlineAdd(groupId) {
+    const table = document.getElementById('fundTable');
+    const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    if (!tbody) return;
+    
+    // Ensure expanded
+    tbody.classList.remove('collapsed');
+    state.groupExpanded[groupId] = true;
+
+    if (tbody.querySelector('.inline-add-row')) {
+        document.getElementById(`inlineAdd-${groupId}`).focus();
+        return;
+    }
+    
+    const tr = document.createElement('tr');
+    tr.className = 'inline-add-row';
+    tr.innerHTML = `
+        <td colspan="12" class="inline-add-cell">
+            <div class="inline-add-wrap">
+                <input type="text" id="inlineAdd-${groupId}" data-i18n-placeholder="inputPlaceholder" placeholder="${i18n[state.currentLang].inputPlaceholder}" onkeydown="if(event.key==='Enter') submitInlineAdd('${groupId}')">
+                <button class="primary-btn mini-btn" onclick="submitInlineAdd('${groupId}')" data-i18n="addBtn">${i18n[state.currentLang].addBtn}</button>
+                <button class="secondary-btn mini-btn" onclick="this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
+            </div>
+        </td>
+    `;
+    
+    if (tbody.children.length > 1) {
+        tbody.insertBefore(tr, tbody.children[1]);
+    } else {
+        tbody.appendChild(tr);
+    }
+    document.getElementById(`inlineAdd-${groupId}`).focus();
+}
+
+window.submitInlineAdd = function(groupId) {
+    const input = document.getElementById(`inlineAdd-${groupId}`);
+    if (!input) return;
+    const codes = input.value;
+    if (codes.trim() !== '') {
+        window.addFundCodes(groupId, codes);
+    }
+    input.closest('tr').remove();
+};
+
+export function toggleGroup(groupId) {
+    const table = document.getElementById('fundTable');
+    const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    if (tbody) {
+        const isCollapsed = tbody.classList.toggle('collapsed');
+        state.groupExpanded[groupId] = !isCollapsed;
     }
 }
 
@@ -66,8 +178,9 @@ export function updateFundRow(code, fields) {
 }
 
 export function addRow(code) {
-    const tableBody = document.getElementById('fundTable').tBodies[0];
-    const row = tableBody.insertRow();
+    const groupId = state.fundGroups[code] || 'default';
+    const tableBody = getOrCreateGroupBody(groupId);
+    const row = document.createElement('tr');
     row.id = `fund-${code}`;
     row.classList.add('loading');
     row.ondblclick = () => navigateToAnalysis(code);
@@ -91,21 +204,24 @@ export function addRow(code) {
         <td>-</td>
         <td><button class="remove-btn" onclick="removeFund('${code}')" title="${i18n[state.currentLang].removeTitle}">✖</button></td>
     `;
+    tableBody.appendChild(row);
     checkEmptyState();
+    updateGroupCounts();
     updateDashboardStats();
 }
 
 export function removeFund(code) {
     state.fundCodes.delete(code);
-    saveFundCodes(state.fundCodes);
+    delete state.fundGroups[code];
+    saveFundCodes();
     const row = document.getElementById(`fund-${code}`);
     if (row) row.remove();
+    updateGroupCounts();
     checkEmptyState();
     updateDashboardStats();
 }
 
 export function sortTable(column) {
-    const tableBody = document.getElementById('fundTable').tBodies[0];
     if (state.currentSortColumn === column) {
         state.sortOrder *= -1;
     } else {
@@ -115,31 +231,36 @@ export function sortTable(column) {
     
     updateSortIcons(column);
     
-    const rows = Array.from(tableBody.rows).filter(row => !row.querySelector('td[colspan="12"]'));
+    const table = document.getElementById('fundTable');
+    const tbodies = table.querySelectorAll('tbody.group-section');
     
-    rows.sort((a, b) => {
-        const isNumeric = a.cells[column].classList.contains('numerical');
+    tbodies.forEach(tbody => {
+        const rows = Array.from(tbody.querySelectorAll('tr[id^="fund-"]'));
+        
+        rows.sort((a, b) => {
+            const isNumeric = a.cells[column].classList.contains('numerical');
 
-        if (isNumeric) {
-            const textA = a.cells[column].textContent;
-            const textB = b.cells[column].textContent;
+            if (isNumeric) {
+                const textA = a.cells[column].textContent;
+                const textB = b.cells[column].textContent;
 
-            // Use regex to extract the number, ignoring icons and symbols.
-            const matchA = textA.match(/-?[\d.]+/);
-            const matchB = textB.match(/-?[\d.]+/);
+                // Use regex to extract the number, ignoring icons and symbols.
+                const matchA = textA.match(/-?[\d.]+/);
+                const matchB = textB.match(/-?[\d.]+/);
 
-            const numA = matchA ? parseFloat(matchA[0]) : -Infinity;
-            const numB = matchB ? parseFloat(matchB[0]) : -Infinity;
-            
-            return (numA - numB) * state.sortOrder;
-        } else {
-            const cellA = a.cells[column].textContent.trim();
-            const cellB = b.cells[column].textContent.trim();
-            return cellA.localeCompare(cellB, 'en', {numeric: true}) * state.sortOrder;
-        }
+                const numA = matchA ? parseFloat(matchA[0]) : -Infinity;
+                const numB = matchB ? parseFloat(matchB[0]) : -Infinity;
+                
+                return (numA - numB) * state.sortOrder;
+            } else {
+                const cellA = a.cells[column].textContent.trim();
+                const cellB = b.cells[column].textContent.trim();
+                return cellA.localeCompare(cellB, 'en', {numeric: true}) * state.sortOrder;
+            }
+        });
+        
+        rows.forEach(row => tbody.appendChild(row));
     });
-    
-    rows.forEach(row => tableBody.appendChild(row));
 }
 
 function updateSortIcons(column) {

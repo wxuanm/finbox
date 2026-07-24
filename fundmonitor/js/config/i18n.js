@@ -34,6 +34,16 @@ export const i18n = {
         emptyState: '输入基金代码后开始监控。<br><span style="color: var(--muted-text); font-size: 13px;">支持批量添加，建议优先关注核心持仓与观察名单。</span>',
         langSwitch: "English",
         
+        defaultGroup: "默认分组",
+        addGroupTitle: "新建分组",
+        promptNewGroup: "请输入新分组名称：",
+        confirmDeleteGroup: "确定要删除此分组及其下属的所有基金吗？",
+        items: "只",
+        cancelBtn: "取消",
+        renameBtn: "改名",
+        deleteBtn: "删除",
+        addBtn: "添加",
+        
         codePrefix: "代码",
         modalTitle: "基金深度分析",
         closeBtnTitle: "关闭",
@@ -89,6 +99,16 @@ export const i18n = {
         removeTitle: "Remove Fund",
         emptyState: 'Enter fund codes to start monitoring.<br><span style="color: var(--muted-text); font-size: 13px;">Batch addition supported. Recommended to focus on core holdings.</span>',
         langSwitch: "中文",
+        
+        defaultGroup: "Default",
+        addGroupTitle: "New Group",
+        promptNewGroup: "Enter new group name:",
+        confirmDeleteGroup: "Are you sure you want to delete this group and all its funds?",
+        items: "items",
+        cancelBtn: "Cancel",
+        renameBtn: "Rename",
+        deleteBtn: "Delete",
+        addBtn: "Add",
         
         codePrefix: "Code",
         modalTitle: "Fund Deep Analysis",

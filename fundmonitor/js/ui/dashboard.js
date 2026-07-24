@@ -1,12 +1,12 @@
 import { state } from '../config/state.js';
 
 export function updateDashboardStats() {
-    const tableBody = document.getElementById('fundTable').tBodies[0];
+    const table = document.getElementById('fundTable');
     const fundCountStat = document.getElementById('fundCountStat');
     const positiveCountStat = document.getElementById('positiveCountStat');
     const negativeCountStat = document.getElementById('negativeCountStat');
 
-    const dataRows = Array.from(tableBody.rows).filter(row => !row.querySelector('td[colspan="12"]'));
+    const dataRows = Array.from(table.querySelectorAll('tr[id^="fund-"]'));
     fundCountStat.textContent = String(state.fundCodes.size);
 
     const positiveCount = dataRows.filter(row => row.cells[3] && row.cells[3].querySelector('.positive')).length;

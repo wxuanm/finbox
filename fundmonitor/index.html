@@ -22,47 +22,29 @@
         </section>
 
         <div class="dashboard-grid">
-            <section class="panel controls-panel">
-                <div class="section-heading">
-                    <div>
-                        <h2 data-i18n="monitorList">监控列表</h2>
-                        <span data-i18n="monitorListSub">支持批量输入基金代码，使用英文逗号分隔</span>
+            <section class="panel unified-panel">
+                <div class="unified-header">
+                    <div class="section-heading">
+                        <div>
+                            <h2 data-i18n="tableTitle">基金行情明细</h2>
+                            <p data-i18n="tableSub" style="margin: 6px 0 0; color: var(--muted-text); font-size: 13px;">双击任意行可跳转基金分析页，点击列头支持排序。</p>
+                        </div>
+                    </div>
+                    <div class="mini-stats">
+                        <div class="stat-item"><span data-i18n="statTotal">监控总数</span> <strong id="fundCountStat">0</strong></div>
+                        <div class="stat-item"><span data-i18n="statPositive">上涨基金</span> <strong id="positiveCountStat">0</strong></div>
+                        <div class="stat-item"><span data-i18n="statNegative">下跌基金</span> <strong id="negativeCountStat">0</strong></div>
+                        <div class="stat-item"><span data-i18n="statLastRefresh">最新刷新</span> <strong id="lastRefreshStat">--:--</strong></div>
                     </div>
                 </div>
-                <div class="controls">
-                    <div class="input-wrap">
-                        <input type="text" id="fundCodeInput" data-i18n-placeholder="inputPlaceholder" placeholder="例如：217021, 161725, 004233">
-                    </div>
-                    <button id="addFundBtn" onclick="addFundCodes()" data-i18n="addFundBtn">添加基金</button>
-                    <button class="secondary-btn" onclick="refreshData()" data-i18n="refreshBtn">刷新全部</button>
-                </div>
-                <div class="stats-strip">
-                    <div class="stat-card">
-                        <span class="stat-label" data-i18n="statTotal">监控总数</span>
-                        <strong class="stat-value" id="fundCountStat">0</strong>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-label" data-i18n="statPositive">上涨基金</span>
-                        <strong class="stat-value" id="positiveCountStat">0</strong>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-label" data-i18n="statNegative">下跌基金</span>
-                        <strong class="stat-value" id="negativeCountStat">0</strong>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-label" data-i18n="statLastRefresh">最新刷新</span>
-                        <strong class="stat-value" id="lastRefreshStat">--:--</strong>
-                    </div>
-                </div>
-            </section>
 
-            <section class="panel table-panel">
-                <div class="table-toolbar">
-                    <div>
-                        <h2 data-i18n="tableTitle">基金行情明细</h2>
-                        <p data-i18n="tableSub">双击任意行可跳转基金分析页，点击列头支持排序。</p>
+                <div class="controls-toolbar">
+                    <div class="left-actions">
+                        <button class="primary-btn" onclick="promptAddGroup()">➕ <span data-i18n="addGroupTitle">新建分组</span></button>
+                        <button class="secondary-btn" onclick="refreshData()" data-i18n="refreshBtn">刷新全部</button>
                     </div>
                 </div>
+
                 <div class="table-responsive">
                     <table id="fundTable">
                         <thead>
@@ -81,8 +63,7 @@
                                 <th><span data-i18n="colAction">操作</span></th>
                             </tr>
                         </thead>
-                        <tbody>
-                        </tbody>
+                        <!-- Group tbodies will be rendered here -->
                     </table>
                 </div>
             </section>
