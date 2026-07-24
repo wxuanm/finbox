@@ -663,7 +663,7 @@
             });
         }
 
-        function toggleLang() {
+        window.toggleLang = function() {
             currentLang = currentLang === 'zh' ? 'en' : 'zh';
             localStorage.setItem('fund-monitor-lang', currentLang);
             applyLanguage();
@@ -872,6 +872,8 @@
 
             saveFundCodes();
             fundCodeInput.value = '';
+            applyLanguage();
+            applyLanguage();
             updateAddButtonState();
         }
         
@@ -995,7 +997,7 @@
         });
 
         // Initial setup
-            applyLanguage();
+        document.addEventListener('DOMContentLoaded', () => {
             updateAddButtonState();
             checkEmptyState();
             updateDashboardStats();
