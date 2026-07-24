@@ -510,6 +510,96 @@
                 right: 18px;
             }
         }
+    
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-backdrop.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-container {
+            width: 90vw;
+            height: 90vh;
+            max-width: 1400px;
+            background: var(--surface-strong);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(20px) scale(0.98);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-light);
+        }
+
+        .modal-backdrop.show .modal-container {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--table-header-bg);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--secondary-color);
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--muted-text);
+            font-size: 18px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--error-bg);
+            color: var(--positive-color);
+        }
+
+        .modal-body {
+            flex: 1;
+            width: 100%;
+            background: var(--surface-strong);
+        }
+
+        .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
     </style>
 </head>
 <body>
@@ -632,6 +722,7 @@
                 emptyState: '输入基金代码后开始监控。<br><span style="color: var(--muted-text); font-size: 13px;">支持批量添加，建议优先关注核心持仓与观察名单。</span>',
                 langSwitch: "English",
                 codePrefix: "代码",
+                modalTitle: "基金深度分析",
                 themeDark: "切换到暗黑模式",
                 themeLight: "切换到浅色模式"
             },
@@ -670,6 +761,7 @@
                 emptyState: 'Enter fund codes to start monitoring.<br><span style="color: var(--muted-text); font-size: 13px;">Batch addition supported. Recommended to focus on core holdings.</span>',
                 langSwitch: "中文",
                 codePrefix: "Code",
+                modalTitle: "Fund Deep Analysis",
                 themeDark: "Switch to Dark Mode",
                 themeLight: "Switch to Light Mode"
             }
@@ -1080,5 +1172,18 @@
             }
         });
     </script>
+
+    <!-- Analysis Modal -->
+    <div id="analysisModal" class="modal-backdrop" onclick="closeModal(event)">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle" data-i18n="modalTitle">基金深度分析</h3>
+                <button class="modal-close" onclick="closeModal()" title="关闭">✖</button>
+            </div>
+            <div class="modal-body">
+                <iframe id="analysisFrame" src=""></iframe>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
