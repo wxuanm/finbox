@@ -31,7 +31,7 @@ export const i18n = {
         waiting: "等待行情返回",
         fetchError: "数据加载失败",
         removeTitle: "移除基金",
-        emptyState: '输入基金代码后开始监控。<br><span style="color: var(--muted-text); font-size: 13px;">支持批量添加，建议优先关注核心持仓与观察名单。</span>',
+        emptyState: '<div style="margin-bottom: 12px; font-size: 24px; opacity: 0.5;">📈</div>暂无监控的基金。<br><span style="color: var(--muted-text); font-size: 13px;">请点击上方“新建分组”或直接添加基金代码开始监控。</span>',
         langSwitch: "English",
         
         defaultGroup: "默认分组",
@@ -97,7 +97,7 @@ export const i18n = {
         waiting: "Waiting for data",
         fetchError: "Data fetch failed",
         removeTitle: "Remove Fund",
-        emptyState: 'Enter fund codes to start monitoring.<br><span style="color: var(--muted-text); font-size: 13px;">Batch addition supported. Recommended to focus on core holdings.</span>',
+        emptyState: '<div style="margin-bottom: 12px; font-size: 24px; opacity: 0.5;">📈</div>No funds monitored.<br><span style="color: var(--muted-text); font-size: 13px;">Create a new group or add fund codes above to get started.</span>',
         langSwitch: "中文",
         
         defaultGroup: "Default",
