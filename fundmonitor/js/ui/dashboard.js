@@ -1,0 +1,26 @@
+import { state } from '../config/state.js';
+
+export function updateDashboardStats() {
+    const tableBody = document.getElementById('fundTable').tBodies[0];
+    const fundCountStat = document.getElementById('fundCountStat');
+    const positiveCountStat = document.getElementById('positiveCountStat');
+    const negativeCountStat = document.getElementById('negativeCountStat');
+
+    const dataRows = Array.from(tableBody.rows).filter(row => !row.querySelector('td[colspan="12"]'));
+    fundCountStat.textContent = String(state.fundCodes.size);
+
+    const positiveCount = dataRows.filter(row => row.cells[3] && row.cells[3].querySelector('.positive')).length;
+    const negativeCount = dataRows.filter(row => row.cells[3] && row.cells[3].querySelector('.negative')).length;
+
+    positiveCountStat.textContent = String(positiveCount);
+    negativeCountStat.textContent = String(negativeCount);
+}
+
+export function updateLastRefreshTime() {
+    const lastRefreshStat = document.getElementById('lastRefreshStat');
+    const now = new Date();
+    lastRefreshStat.textContent = now.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
