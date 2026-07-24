@@ -1071,37 +1071,37 @@
             updateDashboardStats();
         }
 
-        function fetchDataForCode(code) {
-            const existingScript = document.getElementById(`fund-script-${code}`);
+        function fetchDataForCode(codeStr) {
+            const existingScript = document.getElementById(`fund-script-${codeStr}`);
             if (existingScript) {
                 existingScript.remove();
             }
 
             const script = document.createElement('script');
-            script.id = `fund-script-${code}`;
-            script.src = `/api/fundgz?code=${code}&rt=${Date.now()}`;
+            script.id = `fund-script-${codeStr}`;
+            script.src = `/api/fundgz?code=${codeStr}&rt=${Date.now()}`;
             script.onload = () => {
                 if (window.fundinfo) {
-                    const payloadText = `var fundinfo = ${JSON.stringify(window.fundinfo)};`;
-                    const match = payloadText.match(/var\s+fundinfo\s*=\s*\[(.*?)\];?/s);
-                    if (match) {
-                        try {
-                            const fields = JSON.parse(`[${match[1]}]`)[0].split(',');
-                            updateFundRow(code, fields);
-                        } catch (e) {
-                            handleFetchError(code);
-                        }
-                    } else {
-                         handleFetchError(code);
+                    try {
+                        const rawArr = window.fundinfo;
+                        rawArr.forEach(fundStr => {
+                            const fields = fundStr.split(',');
+                            const fundCode = fields[0];
+                            updateFundRow(fundCode, fields);
+                        });
+                    } catch (e) {
+                        handleFetchError(codeStr);
                     }
                 } else {
-                    handleFetchError(code);
+                    handleFetchError(codeStr);
                 }
                 delete window.fundinfo;
                 script.remove();
             };
             script.onerror = () => {
-                handleFetchError(code);
+                // If it was a batch request and failed, we mark all codes in that batch as error
+                const codes = codeStr.split(',');
+                codes.forEach(c => handleFetchError(c));
                 script.remove();
             };
             document.head.appendChild(script);
@@ -1183,19 +1183,26 @@
                 .map(code => code.trim())
                 .filter(code => code !== '');
             
-            let delay = 0;
+            if (codes.length === 0) return;
+
+            // Add rows individually
+            const newCodes = [];
             codes.forEach(code => {
                 if (!fundCodes.has(code)) {
                     fundCodes.add(code);
                     addRow(code);
-                    setTimeout(() => fetchDataForCode(code), delay);
-                    delay += 100;
+                    newCodes.push(code);
                 }
             });
 
+            // Fetch data in a single batch request
+            if (newCodes.length > 0) {
+                const batchCodeStr = newCodes.join(',');
+                fetchDataForCode(batchCodeStr);
+            }
+
             saveFundCodes();
             fundCodeInput.value = '';
-            applyLanguage();
             applyLanguage();
             applyTheme();
             updateAddButtonState();
@@ -1362,12 +1369,16 @@
 
         function refreshData() {
             tableBody.innerHTML = '';
-            let delay = 0;
-            fundCodes.forEach(code => {
-                addRow(code);
-                setTimeout(() => fetchDataForCode(code), delay);
-                delay += 100;
-            });
+            const allCodes = Array.from(fundCodes);
+            
+            // Re-add empty rows
+            allCodes.forEach(code => addRow(code));
+            
+            // Fetch all in a single batch request
+            if (allCodes.length > 0) {
+                const batchCodeStr = allCodes.join(',');
+                fetchDataForCode(batchCodeStr);
+            }
             updateLastRefreshTime();
         }
 
