@@ -1236,8 +1236,8 @@
             
             // Generate native UI on load
             script.onload = () => {
-                if (typeof fundinfo_yjpj !== 'undefined') {
-                    const data = fundinfo_yjpj;
+                if (typeof window.fundinfo_yjpj !== 'undefined') {
+                    const data = window.fundinfo_yjpj;
                     const jdsy = data.jdsy && data.jdsy[0] ? data.jdsy[0].split(',') : [];
                     const lsndsy = data.lsndsy && data.lsndsy[0] ? data.lsndsy[0] : {};
                     const dtsy = data.dtsy && data.dtsy[0] ? data.dtsy[0].split(',') : [];
@@ -1319,7 +1319,7 @@
                     loader.classList.add('hidden');
                     content.style.display = 'block';
                     content.style.opacity = '1';
-                    content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[currentLang].fetchError}</div>`;
+                    content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[currentLang].fetchError} (No Data)</div>`;
                 }
                 delete window.fundinfo_yjpj;
                 script.remove();
@@ -1329,7 +1329,7 @@
                 loader.classList.add('hidden');
                 content.style.display = 'block';
                 content.style.opacity = '1';
-                content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[currentLang].fetchError}</div>`;
+                content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[currentLang].fetchError} (Network Error)</div>`;
                 script.remove();
             };
             document.head.appendChild(script);
