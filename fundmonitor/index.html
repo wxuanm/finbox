@@ -1094,8 +1094,58 @@
         }
 
         function navigateToAnalysis(code) {
-            window.location.href = `Fund Performance Analysis.html?fundCode=${code}`;
+            const modal = document.getElementById('analysisModal');
+            const frame = document.getElementById('analysisFrame');
+            const loader = document.getElementById('modalLoader');
+            
+            // 重置状态
+            frame.classList.remove('loaded');
+            loader.classList.remove('hidden');
+            
+            // 构建带状态的 URL
+            const url = new URL('Fund Performance Analysis.html', window.location.origin + window.location.pathname);
+            url.searchParams.set('fundCode', code);
+            url.searchParams.set('theme', currentTheme); // 透传当前主题
+            url.searchParams.set('lang', currentLang);   // 透传当前语言
+            
+            frame.src = url.toString();
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
+
+        function handleIframeLoad() {
+            const frame = document.getElementById('analysisFrame');
+            const loader = document.getElementById('modalLoader');
+            // 确保 src 有内容才视作有效加载
+            if (frame.src && frame.src !== window.location.href) {
+                loader.classList.add('hidden');
+                frame.classList.add('loaded');
+            }
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== document.getElementById('analysisModal') && event.currentTarget !== event.target) return;
+            const modal = document.getElementById('analysisModal');
+            const frame = document.getElementById('analysisFrame');
+            
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+            
+            setTimeout(() => {
+                frame.src = '';
+                frame.classList.remove('loaded');
+            }, 300);
+        }
+
+        // 监听 Escape 键关闭弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('analysisModal');
+                if (modal.classList.contains('show')) {
+                    closeModal();
+                }
+            }
+        });
 
         function refreshData() {
             tableBody.innerHTML = '';
