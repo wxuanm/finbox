@@ -131,6 +131,12 @@ export function toggleGroup(groupId) {
     }
 }
 
+function toggleMobileFundDetails(row) {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        row.classList.toggle('expanded');
+    }
+}
+
 export function updateFundRow(code, fields) {
     const row = document.getElementById(`fund-${code}`);
     if (!row) return;
@@ -164,6 +170,10 @@ export function updateFundRow(code, fields) {
     row.cells[2].innerHTML = formatChangeCell(estimatedChange);
     row.cells[1].dataset.label = i18n[state.currentLang].colEstNav;
     row.cells[3].dataset.label = i18n[state.currentLang].colNav;
+    row.cells[4].dataset.label = i18n[state.currentLang].colAccNav;
+    row.cells[5].dataset.label = i18n[state.currentLang].colNavChange;
+    row.cells[6].dataset.label = i18n[state.currentLang].colPrevNav;
+    row.cells[7].dataset.label = i18n[state.currentLang].colManager;
 
     row.cells[3].innerHTML = `
         <div class="value-stack">
@@ -192,6 +202,7 @@ export function addRow(code) {
     const row = document.createElement('tr');
     row.id = `fund-${code}`;
     row.classList.add('loading');
+    row.onclick = () => toggleMobileFundDetails(row);
     row.ondblclick = () => navigateToAnalysis(code);
     
     row.innerHTML = `
@@ -204,11 +215,11 @@ export function addRow(code) {
         <td class="numerical" data-label="${i18n[state.currentLang].colEstNav}"><div class="loader"></div></td>
         <td class="numerical">-</td>
         <td class="numerical" data-label="${i18n[state.currentLang].colNav}">-</td>
-        <td class="numerical">-</td>
-        <td class="numerical">-</td>
-        <td class="numerical">-</td>
-        <td>-</td>
-        <td><button class="remove-btn" onclick="removeFund('${code}')" title="${i18n[state.currentLang].removeTitle}"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button></td>
+        <td class="numerical" data-label="${i18n[state.currentLang].colAccNav}">-</td>
+        <td class="numerical" data-label="${i18n[state.currentLang].colNavChange}">-</td>
+        <td class="numerical" data-label="${i18n[state.currentLang].colPrevNav}">-</td>
+        <td data-label="${i18n[state.currentLang].colManager}">-</td>
+        <td><button class="remove-btn" onclick="event.stopPropagation(); removeFund('${code}')" title="${i18n[state.currentLang].removeTitle}"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button></td>
     `;
     tableBody.appendChild(row);
     checkEmptyState();
