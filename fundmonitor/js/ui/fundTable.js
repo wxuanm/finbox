@@ -32,11 +32,38 @@ export function updateGroupCounts() {
         const countSpan = tbody.querySelector('.group-count');
         if (countSpan) countSpan.textContent = `${rows.length} ${i18n[state.currentLang].items}`;
     });
+    syncDefaultGroupVisibility();
+}
+
+function hasDefaultFunds() {
+    return Array.from(state.fundCodes).some(code => !state.fundGroups[code] || state.fundGroups[code] === 'default');
+}
+
+function shouldHideDefaultGroup() {
+    return state.groups.some(group => group !== 'default') && !hasDefaultFunds();
+}
+
+export function syncDefaultGroupVisibility() {
+    const table = document.getElementById('fundTable');
+    if (!table) return;
+
+    const defaultBody = table.querySelector('tbody[data-group="default"]');
+    if (shouldHideDefaultGroup()) {
+        if (defaultBody) defaultBody.remove();
+        return;
+    }
+
+    if (!defaultBody && state.groups.length === 1 && state.groups[0] === 'default') {
+        getOrCreateGroupBody('default');
+    }
 }
 
 export function getOrCreateGroupBody(groupId) {
     const table = document.getElementById('fundTable');
     let tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    if (!tbody && groupId === 'default' && shouldHideDefaultGroup()) {
+        return null;
+    }
     if (!tbody) {
         tbody = document.createElement('tbody');
         tbody.setAttribute('data-group', groupId);
@@ -63,11 +90,14 @@ export function getOrCreateGroupBody(groupId) {
                         <span class="group-count">0 ${i18n[state.currentLang].items}</span>
                     </div>
                     <div class="group-actions" onclick="event.stopPropagation()">
-                        <button class="icon-btn" onclick="showInlineAdd('${groupId}')" data-i18n-title="addBtn" title="${i18n[state.currentLang].addBtn}" aria-label="${i18n[state.currentLang].addBtn}"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
+                        <button class="icon-btn group-menu-btn" onclick="toggleGroupMenu(this)" title="${i18n[state.currentLang].colAction}" aria-label="${i18n[state.currentLang].colAction}">...</button>
+                        <div class="group-action-menu">
+                            <button onclick="showInlineAdd('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg><span data-i18n="addBtn">${i18n[state.currentLang].addBtn}</span></button>
                         ${groupId !== 'default' ? `
-                            <button class="icon-btn" onclick="promptRenameGroup('${groupId}')" data-i18n-title="renameBtn" title="${i18n[state.currentLang].renameBtn}" aria-label="${i18n[state.currentLang].renameBtn}"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                            <button class="icon-btn delete-btn" onclick="deleteGroup('${groupId}')" data-i18n-title="deleteBtn" title="${i18n[state.currentLang].deleteBtn}" aria-label="${i18n[state.currentLang].deleteBtn}"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                            <button onclick="showInlineRename('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg><span data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</span></button>
+                            <button class="delete-btn" onclick="showInlineDelete('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg><span data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</span></button>
                         ` : ''}
+                        </div>
                     </div>
                 </div>
             </td>
@@ -79,6 +109,8 @@ export function getOrCreateGroupBody(groupId) {
 }
 
 export function showInlineAdd(groupId) {
+    closeGroupMenus();
+
     const table = document.getElementById('fundTable');
     const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
     if (!tbody) return;
@@ -87,13 +119,24 @@ export function showInlineAdd(groupId) {
     tbody.classList.remove('collapsed');
     state.groupExpanded[groupId] = true;
 
+    const existingRow = tbody.querySelector('.group-action-row');
+    if (existingRow) {
+        const existingInput = existingRow.querySelector('input');
+        if (existingInput && existingInput.id === `inlineAdd-${groupId}`) {
+            existingInput.focus();
+            return;
+        }
+        existingRow.remove();
+    }
+
+    document.querySelectorAll('.fund-detail-row').forEach(detailRow => detailRow.remove());
+
     if (tbody.querySelector('.inline-add-row')) {
-        document.getElementById(`inlineAdd-${groupId}`).focus();
         return;
     }
     
     const tr = document.createElement('tr');
-    tr.className = 'inline-add-row';
+    tr.className = 'inline-add-row group-action-row';
     tr.innerHTML = `
         <td colspan="9" class="inline-add-cell">
             <div class="inline-add-wrap">
@@ -112,6 +155,110 @@ export function showInlineAdd(groupId) {
     document.getElementById(`inlineAdd-${groupId}`).focus();
 }
 
+export function showInlineNewGroup() {
+    closeGroupMenus();
+
+    const table = document.getElementById('fundTable');
+    if (!table) return;
+
+    const existingRow = table.querySelector('.new-group-section');
+    if (existingRow) {
+        document.getElementById('inlineNewGroup')?.focus();
+        return;
+    }
+
+    document.querySelectorAll('.group-action-row, .fund-detail-row').forEach(row => row.remove());
+
+    const tbody = document.createElement('tbody');
+    tbody.className = 'new-group-section';
+    tbody.innerHTML = `
+        <tr class="inline-add-row group-action-row">
+            <td colspan="9" class="inline-add-cell">
+                <div class="inline-add-wrap">
+                    <input type="text" id="inlineNewGroup" data-i18n-placeholder="promptNewGroup" placeholder="${i18n[state.currentLang].promptNewGroup}" onkeydown="if(event.key==='Enter') submitInlineNewGroup()">
+                    <button class="primary-btn mini-btn" onclick="submitInlineNewGroup()" data-i18n="addGroupTitle">${i18n[state.currentLang].addGroupTitle}</button>
+                    <button class="secondary-btn mini-btn" onclick="this.closest('tbody').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
+                </div>
+            </td>
+        </tr>
+    `;
+
+    table.insertBefore(tbody, table.tBodies[0] || null);
+    document.getElementById('inlineNewGroup').focus();
+}
+
+function insertGroupActionRow(groupId, rowClass, contentHtml) {
+    closeGroupMenus();
+
+    const table = document.getElementById('fundTable');
+    const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    if (!tbody) return null;
+
+    tbody.classList.remove('collapsed');
+    state.groupExpanded[groupId] = true;
+    tbody.querySelector('.group-action-row')?.remove();
+    document.querySelectorAll('.fund-detail-row').forEach(detailRow => detailRow.remove());
+
+    const tr = document.createElement('tr');
+    tr.className = `inline-add-row group-action-row ${rowClass}`;
+    tr.innerHTML = `
+        <td colspan="9" class="inline-add-cell">
+            ${contentHtml}
+        </td>
+    `;
+
+    if (tbody.children.length > 1) {
+        tbody.insertBefore(tr, tbody.children[1]);
+    } else {
+        tbody.appendChild(tr);
+    }
+
+    return tr;
+}
+
+export function showInlineRename(groupId) {
+    if (groupId === 'default') return;
+
+    const tr = insertGroupActionRow(groupId, 'inline-rename-row', `
+        <div class="inline-add-wrap">
+            <input type="text" id="inlineRename-${groupId}" value="${groupId}" onkeydown="if(event.key==='Enter') submitInlineRename('${groupId}')">
+            <button class="primary-btn mini-btn" onclick="submitInlineRename('${groupId}')" data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</button>
+            <button class="secondary-btn mini-btn" onclick="this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
+        </div>
+    `);
+
+    if (tr) {
+        const input = document.getElementById(`inlineRename-${groupId}`);
+        input.focus();
+        input.select();
+    }
+}
+
+export function showInlineDelete(groupId) {
+    if (groupId === 'default') return;
+
+    insertGroupActionRow(groupId, 'inline-delete-row', `
+        <div class="inline-confirm-wrap">
+            <span class="inline-confirm-copy">${i18n[state.currentLang].confirmDeleteGroup}</span>
+            <button class="primary-btn mini-btn danger-mini-btn" onclick="confirmInlineDeleteGroup('${groupId}')" data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</button>
+            <button class="secondary-btn mini-btn" onclick="this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
+        </div>
+    `);
+}
+
+function closeGroupMenus() {
+    document.querySelectorAll('.group-actions.menu-open').forEach(menu => menu.classList.remove('menu-open'));
+}
+
+window.toggleGroupMenu = function(button) {
+    const actions = button.closest('.group-actions');
+    const isOpen = actions.classList.contains('menu-open');
+    closeGroupMenus();
+    if (!isOpen) actions.classList.add('menu-open');
+};
+
+document.addEventListener('click', closeGroupMenus);
+
 window.submitInlineAdd = function(groupId) {
     const input = document.getElementById(`inlineAdd-${groupId}`);
     if (!input) return;
@@ -120,6 +267,26 @@ window.submitInlineAdd = function(groupId) {
         window.addFundCodes(groupId, codes);
     }
     input.closest('tr').remove();
+};
+
+window.submitInlineRename = function(oldId) {
+    const input = document.getElementById(`inlineRename-${oldId}`);
+    if (!input) return;
+    const newId = input.value.trim();
+    if (newId !== '' && newId !== oldId && window.renameGroup) {
+        window.renameGroup(oldId, newId);
+    }
+    input.closest('tr').remove();
+};
+
+window.submitInlineNewGroup = function() {
+    const input = document.getElementById('inlineNewGroup');
+    if (!input) return;
+    const groupName = input.value.trim();
+    if (groupName !== '' && window.addGroup) {
+        window.addGroup(groupName);
+    }
+    input.closest('tbody').remove();
 };
 
 export function toggleGroup(groupId) {
@@ -229,6 +396,7 @@ export function updateFundRow(code, fields) {
 export function addRow(code) {
     const groupId = state.fundGroups[code] || 'default';
     const tableBody = getOrCreateGroupBody(groupId);
+    if (!tableBody) return;
     const row = document.createElement('tr');
     row.id = `fund-${code}`;
     row.classList.add('loading');

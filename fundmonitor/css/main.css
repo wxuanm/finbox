@@ -664,6 +664,7 @@ tbody.collapsed tr:not(.group-header) {
 }
 
 .group-actions {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -700,6 +701,48 @@ tbody.collapsed tr:not(.group-header) {
     background: var(--primary-soft);
 }
 
+.group-menu-btn {
+    color: var(--secondary-color);
+    font-size: 18px !important;
+    letter-spacing: 1px;
+    line-height: 1;
+}
+
+.group-action-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 20;
+    min-width: 152px;
+    display: none;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--surface-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.group-actions.menu-open .group-action-menu {
+    display: grid;
+    gap: 4px;
+}
+
+.group-action-menu button {
+    width: 100%;
+    height: auto;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 9px 10px;
+    color: var(--secondary-color);
+    background: transparent;
+    font-size: 12px;
+}
+
+.group-action-menu button svg {
+    width: 15px;
+    height: 15px;
+}
+
 .group-actions .delete-btn {
     color: var(--positive-color);
 }
@@ -718,6 +761,20 @@ tbody.collapsed tr:not(.group-header) {
     align-items: center;
     gap: 10px;
     max-width: 560px;
+}
+
+.inline-confirm-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.inline-confirm-copy {
+    min-width: 0;
+    flex: 1;
+    color: var(--secondary-color);
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .inline-add-wrap input {
@@ -782,6 +839,10 @@ tbody.collapsed tr:not(.group-header) {
     padding: 8px 14px !important;
     border-radius: 11px !important;
     box-shadow: none !important;
+}
+
+.danger-mini-btn {
+    background: var(--positive-color) !important;
 }
 
 .empty-state-tbody td {
@@ -1156,6 +1217,11 @@ tbody.collapsed tr:not(.group-header) {
     }
 
     .inline-add-wrap {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .inline-confirm-wrap {
         align-items: stretch;
         flex-direction: column;
     }
