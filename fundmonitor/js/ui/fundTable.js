@@ -131,6 +131,42 @@ export function toggleGroup(groupId) {
     }
 }
 
+function toggleMobileFundInfo(row) {
+    if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+    const code = row.id.replace('fund-', '');
+    const nextRow = row.nextElementSibling;
+
+    if (nextRow && nextRow.classList.contains('fund-detail-row')) {
+        nextRow.remove();
+        return;
+    }
+
+    document.querySelectorAll('.fund-detail-row').forEach(detailRow => detailRow.remove());
+
+    const dict = i18n[state.currentLang];
+    const detailRow = document.createElement('tr');
+    detailRow.className = 'fund-detail-row inline-add-row';
+    detailRow.dataset.code = code;
+    detailRow.innerHTML = `
+        <td colspan="9" class="inline-add-cell">
+            <div class="fund-detail-card">
+                <div class="fund-detail-title">${row.cells[0].innerHTML}</div>
+                <div class="fund-detail-grid">
+                    <div class="fund-detail-item"><span>${dict.colEstNav}</span>${row.cells[1].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colEstChange}</span>${row.cells[2].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colNav}</span>${row.cells[3].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colAccNav}</span>${row.cells[4].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colNavChange}</span>${row.cells[5].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colPrevNav}</span>${row.cells[6].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colManager}</span>${row.cells[7].innerHTML}</div>
+                </div>
+            </div>
+        </td>
+    `;
+    row.after(detailRow);
+}
+
 export function updateFundRow(code, fields) {
     const row = document.getElementById(`fund-${code}`);
     if (!row) return;
@@ -196,6 +232,7 @@ export function addRow(code) {
     const row = document.createElement('tr');
     row.id = `fund-${code}`;
     row.classList.add('loading');
+    row.onclick = () => toggleMobileFundInfo(row);
     row.ondblclick = () => navigateToAnalysis(code);
     
     row.innerHTML = `

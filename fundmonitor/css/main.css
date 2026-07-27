@@ -736,6 +736,47 @@ tbody.collapsed tr:not(.group-header) {
     box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
+.fund-detail-card {
+    display: grid;
+    gap: 14px;
+}
+
+.fund-detail-title .name-cell {
+    min-width: 0;
+}
+
+.fund-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.fund-detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--surface-color);
+}
+
+.fund-detail-item > span:first-child {
+    flex: 0 0 auto;
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.fund-detail-item .value-stack {
+    align-items: flex-end;
+}
+
+.fund-detail-item .manager-pill {
+    max-width: 36vw;
+}
+
 .mini-btn {
     min-height: 38px;
     padding: 8px 14px !important;
