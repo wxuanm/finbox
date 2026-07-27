@@ -131,12 +131,6 @@ export function toggleGroup(groupId) {
     }
 }
 
-function toggleMobileFundDetails(row) {
-    if (window.matchMedia('(max-width: 768px)').matches) {
-        row.classList.toggle('expanded');
-    }
-}
-
 export function updateFundRow(code, fields) {
     const row = document.getElementById(`fund-${code}`);
     if (!row) return;
@@ -202,7 +196,6 @@ export function addRow(code) {
     const row = document.createElement('tr');
     row.id = `fund-${code}`;
     row.classList.add('loading');
-    row.onclick = () => toggleMobileFundDetails(row);
     row.ondblclick = () => navigateToAnalysis(code);
     
     row.innerHTML = `
