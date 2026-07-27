@@ -28,6 +28,8 @@ function applyLanguage() {
     
     const langBtn = document.getElementById('langBtn');
     if (langBtn) langBtn.textContent = i18n[state.currentLang].langSwitch;
+    const mobileLangMenuText = document.getElementById('mobileLangMenuText');
+    if (mobileLangMenuText) mobileLangMenuText.textContent = i18n[state.currentLang].langSwitch;
 
     checkEmptyState(); // Refresh empty state message
     updateGroupCounts(); // Refresh item count translations in group headers
@@ -81,6 +83,62 @@ window.promptAddGroup = function() {
         addGroup(groupName);
     }
 }
+
+function initPullToRefresh() {
+    const indicator = document.getElementById('pullRefreshIndicator');
+    if (!indicator) return;
+
+    let startY = 0;
+    let pulling = false;
+    let ready = false;
+    let refreshing = false;
+    const threshold = 72;
+
+    document.addEventListener('touchstart', (event) => {
+        if (!window.matchMedia('(max-width: 768px)').matches || window.scrollY > 0 || refreshing) return;
+        startY = event.touches[0].clientY;
+        pulling = true;
+        ready = false;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (event) => {
+        if (!pulling) return;
+        const distance = event.touches[0].clientY - startY;
+        if (distance <= 12) return;
+
+        ready = distance > threshold;
+        indicator.textContent = ready ? i18n[state.currentLang].releaseRefresh : i18n[state.currentLang].pullRefresh;
+        indicator.classList.add('visible');
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+        if (!pulling) return;
+        pulling = false;
+
+        if (!ready) {
+            indicator.classList.remove('visible');
+            return;
+        }
+
+        refreshing = true;
+        indicator.textContent = i18n[state.currentLang].refreshing;
+        refreshData();
+        setTimeout(() => {
+            refreshing = false;
+            ready = false;
+            indicator.classList.remove('visible');
+        }, 700);
+    }, { passive: true });
+}
+
+window.toggleHeaderMenu = function(event) {
+    event.stopPropagation();
+    document.querySelector('.mobile-more-actions')?.classList.toggle('menu-open');
+}
+
+document.addEventListener('click', () => {
+    document.querySelector('.mobile-more-actions')?.classList.remove('menu-open');
+});
 
 function addGroup(groupName) {
     const cleanedName = groupName.trim();
@@ -139,18 +197,15 @@ window.deleteGroup = function(groupId) {
 function deleteGroupNow(groupId) {
     if (groupId === 'default') return;
 
-    const codesToDelete = [];
+    const codesToMove = [];
     for (const [code, grp] of Object.entries(state.fundGroups)) {
         if (grp === groupId) {
-            codesToDelete.push(code);
+            codesToMove.push(code);
         }
     }
     
-    codesToDelete.forEach(code => {
-        state.fundCodes.delete(code);
-        delete state.fundGroups[code];
-        const row = document.getElementById(`fund-${code}`);
-        if (row) row.remove();
+    codesToMove.forEach(code => {
+        state.fundGroups[code] = 'default';
     });
     
     const table = document.getElementById('fundTable');
@@ -160,9 +215,7 @@ function deleteGroupNow(groupId) {
     state.groups = state.groups.filter(g => g !== groupId);
     
     saveFundCodes();
-    checkEmptyState();
-    syncDefaultGroupVisibility();
-    updateDashboardStats();
+    refreshData();
 }
 
 window.confirmInlineDeleteGroup = deleteGroupNow;
@@ -236,6 +289,7 @@ function refreshData() {
         const batchCodeStr = allCodes.join(',');
         fetchDataForCode(batchCodeStr);
     }
+    checkEmptyState();
     syncDefaultGroupVisibility();
     updateLastRefreshTime();
 }
@@ -263,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDashboardStats();
 
     initModalListeners();
+    initPullToRefresh();
 
     state.groups = loadSavedGroups();
     state.fundGroups = loadSavedFundGroups();

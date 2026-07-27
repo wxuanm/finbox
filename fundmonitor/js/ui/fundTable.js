@@ -9,7 +9,7 @@ export function checkEmptyState() {
     const table = document.getElementById('fundTable');
     let emptyTbody = table.querySelector('.empty-state-tbody');
     
-    if (state.fundCodes.size === 0) {
+    if (shouldShowGlobalEmptyState()) {
         if (!emptyTbody) {
             emptyTbody = document.createElement('tbody');
             emptyTbody.className = 'empty-state-tbody';
@@ -19,6 +19,7 @@ export function checkEmptyState() {
             table.appendChild(emptyTbody);
         }
         emptyTbody.rows[0].cells[0].innerHTML = i18n[state.currentLang].emptyState;
+        positionGlobalEmptyState(emptyTbody);
     } else {
         if (emptyTbody) emptyTbody.remove();
     }
@@ -31,6 +32,7 @@ export function updateGroupCounts() {
         const rows = tbody.querySelectorAll('tr[id^="fund-"]');
         const countSpan = tbody.querySelector('.group-count');
         if (countSpan) countSpan.textContent = `${rows.length} ${i18n[state.currentLang].items}`;
+        syncEmptyGroupRow(tbody);
     });
     syncDefaultGroupVisibility();
 }
@@ -58,8 +60,24 @@ export function syncDefaultGroupVisibility() {
     }
 }
 
+function shouldShowGlobalEmptyState() {
+    return state.fundCodes.size === 0 && state.groups.length === 1 && state.groups[0] === 'default';
+}
+
+function positionGlobalEmptyState(emptyTbody) {
+    const table = document.getElementById('fundTable');
+    const defaultBody = table.querySelector('tbody[data-group="default"]');
+    if (defaultBody && defaultBody.nextSibling !== emptyTbody) {
+        defaultBody.after(emptyTbody);
+    }
+}
+
 export function getOrCreateGroupBody(groupId) {
     const table = document.getElementById('fundTable');
+    if (!shouldShowGlobalEmptyState()) {
+        table.querySelector('.empty-state-tbody')?.remove();
+    }
+
     let tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
     if (!tbody && groupId === 'default' && shouldHideDefaultGroup()) {
         return null;
@@ -103,9 +121,45 @@ export function getOrCreateGroupBody(groupId) {
             </td>
         `;
         tbody.appendChild(headerRow);
+        if (groupId !== 'default') {
+            appendEmptyGroupRow(tbody);
+        }
         table.appendChild(tbody);
+        if (groupId === 'default' && shouldShowGlobalEmptyState()) {
+            const emptyTbody = table.querySelector('.empty-state-tbody');
+            if (emptyTbody) positionGlobalEmptyState(emptyTbody);
+        }
     }
     return tbody;
+}
+
+function appendEmptyGroupRow(tbody) {
+    const row = document.createElement('tr');
+    row.className = 'empty-group-row';
+    row.innerHTML = `<td colspan="9">${i18n[state.currentLang].emptyGroupState}</td>`;
+    tbody.appendChild(row);
+}
+
+function syncEmptyGroupRow(tbody) {
+    if (tbody.dataset.group === 'default') {
+        tbody.querySelector('.empty-group-row')?.remove();
+        return;
+    }
+
+    const hasFunds = tbody.querySelector('tr[id^="fund-"]');
+    let emptyRow = tbody.querySelector('.empty-group-row');
+
+    if (hasFunds) {
+        if (emptyRow) emptyRow.remove();
+        return;
+    }
+
+    if (!emptyRow) {
+        appendEmptyGroupRow(tbody);
+        emptyRow = tbody.querySelector('.empty-group-row');
+    }
+
+    emptyRow.cells[0].innerHTML = i18n[state.currentLang].emptyGroupState;
 }
 
 export function showInlineAdd(groupId) {
