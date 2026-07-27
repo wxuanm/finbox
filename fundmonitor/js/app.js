@@ -218,9 +218,23 @@ function deleteGroupNow(groupId) {
     refreshData();
 }
 
+function moveGroup(groupId, direction) {
+    if (groupId === 'default') return;
+
+    const index = state.groups.indexOf(groupId);
+    const targetIndex = index + direction;
+    if (index <= 0 || targetIndex <= 0 || targetIndex >= state.groups.length) return;
+
+    const [group] = state.groups.splice(index, 1);
+    state.groups.splice(targetIndex, 0, group);
+    saveFundCodes();
+    refreshData();
+}
+
 window.confirmInlineDeleteGroup = deleteGroupNow;
 window.renameGroup = renameGroup;
 window.addGroup = addGroup;
+window.moveGroup = moveGroup;
 
 // --- Fund Management ---
 window.addFundCodes = function(targetGroupId, codesStr) {

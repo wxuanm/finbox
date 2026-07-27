@@ -46,6 +46,8 @@ export const i18n = {
         cancelBtn: "取消",
         renameBtn: "改名",
         deleteBtn: "删除",
+        moveUpBtn: "上移",
+        moveDownBtn: "下移",
         addBtn: "添加",
         
         codePrefix: "代码",
@@ -116,6 +118,8 @@ export const i18n = {
         cancelBtn: "Cancel",
         renameBtn: "Rename Group",
         deleteBtn: "Delete Group",
+        moveUpBtn: "Move Up",
+        moveDownBtn: "Move Down",
         addBtn: "Add Fund",
         
         codePrefix: "Code",
