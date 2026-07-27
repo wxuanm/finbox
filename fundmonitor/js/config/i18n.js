@@ -32,7 +32,7 @@ export const i18n = {
         fetchError: "数据加载失败",
         removeTitle: "移除基金",
         emptyState: '<div class="empty-illustration"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></div><div class="empty-title">暂无监控的基金</div><div class="empty-copy">请点击上方“新建分组”或直接添加基金代码开始监控。</div>',
-        langSwitch: "English",
+        langSwitch: "EN",
         
         defaultGroup: "默认分组",
         addGroupTitle: "新建分组",
@@ -98,7 +98,7 @@ export const i18n = {
         fetchError: "Data fetch failed",
         removeTitle: "Remove Fund",
         emptyState: '<div class="empty-illustration"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></div><div class="empty-title">No funds monitored</div><div class="empty-copy">Create a new group or add fund codes above to get started.</div>',
-        langSwitch: "中文",
+        langSwitch: "CN",
         
         defaultGroup: "Default",
         addGroupTitle: "New Group",
@@ -106,9 +106,9 @@ export const i18n = {
         confirmDeleteGroup: "Are you sure you want to delete this group and all its funds?",
         items: "items",
         cancelBtn: "Cancel",
-        renameBtn: "Rename",
-        deleteBtn: "Delete",
-        addBtn: "Add",
+        renameBtn: "Rename Group",
+        deleteBtn: "Delete Group",
+        addBtn: "Add Fund",
         
         codePrefix: "Code",
         modalTitle: "Fund Deep Analysis",
