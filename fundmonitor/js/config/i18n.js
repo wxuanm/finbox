@@ -31,7 +31,7 @@ export const i18n = {
         waiting: "等待行情返回",
         fetchError: "数据加载失败",
         removeTitle: "移除基金",
-        emptyState: '<div style="margin-bottom: 12px; font-size: 24px; opacity: 0.5;">📈</div>暂无监控的基金。<br><span style="color: var(--muted-text); font-size: 13px;">请点击上方“新建分组”或直接添加基金代码开始监控。</span>',
+        emptyState: '<div class="empty-illustration"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></div><div class="empty-title">暂无监控的基金</div><div class="empty-copy">请点击上方“新建分组”或直接添加基金代码开始监控。</div>',
         langSwitch: "English",
         
         defaultGroup: "默认分组",
@@ -97,7 +97,7 @@ export const i18n = {
         waiting: "Waiting for data",
         fetchError: "Data fetch failed",
         removeTitle: "Remove Fund",
-        emptyState: '<div style="margin-bottom: 12px; font-size: 24px; opacity: 0.5;">📈</div>No funds monitored.<br><span style="color: var(--muted-text); font-size: 13px;">Create a new group or add fund codes above to get started.</span>',
+        emptyState: '<div class="empty-illustration"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></div><div class="empty-title">No funds monitored</div><div class="empty-copy">Create a new group or add fund codes above to get started.</div>',
         langSwitch: "中文",
         
         defaultGroup: "Default",

@@ -52,6 +52,8 @@ function applyLanguage() {
         }
         const removeBtn = row.querySelector('.remove-btn');
         if (removeBtn) removeBtn.title = i18n[state.currentLang].removeTitle;
+        if (row.cells[1]) row.cells[1].dataset.label = i18n[state.currentLang].colEstNav;
+        if (row.cells[3]) row.cells[3].dataset.label = i18n[state.currentLang].colNav;
     });
 }
 

@@ -117,7 +117,7 @@ export function navigateToAnalysis(code) {
             loader.classList.add('hidden');
             content.style.display = 'block';
             content.style.opacity = '1';
-            content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[state.currentLang].fetchError} (No Data)</div>`;
+            content.innerHTML = `<div class="error-message modal-error">${i18n[state.currentLang].fetchError} (No Data)</div>`;
         }
         delete window.fundinfo_yjpj;
         script.remove();
@@ -127,7 +127,7 @@ export function navigateToAnalysis(code) {
         loader.classList.add('hidden');
         content.style.display = 'block';
         content.style.opacity = '1';
-        content.innerHTML = `<div class="error-message" style="text-align: center; padding: 40px; font-size: 16px;">${i18n[state.currentLang].fetchError} (Network Error)</div>`;
+        content.innerHTML = `<div class="error-message modal-error">${i18n[state.currentLang].fetchError} (Network Error)</div>`;
         script.remove();
     };
     document.head.appendChild(script);

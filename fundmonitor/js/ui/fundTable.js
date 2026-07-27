@@ -55,7 +55,7 @@ export function getOrCreateGroupBody(groupId) {
         headerRow.innerHTML = `
             <td colspan="9">
                 <div class="group-header-content">
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="group-title-area">
                         <div class="group-title-wrap">
                             <span class="expander">▼</span>
                             <strong class="group-name" ${defaultNameAttr}>${displayName}</strong>
@@ -162,17 +162,20 @@ export function updateFundRow(code, fields) {
 
     row.cells[1].innerHTML = `<span class="value-chip">${estimatedNav || '-'}</span>`;
     row.cells[2].innerHTML = formatChangeCell(estimatedChange);
+    row.cells[1].dataset.label = i18n[state.currentLang].colEstNav;
+    row.cells[3].dataset.label = i18n[state.currentLang].colNav;
+
     row.cells[3].innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+        <div class="value-stack">
             <span class="value-chip">${unitNav || '-'}</span>
-            <span class="name-sub" style="font-size: 11px;">${unitNavDate || '-'}</span>
+            <span class="name-sub sub-date">${unitNavDate || '-'}</span>
         </div>`;
     row.cells[4].innerHTML = `<span class="value-chip">${accumulatedNav || '-'}</span>`;
     row.cells[5].innerHTML = formatChangeCell(navChange);
     row.cells[6].innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+        <div class="value-stack">
             <span class="value-chip">${previousNav || '-'}</span>
-            <span class="name-sub" style="font-size: 11px;">${previousNavDate || '-'}</span>
+            <span class="name-sub sub-date">${previousNavDate || '-'}</span>
         </div>`;
 
     const managerCell = row.cells[7];
@@ -198,9 +201,9 @@ export function addRow(code) {
                 <span class="name-sub">${code}</span>
             </div>
         </td>
-        <td class="numerical"><div class="loader"></div></td>
+        <td class="numerical" data-label="${i18n[state.currentLang].colEstNav}"><div class="loader"></div></td>
         <td class="numerical">-</td>
-        <td class="numerical">-</td>
+        <td class="numerical" data-label="${i18n[state.currentLang].colNav}">-</td>
         <td class="numerical">-</td>
         <td class="numerical">-</td>
         <td class="numerical">-</td>
