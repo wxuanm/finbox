@@ -8,15 +8,9 @@ export function handleFetchError(code) {
     if (row) {
         row.classList.add('error-row');
         row.cells[1].innerHTML = `<span class="error-message">${i18n[state.currentLang].fetchError}</span>`;
-        row.cells[2].textContent = '-';
-        row.cells[3].textContent = '-';
-        row.cells[4].textContent = '-';
-        row.cells[5].textContent = '-';
-        row.cells[6].textContent = '-';
-        row.cells[7].textContent = '-';
-        row.cells[8].textContent = '-';
-        row.cells[9].textContent = '-';
-        row.cells[10].textContent = '-';
+        for (let index = 2; index < row.cells.length - 1; index += 1) {
+            row.cells[index].textContent = '-';
+        }
         updateDashboardStats();
     }
 }

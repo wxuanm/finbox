@@ -72,14 +72,14 @@ function positionGlobalEmptyState(emptyTbody) {
     }
 }
 
-export function getOrCreateGroupBody(groupId) {
+export function getOrCreateGroupBody(groupId, forceVisible = false) {
     const table = document.getElementById('fundTable');
     if (!shouldShowGlobalEmptyState()) {
         table.querySelector('.empty-state-tbody')?.remove();
     }
 
     let tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
-    if (!tbody && groupId === 'default' && shouldHideDefaultGroup()) {
+    if (!tbody && groupId === 'default' && shouldHideDefaultGroup() && !forceVisible) {
         return null;
     }
     if (!tbody) {
@@ -108,16 +108,18 @@ export function getOrCreateGroupBody(groupId) {
                         <span class="group-count">0 ${i18n[state.currentLang].items}</span>
                     </div>
                     <div class="group-actions" onclick="event.stopPropagation()">
+                        ${groupId !== 'default' ? `
+                        <button class="icon-btn group-add-btn" onclick="showInlineAdd('${groupId}')" title="${i18n[state.currentLang].addBtn}" aria-label="${i18n[state.currentLang].addBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
                         <button class="icon-btn group-menu-btn" onclick="toggleGroupMenu(this)" title="${i18n[state.currentLang].colAction}" aria-label="${i18n[state.currentLang].colAction}">...</button>
                         <div class="group-action-menu">
-                            <button onclick="showInlineAdd('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg><span data-i18n="addBtn">${i18n[state.currentLang].addBtn}</span></button>
-                        ${groupId !== 'default' ? `
                             <button onclick="showInlineRename('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg><span data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</span></button>
                             <button onclick="moveGroup('${groupId}', -1)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg><span data-i18n="moveUpBtn">${i18n[state.currentLang].moveUpBtn}</span></button>
                             <button onclick="moveGroup('${groupId}', 1)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg><span data-i18n="moveDownBtn">${i18n[state.currentLang].moveDownBtn}</span></button>
                             <button class="delete-btn" onclick="showInlineDelete('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg><span data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</span></button>
-                        ` : ''}
                         </div>
+                        ` : `
+                        <button class="icon-btn group-add-btn" onclick="showInlineAdd('${groupId}')" title="${i18n[state.currentLang].addBtn}" aria-label="${i18n[state.currentLang].addBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
+                        `}
                     </div>
                 </div>
             </td>
@@ -168,7 +170,10 @@ export function showInlineAdd(groupId) {
     closeGroupMenus();
 
     const table = document.getElementById('fundTable');
-    const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    let tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    if (!tbody && groupId === 'default') {
+        tbody = getOrCreateGroupBody('default', true);
+    }
     if (!tbody) return;
     
     // Ensure expanded
@@ -482,6 +487,8 @@ export function addRow(code) {
 }
 
 export function removeFund(code) {
+    if (!confirm(i18n[state.currentLang].confirmRemoveFund)) return;
+
     state.fundCodes.delete(code);
     delete state.fundGroups[code];
     saveFundCodes();

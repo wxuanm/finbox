@@ -782,6 +782,11 @@ tbody.collapsed tr:not(.group-header) {
     background: var(--primary-soft);
 }
 
+.group-add-btn {
+    width: 38px !important;
+    padding: 0 !important;
+}
+
 .group-menu-btn {
     color: var(--secondary-color);
     font-size: 18px !important;
@@ -1208,11 +1213,6 @@ tbody.collapsed tr:not(.group-header) {
 
     .mobile-more-actions {
         display: block;
-    }
-
-    .main-new-group-btn,
-    .main-refresh-btn {
-        display: none;
     }
 
     .header-divider {
