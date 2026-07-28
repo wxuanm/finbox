@@ -110,6 +110,7 @@ export function getOrCreateGroupBody(groupId, forceVisible = false) {
                     <div class="group-actions" onclick="event.stopPropagation()">
                         ${groupId !== 'default' ? `
                         <button class="icon-btn group-add-btn" onclick="showInlineAdd('${groupId}')" title="${i18n[state.currentLang].addBtn}" aria-label="${i18n[state.currentLang].addBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
+                        <button class="icon-btn group-compare-btn" onclick="showGroupAnalysis('${groupId}')" title="${i18n[state.currentLang].compareBtn}" aria-label="${i18n[state.currentLang].compareBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></button>
                         <button class="icon-btn group-menu-btn" onclick="toggleGroupMenu(this)" title="${i18n[state.currentLang].colAction}" aria-label="${i18n[state.currentLang].colAction}">...</button>
                         <div class="group-action-menu">
                             <button onclick="showInlineRename('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg><span data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</span></button>
@@ -119,6 +120,7 @@ export function getOrCreateGroupBody(groupId, forceVisible = false) {
                         </div>
                         ` : `
                         <button class="icon-btn group-add-btn" onclick="showInlineAdd('${groupId}')" title="${i18n[state.currentLang].addBtn}" aria-label="${i18n[state.currentLang].addBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
+                        <button class="icon-btn group-compare-btn" onclick="showGroupAnalysis('${groupId}')" title="${i18n[state.currentLang].compareBtn}" aria-label="${i18n[state.currentLang].compareBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></button>
                         `}
                     </div>
                 </div>
@@ -318,6 +320,27 @@ window.toggleGroupMenu = function(button) {
     if (!isOpen) actions.classList.add('menu-open');
 };
 
+export function showGroupAnalysis(groupId) {
+    closeGroupMenus();
+
+    const table = document.getElementById('fundTable');
+    const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    const codes = tbody ? Array.from(tbody.querySelectorAll('tr[id^="fund-"]')).map(row => row.id.replace('fund-', '')) : [];
+
+    if (codes.length === 0) {
+        alert(i18n[state.currentLang].compareEmpty);
+        return;
+    }
+
+    if (codes.length > 10) {
+        alert(i18n[state.currentLang].compareLimit);
+        return;
+    }
+
+    const groupName = groupId === 'default' ? i18n[state.currentLang].defaultGroup : groupId;
+    navigateToAnalysis(codes, groupName);
+}
+
 document.addEventListener('click', closeGroupMenus);
 
 window.submitInlineAdd = function(groupId) {
@@ -462,7 +485,6 @@ export function addRow(code) {
     row.id = `fund-${code}`;
     row.classList.add('loading');
     row.onclick = () => toggleMobileFundInfo(row);
-    row.ondblclick = () => navigateToAnalysis(code);
     
     row.innerHTML = `
         <td>

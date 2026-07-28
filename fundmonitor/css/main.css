@@ -787,6 +787,12 @@ tbody.collapsed tr:not(.group-header) {
     padding: 0 !important;
 }
 
+.group-compare-btn {
+    width: 38px !important;
+    padding: 0 !important;
+    color: var(--secondary-color) !important;
+}
+
 .group-menu-btn {
     color: var(--secondary-color);
     font-size: 18px !important;
@@ -1069,8 +1075,12 @@ tbody.collapsed tr:not(.group-header) {
 
 .analysis-rating {
     color: #f59e0b;
-    font-size: 18px;
-    letter-spacing: 2px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
 }
 
 .analysis-grid {
@@ -1123,6 +1133,270 @@ tbody.collapsed tr:not(.group-header) {
 
 .data-item .neutral {
     color: var(--text-color);
+}
+
+.analysis-compare-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.compare-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--stat-bg);
+}
+
+.compare-summary-name {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.compare-summary-name strong {
+    overflow: hidden;
+    color: var(--secondary-color);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.compare-summary-name span,
+.compare-summary-return > span:first-child {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.compare-summary-return {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.analysis-compare-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+}
+
+.analysis-compare-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.analysis-compare-table th,
+.analysis-compare-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.analysis-compare-table th {
+    background: var(--table-header-bg);
+}
+
+.analysis-compare-table tbody tr:hover td {
+    background: var(--table-row-hover);
+}
+
+.analysis-compare-table th:first-child,
+.analysis-compare-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 220px;
+    background: var(--surface-strong);
+    text-align: left;
+}
+
+.compare-fund-name {
+    display: grid;
+    gap: 4px;
+}
+
+.compare-fund-name strong {
+    max-width: 260px;
+    overflow: hidden;
+    color: var(--secondary-color);
+    text-overflow: ellipsis;
+}
+
+.compare-fund-name span {
+    color: var(--muted-text);
+    font-size: 12px;
+}
+
+.analysis-compare-cards {
+    display: none;
+}
+
+.compare-mobile-sort-bar {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--surface-color);
+}
+
+.compare-mobile-sort-bar > span {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.compare-mobile-sort-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.compare-mobile-sort-chip {
+    flex: 0 0 auto;
+    padding: 7px 11px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--muted-text);
+    background: var(--surface-strong);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.compare-mobile-sort-chip.active {
+    border-color: rgba(37, 99, 235, 0.28);
+    color: var(--primary-color);
+    background: var(--chip-bg);
+}
+
+.compare-mobile-card-list {
+    display: grid;
+    gap: 14px;
+}
+
+.compare-mobile-card {
+    display: grid;
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: var(--stat-bg);
+    box-shadow: var(--shadow-sm);
+}
+
+.compare-mobile-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.compare-mobile-title {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+
+.compare-mobile-title strong {
+    overflow: hidden;
+    color: var(--secondary-color);
+    font-size: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.compare-mobile-title span,
+.compare-mobile-primary > span:first-child {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.compare-mobile-primary {
+    display: grid;
+    flex: 0 0 auto;
+    justify-items: end;
+    gap: 5px;
+}
+
+.compare-mobile-primary .positive,
+.compare-mobile-primary .negative,
+.compare-mobile-primary .neutral {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.compare-mobile-section {
+    display: grid;
+    gap: 10px;
+}
+
+.compare-mobile-section h5 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 13px;
+}
+
+.compare-mobile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.compare-mobile-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    padding: 9px 10px;
+    border-radius: 12px;
+    background: var(--surface-color);
+}
+
+.compare-mobile-item > span:first-child {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.compare-mobile-more {
+    display: grid;
+    gap: 10px;
+}
+
+.compare-mobile-more summary {
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 800;
+    list-style: none;
+}
+
+.compare-mobile-more summary::-webkit-details-marker {
+    display: none;
+}
+
+.compare-mobile-more summary::after {
+    content: ' +';
+}
+
+.compare-mobile-more[open] summary::after {
+    content: ' -';
 }
 
 @media (max-width: 1024px) {
@@ -1375,6 +1649,16 @@ tbody.collapsed tr:not(.group-header) {
     .inline-confirm-wrap {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .analysis-compare-summary,
+    .analysis-compare-wrap {
+        display: none;
+    }
+
+    .analysis-compare-cards {
+        display: grid;
+        gap: 14px;
     }
 }
 

@@ -2,7 +2,7 @@ import { state } from './config/state.js';
 import { i18n } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
 import { loadSavedFundCodes, saveFundCodes, loadSavedGroups, loadSavedFundGroups } from './utils/storage.js';
-import { checkEmptyState, addRow, removeFund, sortTable, toggleGroup, updateGroupCounts, getOrCreateGroupBody, syncDefaultGroupVisibility, showInlineAdd, showInlineRename, showInlineDelete, showInlineNewGroup } from './ui/fundTable.js';
+import { checkEmptyState, addRow, removeFund, sortTable, toggleGroup, updateGroupCounts, getOrCreateGroupBody, syncDefaultGroupVisibility, showInlineAdd, showInlineRename, showInlineDelete, showInlineNewGroup, showGroupAnalysis } from './ui/fundTable.js';
 import { updateDashboardStats, updateLastRefreshTime } from './ui/dashboard.js';
 import { fetchDataForCode } from './api/fundApi.js';
 import { closeModal, initModalListeners, navigateToAnalysis } from './ui/modal.js';
@@ -69,9 +69,9 @@ function toggleLang() {
     const modal = document.getElementById('analysisModal');
     const content = document.getElementById('analysisContent');
     if (modal && modal.classList.contains('show') && content && content.innerHTML.trim() !== '') {
-        const codeBadge = content.querySelector('.code-badge');
-        if (codeBadge) {
-            navigateToAnalysis(codeBadge.textContent);
+        const codes = modal.dataset.analysisCodes ? modal.dataset.analysisCodes.split(',') : [];
+        if (codes.length > 0) {
+            navigateToAnalysis(codes, modal.dataset.analysisGroupName || '');
         }
     }
 }
@@ -319,6 +319,7 @@ window.showInlineAdd = showInlineAdd;
 window.showInlineRename = showInlineRename;
 window.showInlineDelete = showInlineDelete;
 window.showInlineNewGroup = showInlineNewGroup;
+window.showGroupAnalysis = showGroupAnalysis;
 window.closeModal = closeModal;
 window.promptAddGroup = promptAddGroup;
 

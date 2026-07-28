@@ -10,7 +10,7 @@ export async function onRequest(context) {
 
   try {
     const codes = code.split(',').map(item => item.trim()).filter(Boolean);
-    const data = codes.length > 1 && t === '0'
+    const data = codes.length > 10 && t === '0'
       ? await fetchBatchFundInfo(codes, t)
       : await fetchFundInfo(code, t);
 
