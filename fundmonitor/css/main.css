@@ -1342,10 +1342,10 @@ tbody.collapsed tr:not(.group-header) {
 
 .nav-period-metric-row {
     display: grid;
-    grid-template-columns: minmax(72px, 1fr) minmax(76px, 1fr) minmax(88px, 1fr);
+    grid-template-columns: minmax(32px, 0.55fr) minmax(62px, 1fr) minmax(70px, 1fr);
     align-items: center;
-    gap: 8px;
-    padding: 9px 10px;
+    gap: 6px;
+    padding: 9px 8px;
     border-bottom: 1px solid var(--border-color);
     background: var(--surface-color);
     font-size: 13px;
