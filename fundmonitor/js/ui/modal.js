@@ -1,12 +1,16 @@
 import { state } from '../config/state.js';
 import { i18n } from '../config/i18n.js';
 import { formatRet } from '../utils/formatter.js';
+import { fetchOneYearFundNav } from '../api/fundNavApi.js';
+import { buildNavMetrics } from '../utils/navMetrics.js';
 
 let compareSortKey = '';
 let compareSortOrder = 1;
 let mobileCompareSortKey = '';
 let mobileCompareSortOrder = 1;
 const defaultMobileSortKey = 'y1';
+let modalRequestSeq = 0;
+const defaultNavChartPeriod = 'y1';
 
 function parseReturnValue(value) {
     if (!value || value === '---' || value === 'N/A') return -Infinity;
@@ -107,6 +111,142 @@ function renderMobileCompareCards(rows, primaryColumn, defaultColumns, moreColum
     `).join('');
 }
 
+function formatPercentValue(value) {
+    if (!Number.isFinite(value)) return '-';
+    const className = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+    return `<span class="${className}">${value.toFixed(2)}%</span>`;
+}
+
+function renderNavMetricCards(metrics) {
+    const dict = i18n[state.currentLang];
+    const periodItems = [
+        ['period1w', 'w1'],
+        ['period1m', 'm1'],
+        ['period3m', 'm3'],
+        ['period6m', 'm6'],
+        ['period1y', 'y1']
+    ];
+
+    return metrics.map(metric => `
+        <div class="nav-metric-card">
+            <div class="nav-metric-name">
+                <strong>${metric.name}</strong>
+                <span>${metric.code}</span>
+            </div>
+            <div class="nav-period-metric-table">
+                <div class="nav-period-metric-row nav-period-metric-header">
+                    <span>${dict.navPeriodRange}</span>
+                    <span>${dict.navPeriodReturn}</span>
+                    <span>${dict.navMaxDrawdown}</span>
+                </div>
+                ${periodItems.map(([label, key]) => `
+                    <div class="nav-period-metric-row">
+                        <strong>${dict[label]}</strong>
+                        <div>${formatPercentValue(metric.periods?.[key]?.returnValue)}</div>
+                        <div>${formatPercentValue(metric.periods?.[key]?.maxDrawdown)}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="nav-metric-footer">
+                <span>${dict.navLatestDate}</span>
+                <strong>${metric.latestDate || '-'}</strong>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
+    const chartEl = document.getElementById('oneYearNavChart');
+    if (!chartEl || typeof window.echarts === 'undefined') return;
+
+    const existingChart = window.echarts.getInstanceByDom(chartEl);
+    if (existingChart) existingChart.dispose();
+
+    const chart = window.echarts.init(chartEl);
+    chart.setOption({
+        color: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'],
+        tooltip: {
+            trigger: 'axis',
+            valueFormatter: value => `${Number(value).toFixed(2)}%`
+        },
+        legend: {
+            type: 'scroll',
+            top: 0,
+            textStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#111827' }
+        },
+        grid: { top: 42, right: 18, bottom: 34, left: 48 },
+        xAxis: { type: 'time', boundaryGap: false },
+        yAxis: {
+            type: 'value',
+            axisLabel: { formatter: '{value}%' },
+            splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#e5e7eb' } }
+        },
+        dataZoom: [{ type: 'inside' }],
+        series: metrics.map(metric => ({
+            name: `${metric.name} ${metric.code}`,
+            type: 'line',
+            showSymbol: false,
+            smooth: true,
+            emphasis: { focus: 'series' },
+            data: metric.chartSeries?.[periodKey] || metric.series
+        }))
+    });
+
+    window.addEventListener('resize', () => chart.resize(), { passive: true });
+}
+
+function bindNavChartPeriodSwitch(metrics) {
+    document.querySelectorAll('.nav-chart-range-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.nav-chart-range-chip').forEach(item => item.classList.remove('active'));
+            chip.classList.add('active');
+            renderNavChart(metrics, chip.dataset.navChartPeriod || defaultNavChartPeriod);
+        });
+    });
+}
+
+function renderOneYearNavData(data, statusText) {
+    const status = document.getElementById('oneYearNavStatus');
+    const metricWrap = document.getElementById('oneYearNavMetrics');
+    if (!status || !metricWrap) return false;
+
+    const metrics = buildNavMetrics(data.funds || []);
+    if (metrics.length === 0) return false;
+
+    status.textContent = statusText;
+    metricWrap.innerHTML = renderNavMetricCards(metrics);
+    renderNavChart(metrics, defaultNavChartPeriod);
+    bindNavChartPeriodSwitch(metrics);
+
+    if (Array.isArray(data.failedCodes) && data.failedCodes.length > 0) {
+        status.textContent += ` ${i18n[state.currentLang].navPartialFailed}: ${data.failedCodes.join(', ')}`;
+    }
+
+    return true;
+}
+
+async function loadOneYearNav(codes, requestId) {
+    const dict = i18n[state.currentLang];
+    const section = document.getElementById('oneYearNavSection');
+    const status = document.getElementById('oneYearNavStatus');
+    const metricWrap = document.getElementById('oneYearNavMetrics');
+    if (!section || !status || !metricWrap) return;
+
+    try {
+        const data = await fetchOneYearFundNav(codes);
+        if (!isActiveModalRequest('trend', requestId)) return;
+
+        const rendered = renderOneYearNavData(data, dict.navDataNotice);
+        if (!rendered) throw new Error('No nav metrics');
+
+    } catch (error) {
+        if (!isActiveModalRequest('trend', requestId)) return;
+
+        status.textContent = dict.navFetchError;
+        metricWrap.innerHTML = '';
+    }
+}
+
 function updateMobileCompareCards(rows, comparisonColumns, dict) {
     const cards = document.querySelector('.compare-mobile-card-list');
     if (!cards) return;
@@ -150,6 +290,8 @@ export function closeModal(event) {
     const modal = document.getElementById('analysisModal');
     const content = document.getElementById('analysisContent');
     const title = document.getElementById('modalTitle');
+    modalRequestSeq += 1;
+    modal.dataset.analysisRequestId = String(modalRequestSeq);
     
     modal.classList.remove('show');
     document.body.style.overflow = '';
@@ -160,23 +302,81 @@ export function closeModal(event) {
     }, 300);
 }
 
-export function navigateToAnalysis(codes, groupName = '') {
+function openAnalysisModal(codes, groupName, mode, modalTitle) {
     const modal = document.getElementById('analysisModal');
     const content = document.getElementById('analysisContent');
     const loader = document.getElementById('modalLoader');
     const title = document.getElementById('modalTitle');
     const codeList = Array.isArray(codes) ? codes : [codes];
+    const requestId = String(++modalRequestSeq);
+
     modal.dataset.analysisCodes = codeList.join(',');
     modal.dataset.analysisGroupName = groupName;
-    
-    // Reset state
+    modal.dataset.analysisMode = mode;
+    modal.dataset.analysisRequestId = requestId;
+
     content.style.display = 'none';
     content.style.opacity = '0';
     content.innerHTML = '';
-    if (title) title.textContent = i18n[state.currentLang].modalTitle;
+    if (title) title.textContent = modalTitle;
     loader.classList.remove('hidden');
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
+
+    return { content, loader, title, codeList, requestId };
+}
+
+function isActiveModalRequest(mode, requestId) {
+    const modal = document.getElementById('analysisModal');
+    return Boolean(
+        modal &&
+        modal.classList.contains('show') &&
+        modal.dataset.analysisMode === mode &&
+        modal.dataset.analysisRequestId === requestId
+    );
+}
+
+function showModalContent(content, loader) {
+    loader.classList.add('hidden');
+    content.style.display = 'block';
+    void content.offsetWidth;
+    content.style.opacity = '1';
+}
+
+export function navigateToNavTrend(codes, groupName = '') {
+    const dict = i18n[state.currentLang];
+    const titleText = `${groupName ? `${groupName} · ` : ''}${dict.navTrendTitle}`;
+    const { content, loader, codeList, requestId } = openAnalysisModal(codes, groupName, 'trend', titleText);
+
+    content.innerHTML = `
+        <section id="oneYearNavSection" class="one-year-nav-section standalone-trend-section">
+            <div class="one-year-nav-head">
+                <div>
+                    <h4>${dict.navOneYearTitle}</h4>
+                    <p>${dict.navOneYearDesc}</p>
+                </div>
+                <span id="oneYearNavStatus" class="one-year-nav-status">${dict.loading}</span>
+            </div>
+            <div class="nav-chart-range-bar" aria-label="${dict.navChartRange}">
+                ${[
+                    ['period1m', 'm1'],
+                    ['period3m', 'm3'],
+                    ['period6m', 'm6'],
+                    ['period1y', 'y1']
+                ].map(([label, key]) => `<button class="nav-chart-range-chip${key === defaultNavChartPeriod ? ' active' : ''}" type="button" data-nav-chart-period="${key}">${dict[label]}</button>`).join('')}
+            </div>
+            <div id="oneYearNavChart" class="one-year-nav-chart"></div>
+            <div id="oneYearNavMetrics" class="nav-metric-list"></div>
+        </section>
+    `;
+
+    showModalContent(content, loader);
+    loadOneYearNav(codeList, requestId);
+}
+
+export function navigateToAnalysis(codes, groupName = '') {
+    const dict = i18n[state.currentLang];
+    const { content, loader, title, codeList, requestId } = openAnalysisModal(codes, groupName, 'returns', i18n[state.currentLang].modalTitle);
 
     // Fetch native data
     const script = document.createElement('script');
@@ -184,9 +384,14 @@ export function navigateToAnalysis(codes, groupName = '') {
     
     // Generate native UI on load
     script.onload = () => {
+        if (!isActiveModalRequest('returns', requestId)) {
+            delete window.fundinfo_yjpj;
+            script.remove();
+            return;
+        }
+
         if (typeof window.fundinfo_yjpj !== 'undefined') {
             const data = window.fundinfo_yjpj;
-            const dict = i18n[state.currentLang];
             const rows = (data.jdsy || []).map(row => {
                 const [
                     fundCode = '-', name = '-', estDate = '-',
@@ -236,54 +441,58 @@ export function navigateToAnalysis(codes, groupName = '') {
             }
 
             content.innerHTML = `
-                <div class="analysis-compare-summary">
-                    ${rows.map(row => `
-                        <div class="compare-summary-card">
-                            <div class="compare-summary-name">
-                                <strong>${row.name}</strong>
-                                <span>${row.fundCode}</span>
-                            </div>
-                            <div class="compare-summary-return">
-                                <span>${dict[primaryColumn[0]]}</span>
-                                ${formatRet(row[primaryColumn[1]])}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-
-                <div class="analysis-compare-wrap">
-                    <table class="analysis-compare-table">
-                        <thead>
-                            <tr>
-                                <th data-compare-sort="name">${dict.compareName}<span class="sort-icon"></span></th>
-                                ${comparisonColumns.map(([label, key]) => `<th data-compare-sort="${key}">${dict[label]}<span class="sort-icon"></span></th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${renderCompareRows(rows, comparisonColumns)}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="analysis-compare-cards">
-                    <div class="compare-mobile-sort-bar">
-                        <span>${state.currentLang === 'zh' ? '排序' : 'Sort'}</span>
-                        <div class="compare-mobile-sort-chips">
-                            ${mobileSortColumns.map(([label, key]) => `<button class="compare-mobile-sort-chip${key === mobileCompareSortKey ? ' active' : ''}" type="button" data-compare-sort="${key}" data-label="${dict[label]}">${dict[label]}${key === mobileCompareSortKey ? ' ▼' : ''}</button>`).join('')}
+                <section class="period-return-section">
+                    <div class="period-return-head">
+                        <div>
+                            <h4>${dict.periodReturnTitle}</h4>
+                            <p>${dict.periodReturnDesc}</p>
                         </div>
                     </div>
-                    <div class="compare-mobile-card-list">
-                        ${renderMobileCompareCards(mobileRows, primaryColumn, comparisonColumns.filter(([, key]) => ['w1', 'm1', 'm3', 'm6', 'y1'].includes(key) && key !== primaryColumn[1]), comparisonColumns.filter(([, key]) => !['w1', 'm1', 'm3', 'm6', 'y1'].includes(key)), dict)}
+
+                    <div class="analysis-compare-summary">
+                        ${rows.map(row => `
+                            <div class="compare-summary-card">
+                                <div class="compare-summary-name">
+                                    <strong>${row.name}</strong>
+                                    <span>${row.fundCode}</span>
+                                </div>
+                                <div class="compare-summary-return">
+                                    <span>${dict[primaryColumn[0]]}</span>
+                                    ${formatRet(row[primaryColumn[1]])}
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
-                </div>
+
+                    <div class="analysis-compare-wrap">
+                        <table class="analysis-compare-table">
+                            <thead>
+                                <tr>
+                                    <th data-compare-sort="name">${dict.compareName}<span class="sort-icon"></span></th>
+                                    ${comparisonColumns.map(([label, key]) => `<th data-compare-sort="${key}">${dict[label]}<span class="sort-icon"></span></th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${renderCompareRows(rows, comparisonColumns)}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="analysis-compare-cards">
+                        <div class="compare-mobile-sort-bar">
+                            <span>${state.currentLang === 'zh' ? '排序' : 'Sort'}</span>
+                            <div class="compare-mobile-sort-chips">
+                                ${mobileSortColumns.map(([label, key]) => `<button class="compare-mobile-sort-chip${key === mobileCompareSortKey ? ' active' : ''}" type="button" data-compare-sort="${key}" data-label="${dict[label]}">${dict[label]}${key === mobileCompareSortKey ? ' ▼' : ''}</button>`).join('')}
+                            </div>
+                        </div>
+                        <div class="compare-mobile-card-list">
+                            ${renderMobileCompareCards(mobileRows, primaryColumn, comparisonColumns.filter(([, key]) => ['w1', 'm1', 'm3', 'm6', 'y1'].includes(key) && key !== primaryColumn[1]), comparisonColumns.filter(([, key]) => !['w1', 'm1', 'm3', 'm6', 'y1'].includes(key)), dict)}
+                        </div>
+                    </div>
+                </section>
             `;
             
-            // Show content, hide loader
-            loader.classList.add('hidden');
-            content.style.display = 'block';
-            // Trigger reflow to animate opacity
-            void content.offsetWidth;
-            content.style.opacity = '1';
+            showModalContent(content, loader);
             bindCompareSorting(rows, comparisonColumns);
             bindMobileCompareSorting(mobileRows, comparisonColumns, dict);
         } else {
@@ -297,6 +506,11 @@ export function navigateToAnalysis(codes, groupName = '') {
     };
     
     script.onerror = () => {
+        if (!isActiveModalRequest('returns', requestId)) {
+            script.remove();
+            return;
+        }
+
         loader.classList.add('hidden');
         content.style.display = 'block';
         content.style.opacity = '1';

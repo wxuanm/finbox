@@ -787,10 +787,15 @@ tbody.collapsed tr:not(.group-header) {
     padding: 0 !important;
 }
 
-.group-compare-btn {
+.group-compare-btn,
+.group-trend-btn {
     width: 38px !important;
     padding: 0 !important;
     color: var(--secondary-color) !important;
+}
+
+.group-trend-btn {
+    color: var(--primary-color) !important;
 }
 
 .group-menu-btn {
@@ -1140,6 +1145,187 @@ tbody.collapsed tr:not(.group-header) {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
     margin-bottom: 18px;
+}
+
+.period-return-section {
+    display: grid;
+    gap: 14px;
+}
+
+.period-return-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.period-return-head h4 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 16px;
+}
+
+.period-return-head p {
+    margin: 6px 0 0;
+    color: var(--muted-text);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.one-year-nav-section {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 22px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: linear-gradient(180deg, var(--surface-strong), var(--surface-color));
+}
+
+.one-year-nav-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.one-year-nav-head h4 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 16px;
+}
+
+.one-year-nav-head p {
+    margin: 6px 0 0;
+    color: var(--muted-text);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.one-year-nav-status {
+    flex: 0 0 auto;
+    max-width: 280px;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 750;
+    text-align: right;
+}
+
+.one-year-nav-chart {
+    width: 100%;
+    height: 340px;
+    min-height: 260px;
+}
+
+.nav-chart-range-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nav-chart-range-chip {
+    padding: 7px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--muted-text);
+    background: var(--surface-strong);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.nav-chart-range-chip.active {
+    border-color: rgba(37, 99, 235, 0.28);
+    color: var(--primary-color);
+    background: var(--chip-bg);
+}
+
+.nav-metric-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.nav-metric-card {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--stat-bg);
+}
+
+.nav-metric-name {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.nav-metric-name strong {
+    overflow: hidden;
+    color: var(--secondary-color);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-metric-name span,
+.nav-period-metric-header span,
+.nav-metric-footer span {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.nav-period-metric-table {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+}
+
+.nav-period-metric-row {
+    display: grid;
+    grid-template-columns: minmax(72px, 1fr) minmax(76px, 1fr) minmax(88px, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface-color);
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.nav-period-metric-row:last-child {
+    border-bottom: 0;
+}
+
+.nav-period-metric-header {
+    background: var(--table-header-bg);
+}
+
+.nav-period-metric-row strong {
+    color: var(--secondary-color);
+    font-size: 12px;
+}
+
+.nav-period-metric-row div,
+.nav-period-metric-row span:nth-child(n + 2) {
+    text-align: right;
+}
+
+.nav-metric-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.nav-metric-footer strong {
+    color: var(--secondary-color);
+    font-size: 13px;
 }
 
 .compare-summary-card {
@@ -1660,6 +1846,19 @@ tbody.collapsed tr:not(.group-header) {
         display: grid;
         gap: 14px;
     }
+
+    .one-year-nav-head {
+        flex-direction: column;
+    }
+
+    .one-year-nav-status {
+        max-width: none;
+        text-align: left;
+    }
+
+    .one-year-nav-chart {
+        height: 300px;
+    }
 }
 
 @media (max-width: 520px) {
@@ -1707,5 +1906,9 @@ tbody.collapsed tr:not(.group-header) {
 
     .data-list {
         grid-template-columns: 1fr;
+    }
+
+    .nav-period-metric-row {
+        grid-template-columns: minmax(58px, 0.9fr) minmax(70px, 1fr) minmax(78px, 1fr);
     }
 }

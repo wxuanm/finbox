@@ -2,7 +2,7 @@ import { state } from '../config/state.js';
 import { i18n } from '../config/i18n.js';
 import { formatChangeCell } from '../utils/formatter.js';
 import { updateDashboardStats } from './dashboard.js';
-import { navigateToAnalysis } from './modal.js';
+import { navigateToAnalysis, navigateToNavTrend } from './modal.js';
 import { saveFundCodes } from '../utils/storage.js';
 
 export function checkEmptyState() {
@@ -15,7 +15,7 @@ export function checkEmptyState() {
             emptyTbody.className = 'empty-state-tbody';
             const row = emptyTbody.insertRow();
             const cell = row.insertCell(0);
-            cell.colSpan = 9;
+            cell.colSpan = 8;
             table.appendChild(emptyTbody);
         }
         emptyTbody.rows[0].cells[0].innerHTML = i18n[state.currentLang].emptyState;
@@ -98,7 +98,7 @@ export function getOrCreateGroupBody(groupId, forceVisible = false) {
         headerRow.className = 'group-header';
         headerRow.onclick = () => toggleGroup(groupId);
         headerRow.innerHTML = `
-            <td colspan="9">
+            <td colspan="8">
                 <div class="group-header-content">
                     <div class="group-title-area">
                         <div class="group-title-wrap">
@@ -110,7 +110,7 @@ export function getOrCreateGroupBody(groupId, forceVisible = false) {
                     <div class="group-actions" onclick="event.stopPropagation()">
                         ${groupId !== 'default' ? `
                         <button class="icon-btn group-add-btn" onclick="showInlineAdd('${groupId}')" title="${i18n[state.currentLang].addBtn}" aria-label="${i18n[state.currentLang].addBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
-                        <button class="icon-btn group-compare-btn" onclick="showGroupAnalysis('${groupId}')" title="${i18n[state.currentLang].compareBtn}" aria-label="${i18n[state.currentLang].compareBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></button>
+                        <button class="icon-btn group-trend-btn" onclick="showGroupTrend('${groupId}')" title="${i18n[state.currentLang].trendBtn}" aria-label="${i18n[state.currentLang].trendBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M6 15l4-4 3 3 5-8"></path></svg></button>
                         <button class="icon-btn group-menu-btn" onclick="toggleGroupMenu(this)" title="${i18n[state.currentLang].colAction}" aria-label="${i18n[state.currentLang].colAction}">...</button>
                         <div class="group-action-menu">
                             <button onclick="showInlineRename('${groupId}')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg><span data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</span></button>
@@ -120,7 +120,7 @@ export function getOrCreateGroupBody(groupId, forceVisible = false) {
                         </div>
                         ` : `
                         <button class="icon-btn group-add-btn" onclick="showInlineAdd('${groupId}')" title="${i18n[state.currentLang].addBtn}" aria-label="${i18n[state.currentLang].addBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
-                        <button class="icon-btn group-compare-btn" onclick="showGroupAnalysis('${groupId}')" title="${i18n[state.currentLang].compareBtn}" aria-label="${i18n[state.currentLang].compareBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path></svg></button>
+                        <button class="icon-btn group-trend-btn" onclick="showGroupTrend('${groupId}')" title="${i18n[state.currentLang].trendBtn}" aria-label="${i18n[state.currentLang].trendBtn}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M6 15l4-4 3 3 5-8"></path></svg></button>
                         `}
                     </div>
                 </div>
@@ -142,7 +142,7 @@ export function getOrCreateGroupBody(groupId, forceVisible = false) {
 function appendEmptyGroupRow(tbody) {
     const row = document.createElement('tr');
     row.className = 'empty-group-row';
-    row.innerHTML = `<td colspan="9">${i18n[state.currentLang].emptyGroupState}</td>`;
+    row.innerHTML = `<td colspan="8">${i18n[state.currentLang].emptyGroupState}</td>`;
     tbody.appendChild(row);
 }
 
@@ -201,7 +201,7 @@ export function showInlineAdd(groupId) {
     const tr = document.createElement('tr');
     tr.className = 'inline-add-row group-action-row';
     tr.innerHTML = `
-        <td colspan="9" class="inline-add-cell">
+        <td colspan="8" class="inline-add-cell">
             <div class="inline-add-wrap">
                 <input type="text" id="inlineAdd-${groupId}" data-i18n-placeholder="inputPlaceholder" placeholder="${i18n[state.currentLang].inputPlaceholder}" onkeydown="if(event.key==='Enter') submitInlineAdd('${groupId}')">
                 <button class="primary-btn mini-btn" onclick="submitInlineAdd('${groupId}')" data-i18n="addBtn">${i18n[state.currentLang].addBtn}</button>
@@ -236,7 +236,7 @@ export function showInlineNewGroup() {
     tbody.className = 'new-group-section';
     tbody.innerHTML = `
         <tr class="inline-add-row group-action-row">
-            <td colspan="9" class="inline-add-cell">
+            <td colspan="8" class="inline-add-cell">
                 <div class="inline-add-wrap">
                     <input type="text" id="inlineNewGroup" data-i18n-placeholder="promptNewGroup" placeholder="${i18n[state.currentLang].promptNewGroup}" onkeydown="if(event.key==='Enter') submitInlineNewGroup()">
                     <button class="primary-btn mini-btn" onclick="submitInlineNewGroup()" data-i18n="addGroupTitle">${i18n[state.currentLang].addGroupTitle}</button>
@@ -265,7 +265,7 @@ function insertGroupActionRow(groupId, rowClass, contentHtml) {
     const tr = document.createElement('tr');
     tr.className = `inline-add-row group-action-row ${rowClass}`;
     tr.innerHTML = `
-        <td colspan="9" class="inline-add-cell">
+        <td colspan="8" class="inline-add-cell">
             ${contentHtml}
         </td>
     `;
@@ -341,6 +341,27 @@ export function showGroupAnalysis(groupId) {
     navigateToAnalysis(codes, groupName);
 }
 
+export function showGroupTrend(groupId) {
+    closeGroupMenus();
+
+    const table = document.getElementById('fundTable');
+    const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
+    const codes = tbody ? Array.from(tbody.querySelectorAll('tr[id^="fund-"]')).map(row => row.id.replace('fund-', '')) : [];
+
+    if (codes.length === 0) {
+        alert(i18n[state.currentLang].compareEmpty);
+        return;
+    }
+
+    if (codes.length > 10) {
+        alert(i18n[state.currentLang].trendLimit);
+        return;
+    }
+
+    const groupName = groupId === 'default' ? i18n[state.currentLang].defaultGroup : groupId;
+    navigateToNavTrend(codes, groupName);
+}
+
 document.addEventListener('click', closeGroupMenus);
 
 window.submitInlineAdd = function(groupId) {
@@ -400,17 +421,16 @@ function toggleMobileFundInfo(row) {
     detailRow.className = 'fund-detail-row inline-add-row';
     detailRow.dataset.code = code;
     detailRow.innerHTML = `
-        <td colspan="9" class="inline-add-cell">
+        <td colspan="8" class="inline-add-cell">
             <div class="fund-detail-card">
                 <div class="fund-detail-title">${row.cells[0].innerHTML}</div>
                 <div class="fund-detail-grid">
                     <div class="fund-detail-item"><span>${dict.colEstNav}</span>${row.cells[1].innerHTML}</div>
                     <div class="fund-detail-item"><span>${dict.colEstChange}</span>${row.cells[2].innerHTML}</div>
                     <div class="fund-detail-item"><span>${dict.colNav}</span>${row.cells[3].innerHTML}</div>
-                    <div class="fund-detail-item"><span>${dict.colAccNav}</span>${row.cells[4].innerHTML}</div>
-                    <div class="fund-detail-item"><span>${dict.colNavChange}</span>${row.cells[5].innerHTML}</div>
-                    <div class="fund-detail-item"><span>${dict.colPrevNav}</span>${row.cells[6].innerHTML}</div>
-                    <div class="fund-detail-item"><span>${dict.colManager}</span>${row.cells[7].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colNavChange}</span>${row.cells[4].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colPrevNav}</span>${row.cells[5].innerHTML}</div>
+                    <div class="fund-detail-item"><span>${dict.colManager}</span>${row.cells[6].innerHTML}</div>
                 </div>
             </div>
         </td>
@@ -451,25 +471,23 @@ export function updateFundRow(code, fields) {
     row.cells[2].innerHTML = formatChangeCell(estimatedChange);
     row.cells[1].dataset.label = i18n[state.currentLang].colEstNav;
     row.cells[3].dataset.label = i18n[state.currentLang].colNav;
-    row.cells[4].dataset.label = i18n[state.currentLang].colAccNav;
-    row.cells[5].dataset.label = i18n[state.currentLang].colNavChange;
-    row.cells[6].dataset.label = i18n[state.currentLang].colPrevNav;
-    row.cells[7].dataset.label = i18n[state.currentLang].colManager;
+    row.cells[4].dataset.label = i18n[state.currentLang].colNavChange;
+    row.cells[5].dataset.label = i18n[state.currentLang].colPrevNav;
+    row.cells[6].dataset.label = i18n[state.currentLang].colManager;
 
     row.cells[3].innerHTML = `
         <div class="value-stack">
             <span class="value-chip">${unitNav || '-'}</span>
             <span class="name-sub sub-date">${unitNavDate || '-'}</span>
         </div>`;
-    row.cells[4].innerHTML = `<span class="value-chip">${accumulatedNav || '-'}</span>`;
-    row.cells[5].innerHTML = formatChangeCell(navChange);
-    row.cells[6].innerHTML = `
+    row.cells[4].innerHTML = formatChangeCell(navChange);
+    row.cells[5].innerHTML = `
         <div class="value-stack">
             <span class="value-chip">${previousNav || '-'}</span>
             <span class="name-sub sub-date">${previousNavDate || '-'}</span>
         </div>`;
 
-    const managerCell = row.cells[7];
+    const managerCell = row.cells[6];
     managerCell.innerHTML = `<span class="manager-pill" title="${fundManager || ''}">${fundManager || '-'}</span>`;
     managerCell.title = fundManager || '';
 
@@ -496,7 +514,6 @@ export function addRow(code) {
         <td class="numerical" data-label="${i18n[state.currentLang].colEstNav}"><div class="loader"></div></td>
         <td class="numerical">-</td>
         <td class="numerical" data-label="${i18n[state.currentLang].colNav}">-</td>
-        <td class="numerical" data-label="${i18n[state.currentLang].colAccNav}">-</td>
         <td class="numerical" data-label="${i18n[state.currentLang].colNavChange}">-</td>
         <td class="numerical" data-label="${i18n[state.currentLang].colPrevNav}">-</td>
         <td data-label="${i18n[state.currentLang].colManager}">-</td>

@@ -2,10 +2,10 @@ import { state } from './config/state.js';
 import { i18n } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
 import { loadSavedFundCodes, saveFundCodes, loadSavedGroups, loadSavedFundGroups } from './utils/storage.js';
-import { checkEmptyState, addRow, removeFund, sortTable, toggleGroup, updateGroupCounts, getOrCreateGroupBody, syncDefaultGroupVisibility, showInlineAdd, showInlineRename, showInlineDelete, showInlineNewGroup, showGroupAnalysis } from './ui/fundTable.js';
+import { checkEmptyState, addRow, removeFund, sortTable, toggleGroup, updateGroupCounts, getOrCreateGroupBody, syncDefaultGroupVisibility, showInlineAdd, showInlineRename, showInlineDelete, showInlineNewGroup, showGroupAnalysis, showGroupTrend } from './ui/fundTable.js';
 import { updateDashboardStats, updateLastRefreshTime } from './ui/dashboard.js';
 import { fetchDataForCode } from './api/fundApi.js';
-import { closeModal, initModalListeners, navigateToAnalysis } from './ui/modal.js';
+import { closeModal, initModalListeners, navigateToAnalysis, navigateToNavTrend } from './ui/modal.js';
 
 // --- Globalization & Theme ---
 function applyLanguage() {
@@ -71,7 +71,11 @@ function toggleLang() {
     if (modal && modal.classList.contains('show') && content && content.innerHTML.trim() !== '') {
         const codes = modal.dataset.analysisCodes ? modal.dataset.analysisCodes.split(',') : [];
         if (codes.length > 0) {
-            navigateToAnalysis(codes, modal.dataset.analysisGroupName || '');
+            if (modal.dataset.analysisMode === 'trend') {
+                navigateToNavTrend(codes, modal.dataset.analysisGroupName || '');
+            } else {
+                navigateToAnalysis(codes, modal.dataset.analysisGroupName || '');
+            }
         }
     }
 }
@@ -320,6 +324,8 @@ window.showInlineRename = showInlineRename;
 window.showInlineDelete = showInlineDelete;
 window.showInlineNewGroup = showInlineNewGroup;
 window.showGroupAnalysis = showGroupAnalysis;
+window.showGroupTrend = showGroupTrend;
+window.navigateToNavTrend = navigateToNavTrend;
 window.closeModal = closeModal;
 window.promptAddGroup = promptAddGroup;
 
