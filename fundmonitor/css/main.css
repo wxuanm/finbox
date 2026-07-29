@@ -1240,6 +1240,62 @@ tbody.collapsed tr:not(.group-header) {
     background: var(--chip-bg);
 }
 
+.nav-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.nav-summary-card,
+.nav-summary-skeleton {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--stat-bg);
+}
+
+.nav-summary-card {
+    display: grid;
+    gap: 7px;
+}
+
+.nav-summary-card span,
+.nav-summary-card small,
+.nav-summary-skeleton {
+    overflow: hidden;
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-summary-card strong {
+    color: var(--secondary-color);
+    font-size: 20px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.nav-summary-card strong .positive,
+.nav-summary-card strong .negative,
+.nav-summary-card strong .neutral {
+    min-width: 0;
+    padding: 0;
+    background: transparent;
+    font-size: inherit;
+}
+
+.nav-summary-card-best {
+    background: linear-gradient(135deg, var(--positive-bg), var(--stat-bg) 58%);
+}
+
+.nav-summary-card-worst,
+.nav-summary-card-drawdown {
+    background: linear-gradient(135deg, var(--negative-bg), var(--stat-bg) 58%);
+}
+
 .nav-metric-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1859,6 +1915,10 @@ tbody.collapsed tr:not(.group-header) {
     .one-year-nav-chart {
         height: 300px;
     }
+
+    .nav-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 520px) {
@@ -1910,5 +1970,9 @@ tbody.collapsed tr:not(.group-header) {
 
     .nav-period-metric-row {
         grid-template-columns: minmax(58px, 0.9fr) minmax(70px, 1fr) minmax(78px, 1fr);
+    }
+
+    .nav-summary-grid {
+        grid-template-columns: 1fr;
     }
 }

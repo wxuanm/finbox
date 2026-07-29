@@ -155,6 +155,75 @@ function renderNavMetricCards(metrics) {
     `).join('');
 }
 
+function renderNavSummary(metrics, periodKey = defaultNavChartPeriod) {
+    const dict = i18n[state.currentLang];
+    const periodLabels = {
+        m1: dict.period1m,
+        m3: dict.period3m,
+        m6: dict.period6m,
+        y1: dict.period1y
+    };
+    const validMetrics = metrics.filter(metric => Number.isFinite(metric.periods?.[periodKey]?.returnValue));
+    const validDrawdowns = metrics.filter(metric => Number.isFinite(metric.periods?.[periodKey]?.maxDrawdown));
+    const best = validMetrics.reduce((current, metric) => {
+        if (!current) return metric;
+        return metric.periods[periodKey].returnValue > current.periods[periodKey].returnValue ? metric : current;
+    }, null);
+    const worst = validMetrics.reduce((current, metric) => {
+        if (!current) return metric;
+        return metric.periods[periodKey].returnValue < current.periods[periodKey].returnValue ? metric : current;
+    }, null);
+    const deepestDrawdown = validDrawdowns.reduce((current, metric) => {
+        if (!current) return metric;
+        return metric.periods[periodKey].maxDrawdown < current.periods[periodKey].maxDrawdown ? metric : current;
+    }, null);
+    const latestDate = metrics.reduce((latest, metric) => {
+        if (!metric.latestDate) return latest;
+        return !latest || metric.latestDate > latest ? metric.latestDate : latest;
+    }, '');
+
+    const cards = [
+        {
+            label: `${periodLabels[periodKey] || dict.period1y}${dict.navBestPerformer}`,
+            metric: best,
+            value: best ? formatPercentValue(best.periods[periodKey].returnValue) : '-',
+            className: 'best'
+        },
+        {
+            label: `${periodLabels[periodKey] || dict.period1y}${dict.navWorstPerformer}`,
+            metric: worst,
+            value: worst ? formatPercentValue(worst.periods[periodKey].returnValue) : '-',
+            className: 'worst'
+        },
+        {
+            label: `${periodLabels[periodKey] || dict.period1y}${dict.navDeepestDrawdown}`,
+            metric: deepestDrawdown,
+            value: deepestDrawdown ? formatPercentValue(deepestDrawdown.periods[periodKey].maxDrawdown) : '-',
+            className: 'drawdown'
+        },
+        {
+            label: dict.navLatestDataDate,
+            metric: null,
+            value: latestDate || '-',
+            className: 'date'
+        }
+    ];
+
+    return cards.map(card => `
+        <div class="nav-summary-card nav-summary-card-${card.className}">
+            <span>${card.label}</span>
+            <strong>${card.value}</strong>
+            <small>${card.metric ? `${card.metric.name} ${card.metric.code}` : dict.navAllFunds}</small>
+        </div>
+    `).join('');
+}
+
+function updateNavSummary(metrics, periodKey = defaultNavChartPeriod) {
+    const summaryEl = document.getElementById('oneYearNavSummary');
+    if (!summaryEl) return;
+    summaryEl.innerHTML = renderNavSummary(metrics, periodKey);
+}
+
 function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     const chartEl = document.getElementById('oneYearNavChart');
     if (!chartEl || typeof window.echarts === 'undefined') return;
@@ -200,7 +269,9 @@ function bindNavChartPeriodSwitch(metrics) {
         chip.addEventListener('click', () => {
             document.querySelectorAll('.nav-chart-range-chip').forEach(item => item.classList.remove('active'));
             chip.classList.add('active');
-            renderNavChart(metrics, chip.dataset.navChartPeriod || defaultNavChartPeriod);
+            const periodKey = chip.dataset.navChartPeriod || defaultNavChartPeriod;
+            updateNavSummary(metrics, periodKey);
+            renderNavChart(metrics, periodKey);
         });
     });
 }
@@ -214,6 +285,7 @@ function renderOneYearNavData(data, statusText) {
     if (metrics.length === 0) return false;
 
     status.textContent = statusText;
+    updateNavSummary(metrics, defaultNavChartPeriod);
     metricWrap.innerHTML = renderNavMetricCards(metrics);
     renderNavChart(metrics, defaultNavChartPeriod);
     bindNavChartPeriodSwitch(metrics);
@@ -364,6 +436,9 @@ export function navigateToNavTrend(codes, groupName = '') {
                     ['period6m', 'm6'],
                     ['period1y', 'y1']
                 ].map(([label, key]) => `<button class="nav-chart-range-chip${key === defaultNavChartPeriod ? ' active' : ''}" type="button" data-nav-chart-period="${key}">${dict[label]}</button>`).join('')}
+            </div>
+            <div id="oneYearNavSummary" class="nav-summary-grid" aria-live="polite">
+                <div class="nav-summary-skeleton">${dict.loading}</div>
             </div>
             <div id="oneYearNavChart" class="one-year-nav-chart"></div>
             <div id="oneYearNavMetrics" class="nav-metric-list"></div>
