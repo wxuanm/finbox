@@ -71,12 +71,38 @@ function calculatePeriodMetrics(points, lastPoint) {
         const periodPoints = getPeriodPoints(points, latestTime - days * DAY_MS);
         const startPoint = periodPoints[0];
         const returnValue = startPoint ? (lastPoint.value / startPoint.value - 1) * 100 : null;
+        const maxDrawdown = periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null;
+        const dailyReturns = calculateDailyReturns(periodPoints);
+        const annualizedVolatility = dailyReturns.length > 1 ? standardDeviation(dailyReturns) * Math.sqrt(252) * 100 : null;
+        const upDayRatio = dailyReturns.length > 0 ? dailyReturns.filter(value => value > 0).length / dailyReturns.length * 100 : null;
+        const calmarRatio = returnValue !== null && maxDrawdown !== null && maxDrawdown < 0
+            ? returnValue / Math.abs(maxDrawdown)
+            : null;
 
         return [key, {
             returnValue,
-            maxDrawdown: periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null
+            maxDrawdown,
+            annualizedVolatility,
+            calmarRatio,
+            upDayRatio
         }];
     }));
+}
+
+function calculateDailyReturns(points) {
+    const returns = [];
+    for (let i = 1; i < points.length; i += 1) {
+        const previous = points[i - 1].value;
+        const current = points[i].value;
+        if (previous > 0 && current > 0) returns.push(current / previous - 1);
+    }
+    return returns;
+}
+
+function standardDeviation(values) {
+    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const variance = values.reduce((sum, value) => sum + (value - average) ** 2, 0) / (values.length - 1);
+    return Math.sqrt(variance);
 }
 
 function calculateChartSeries(points, lastPoint) {

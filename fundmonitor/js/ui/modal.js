@@ -117,17 +117,63 @@ function formatPercentValue(value) {
     return `<span class="${className}">${value.toFixed(2)}%</span>`;
 }
 
+function formatNumberValue(value) {
+    if (!Number.isFinite(value)) return '-';
+    const className = value > 1 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+    return `<span class="${className}">${value.toFixed(2)}</span>`;
+}
+
+function getMetricHighlightClasses(values, preferLow = false) {
+    const finiteValues = values.filter(Number.isFinite);
+    if (finiteValues.length < 2) return values.map(() => '');
+
+    const bestValue = preferLow ? Math.min(...finiteValues) : Math.max(...finiteValues);
+    const worstValue = preferLow ? Math.max(...finiteValues) : Math.min(...finiteValues);
+    if (bestValue === worstValue) return values.map(() => '');
+
+    return values.map(value => {
+        if (!Number.isFinite(value)) return '';
+        if (value === bestValue) return ' best';
+        if (value === worstValue) return ' worst';
+        return '';
+    });
+}
+
+function getMetricHighlightGrid(metrics, items, getValue, preferLow = false) {
+    const grid = metrics.map(() => items.map(() => ''));
+
+    items.forEach(([, key], itemIndex) => {
+        const classes = getMetricHighlightClasses(metrics.map(metric => getValue(metric, key)), preferLow);
+        classes.forEach((className, metricIndex) => {
+            grid[metricIndex][itemIndex] = className;
+        });
+    });
+
+    return grid;
+}
+
 function renderNavMetricCards(metrics) {
     const dict = i18n[state.currentLang];
     const periodItems = [
-        ['period1w', 'w1'],
-        ['period1m', 'm1'],
-        ['period3m', 'm3'],
-        ['period6m', 'm6'],
-        ['period1y', 'y1']
+        ['periodShort1w', 'w1'],
+        ['periodShort1m', 'm1'],
+        ['periodShort3m', 'm3'],
+        ['periodShort6m', 'm6'],
+        ['periodShort1y', 'y1']
     ];
+    const qualityItems = [
+        ['periodShort3m', 'm3'],
+        ['periodShort6m', 'm6'],
+        ['periodShort1y', 'y1']
+    ];
+    const returnHighlights = getMetricHighlightGrid(metrics, periodItems, (metric, key) => metric.periods?.[key]?.returnValue);
+    const drawdownHighlights = getMetricHighlightGrid(metrics, periodItems, (metric, key) => metric.periods?.[key]?.maxDrawdown, true);
+    const volatilityHighlights = getMetricHighlightGrid(metrics, qualityItems, (metric, key) => metric.periods?.[key]?.annualizedVolatility, true);
+    const calmarHighlights = getMetricHighlightGrid(metrics, qualityItems, (metric, key) => metric.periods?.[key]?.calmarRatio);
+    const upDayHighlights = getMetricHighlightGrid(metrics, qualityItems, (metric, key) => metric.periods?.[key]?.upDayRatio);
 
-    return metrics.map(metric => `
+    return metrics.map((metric, metricIndex) => {
+        return `
         <div class="nav-metric-card">
             <div class="nav-metric-name">
                 <strong>${metric.name}</strong>
@@ -139,11 +185,34 @@ function renderNavMetricCards(metrics) {
                     <span>${dict.navPeriodReturn}</span>
                     <span>${dict.navMaxDrawdown}</span>
                 </div>
-                ${periodItems.map(([label, key]) => `
+                ${periodItems.map(([label, key], index) => `
                     <div class="nav-period-metric-row">
                         <strong>${dict[label]}</strong>
-                        <div>${formatPercentValue(metric.periods?.[key]?.returnValue)}</div>
-                        <div>${formatPercentValue(metric.periods?.[key]?.maxDrawdown)}</div>
+                        <div class="nav-highlight-cell${returnHighlights[metricIndex][index]}">${formatPercentValue(metric.periods?.[key]?.returnValue)}</div>
+                        <div class="nav-highlight-cell${drawdownHighlights[metricIndex][index]}">${formatPercentValue(metric.periods?.[key]?.maxDrawdown)}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="nav-quality-metrics">
+                <div class="nav-quality-title">${dict.navQualityTitle}</div>
+                <div class="nav-quality-row nav-quality-header">
+                    <span>${dict.navPeriodRange}</span>
+                    <span>${dict.navAnnualizedVolatility}</span>
+                    <span>${dict.navCalmarRatio}</span>
+                    <span>${dict.navUpDayRatio}</span>
+                </div>
+                ${qualityItems.map(([label, key], index) => `
+                    <div class="nav-quality-row">
+                        <strong>${dict[label]}</strong>
+                        <div class="nav-highlight-cell${volatilityHighlights[metricIndex][index]}">
+                            ${formatPercentValue(metric.periods?.[key]?.annualizedVolatility)}
+                        </div>
+                        <div class="nav-highlight-cell${calmarHighlights[metricIndex][index]}">
+                            ${formatNumberValue(metric.periods?.[key]?.calmarRatio)}
+                        </div>
+                        <div class="nav-highlight-cell${upDayHighlights[metricIndex][index]}">
+                            ${formatPercentValue(metric.periods?.[key]?.upDayRatio)}
+                        </div>
                     </div>
                 `).join('')}
             </div>
@@ -152,7 +221,8 @@ function renderNavMetricCards(metrics) {
                 <strong>${metric.latestDate || '-'}</strong>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderNavSummary(metrics, periodKey = defaultNavChartPeriod) {

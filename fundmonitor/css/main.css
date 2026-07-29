@@ -1360,6 +1360,19 @@ tbody.collapsed tr:not(.group-header) {
     background: var(--table-header-bg);
 }
 
+.nav-period-metric-header span {
+    overflow: hidden;
+    color: var(--muted-text);
+    font-size: 10px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-period-metric-header span:first-child {
+    text-align: left;
+}
+
 .nav-period-metric-row strong {
     color: var(--secondary-color);
     font-size: 12px;
@@ -1368,6 +1381,93 @@ tbody.collapsed tr:not(.group-header) {
 .nav-period-metric-row div,
 .nav-period-metric-row span:nth-child(n + 2) {
     text-align: right;
+}
+
+.nav-period-metric-row .positive,
+.nav-period-metric-row .negative,
+.nav-period-metric-row .neutral {
+    min-width: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.nav-quality-metrics {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--surface-color);
+}
+
+.nav-quality-title {
+    color: var(--secondary-color);
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.nav-quality-row {
+    display: grid;
+    grid-template-columns: minmax(52px, 0.8fr) repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+.nav-quality-header {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.nav-quality-header span {
+    overflow: hidden;
+    color: var(--muted-text);
+    font-size: 10px;
+    font-weight: 750;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-quality-header span:first-child {
+    text-align: left;
+}
+
+.nav-quality-row strong {
+    color: var(--secondary-color);
+    font-size: 12px;
+}
+
+.nav-quality-row div {
+    min-width: 0;
+    color: var(--secondary-color);
+    font-size: 12px;
+    font-weight: 850;
+    text-align: right;
+}
+
+.nav-quality-row .positive,
+.nav-quality-row .negative,
+.nav-quality-row .neutral {
+    min-width: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.nav-highlight-cell {
+    position: relative;
+    border-radius: 10px;
+}
+
+.nav-highlight-cell.best {
+    background: linear-gradient(90deg, var(--highlight-best-bg), var(--highlight-best-soft));
+    box-shadow: inset 3px 0 0 var(--positive-color), inset 0 0 0 1px var(--highlight-best-border);
+}
+
+.nav-highlight-cell.worst {
+    background: linear-gradient(90deg, var(--highlight-worst-bg), var(--highlight-worst-soft));
+    box-shadow: inset 3px 0 0 var(--negative-color), inset 0 0 0 1px var(--highlight-worst-border);
 }
 
 .nav-metric-footer {
@@ -1970,6 +2070,10 @@ tbody.collapsed tr:not(.group-header) {
 
     .nav-period-metric-row {
         grid-template-columns: minmax(58px, 0.9fr) minmax(70px, 1fr) minmax(78px, 1fr);
+    }
+
+    .nav-quality-row {
+        grid-template-columns: minmax(42px, 0.7fr) repeat(3, minmax(0, 1fr));
     }
 
     .nav-summary-grid {
