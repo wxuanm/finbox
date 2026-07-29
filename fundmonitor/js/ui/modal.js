@@ -167,7 +167,7 @@ function renderNavMetricCards(metrics) {
         ['periodShort1y', 'y1']
     ];
     const returnHighlights = getMetricHighlightGrid(metrics, periodItems, (metric, key) => metric.periods?.[key]?.returnValue);
-    const drawdownHighlights = getMetricHighlightGrid(metrics, periodItems, (metric, key) => metric.periods?.[key]?.maxDrawdown, true);
+    const drawdownHighlights = getMetricHighlightGrid(metrics, periodItems, (metric, key) => metric.periods?.[key]?.maxDrawdown);
     const volatilityHighlights = getMetricHighlightGrid(metrics, qualityItems, (metric, key) => metric.periods?.[key]?.annualizedVolatility, true);
     const calmarHighlights = getMetricHighlightGrid(metrics, qualityItems, (metric, key) => metric.periods?.[key]?.calmarRatio);
     const upDayHighlights = getMetricHighlightGrid(metrics, qualityItems, (metric, key) => metric.periods?.[key]?.upDayRatio);
