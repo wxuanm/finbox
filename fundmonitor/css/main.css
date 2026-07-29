@@ -1309,6 +1309,21 @@ tbody.collapsed tr:not(.group-header) {
     border: 1px solid var(--border-color);
     border-radius: 16px;
     background: var(--stat-bg);
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.nav-metric-card:hover,
+.nav-metric-card:focus-visible {
+    border-color: var(--primary-border);
+    box-shadow: 0 0 0 3px var(--primary-ring);
+    outline: none;
+}
+
+.nav-metric-card.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-ring), var(--shadow-sm);
+    transform: translateY(-1px);
 }
 
 .nav-metric-name {

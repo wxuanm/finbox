@@ -11,6 +11,7 @@ let mobileCompareSortOrder = 1;
 const defaultMobileSortKey = 'y1';
 let modalRequestSeq = 0;
 const defaultNavChartPeriod = 'y1';
+let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
     if (!value || value === '---' || value === 'N/A') return -Infinity;
@@ -174,7 +175,7 @@ function renderNavMetricCards(metrics) {
 
     return metrics.map((metric, metricIndex) => {
         return `
-        <div class="nav-metric-card">
+        <div class="nav-metric-card" data-nav-fund-code="${metric.code}" role="button" tabindex="0" aria-pressed="false">
             <div class="nav-metric-name">
                 <strong>${metric.name}</strong>
                 <span>${metric.code}</span>
@@ -294,6 +295,44 @@ function updateNavSummary(metrics, periodKey = defaultNavChartPeriod) {
     summaryEl.innerHTML = renderNavSummary(metrics, periodKey);
 }
 
+function getLowestSeriesPoint(seriesData) {
+    return (seriesData || []).reduce((lowest, point) => {
+        const value = Number(point?.[1]);
+        if (!Number.isFinite(value)) return lowest;
+        if (!lowest || value < lowest[1]) return [point[0], value];
+        return lowest;
+    }, null);
+}
+
+function getActiveNavChartPeriod() {
+    return document.querySelector('.nav-chart-range-chip.active')?.dataset.navChartPeriod || defaultNavChartPeriod;
+}
+
+function updateNavMetricSelection() {
+    document.querySelectorAll('.nav-metric-card[data-nav-fund-code]').forEach(card => {
+        const active = Boolean(selectedNavFundCode && card.dataset.navFundCode === selectedNavFundCode);
+        card.classList.toggle('active', active);
+        card.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+}
+
+function bindNavMetricSelection(metrics) {
+    document.querySelectorAll('.nav-metric-card[data-nav-fund-code]').forEach(card => {
+        const toggleSelection = () => {
+            selectedNavFundCode = selectedNavFundCode === card.dataset.navFundCode ? '' : card.dataset.navFundCode;
+            updateNavMetricSelection();
+            renderNavChart(metrics, getActiveNavChartPeriod());
+        };
+
+        card.addEventListener('click', toggleSelection);
+        card.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            toggleSelection();
+        });
+    });
+}
+
 function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     const chartEl = document.getElementById('oneYearNavChart');
     if (!chartEl || typeof window.echarts === 'undefined') return;
@@ -302,14 +341,44 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     if (existingChart) existingChart.dispose();
 
     const chart = window.echarts.init(chartEl);
-    const chartSeries = metrics.map(metric => ({
-        name: `${metric.name} ${metric.code}`,
-        type: 'line',
-        showSymbol: false,
-        smooth: true,
-        emphasis: { focus: 'series' },
-        data: metric.chartSeries?.[periodKey] || metric.series
-    }));
+    const chartSeries = metrics.map(metric => {
+        const seriesData = metric.chartSeries?.[periodKey] || metric.series;
+        const lowPoint = getLowestSeriesPoint(seriesData);
+
+        return {
+            name: `${metric.name} ${metric.code}`,
+            type: 'line',
+            showSymbol: false,
+            smooth: true,
+            emphasis: { focus: 'series' },
+            lineStyle: {
+                width: selectedNavFundCode === metric.code ? 3 : 1.5,
+                opacity: !selectedNavFundCode || selectedNavFundCode === metric.code ? 1 : 0.18
+            },
+            z: selectedNavFundCode === metric.code ? 10 : 1,
+            data: seriesData,
+            markPoint: lowPoint ? {
+                symbol: 'circle',
+                symbolSize: selectedNavFundCode === metric.code ? 10 : 8,
+                itemStyle: {
+                    opacity: !selectedNavFundCode || selectedNavFundCode === metric.code ? 1 : 0
+                },
+                label: {
+                    formatter: params => `${Number(params.value).toFixed(2)}%`,
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#0f172a',
+                    fontSize: 10,
+                    fontWeight: 800,
+                    position: 'bottom',
+                    opacity: !selectedNavFundCode || selectedNavFundCode === metric.code ? 1 : 0
+                },
+                data: [{
+                    name: 'Low',
+                    coord: lowPoint,
+                    value: lowPoint[1]
+                }]
+            } : undefined
+        };
+    });
     const axisMirrorSeries = {
         name: '__axis_mirror__',
         type: 'line',
@@ -393,6 +462,8 @@ function renderOneYearNavData(data, statusText) {
     metricWrap.innerHTML = renderNavMetricCards(metrics);
     renderNavChart(metrics, defaultNavChartPeriod);
     bindNavChartPeriodSwitch(metrics);
+    bindNavMetricSelection(metrics);
+    updateNavMetricSelection();
 
     if (Array.isArray(data.failedCodes) && data.failedCodes.length > 0) {
         status.textContent += ` ${i18n[state.currentLang].navPartialFailed}: ${data.failedCodes.join(', ')}`;
@@ -523,6 +594,7 @@ export function navigateToNavTrend(codes, groupName = '') {
     const dict = i18n[state.currentLang];
     const titleText = `${groupName ? `${groupName} · ` : ''}${dict.navTrendTitle}`;
     const { content, loader, codeList, requestId } = openAnalysisModal(codes, groupName, 'trend', titleText);
+    selectedNavFundCode = '';
 
     content.innerHTML = `
         <section id="oneYearNavSection" class="one-year-nav-section standalone-trend-section">
