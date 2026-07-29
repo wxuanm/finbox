@@ -302,6 +302,27 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     if (existingChart) existingChart.dispose();
 
     const chart = window.echarts.init(chartEl);
+    const chartSeries = metrics.map(metric => ({
+        name: `${metric.name} ${metric.code}`,
+        type: 'line',
+        showSymbol: false,
+        smooth: true,
+        emphasis: { focus: 'series' },
+        data: metric.chartSeries?.[periodKey] || metric.series
+    }));
+    const axisMirrorSeries = {
+        name: '__axis_mirror__',
+        type: 'line',
+        yAxisIndex: 1,
+        data: chartSeries.flatMap(series => series.data || []),
+        showSymbol: false,
+        silent: true,
+        tooltip: { show: false },
+        lineStyle: { opacity: 0 },
+        itemStyle: { opacity: 0 },
+        emphasis: { disabled: true }
+    };
+
     chart.setOption({
         color: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'],
         tooltip: {
@@ -311,24 +332,37 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         legend: {
             type: 'scroll',
             top: 0,
+            data: chartSeries.map(series => series.name),
             textStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#111827' }
         },
-        grid: { top: 42, right: 18, bottom: 34, left: 48 },
+        grid: { top: 42, right: 48, bottom: 34, left: 48 },
         xAxis: { type: 'time', boundaryGap: false },
-        yAxis: {
-            type: 'value',
-            axisLabel: { formatter: '{value}%' },
-            splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#e5e7eb' } }
-        },
+        yAxis: [
+            {
+                type: 'value',
+                axisLabel: { formatter: '{value}%' },
+                splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#e5e7eb' } }
+            },
+            {
+                type: 'value',
+                position: 'right',
+                axisLabel: { formatter: '{value}%' },
+                axisTick: { show: false },
+                axisLine: { show: false },
+                splitLine: { show: false }
+            }
+        ],
         dataZoom: [{ type: 'inside' }],
-        series: metrics.map(metric => ({
-            name: `${metric.name} ${metric.code}`,
-            type: 'line',
-            showSymbol: false,
-            smooth: true,
-            emphasis: { focus: 'series' },
-            data: metric.chartSeries?.[periodKey] || metric.series
-        }))
+        series: [...chartSeries, axisMirrorSeries]
+    });
+
+    chart.on('dataZoom', () => {
+        const zoom = chart.getOption().dataZoom?.[0];
+        if (!zoom || zoom.end === 100) return;
+
+        chart.setOption({
+            dataZoom: [{ start: zoom.start, end: 100 }]
+        }, false);
     });
 
     window.addEventListener('resize', () => chart.resize(), { passive: true });
