@@ -14,6 +14,16 @@ export async function fetchOneYearFundNav(codes) {
     return { ...data, fromCache: false };
 }
 
+export function clearFundNavCache() {
+    try {
+        Object.keys(localStorage)
+            .filter(key => key.startsWith(CACHE_PREFIX))
+            .forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+        // localStorage can be unavailable; stale cache cleanup is best-effort.
+    }
+}
+
 function normalizeCodes(codes) {
     return (Array.isArray(codes) ? codes : [codes])
         .map(code => String(code).trim())

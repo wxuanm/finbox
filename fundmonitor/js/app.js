@@ -5,6 +5,7 @@ import { loadSavedFundCodes, saveFundCodes, loadSavedGroups, loadSavedFundGroups
 import { checkEmptyState, addRow, removeFund, sortTable, toggleGroup, updateGroupCounts, getOrCreateGroupBody, syncDefaultGroupVisibility, showInlineAdd, showInlineRename, showInlineDelete, showInlineNewGroup, showGroupAnalysis, showGroupTrend } from './ui/fundTable.js';
 import { updateDashboardStats, updateLastRefreshTime } from './ui/dashboard.js';
 import { fetchDataForCode } from './api/fundApi.js';
+import { clearFundNavCache } from './api/fundNavApi.js';
 import { closeModal, initModalListeners, navigateToAnalysis, navigateToNavTrend } from './ui/modal.js';
 
 // --- Globalization & Theme ---
@@ -217,7 +218,8 @@ function deleteGroupNow(groupId) {
     if (tbody) tbody.remove();
     
     state.groups = state.groups.filter(g => g !== groupId);
-    
+
+    clearFundNavCache();
     saveFundCodes();
     refreshData();
 }
@@ -246,12 +248,14 @@ window.addFundCodes = function(targetGroupId, codesStr) {
     if (codes.length === 0) return;
 
     const newCodes = [];
+    let groupFundsChanged = false;
     codes.forEach(code => {
         if (!state.fundCodes.has(code)) {
             state.fundCodes.add(code);
             state.fundGroups[code] = targetGroupId;
             addRow(code);
             newCodes.push(code);
+            groupFundsChanged = true;
         } else if (state.fundGroups[code] !== targetGroupId) {
             state.fundGroups[code] = targetGroupId;
             const row = document.getElementById(`fund-${code}`);
@@ -260,6 +264,7 @@ window.addFundCodes = function(targetGroupId, codesStr) {
                 targetTbody.appendChild(row);
                 updateGroupCounts();
             }
+            groupFundsChanged = true;
         }
     });
 
@@ -267,6 +272,9 @@ window.addFundCodes = function(targetGroupId, codesStr) {
         fetchDataForCode(newCodes.join(','));
     }
 
+    if (groupFundsChanged) {
+        clearFundNavCache();
+    }
     saveFundCodes();
     applyLanguage();
     applyTheme();

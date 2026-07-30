@@ -3,6 +3,7 @@ import { i18n } from '../config/i18n.js';
 import { formatChangeCell } from '../utils/formatter.js';
 import { updateDashboardStats } from './dashboard.js';
 import { navigateToAnalysis, navigateToNavTrend } from './modal.js';
+import { clearFundNavCache } from '../api/fundNavApi.js';
 import { saveFundCodes } from '../utils/storage.js';
 
 export function checkEmptyState() {
@@ -530,6 +531,7 @@ export function removeFund(code) {
 
     state.fundCodes.delete(code);
     delete state.fundGroups[code];
+    clearFundNavCache();
     saveFundCodes();
     const row = document.getElementById(`fund-${code}`);
     if (row) row.remove();
