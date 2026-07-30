@@ -307,6 +307,16 @@ function getLowestSeriesPoint(seriesData) {
     }, null);
 }
 
+function getLastSeriesPoint(seriesData) {
+    for (let index = (seriesData || []).length - 1; index >= 0; index -= 1) {
+        const point = seriesData[index];
+        const value = Number(point?.[1]);
+        if (Number.isFinite(value)) return [point[0], value];
+    }
+
+    return null;
+}
+
 function getActiveNavChartPeriod() {
     return document.querySelector('.nav-chart-range-chip.active')?.dataset.navChartPeriod || defaultNavChartPeriod;
 }
@@ -346,7 +356,28 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     const chart = window.echarts.init(chartEl);
     const chartSeries = metrics.map(metric => {
         const seriesData = metric.chartSeries?.[periodKey] || metric.series;
+        const isSelected = selectedNavFundCode === metric.code;
         const lowPoint = getLowestSeriesPoint(seriesData);
+        const lastPoint = isSelected ? getLastSeriesPoint(seriesData) : null;
+        const markPointData = [];
+
+        if (lowPoint) {
+            markPointData.push({
+                name: 'Low',
+                coord: lowPoint,
+                value: lowPoint[1],
+                label: { position: 'bottom' }
+            });
+        }
+
+        if (lastPoint) {
+            markPointData.push({
+                name: 'Latest',
+                coord: lastPoint,
+                value: lastPoint[1],
+                label: { position: 'top' }
+            });
+        }
 
         return {
             name: `${metric.name} ${metric.code}`,
@@ -355,30 +386,25 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             smooth: true,
             emphasis: { focus: 'series' },
             lineStyle: {
-                width: selectedNavFundCode === metric.code ? 3 : 1.5,
-                opacity: !selectedNavFundCode || selectedNavFundCode === metric.code ? 1 : 0.18
+                width: isSelected ? 3 : 1.5,
+                opacity: !selectedNavFundCode || isSelected ? 1 : 0.18
             },
-            z: selectedNavFundCode === metric.code ? 10 : 1,
+            z: isSelected ? 10 : 1,
             data: seriesData,
-            markPoint: lowPoint ? {
+            markPoint: markPointData.length > 0 ? {
                 symbol: 'circle',
-                symbolSize: selectedNavFundCode === metric.code ? 10 : 8,
+                symbolSize: isSelected ? 10 : 8,
                 itemStyle: {
-                    opacity: !selectedNavFundCode || selectedNavFundCode === metric.code ? 1 : 0
+                    opacity: !selectedNavFundCode || isSelected ? 1 : 0
                 },
                 label: {
                     formatter: params => `${Number(params.value).toFixed(2)}%`,
                     color: getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#0f172a',
                     fontSize: 10,
                     fontWeight: 800,
-                    position: 'bottom',
-                    opacity: !selectedNavFundCode || selectedNavFundCode === metric.code ? 1 : 0
+                    opacity: !selectedNavFundCode || isSelected ? 1 : 0
                 },
-                data: [{
-                    name: 'Low',
-                    coord: lowPoint,
-                    value: lowPoint[1]
-                }]
+                data: markPointData
             } : undefined
         };
     });
