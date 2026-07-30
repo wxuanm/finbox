@@ -1,6 +1,6 @@
-const CACHE_PREFIX = 'fund-nav-1y:';
+const CACHE_PREFIX = 'fund-nav-3y:';
 
-export async function fetchOneYearFundNav(codes) {
+export async function fetchThreeYearFundNav(codes) {
     const codeList = normalizeCodes(codes);
     const cacheKey = `${CACHE_PREFIX}${codeList.join(',')}`;
     const cached = readCache(cacheKey);
@@ -17,7 +17,7 @@ export async function fetchOneYearFundNav(codes) {
 export function clearFundNavCache() {
     try {
         Object.keys(localStorage)
-            .filter(key => key.startsWith(CACHE_PREFIX))
+            .filter(key => key.startsWith(CACHE_PREFIX) || key.startsWith('fund-nav-1y:'))
             .forEach(key => localStorage.removeItem(key));
     } catch (error) {
         // localStorage can be unavailable; stale cache cleanup is best-effort.

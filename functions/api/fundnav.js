@@ -1,5 +1,5 @@
 const MAX_CODES = 10;
-const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+const THREE_YEARS_MS = 365 * 3 * 24 * 60 * 60 * 1000;
 
 export async function onRequest(context) {
   const { request } = context;
@@ -14,7 +14,7 @@ export async function onRequest(context) {
     return jsonResponse({ error: `Fund nav comparison supports up to ${MAX_CODES} codes` }, 400);
   }
 
-  const results = await Promise.allSettled(codes.map(fetchOneYearFundNav));
+  const results = await Promise.allSettled(codes.map(fetchThreeYearFundNav));
   const funds = [];
   const failedCodes = [];
 
@@ -27,7 +27,7 @@ export async function onRequest(context) {
   });
 
   return jsonResponse({
-    range: '1y',
+    range: '3y',
     source: 'eastmoney',
     updatedAt: new Date().toISOString(),
     funds,
@@ -44,7 +44,7 @@ function parseCodes(codeParam) {
     .filter(code => /^\d{6}$/.test(code)))];
 }
 
-async function fetchOneYearFundNav(code) {
+async function fetchThreeYearFundNav(code) {
   const targetUrl = `https://fund.eastmoney.com/pingzhongdata/${encodeURIComponent(code)}.js?v=${Date.now()}`;
   const response = await fetch(targetUrl, {
     headers: {
@@ -80,7 +80,7 @@ async function fetchOneYearFundNav(code) {
     const timestamp = toNumber(point && point.x);
     return timestamp !== null && timestamp > latest ? timestamp : latest;
   }, 0);
-  const cutoff = latestTimestamp ? latestTimestamp - ONE_YEAR_MS : Date.now() - ONE_YEAR_MS;
+  const cutoff = latestTimestamp ? latestTimestamp - THREE_YEARS_MS : Date.now() - THREE_YEARS_MS;
 
   const items = unitTrend
     .map(point => normalizeUnitPoint(point, accNavByDate))
@@ -88,7 +88,7 @@ async function fetchOneYearFundNav(code) {
     .map(({ timestamp, ...item }) => item);
 
   if (items.length === 0) {
-    throw new Error('No one-year nav data');
+    throw new Error('No three-year nav data');
   }
 
   return { code, name, items };

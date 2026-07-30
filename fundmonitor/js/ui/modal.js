@@ -1,7 +1,7 @@
 import { state } from '../config/state.js';
 import { i18n } from '../config/i18n.js';
 import { formatRet } from '../utils/formatter.js';
-import { fetchOneYearFundNav } from '../api/fundNavApi.js';
+import { fetchThreeYearFundNav } from '../api/fundNavApi.js';
 import { buildNavMetrics } from '../utils/navMetrics.js';
 
 let compareSortKey = '';
@@ -10,7 +10,7 @@ let mobileCompareSortKey = '';
 let mobileCompareSortOrder = 1;
 const defaultMobileSortKey = 'y1';
 let modalRequestSeq = 0;
-const defaultNavChartPeriod = 'y1';
+const defaultNavChartPeriod = 'y3';
 let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
@@ -160,12 +160,14 @@ function renderNavMetricCards(metrics) {
         ['periodShort1m', 'm1'],
         ['periodShort3m', 'm3'],
         ['periodShort6m', 'm6'],
-        ['periodShort1y', 'y1']
+        ['periodShort1y', 'y1'],
+        ['periodShort3y', 'y3']
     ];
     const qualityItems = [
         ['periodShort3m', 'm3'],
         ['periodShort6m', 'm6'],
-        ['periodShort1y', 'y1']
+        ['periodShort1y', 'y1'],
+        ['periodShort3y', 'y3']
     ];
     const returnHighlights = getMetricHighlightGrid(metrics, periodItems, (metric, key) => metric.periods?.[key]?.returnValue);
     const drawdownHighlights = getMetricHighlightGrid(metrics, periodItems, (metric, key) => metric.periods?.[key]?.maxDrawdown);
@@ -232,7 +234,8 @@ function renderNavSummary(metrics, periodKey = defaultNavChartPeriod) {
         m1: dict.period1m,
         m3: dict.period3m,
         m6: dict.period6m,
-        y1: dict.period1y
+        y1: dict.period1y,
+        y3: dict.period3y
     };
     const validMetrics = metrics.filter(metric => Number.isFinite(metric.periods?.[periodKey]?.returnValue));
     const validDrawdowns = metrics.filter(metric => Number.isFinite(metric.periods?.[periodKey]?.maxDrawdown));
@@ -480,7 +483,7 @@ async function loadOneYearNav(codes, requestId) {
     if (!section || !status || !metricWrap) return;
 
     try {
-        const data = await fetchOneYearFundNav(codes);
+        const data = await fetchThreeYearFundNav(codes);
         if (!isActiveModalRequest('trend', requestId)) return;
 
         const rendered = renderOneYearNavData(data, dict.navDataNotice);
@@ -610,7 +613,8 @@ export function navigateToNavTrend(codes, groupName = '') {
                     ['period1m', 'm1'],
                     ['period3m', 'm3'],
                     ['period6m', 'm6'],
-                    ['period1y', 'y1']
+                    ['period1y', 'y1'],
+                    ['period3y', 'y3']
                 ].map(([label, key]) => `<button class="nav-chart-range-chip${key === defaultNavChartPeriod ? ' active' : ''}" type="button" data-nav-chart-period="${key}">${dict[label]}</button>`).join('')}
             </div>
             <div id="oneYearNavSummary" class="nav-summary-grid" aria-live="polite">
