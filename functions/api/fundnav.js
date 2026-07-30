@@ -66,25 +66,32 @@ async function fetchThreeYearFundNav(code) {
     throw new Error('Missing net worth trend');
   }
 
-  const accNavByDate = new Map();
-  if (Array.isArray(accTrend)) {
-    accTrend.forEach(point => {
-      if (!Array.isArray(point) || point.length < 2) return;
-      const date = formatDate(point[0]);
-      const accNav = toNumber(point[1]);
-      if (date && accNav !== null) accNavByDate.set(date, accNav);
-    });
-  }
-
-  const latestTimestamp = unitTrend.reduce((latest, point) => {
-    const timestamp = toNumber(point && point.x);
-    return timestamp !== null && timestamp > latest ? timestamp : latest;
+  const unitItems = unitTrend
+    .map(normalizeUnitPoint)
+    .filter(Boolean);
+  const accItems = Array.isArray(accTrend)
+    ? accTrend.map(normalizeAccPoint).filter(Boolean)
+    : [];
+  const allItems = [...unitItems, ...accItems];
+  const latestTimestamp = allItems.reduce((latest, item) => {
+    return item.timestamp > latest ? item.timestamp : latest;
   }, 0);
   const cutoff = latestTimestamp ? latestTimestamp - THREE_YEARS_MS : Date.now() - THREE_YEARS_MS;
 
-  const items = unitTrend
-    .map(point => normalizeUnitPoint(point, accNavByDate))
-    .filter(item => item && item.timestamp >= cutoff)
+  const itemByDate = new Map();
+  allItems.forEach(item => {
+    if (item.timestamp < cutoff) return;
+
+    const current = itemByDate.get(item.date) || { timestamp: item.timestamp, date: item.date, unitNav: null, accNav: null, dailyReturn: null };
+    current.timestamp = Math.max(current.timestamp, item.timestamp);
+    if (item.unitNav !== null) current.unitNav = item.unitNav;
+    if (item.accNav !== null) current.accNav = item.accNav;
+    if (item.dailyReturn !== null) current.dailyReturn = item.dailyReturn;
+    itemByDate.set(item.date, current);
+  });
+
+  const items = [...itemByDate.values()]
+    .sort((a, b) => a.timestamp - b.timestamp)
     .map(({ timestamp, ...item }) => item);
 
   if (items.length === 0) {
@@ -94,7 +101,7 @@ async function fetchThreeYearFundNav(code) {
   return { code, name, items };
 }
 
-function normalizeUnitPoint(point, accNavByDate) {
+function normalizeUnitPoint(point) {
   if (!point || typeof point !== 'object') return null;
 
   const timestamp = toNumber(point.x);
@@ -107,8 +114,25 @@ function normalizeUnitPoint(point, accNavByDate) {
     timestamp,
     date,
     unitNav,
-    accNav: accNavByDate.get(date) ?? null,
+    accNav: null,
     dailyReturn
+  };
+}
+
+function normalizeAccPoint(point) {
+  if (!Array.isArray(point) || point.length < 2) return null;
+
+  const timestamp = toNumber(point[0]);
+  const date = formatDate(timestamp);
+  const accNav = toNumber(point[1]);
+  if (!date || accNav === null) return null;
+
+  return {
+    timestamp,
+    date,
+    unitNav: null,
+    accNav,
+    dailyReturn: null
   };
 }
 
