@@ -494,6 +494,7 @@ export function updateFundRow(code, fields) {
 
     row.classList.remove('loading', 'error-row');
     updateDashboardStats();
+    applyCurrentSort();
 }
 
 export function addRow(code) {
@@ -548,8 +549,15 @@ export function sortTable(column) {
         state.sortOrder = 1;
     }
     
+    applyCurrentSort();
+}
+
+export function applyCurrentSort() {
+    const column = state.currentSortColumn;
+    if (column < 0) return;
+
     updateSortIcons(column);
-    
+
     const table = document.getElementById('fundTable');
     const tbodies = table.querySelectorAll('tbody.group-section');
     

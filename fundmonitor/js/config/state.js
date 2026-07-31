@@ -6,6 +6,6 @@ export const state = {
     fundGroups: {}, // Code to Group ID mapping
     groupExpanded: {}, // Group ID to boolean mapping
     activeGroup: 'default', // The currently selected group tab
-    currentSortColumn: -1,
-    sortOrder: 1
+    currentSortColumn: 2,
+    sortOrder: -1
 };
