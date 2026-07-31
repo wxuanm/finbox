@@ -28,6 +28,8 @@ export function buildNavMetrics(funds) {
             return {
                 code: fund.code,
                 name: fund.name || fund.code,
+                manager: fund.manager || '',
+                scale: fund.scale || null,
                 latestDate: lastPoint.date,
                 oneYearReturn: (lastPoint.value / firstValue - 1) * 100,
                 periods: calculatePeriodMetrics(points, lastPoint),

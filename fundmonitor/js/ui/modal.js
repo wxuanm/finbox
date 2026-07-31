@@ -180,7 +180,7 @@ function renderNavMetricCards(metrics) {
         <div class="nav-metric-card" data-nav-fund-code="${metric.code}" role="button" tabindex="0" aria-pressed="false">
             <div class="nav-metric-name">
                 <strong>${metric.name}</strong>
-                <span>${metric.code}</span>
+                <span>${formatNavFundCardMeta(metric)}</span>
             </div>
             <div class="nav-period-metric-table">
                 <div class="nav-period-metric-row nav-period-metric-header">
@@ -226,6 +226,21 @@ function renderNavMetricCards(metrics) {
         </div>
         `;
     }).join('');
+}
+
+function formatNavFundCardMeta(metric) {
+    const dict = i18n[state.currentLang];
+    const meta = [metric.code];
+    if (metric.manager) meta.push(metric.manager);
+    if (Number.isFinite(metric.scale?.value)) {
+        meta.push(`${metric.scale.value.toFixed(2)}${dict.navFundScaleUnit}`);
+    }
+
+    return meta.join(' · ');
+}
+
+function formatNavFundName(metric) {
+    return `${metric.name} ${metric.code}`;
 }
 
 function renderNavSummary(metrics, periodKey = defaultNavChartPeriod) {
@@ -287,7 +302,7 @@ function renderNavSummary(metrics, periodKey = defaultNavChartPeriod) {
         <div class="nav-summary-card nav-summary-card-${card.className}">
             <span>${card.label}</span>
             <strong>${card.value}</strong>
-            <small>${card.metric ? `${card.metric.name} ${card.metric.code}` : dict.navAllFunds}</small>
+            <small>${card.metric ? formatNavFundName(card.metric) : dict.navAllFunds}</small>
         </div>
     `).join('');
 }
@@ -380,7 +395,7 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         }
 
         return {
-            name: `${metric.name} ${metric.code}`,
+            name: formatNavFundName(metric),
             type: 'line',
             showSymbol: false,
             smooth: true,

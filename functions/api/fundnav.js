@@ -59,6 +59,8 @@ async function fetchThreeYearFundNav(code) {
 
   const script = await response.text();
   const name = extractStringVar(script, 'fS_name') || code;
+  const manager = extractFundManager(script);
+  const scale = extractFundScale(script);
   const unitTrend = extractJsonVar(script, 'Data_netWorthTrend');
   const accTrend = extractJsonVar(script, 'Data_ACWorthTrend');
 
@@ -98,7 +100,59 @@ async function fetchThreeYearFundNav(code) {
     throw new Error('No three-year nav data');
   }
 
-  return { code, name, items };
+  return { code, name, manager, scale, items };
+}
+
+function extractFundManager(script) {
+  const managers = extractJsonVar(script, 'Data_currentFundManager');
+  if (!Array.isArray(managers)) return '';
+
+  return managers
+    .map(manager => manager && manager.name)
+    .filter(Boolean)
+    .join(' / ');
+}
+
+function extractFundScale(script) {
+  const assetScale = extractAssetAllocationScale(script);
+  if (assetScale) return assetScale;
+
+  const scale = extractJsonVar(script, 'Data_fluctuationScale');
+  const categories = Array.isArray(scale?.categories) ? scale.categories : [];
+  const series = Array.isArray(scale?.series) ? scale.series : [];
+
+  for (let index = series.length - 1; index >= 0; index -= 1) {
+    const value = toNumber(series[index]?.y);
+    if (value !== null) {
+      return {
+        date: categories[index] || '',
+        value
+      };
+    }
+  }
+
+  return null;
+}
+
+function extractAssetAllocationScale(script) {
+  const assetAllocation = extractJsonVar(script, 'Data_assetAllocation');
+  const categories = Array.isArray(assetAllocation?.categories) ? assetAllocation.categories : [];
+  const netAssetSeries = Array.isArray(assetAllocation?.series)
+    ? assetAllocation.series.find(item => item?.name === '净资产')
+    : null;
+  const data = Array.isArray(netAssetSeries?.data) ? netAssetSeries.data : [];
+
+  for (let index = data.length - 1; index >= 0; index -= 1) {
+    const value = toNumber(data[index]);
+    if (value !== null) {
+      return {
+        date: categories[index] || '',
+        value
+      };
+    }
+  }
+
+  return null;
 }
 
 function normalizeUnitPoint(point) {
@@ -142,11 +196,10 @@ function extractStringVar(script, name) {
 }
 
 function extractJsonVar(script, name) {
-  const startToken = `var ${name} = `;
-  const start = script.indexOf(startToken);
-  if (start === -1) return null;
+  const match = script.match(new RegExp(`var\\s+${name}\\s*=\\s*`));
+  if (!match) return null;
 
-  const valueStart = start + startToken.length;
+  const valueStart = match.index + match[0].length;
   const firstChar = script[valueStart];
   const closingChar = firstChar === '[' ? ']' : firstChar === '{' ? '}' : '';
   if (!closingChar) return null;
