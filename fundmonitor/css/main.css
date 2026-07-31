@@ -1357,7 +1357,7 @@ tbody.collapsed tr:not(.group-header) {
 
 .nav-period-metric-row {
     display: grid;
-    grid-template-columns: minmax(32px, 0.55fr) minmax(62px, 1fr) minmax(70px, 1fr);
+    grid-template-columns: 32px minmax(62px, 1fr) minmax(70px, 1fr);
     align-items: center;
     gap: 6px;
     padding: 9px 8px;
@@ -1423,7 +1423,7 @@ tbody.collapsed tr:not(.group-header) {
 
 .nav-quality-row {
     display: grid;
-    grid-template-columns: minmax(52px, 0.8fr) repeat(3, minmax(0, 1fr));
+    grid-template-columns: 32px repeat(3, minmax(0, 1fr));
     align-items: center;
     gap: 8px;
     padding-top: 8px;
