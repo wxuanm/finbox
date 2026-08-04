@@ -2,7 +2,7 @@ const CACHE_PREFIX = 'fund-nav-3y:';
 
 export async function fetchThreeYearFundNav(codes) {
     const codeList = normalizeCodes(codes);
-    const cacheKey = `${CACHE_PREFIX}${codeList.join(',')}`;
+    const cacheKey = `${CACHE_PREFIX}${buildCacheKeyCodes(codeList).join(',')}`;
     const cached = readCache(cacheKey);
 
     if (cached) {
@@ -28,6 +28,10 @@ function normalizeCodes(codes) {
     return (Array.isArray(codes) ? codes : [codes])
         .map(code => String(code).trim())
         .filter(Boolean);
+}
+
+function buildCacheKeyCodes(codeList) {
+    return [...new Set(codeList)].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 }
 
 async function requestFundNav(codeList) {
