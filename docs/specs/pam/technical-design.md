@@ -156,6 +156,33 @@ Demo data is generated only through user action.
 - If data exists, user confirmation is required.
 - Demo account names are prefixed with `示例`.
 
+## Data Import And Export
+
+PAM supports JSON backup import and export for local-only data portability.
+
+Export payload:
+
+```js
+{
+  app: 'pam',
+  schemaVersion: 1,
+  exportedAt: '2026-08-05T10:00:00.000Z',
+  data: {
+    accounts: [],
+    snapshots: [],
+    preferences: {}
+  }
+}
+```
+
+Import behavior:
+
+- Accept only `app: 'pam'` and `schemaVersion: 1`.
+- Normalize accounts and snapshots before applying.
+- Drop snapshots whose `accountId` does not exist in the imported accounts.
+- Replace current local PAM data only after confirmation.
+- Preserve local-only design: no upload or backend API.
+
 ## Verification
 
 Minimum verification:

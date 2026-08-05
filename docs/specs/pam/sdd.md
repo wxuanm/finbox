@@ -182,6 +182,14 @@ Empty state:
 - If real user data already exists, demo data may only be added after confirmation.
 - Demo data should be added as separate demo accounts rather than merged into real accounts.
 
+### Data Portability
+
+- Users can export all PAM local data as a JSON backup file.
+- Users can import a PAM JSON backup file into the current browser.
+- Import replaces current PAM accounts, snapshots, and preferences only after user confirmation.
+- Import validates schema version, account records, snapshot records, and account references before applying data.
+- CSV import/export is out of scope for the first backup feature and can be added later for batch snapshot entry.
+
 ## 3. Calculation Spec
 
 ### Default Performance Method

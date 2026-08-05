@@ -26,6 +26,9 @@ function init() {
 function bindEvents() {
     document.getElementById('themeBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('demoDataBtn')?.addEventListener('click', addDemoData);
+    document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
+    document.getElementById('importDataBtn')?.addEventListener('click', () => document.getElementById('importDataInput')?.click());
+    document.getElementById('importDataInput')?.addEventListener('change', importData);
     document.getElementById('accountForm')?.addEventListener('submit', handleAddAccount);
     document.getElementById('snapshotForm')?.addEventListener('submit', handleSaveSnapshot);
     document.querySelectorAll('.module-tab[data-view]').forEach(tab => {
@@ -272,6 +275,123 @@ function addDemoData() {
     persistAll();
     showFormMessage('示例数据已添加，可在账户列表中查看。');
     renderApp();
+}
+
+function exportData() {
+    const payload = {
+        app: 'pam',
+        schemaVersion: 1,
+        exportedAt: new Date().toISOString(),
+        data: {
+            accounts: state.accounts,
+            snapshots: state.snapshots,
+            preferences: {
+                theme: state.theme,
+                selectedAccountId: state.selectedAccountId,
+                selectedPeriod: state.selectedPeriod,
+                activeView: state.activeView
+            }
+        }
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pam-backup-${todayKey()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+    const input = event.target;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const parsed = JSON.parse(String(reader.result || ''));
+            const data = parseImportPayload(parsed);
+            if (!data) {
+                alert('导入失败：文件不是有效的 PAM 备份。');
+                return;
+            }
+
+            const hasCurrentData = state.accounts.length > 0 || state.snapshots.length > 0;
+            const message = hasCurrentData
+                ? '导入会替换当前浏览器中的 PAM 账户和快照，确认继续吗？'
+                : '确认导入 PAM 备份数据吗？';
+            if (!confirm(message)) return;
+
+            state.accounts = data.accounts;
+            state.snapshots = data.snapshots;
+            state.theme = data.preferences.theme || state.theme;
+            state.selectedPeriod = data.preferences.selectedPeriod || 'ALL';
+            state.activeView = data.preferences.activeView === 'data' ? 'data' : 'analysis';
+            state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
+            state.selectedHighlightAccountId = '';
+            state.editingSnapshotId = '';
+            applyTheme(state.theme);
+            persistAll();
+            renderApp();
+            alert(`导入完成：${state.accounts.length} 个账户，${state.snapshots.length} 条快照。`);
+        } catch (error) {
+            alert('导入失败：无法解析 JSON 文件。');
+        } finally {
+            input.value = '';
+        }
+    };
+    reader.onerror = () => {
+        alert('导入失败：无法读取文件。');
+        input.value = '';
+    };
+    reader.readAsText(file, 'utf-8');
+}
+
+function parseImportPayload(payload) {
+    if (!payload || payload.app !== 'pam' || payload.schemaVersion !== 1 || !payload.data) return null;
+    const accounts = Array.isArray(payload.data.accounts) ? payload.data.accounts.map(normalizeImportedAccount).filter(Boolean) : [];
+    const accountIds = new Set(accounts.map(account => account.id));
+    const snapshots = Array.isArray(payload.data.snapshots)
+        ? payload.data.snapshots.map(normalizeImportedSnapshot).filter(snapshot => snapshot && accountIds.has(snapshot.accountId))
+        : [];
+    const preferences = payload.data.preferences && typeof payload.data.preferences === 'object' ? payload.data.preferences : {};
+    return { accounts, snapshots, preferences };
+}
+
+function normalizeImportedAccount(account) {
+    if (!account || typeof account !== 'object') return null;
+    const id = String(account.id || '').trim();
+    const name = String(account.name || '').trim();
+    if (!id || !name) return null;
+    return {
+        id,
+        name,
+        currency: 'CNY',
+        createdAt: account.createdAt || new Date().toISOString(),
+        updatedAt: account.updatedAt || account.createdAt || new Date().toISOString()
+    };
+}
+
+function normalizeImportedSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return null;
+    const id = String(snapshot.id || '').trim();
+    const accountId = String(snapshot.accountId || '').trim();
+    const date = String(snapshot.date || '').trim();
+    const totalValue = Number(snapshot.totalValue);
+    const netFlow = Number(snapshot.netFlow);
+    if (!id || !accountId || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+    if (!Number.isFinite(totalValue) || totalValue < 0 || !Number.isFinite(netFlow)) return null;
+    return {
+        id,
+        accountId,
+        date,
+        totalValue,
+        netFlow,
+        note: String(snapshot.note || '').trim()
+    };
 }
 
 function validateSnapshot(payload) {
