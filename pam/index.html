@@ -90,7 +90,7 @@
                                 </div>
                                 <button id="cancelEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
                             </div>
-                            <div class="input-guide">总资产=当天全部资产；净流入=追加为正、取出为负、无变化填 0。</div>
+                            <div class="input-guide">账户数据只做手动快照：总资产按券商账户总资产填写；净流入为上次快照后至本次快照期间的净投入/取出。</div>
                             <form id="snapshotForm" class="snapshot-form">
                                 <label>
                                     <span>账户</span>
@@ -102,7 +102,7 @@
                                 </label>
                                 <label>
                                     <span>总资产</span>
-                                    <input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="120000" required>
+                                    <input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="券商账户总资产" required>
                                 </label>
                                 <label>
                                     <span>净流入</span>
@@ -144,7 +144,10 @@
                             <h2>持仓筛选</h2>
                             <p>当前持仓按账户、类别和市场筛选。</p>
                         </div>
-                        <button id="refreshQuotesBtn" class="secondary-btn" type="button">刷新行情</button>
+                        <div class="panel-actions">
+                            <button id="generateSnapshotsBtn" class="secondary-btn" type="button">生成快照</button>
+                            <button id="refreshQuotesBtn" class="secondary-btn" type="button">刷新行情</button>
+                        </div>
                     </div>
                     <div class="holding-filter-bar">
                         <label><span>账户</span><select id="holdingFilterAccount"></select></label>
@@ -159,7 +162,7 @@
                         <div class="panel-head split-head">
                             <div>
                                 <h2>录入持仓</h2>
-                                <p>当前价可手动维护，A股和基金可刷新行情。</p>
+                                <p>A股、基金可刷新行情；现金直接录入金额。</p>
                             </div>
                             <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
                         </div>
@@ -171,7 +174,7 @@
                             <label><span>市场</span><select id="holdingMarketSelect"></select></label>
                             <label><span>数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
                             <label><span>成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
-                            <label><span>当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
+                            <label><span>当前价/现金金额</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
                             <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
                             <label><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选"></label>
                             <button id="holdingSubmitBtn" class="primary-btn" type="submit">保存持仓</button>

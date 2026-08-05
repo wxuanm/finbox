@@ -69,6 +69,13 @@ button:disabled {
     flex-shrink: 0;
 }
 
+.panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
 .primary-btn,
 .secondary-btn,
 .ghost-btn,
@@ -263,6 +270,14 @@ button:disabled {
     color: var(--muted-text);
     font-size: 13px;
     font-weight: 800;
+}
+
+.holding-form.cash-mode #holdingSymbolInput,
+.holding-form.cash-mode #holdingMarketSelect,
+.holding-form.cash-mode #holdingQuantityInput,
+.holding-form.cash-mode #holdingCostPriceInput {
+    color: var(--muted-text);
+    background: var(--surface-muted);
 }
 
 .holding-layout-grid {
@@ -677,6 +692,11 @@ select:focus {
 
     .hero-actions {
         display: grid;
+    }
+
+    .panel-actions {
+        display: grid;
+        width: 100%;
     }
 
     .icon-btn {

@@ -92,7 +92,8 @@ function bindEvents() {
         onEdit: editHolding,
         onDelete: deleteHolding,
         onSort: sortHoldings,
-        onRefreshQuotes: refreshHoldingQuotes
+        onRefreshQuotes: refreshHoldingQuotes,
+        onGenerateSnapshots: generateSnapshotsFromHoldings
     });
     window.addEventListener('resize', resizeChart, { passive: true });
 }
@@ -310,8 +311,8 @@ function addDemoData() {
         [steady.id, '019547', '中短债基金', 'fund', 'Fund', 30000, 1.03, 1.05],
         [growth.id, '600519', '贵州茅台', 'stock', 'CN', 30, 1550, 1680],
         [growth.id, '300750', '宁德时代', 'stock', 'CN', 200, 185, 205],
-        [hk.id, '00700', '腾讯控股', 'stock', 'HK', 100, 310, 335],
-        [us.id, 'AAPL', 'Apple', 'stock', 'US', 80, 180, 195],
+        [hk.id, '', '港股账户现金', 'cash', 'Cash', 1, 67000, 67000],
+        [us.id, '', '美股账户现金', 'cash', 'Cash', 1, 148200, 148200],
         [pension.id, '017512', '养老目标基金', 'fund', 'Fund', 42000, 1.08, 1.12],
         [tactical.id, '159915', '创业板ETF', 'fund', 'Fund', 25000, 1.85, 1.76]
     ].map(([accountId, symbol, name, assetClass, market, quantity, costPrice, currentPrice]) => ({
@@ -487,7 +488,7 @@ function normalizeImportedHolding(holding) {
         symbol: String(holding.symbol || '').trim(),
         name,
         assetClass: ['stock', 'fund', 'bond', 'cash', 'other'].includes(holding.assetClass) ? holding.assetClass : 'other',
-        market: ['CN', 'Fund', 'HK', 'US', 'Other'].includes(holding.market) ? holding.market : 'Other',
+        market: ['CN', 'Fund', 'Cash', 'Other'].includes(holding.market) ? holding.market : 'Other',
         quantity,
         costPrice,
         currentPrice,
@@ -606,10 +607,69 @@ function validateSnapshot(payload) {
     if (!payload.accountId) return '请先选择账户。';
     if (!payload.date) return '日期不能为空。';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.date)) return '日期格式无效。';
-    if (!Number.isFinite(payload.totalValue)) return '总资产必须是数字。';
-    if (payload.totalValue < 0) return '总资产不能为负数。';
+    if (!Number.isFinite(payload.totalValue) || payload.totalValue <= 0) return '总资产必须大于 0，请按券商账户总资产手动录入。';
     if (!Number.isFinite(payload.netFlow)) return '净流入必须是数字。';
     return '';
+}
+
+function generateSnapshotsFromHoldings() {
+    const selectedAccountId = state.holdingFilters.accountId;
+    const accountIds = selectedAccountId === 'all'
+        ? state.accounts.map(account => account.id)
+        : [selectedAccountId];
+    const rows = accountIds
+        .map(accountId => {
+            const account = state.accounts.find(item => item.id === accountId);
+            const totalValue = getAccountHoldingMarketValue(accountId);
+            return { account, accountId, totalValue };
+        })
+        .filter(row => row.account && row.totalValue > 0);
+
+    if (rows.length === 0) {
+        showHoldingMessage('没有可生成快照的持仓市值。请先录入持仓或选择有持仓的账户。', true);
+        return;
+    }
+
+    const date = todayKey();
+    const existingCount = rows.filter(row => state.snapshots.some(snapshot => snapshot.accountId === row.accountId && snapshot.date === date)).length;
+    const scopeText = selectedAccountId === 'all' ? `${rows.length} 个账户` : `账户「${rows[0].account.name}」`;
+    const overwriteText = existingCount > 0 ? `，其中 ${existingCount} 条会覆盖今日已有快照` : '';
+    if (!confirm(`将用当前持仓市值为${scopeText}生成今日账户快照，净流入默认为 0${overwriteText}。是否继续？`)) return;
+
+    rows.forEach(row => {
+        const snapshot = {
+            id: createId('snapshot'),
+            accountId: row.accountId,
+            date,
+            totalValue: Number(row.totalValue.toFixed(2)),
+            netFlow: 0,
+            note: '由持仓管理生成',
+            source: 'holdings'
+        };
+        const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
+        if (existing) {
+            Object.assign(existing, { ...snapshot, id: existing.id });
+        } else {
+            state.snapshots.push(snapshot);
+        }
+    });
+
+    state.selectedAccountId = rows[0].accountId;
+    state.activeView = 'analysis';
+    persistAll();
+    renderApp();
+    showHoldingMessage(`已生成 ${rows.length} 条账户快照。`);
+}
+
+function getAccountHoldingMarketValue(accountId) {
+    return state.holdings
+        .filter(holding => holding.accountId === accountId)
+        .reduce((sum, holding) => {
+            const quantity = Number(holding.quantity);
+            const currentPrice = Number(holding.currentPrice);
+            if (!Number.isFinite(quantity) || !Number.isFinite(currentPrice)) return sum;
+            return sum + quantity * currentPrice;
+        }, 0);
 }
 
 function resolveSelectedAccount(accountId) {

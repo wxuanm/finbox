@@ -11,16 +11,19 @@ export function renderHoldingsPanel(metrics) {
     renderHoldingTable(metrics.rows);
 }
 
-export function bindHoldingsPanel({ onFilter, onSubmit, onCancelEdit, onEdit, onDelete, onSort, onRefreshQuotes }) {
+export function bindHoldingsPanel({ onFilter, onSubmit, onCancelEdit, onEdit, onDelete, onSort, onRefreshQuotes, onGenerateSnapshots }) {
     document.getElementById('holdingFilterAccount')?.addEventListener('change', event => onFilter('accountId', event.target.value));
     document.getElementById('holdingFilterAssetClass')?.addEventListener('change', event => onFilter('assetClass', event.target.value));
     document.getElementById('holdingFilterMarket')?.addEventListener('change', event => onFilter('market', event.target.value));
+    document.getElementById('holdingAssetClassSelect')?.addEventListener('change', updateCashMode);
+    document.getElementById('holdingCurrentPriceInput')?.addEventListener('input', syncCashAmountFields);
     document.getElementById('holdingForm')?.addEventListener('submit', event => {
         event.preventDefault();
         onSubmit(readHoldingForm());
     });
     document.getElementById('cancelHoldingEditBtn')?.addEventListener('click', onCancelEdit);
     document.getElementById('refreshQuotesBtn')?.addEventListener('click', onRefreshQuotes);
+    document.getElementById('generateSnapshotsBtn')?.addEventListener('click', onGenerateSnapshots);
     document.getElementById('holdingTable')?.addEventListener('click', event => {
         const sortHeader = event.target.closest('[data-holding-sort]');
         if (sortHeader) {
@@ -41,6 +44,7 @@ export function resetHoldingForm() {
     if (form) form.reset();
     const date = document.getElementById('holdingAsOfDateInput');
     if (date) date.value = todayKey();
+    updateCashMode();
 }
 
 export function showHoldingMessage(message, isError = false) {
@@ -112,6 +116,7 @@ function renderHoldingForm() {
     document.getElementById('holdingCurrentPriceInput').value = editing.currentPrice;
     document.getElementById('holdingAsOfDateInput').value = editing.asOfDate || todayKey();
     document.getElementById('holdingNoteInput').value = editing.note || '';
+    updateCashMode();
 }
 
 function renderAllocation(elementId, allocation) {
@@ -180,18 +185,63 @@ function renderHoldingRow(row) {
 }
 
 export function readHoldingForm() {
+    const assetClass = document.getElementById('holdingAssetClassSelect').value;
+    const currentPrice = Number(document.getElementById('holdingCurrentPriceInput').value);
+    const isCash = assetClass === 'cash';
+
     return {
         accountId: document.getElementById('holdingAccountSelect').value,
-        name: document.getElementById('holdingNameInput').value.trim(),
-        symbol: document.getElementById('holdingSymbolInput').value.trim(),
-        assetClass: document.getElementById('holdingAssetClassSelect').value,
-        market: document.getElementById('holdingMarketSelect').value,
-        quantity: Number(document.getElementById('holdingQuantityInput').value),
-        costPrice: Number(document.getElementById('holdingCostPriceInput').value),
-        currentPrice: Number(document.getElementById('holdingCurrentPriceInput').value),
+        name: document.getElementById('holdingNameInput').value.trim() || (isCash ? '现金' : ''),
+        symbol: isCash ? '' : document.getElementById('holdingSymbolInput').value.trim(),
+        assetClass,
+        market: isCash ? 'Cash' : document.getElementById('holdingMarketSelect').value,
+        quantity: isCash ? 1 : Number(document.getElementById('holdingQuantityInput').value),
+        costPrice: isCash ? currentPrice : Number(document.getElementById('holdingCostPriceInput').value),
+        currentPrice,
         asOfDate: document.getElementById('holdingAsOfDateInput').value || todayKey(),
         note: document.getElementById('holdingNoteInput').value.trim()
     };
+}
+
+function updateCashMode() {
+    const form = document.getElementById('holdingForm');
+    const assetSelect = document.getElementById('holdingAssetClassSelect');
+    const marketSelect = document.getElementById('holdingMarketSelect');
+    const symbolInput = document.getElementById('holdingSymbolInput');
+    const quantityInput = document.getElementById('holdingQuantityInput');
+    const costInput = document.getElementById('holdingCostPriceInput');
+    const currentInput = document.getElementById('holdingCurrentPriceInput');
+    if (!form || !assetSelect || !marketSelect || !symbolInput || !quantityInput || !costInput || !currentInput) return;
+
+    const isCash = assetSelect.value === 'cash';
+    form.classList.toggle('cash-mode', isCash);
+    if (!isCash) {
+        marketSelect.disabled = false;
+        symbolInput.disabled = false;
+        quantityInput.readOnly = false;
+        costInput.readOnly = false;
+        return;
+    }
+
+    marketSelect.value = 'Cash';
+    marketSelect.disabled = true;
+    symbolInput.value = '';
+    symbolInput.disabled = true;
+    quantityInput.value = '1';
+    quantityInput.readOnly = true;
+    costInput.value = currentInput.value || costInput.value || '0';
+    costInput.readOnly = true;
+    syncCashAmountFields();
+}
+
+function syncCashAmountFields() {
+    const assetSelect = document.getElementById('holdingAssetClassSelect');
+    const quantityInput = document.getElementById('holdingQuantityInput');
+    const costInput = document.getElementById('holdingCostPriceInput');
+    const currentInput = document.getElementById('holdingCurrentPriceInput');
+    if (!assetSelect || assetSelect.value !== 'cash' || !quantityInput || !costInput || !currentInput) return;
+    quantityInput.value = '1';
+    costInput.value = currentInput.value || '0';
 }
 
 function overviewCard(label, value, note, className = '') {

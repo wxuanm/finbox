@@ -92,9 +92,11 @@ Snapshots:
 - `id` is generated on creation.
 - `accountId` must reference an existing account.
 - `date` is required in `YYYY-MM-DD` format.
-- `totalValue` must be numeric and greater than or equal to 0 for storage.
+- In account data, `totalValue` is manually entered and must be greater than 0.
 - First valid performance snapshot must have `totalValue > 0`.
 - `netFlow` must be numeric and can be positive, negative, or 0.
+- `netFlow` remains manually maintained by the user and represents the net cash flow between snapshots.
+- In holdings management, users can generate account snapshots from current holdings market value. Generated snapshots use `netFlow = 0`, `source = 'holdings'`, and may overwrite same-account same-date snapshots after confirmation.
 - Same-account same-date overwrite requires confirmation.
 
 Holdings:
@@ -102,9 +104,10 @@ Holdings:
 - `accountId` must reference an existing account.
 - `name` is required and trimmed.
 - `assetClass` is one of `stock`, `fund`, `bond`, `cash`, `other`.
-- `market` is one of `CN`, `Fund`, `HK`, `US`, `Other`.
+- `market` is one of `CN`, `Fund`, `Cash`, `Other`.
 - `quantity`, `costPrice`, and `currentPrice` must be finite numbers greater than or equal to 0.
 - First quote refresh supports `CN` and `Fund`; unsupported markets remain manual.
+- Cash holdings use amount mode: `quantity = 1`, `costPrice = currentPrice = cash amount`.
 
 ## Calculation Flow
 

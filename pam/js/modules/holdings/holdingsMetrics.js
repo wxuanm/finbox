@@ -9,8 +9,7 @@ export const ASSET_CLASSES = [
 export const MARKETS = [
     ['CN', 'A股/境内'],
     ['Fund', '基金'],
-    ['HK', '港股'],
-    ['US', '美股'],
+    ['Cash', '现金'],
     ['Other', '其他']
 ];
 

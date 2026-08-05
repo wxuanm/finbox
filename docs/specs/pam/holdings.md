@@ -16,7 +16,7 @@
 - First release tracks current holdings only, not historical holding snapshots.
 - Holdings must be bound to an account.
 - Price can be manually entered.
-- A-share and fund quote refresh is planned first; unsupported markets remain manual.
+- A-share and fund quote refresh is planned first; cash is manually maintained as a first-class holding; unsupported markets remain manual.
 - No transaction ledger, dividend handling, fee handling, or cost-basis automation in this release.
 
 ## In Scope
@@ -41,6 +41,7 @@
 - CSV/Excel import.
 - Multi-currency conversion.
 - Real-time quotes for HK and US markets in the first quote release.
+- Foreign currency conversion. First release treats all values as CNY-equivalent manual values.
 - Tax, dividend, fee, or realized profit/loss calculation.
 
 ## Holding Data Model
@@ -79,12 +80,11 @@ other: 其他
 ```text
 CN: A股/境内
 Fund: 基金
-HK: 港股
-US: 美股
+Cash: 现金
 Other: 其他
 ```
 
-Only `CN` and `Fund` are quote-refresh targets in the first quote release.
+Only `CN` and `Fund` are quote-refresh targets in the first quote release. `Cash` is manual and uses amount mode.
 
 ## Calculations
 
@@ -133,6 +133,8 @@ Response:
 - Holdings persist after refresh.
 - Holdings are included in JSON export and restored by JSON import.
 - Old PAM backups without holdings import successfully with an empty holdings list.
+- Holdings management can generate account snapshots from current holdings market value. Account data remains the manual-entry path for snapshots, including net cash flow.
+- Cash holdings use amount mode: quantity is stored as 1, and cost/current price both represent the cash amount.
 - Holdings table supports filtering and sorting.
 - A-share and fund quote refresh updates current price, name when available, price source, and price update time.
 - Quote refresh failure does not block manual holding maintenance.

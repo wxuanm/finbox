@@ -35,6 +35,7 @@ The first release started with account performance. PAM now expands toward curre
 - PAM specs, design notes, and implementation tasks live under `docs/specs/pam/`.
 - 持仓管理 tracks current holdings only in its first release, and holdings must be bound to accounts.
 - A-share and fund quote refresh are the first supported real-time quote targets for holdings.
+- Cash is a supported holding type and is manually maintained as CNY-equivalent amount; no currency conversion is performed.
 
 ### In Scope For First Release
 
@@ -73,6 +74,7 @@ The first release started with account performance. PAM now expands toward curre
 
 - As a user with multiple investment accounts, I want to create account records so that I can track them separately.
 - As a user, I want to record a date, total account value, net cash flow, and optional note so that PAM can calculate account performance.
+- As a user, I want account data to support fully manual account snapshots, while holdings management can generate snapshots from current holdings market value with net cash flow defaulting to 0.
 - As a user, I want cash deposits and withdrawals excluded from return calculations so that account comparisons are fair.
 - As a user, I want to compare multiple account return curves in one chart so that I can see which account performs better.
 - As a user, I want to inspect return, drawdown, and volatility metrics so that I can compare both performance and risk.
@@ -154,8 +156,8 @@ UI direction:
 | Field | Meaning | Rule |
 | --- | --- | --- |
 | Date | Snapshot date | Required |
-| Total value | Total account value on the date | Required, must be greater than or equal to 0 |
-| Net flow | Net deposit or withdrawal on the date | Required, deposit is positive, withdrawal is negative, no cash flow is 0 |
+| Total value | Manual account total value in account data; generated from holdings only through holdings management action | Required, must be greater than 0 for new snapshots |
+| Net flow | Net deposit or withdrawal between snapshots | Required, deposit is positive, withdrawal is negative, no cash flow is 0 |
 | Note | Optional user note | Optional |
 
 ### Default Copy
@@ -175,7 +177,7 @@ Subtitle:
 Input help:
 
 ```text
-总资产填写账户当天全部资产价值；净流入填写当天新增投入或取出资金，投入为正，取出为负，无资金变化填 0。
+账户数据只做手动快照：总资产按券商账户总资产填写；净流入填写上次快照后至本次快照期间的净投入/取出。持仓管理可用当前持仓市值生成快照。
 ```
 
 Empty state:
