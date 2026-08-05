@@ -55,7 +55,7 @@ export function renderPerformanceChart(metrics) {
             name: metric.account.name,
             type: 'line',
             showSymbol: false,
-            smooth: true,
+            smooth: false,
             emphasis: { focus: 'series' },
             lineStyle: {
                 width: selected ? 3 : 1.8,

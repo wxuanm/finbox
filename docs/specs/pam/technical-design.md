@@ -134,6 +134,7 @@ The performance chart uses ECharts from CDN.
 - X axis: date.
 - Y axis: active-period return percentage, normalized from each account's period anchor point.
 - Series: one line per valid account.
+- Lines use straight segments between manually entered snapshots instead of smoothed curves, avoiding implied unobserved performance between data points.
 - Active account highlight dims other series.
 - Period chips update chart and metrics together.
 - If ECharts is unavailable, show an inline warning without blocking account management.
