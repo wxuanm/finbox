@@ -132,7 +132,7 @@ UI modules render into fixed DOM containers and expose bind functions through gl
 The performance chart uses ECharts from CDN.
 
 - X axis: date.
-- Y axis: return percentage.
+- Y axis: active-period return percentage, normalized from each account's period anchor point.
 - Series: one line per valid account.
 - Active account highlight dims other series.
 - Period chips update chart and metrics together.

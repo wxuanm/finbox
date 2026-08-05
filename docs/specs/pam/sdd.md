@@ -253,6 +253,7 @@ This formula is intentionally approximate for manual snapshot tracking. It is de
 - `YTD` starts from January 1 of the latest valid snapshot year.
 - `ALL` starts from the first valid snapshot.
 - Summary cards, chart series, and account metric cards must use the same active period.
+- Chart series are normalized to the active period anchor, so the latest chart value matches the account comparison table's selected-period return.
 
 ### Invalid Data Cases
 

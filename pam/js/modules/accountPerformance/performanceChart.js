@@ -50,6 +50,7 @@ export function renderPerformanceChart(metrics) {
 
     const series = validMetrics.map(metric => {
         const selected = state.selectedHighlightAccountId === metric.account.id;
+        const baseUnitNav = metric.periodPoints[0]?.unitNav;
         return {
             name: metric.account.name,
             type: 'line',
@@ -60,7 +61,7 @@ export function renderPerformanceChart(metrics) {
                 width: selected ? 3 : 1.8,
                 opacity: !state.selectedHighlightAccountId || selected ? 1 : 0.22
             },
-            data: metric.periodPoints.map(point => [point.date, point.returnPct])
+            data: metric.periodPoints.map(point => [point.date, (point.unitNav / baseUnitNav - 1) * 100])
         };
     });
 
