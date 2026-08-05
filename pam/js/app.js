@@ -5,7 +5,7 @@ import { buildAccountMetrics } from './modules/accountPerformance/metrics.js';
 import { renderAccountList, bindAccountList } from './modules/accountPerformance/accountList.js';
 import { readSnapshotForm, renderSnapshotForm, resetSnapshotForm, showFormMessage } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
-import { bindMetricCards, renderMetricCards, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
+import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { todayKey } from './utils/formatter.js';
 
@@ -50,10 +50,24 @@ function bindEvents() {
         persistPreferences();
         renderApp();
     });
-    bindMetricCards(accountId => {
-        state.selectedHighlightAccountId = state.selectedHighlightAccountId === accountId ? '' : accountId;
-        renderApp();
+    bindAccountComparison({
+        onHighlight: accountId => {
+            state.selectedHighlightAccountId = state.selectedHighlightAccountId === accountId ? '' : accountId;
+            renderApp();
+        },
+        onSort: sortAccountComparison
     });
+
+    function sortAccountComparison(sortKey) {
+        if (state.comparisonSortKey === sortKey) {
+            state.comparisonSortOrder *= -1;
+        } else {
+            state.comparisonSortKey = sortKey;
+            state.comparisonSortOrder = sortKey === 'name' || sortKey === 'latestDate' ? 1 : -1;
+        }
+        renderApp();
+    }
+
     bindSnapshotTable({
         onEdit: editSnapshot,
         onDelete: deleteSnapshot
@@ -71,7 +85,7 @@ function renderApp() {
     renderSnapshotForm();
     renderPeriodSwitch();
     renderPerformanceChart(metrics);
-    renderMetricCards(metrics);
+    renderAccountComparison(metrics);
     renderSnapshotTable();
 }
 

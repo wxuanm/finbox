@@ -144,7 +144,7 @@ The performance chart uses ECharts from CDN.
 - Data synchronization is shown as accounts updated to the latest snapshot date over calculable accounts.
 - Snapshot input includes short inline guidance for total value, net flow, and unit-NAV return logic.
 - Account list items expose readiness status and selected-period return to reduce navigation ambiguity.
-- Metric cards label the primary percentage as selected-period return and visually distinguish latest asset value from secondary risk metrics.
+- Account performance is compared in a sortable table rather than per-account cards, because table rows make return, drawdown, volatility, asset value, and data freshness easier to compare across accounts.
 - The top module navigation includes `账户收益` and `账户数据` alongside disabled future modules, avoiding two separate menu rows while keeping performance review separate from account maintenance.
 - The interface favors compact decision screens: shorter copy, fewer decorative elements, four overview cards, and six high-signal metrics per account card.
 

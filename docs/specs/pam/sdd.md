@@ -104,7 +104,7 @@ PAM
 ├─ Header: product name, description, theme toggle
 ├─ Module navigation: 账户收益, future modules disabled or hidden
 ├─ Unified module navigation: 账户收益 / 账户数据 / future modules
-├─ 账户收益: overview cards, performance chart, account metric cards
+├─ 账户收益: overview cards, performance chart, sortable account comparison table
 └─ 账户数据: account list, snapshot input form, snapshot table with account switch
 ```
 
@@ -113,6 +113,7 @@ UI direction:
 - Keep the default experience decision-first: account return overview, chart, and compact metric cards.
 - Keep account maintenance separate under `账户数据`.
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
+- Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 
 ### Account Data Model
 

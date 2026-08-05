@@ -54,7 +54,15 @@
                     <div id="performanceChart" class="performance-chart"></div>
                 </section>
 
-                <section id="metricCards" class="metric-grid" aria-live="polite"></section>
+                <section class="panel comparison-panel">
+                    <div class="panel-head split-head">
+                        <div>
+                            <h2>账户对比</h2>
+                            <p>点击表头排序，点击账户行高亮走势图。</p>
+                        </div>
+                    </div>
+                    <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
+                </section>
             </section>
 
             <section id="dataView" class="workspace-view" data-workspace-view="data">

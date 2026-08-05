@@ -4,6 +4,8 @@ export const state = {
     selectedAccountId: '',
     selectedPeriod: 'ALL',
     selectedHighlightAccountId: '',
+    comparisonSortKey: 'periodReturn',
+    comparisonSortOrder: -1,
     editingSnapshotId: '',
     activeView: 'analysis',
     theme: 'light'

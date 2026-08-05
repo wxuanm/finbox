@@ -1,5 +1,5 @@
 import { state } from '../../config/state.js';
-import { escapeHtml, formatCurrency, formatNumber, formatPercent, signedClass } from '../../utils/formatter.js';
+import { escapeHtml, formatCurrency, formatPercent, signedClass } from '../../utils/formatter.js';
 
 export function renderOverviewCards(metrics) {
     const wrap = document.getElementById('overviewCards');
@@ -20,60 +20,57 @@ export function renderOverviewCards(metrics) {
     ].join('');
 }
 
-export function renderMetricCards(metrics) {
-    const wrap = document.getElementById('metricCards');
+export function renderAccountComparison(metrics) {
+    const wrap = document.getElementById('accountComparison');
     if (!wrap) return;
 
     if (state.accounts.length === 0) {
-        wrap.innerHTML = '';
+        wrap.innerHTML = '<div class="empty-state">暂无账户。进入“账户数据”新增账户并录入快照。</div>';
         return;
     }
 
-    wrap.innerHTML = metrics.map(metric => {
-        const active = state.selectedHighlightAccountId === metric.account.id;
-        if (!metric.valid) {
-            return `
-                <button class="metric-card${active ? ' active' : ''}" type="button" data-highlight-account="${metric.account.id}">
-                    <div class="metric-head">
-                        <div><strong>${escapeHtml(metric.account.name)}</strong><span class="metric-label">数据不足</span></div>
-                    </div>
-                    <div class="empty-state">${escapeHtml(metric.error || '至少需要两条有效快照')}</div>
-                </button>
-            `;
-        }
+    const sortedMetrics = [...metrics].sort(compareMetrics);
+    const columns = [
+        ['name', '账户'],
+        ['periodReturn', '区间收益'],
+        ['cumulativeReturn', '累计收益'],
+        ['latestValue', '最新资产'],
+        ['profitLoss', '累计盈亏'],
+        ['maxDrawdown', '最大回撤'],
+        ['annualizedVolatility', '年化波动'],
+        ['latestDate', '最新快照']
+    ];
 
-        return `
-            <button class="metric-card${active ? ' active' : ''}" type="button" data-highlight-account="${metric.account.id}">
-                <div class="metric-head">
-                    <div>
-                        <strong>${escapeHtml(metric.account.name)}</strong>
-                        <span class="metric-label">最新日期 ${metric.latestDate}</span>
-                    </div>
-                    <div>
-                        <div class="metric-return ${signedClass(metric.periodReturn)}">${formatPercent(metric.periodReturn)}</div>
-                        <span class="metric-period-label">当前区间收益</span>
-                    </div>
-                </div>
-                <div class="metric-body">
-                    ${metricCell('最新资产', formatCurrency(metric.latestValue), '', true)}
-                    ${metricCell('净投入', formatCurrency(metric.netContribution))}
-                    ${metricCell('累计盈亏', formatCurrency(metric.profitLoss), signedClass(metric.profitLoss))}
-                    ${metricCell('累计收益', formatPercent(metric.cumulativeReturn), signedClass(metric.cumulativeReturn))}
-                    ${metricCell('最大回撤', formatPercent(metric.maxDrawdown), signedClass(metric.maxDrawdown))}
-                    ${metricCell('年化波动', formatPercent(metric.annualizedVolatility))}
-                </div>
-            </button>
-        `;
-    }).join('');
+    wrap.innerHTML = `
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    ${columns.map(([key, label]) => `
+                        <th class="${key === 'name' ? '' : 'number-cell'}" data-comparison-sort="${key}">
+                            <button type="button">${label}${sortIcon(key)}</button>
+                        </th>
+                    `).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${sortedMetrics.map(metric => renderComparisonRow(metric)).join('')}
+            </tbody>
+        </table>
+    `;
 }
 
-export function bindMetricCards(onHighlight) {
-    const wrap = document.getElementById('metricCards');
+export function bindAccountComparison({ onHighlight, onSort }) {
+    const wrap = document.getElementById('accountComparison');
     if (!wrap) return;
     wrap.addEventListener('click', event => {
-        const cardEl = event.target.closest('[data-highlight-account]');
-        if (!cardEl) return;
-        onHighlight(cardEl.dataset.highlightAccount);
+        const sortHeader = event.target.closest('[data-comparison-sort]');
+        if (sortHeader) {
+            onSort(sortHeader.dataset.comparisonSort);
+            return;
+        }
+
+        const row = event.target.closest('[data-highlight-account]');
+        if (row) onHighlight(row.dataset.highlightAccount);
     });
 }
 
@@ -81,6 +78,46 @@ function card(label, value, note, className = '') {
     return `<div class="overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${escapeHtml(note)}</small></div>`;
 }
 
-function metricCell(label, value, className = '', primary = false) {
-    return `<div class="metric-cell${primary ? ' primary-metric' : ''}"><span class="metric-label">${label}</span><strong class="${className}">${value}</strong></div>`;
+function renderComparisonRow(metric) {
+    const active = state.selectedHighlightAccountId === metric.account.id;
+    if (!metric.valid) {
+        return `
+            <tr class="comparison-row invalid${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
+                <td><strong>${escapeHtml(metric.account.name)}</strong><small>${escapeHtml(metric.error || '数据不足')}</small></td>
+                <td colspan="7">至少需要两条有效快照</td>
+            </tr>
+        `;
+    }
+
+    return `
+        <tr class="comparison-row${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
+            <td><strong>${escapeHtml(metric.account.name)}</strong><small>点击高亮走势</small></td>
+            <td class="number-cell ${signedClass(metric.periodReturn)}">${formatPercent(metric.periodReturn)}</td>
+            <td class="number-cell ${signedClass(metric.cumulativeReturn)}">${formatPercent(metric.cumulativeReturn)}</td>
+            <td class="number-cell">${formatCurrency(metric.latestValue)}</td>
+            <td class="number-cell ${signedClass(metric.profitLoss)}">${formatCurrency(metric.profitLoss)}</td>
+            <td class="number-cell ${signedClass(metric.maxDrawdown)}">${formatPercent(metric.maxDrawdown)}</td>
+            <td class="number-cell">${formatPercent(metric.annualizedVolatility)}</td>
+            <td class="number-cell">${metric.latestDate || '-'}</td>
+        </tr>
+    `;
+}
+
+function compareMetrics(a, b) {
+    const direction = state.comparisonSortOrder || -1;
+    const key = state.comparisonSortKey || 'periodReturn';
+    if (key === 'name') return a.account.name.localeCompare(b.account.name, 'zh-CN', { numeric: true }) * direction;
+    if (key === 'latestDate') return String(a.latestDate || '').localeCompare(String(b.latestDate || '')) * direction;
+
+    const aValue = a.valid ? Number(a[key]) : Number.NEGATIVE_INFINITY;
+    const bValue = b.valid ? Number(b[key]) : Number.NEGATIVE_INFINITY;
+    if (!Number.isFinite(aValue) && !Number.isFinite(bValue)) return 0;
+    if (!Number.isFinite(aValue)) return 1;
+    if (!Number.isFinite(bValue)) return -1;
+    return (aValue - bValue) * direction;
+}
+
+function sortIcon(key) {
+    if (state.comparisonSortKey !== key) return '';
+    return state.comparisonSortOrder === 1 ? ' ▲' : ' ▼';
 }
