@@ -1,0 +1,85 @@
+import { state } from '../../config/state.js';
+import { escapeHtml, formatCurrency } from '../../utils/formatter.js';
+
+export function renderSnapshotTable() {
+    const wrap = document.getElementById('snapshotTable');
+    const select = document.getElementById('snapshotTableAccountSelect');
+    const context = document.getElementById('snapshotTableContext');
+    if (!wrap) return;
+
+    if (select) {
+        select.innerHTML = state.accounts.length === 0
+            ? '<option value="">暂无账户</option>'
+            : state.accounts.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
+        select.value = state.selectedAccountId || state.accounts[0]?.id || '';
+        select.disabled = state.accounts.length === 0;
+    }
+
+    if (state.accounts.length === 0) {
+        if (context) context.textContent = '暂无可查看的账户。';
+        wrap.innerHTML = '<div class="empty-state">暂无账户。</div>';
+        return;
+    }
+
+    const accountId = state.selectedAccountId || state.accounts[0]?.id;
+    const account = state.accounts.find(item => item.id === accountId);
+    const rows = state.snapshots
+        .filter(snapshot => snapshot.accountId === accountId)
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+    if (context) {
+        context.textContent = `${account?.name || '未选择账户'} · ${rows.length} 条快照`;
+    }
+
+    if (rows.length === 0) {
+        wrap.innerHTML = `<div class="empty-state">${escapeHtml(account?.name || '当前账户')} 还没有快照。</div>`;
+        return;
+    }
+
+    wrap.innerHTML = `
+        <table class="snapshot-table">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th class="number-cell">总资产</th>
+                    <th class="number-cell">净流入</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(row => `
+                    <tr>
+                        <td>${row.date}</td>
+                        <td class="number-cell">${formatCurrency(row.totalValue)}</td>
+                        <td class="number-cell">${formatCurrency(row.netFlow)}</td>
+                        <td>${escapeHtml(row.note || '-')}</td>
+                        <td>
+                            <div class="row-actions">
+                                <button class="mini-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}">编辑</button>
+                                <button class="mini-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+export function bindSnapshotTable({ onEdit, onDelete }) {
+    const wrap = document.getElementById('snapshotTable');
+    if (!wrap) return;
+    wrap.addEventListener('click', event => {
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
+        if (target.dataset.action === 'edit-snapshot') onEdit(target.dataset.snapshotId);
+        if (target.dataset.action === 'delete-snapshot') onDelete(target.dataset.snapshotId);
+    });
+}
+
+export function bindSnapshotTableAccountSwitch(onSelect) {
+    const select = document.getElementById('snapshotTableAccountSelect');
+    if (!select) return;
+    select.addEventListener('change', () => onSelect(select.value));
+}

@@ -1,8 +1,8 @@
 # FinBox
 
-FinBox is a lightweight financial monitoring toolkit. The current release focuses on a responsive mutual fund monitor with real-time market data, custom grouping, mobile-friendly interactions, and a Cloudflare Pages API proxy.
+FinBox is a lightweight financial monitoring toolkit. The current release includes a responsive mutual fund monitor and PAM, a standalone portfolio and asset management tool focused first on manually tracked account performance.
 
-## Current Tool
+## Current Tools
 
 ### Fund Monitor
 
@@ -26,6 +26,25 @@ Key features:
 - Light and dark themes.
 - Chinese and English UI.
 - Data and preferences persisted in `localStorage`.
+
+### PAM
+
+PAM (Portfolio & Asset Manager, 投资组合与资产管理) is a standalone browser tool for manually tracking investment account performance.
+
+Production URL:
+
+`https://finbox.pages.dev/pam/`
+
+Key features:
+
+- Independent `/pam/` static tool, separate from `fundmonitor`.
+- Create, rename, and delete investment accounts.
+- Manually add, edit, and delete account snapshots.
+- Cash-flow-adjusted account unit NAV calculation for fair account comparison.
+- Multi-account performance chart with period switches: 1M, 3M, 6M, YTD, 1Y, 3Y, and ALL.
+- Account metrics including latest value, net contribution, profit/loss, cumulative return, period return, max drawdown, annualized volatility, and Calmar ratio.
+- Optional demo data generated only by user action.
+- Dark mode and local-only persistence using `pam:v1:*` `localStorage` keys.
 
 ## Data Proxy
 
@@ -76,6 +95,24 @@ finbox/
 │     └─ utils/
 │        ├─ formatter.js        # Formatting helpers
 │        └─ storage.js          # localStorage persistence
+├─ pam/
+│  ├─ index.html                # PAM page
+│  ├─ css/
+│  │  ├─ main.css               # PAM layout and components
+│  │  └─ variables.css          # PAM theme variables
+│  └─ js/
+│     ├─ app.js                 # PAM bootstrap and orchestration
+│     ├─ config/
+│     │  └─ state.js            # Runtime state
+│     ├─ core/
+│     │  └─ theme.js            # Theme handling
+│     ├─ modules/
+│     │  └─ accountPerformance/ # Account performance module
+│     └─ utils/
+│        └─ formatter.js        # Formatting helpers
+├─ docs/
+│  └─ specs/
+│     └─ pam/                   # PAM SDD specs and implementation tasks
 └─ README.md
 ```
 
@@ -93,6 +130,7 @@ Then open the local URL printed by Wrangler and navigate to:
 
 ```text
 /fundmonitor/
+/pam/
 ```
 
 Why use Wrangler locally:
@@ -110,6 +148,12 @@ The monitor stores user data in browser `localStorage`:
 - Fund-to-group mapping.
 - Theme preference.
 - Language preference.
+
+PAM stores user data in browser `localStorage`:
+
+- `pam:v1:accounts`.
+- `pam:v1:snapshots`.
+- `pam:v1:preferences`.
 
 No backend database is required.
 
