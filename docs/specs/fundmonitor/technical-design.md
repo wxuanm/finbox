@@ -6,6 +6,7 @@
 - Path: `/fundmonitor/`
 - Spec source: `docs/specs/fundmonitor/sdd.md`
 - API paths: `/api/fundgz`, `/api/fundnav`
+- API source files: `functions/api/fundgz.js`, `functions/api/fundnav.js`
 - Design target: current implementation baseline
 
 ## Architecture
@@ -290,6 +291,7 @@ The historical trend chart uses ECharts from CDN.
 - X axis: date/time.
 - Y axes: return percentage on left and mirrored invisible right axis.
 - Series: one line per valid fund.
+- Lines use straight segments rather than smoothing, matching common financial time-series chart conventions and avoiding implied interpolation between disclosed NAV points.
 - Chart periods: `1M`, `3M`, `6M`, `1Y`, `3Y`.
 - Selected fund metric card highlights its chart series and dims others.
 - Lowest point markers are shown when available.

@@ -398,7 +398,7 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             name: formatNavFundName(metric),
             type: 'line',
             showSymbol: false,
-            smooth: true,
+            smooth: false,
             emphasis: { focus: 'series' },
             lineStyle: {
                 width: isSelected ? 3 : 1.5,

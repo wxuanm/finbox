@@ -6,6 +6,7 @@
 - Spec path: `docs/specs/fundmonitor/sdd.md`
 - Related tool path: `/fundmonitor/`
 - Related API paths: `/api/fundgz`, `/api/fundnav`
+- Related API source files: `functions/api/fundgz.js`, `functions/api/fundnav.js`
 - Status: Current implementation baseline
 
 This document belongs only to Fund Monitor. Other FinBox tools should use their own folders under `docs/specs/<tool-name>/` to avoid naming, storage, and acceptance-criteria conflicts.
@@ -288,6 +289,7 @@ Historical NAV notice:
 - Data is normalized to the latest three-year window based on the newest available timestamp.
 - Unit NAV and accumulated NAV points are merged by date.
 - Accumulated NAV is preferred over unit NAV for normalized return calculations when available.
+- Historical trend charts use straight line segments rather than smoothed curves to avoid implying unavailable prices between disclosed NAV points.
 - Partial failures return successful funds plus `failedCodes`.
 
 ### NAV Metric Rules
