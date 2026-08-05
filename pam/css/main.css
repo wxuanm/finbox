@@ -69,6 +69,46 @@ button:disabled {
     flex-shrink: 0;
 }
 
+.mobile-more-actions {
+    position: relative;
+    display: none;
+}
+
+.header-action-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 40;
+    display: none;
+    min-width: 116px;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--surface-color);
+    box-shadow: var(--shadow-md);
+}
+
+.mobile-more-actions.menu-open .header-action-menu {
+    display: grid;
+    gap: 4px;
+}
+
+.header-action-menu button {
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 9px;
+    color: var(--text-color);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: left;
+}
+
+.header-action-menu button:hover {
+    background: var(--primary-soft);
+}
+
 .panel-actions {
     display: flex;
     flex-wrap: wrap;
@@ -676,12 +716,15 @@ select:focus {
         padding: 12px;
     }
 
-    .hero,
+    .hero {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
     .split-head {
         flex-direction: column;
     }
 
-    .hero-actions,
     .account-form,
     .snapshot-form,
     .holding-filter-bar,
@@ -691,7 +734,15 @@ select:focus {
     }
 
     .hero-actions {
-        display: grid;
+        margin-left: auto;
+    }
+
+    .desktop-action {
+        display: none;
+    }
+
+    .mobile-more-actions {
+        display: block;
     }
 
     .panel-actions {
@@ -699,8 +750,8 @@ select:focus {
         width: 100%;
     }
 
-    .icon-btn {
-        width: 100%;
+    .mobile-more-actions .icon-btn {
+        width: 44px;
     }
 
     .panel {

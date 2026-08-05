@@ -33,10 +33,16 @@ function init() {
 
 function bindEvents() {
     document.getElementById('themeBtn')?.addEventListener('click', toggleTheme);
+    document.getElementById('mobileThemeBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('demoDataBtn')?.addEventListener('click', addDemoData);
+    document.getElementById('mobileDemoDataBtn')?.addEventListener('click', addDemoData);
     document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
-    document.getElementById('importDataBtn')?.addEventListener('click', () => document.getElementById('importDataInput')?.click());
+    document.getElementById('mobileExportDataBtn')?.addEventListener('click', exportData);
+    document.getElementById('importDataBtn')?.addEventListener('click', openImportDataPicker);
+    document.getElementById('mobileImportDataBtn')?.addEventListener('click', openImportDataPicker);
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleMobileActionMenu);
     document.getElementById('importDataInput')?.addEventListener('change', importData);
+    document.addEventListener('click', closeMobileActionMenu);
     document.getElementById('accountForm')?.addEventListener('submit', handleAddAccount);
     document.getElementById('snapshotForm')?.addEventListener('submit', handleSaveSnapshot);
     document.querySelectorAll('.module-tab[data-view]').forEach(tab => {
@@ -96,6 +102,23 @@ function bindEvents() {
         onGenerateSnapshots: generateSnapshotsFromHoldings
     });
     window.addEventListener('resize', resizeChart, { passive: true });
+}
+
+function openImportDataPicker() {
+    document.getElementById('importDataInput')?.click();
+}
+
+function toggleMobileActionMenu(event) {
+    event.stopPropagation();
+    const menu = document.querySelector('.mobile-more-actions');
+    const button = document.getElementById('mobileMenuBtn');
+    const isOpen = menu?.classList.toggle('menu-open') || false;
+    button?.setAttribute('aria-expanded', String(isOpen));
+}
+
+function closeMobileActionMenu() {
+    document.querySelector('.mobile-more-actions')?.classList.remove('menu-open');
+    document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded', 'false');
 }
 
 function renderApp() {

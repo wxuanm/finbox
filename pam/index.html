@@ -19,12 +19,21 @@
                 <p>手动快照，扣除现金流，对比账户真实收益。</p>
             </div>
             <div class="hero-actions">
-                <button id="demoDataBtn" class="secondary-btn" type="button">示例数据</button>
-                <button id="exportDataBtn" class="secondary-btn" type="button">导出</button>
-                <button id="importDataBtn" class="secondary-btn" type="button">导入</button>
-                <button id="themeBtn" class="icon-btn" type="button" title="切换主题" aria-label="切换主题">
+                <button id="demoDataBtn" class="secondary-btn desktop-action" type="button">示例数据</button>
+                <button id="exportDataBtn" class="secondary-btn desktop-action" type="button">导出</button>
+                <button id="importDataBtn" class="secondary-btn desktop-action" type="button">导入</button>
+                <button id="themeBtn" class="icon-btn desktop-action" type="button" title="切换主题" aria-label="切换主题">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
+                <div class="mobile-more-actions">
+                    <button id="mobileMenuBtn" class="icon-btn" type="button" title="更多" aria-label="更多操作" aria-expanded="false">...</button>
+                    <div class="header-action-menu" aria-label="更多操作">
+                        <button id="mobileDemoDataBtn" type="button">示例数据</button>
+                        <button id="mobileExportDataBtn" type="button">导出</button>
+                        <button id="mobileImportDataBtn" type="button">导入</button>
+                        <button id="mobileThemeBtn" type="button">切换主题</button>
+                    </div>
+                </div>
                 <input id="importDataInput" class="hidden" type="file" accept="application/json,.json">
             </div>
         </header>
