@@ -45,7 +45,7 @@ pam/
   accounts: [],
   snapshots: [],
   selectedAccountId: '',
-  selectedPeriod: 'ALL',
+  selectedPeriod: '3M',
   selectedHighlightAccountId: '',
   editingSnapshotId: '',
   activeView: 'analysis',

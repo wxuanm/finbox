@@ -2,7 +2,7 @@ export const state = {
     accounts: [],
     snapshots: [],
     selectedAccountId: '',
-    selectedPeriod: 'ALL',
+    selectedPeriod: '3M',
     selectedHighlightAccountId: '',
     comparisonSortKey: 'periodReturn',
     comparisonSortOrder: -1,

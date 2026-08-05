@@ -14,7 +14,7 @@ function init() {
     state.accounts = loadAccounts();
     state.snapshots = loadSnapshots();
     state.theme = preferences.theme || 'light';
-    state.selectedPeriod = preferences.selectedPeriod || 'ALL';
+    state.selectedPeriod = preferences.selectedPeriod || '3M';
     state.activeView = preferences.activeView || 'analysis';
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
 
@@ -284,7 +284,7 @@ function addDemoData() {
     state.accounts.push(...demoAccounts);
     state.snapshots.push(...demoSnapshots);
     state.selectedAccountId = steady.id;
-    state.selectedPeriod = 'ALL';
+    state.selectedPeriod = '3M';
     state.activeView = 'analysis';
     persistAll();
     showFormMessage('示例数据已添加，可在账户列表中查看。');
@@ -342,7 +342,7 @@ function importData(event) {
             state.accounts = data.accounts;
             state.snapshots = data.snapshots;
             state.theme = data.preferences.theme || state.theme;
-            state.selectedPeriod = data.preferences.selectedPeriod || 'ALL';
+            state.selectedPeriod = data.preferences.selectedPeriod || '3M';
             state.activeView = data.preferences.activeView === 'data' ? 'data' : 'analysis';
             state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
             state.selectedHighlightAccountId = '';

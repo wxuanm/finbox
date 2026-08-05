@@ -44,6 +44,7 @@ The first release focuses on account performance. The product name and structure
 - Calculate account unit NAV and performance using cash-flow-adjusted logic.
 - Compare multiple accounts in one performance chart.
 - Support chart periods: `1M`, `3M`, `6M`, `YTD`, `1Y`, `3Y`, `ALL`.
+- The default account return period is `3M`; saved user preference takes precedence.
 - Show account metrics: latest value, net contribution, cumulative profit/loss, cumulative return, selected-period return, max drawdown, annualized volatility, Calmar ratio, and latest date.
 - Persist all user data in browser `localStorage`.
 - Support dark mode.
