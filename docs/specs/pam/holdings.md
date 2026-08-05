@@ -1,0 +1,138 @@
+# PAM Holdings Spec
+
+## Scope
+
+- Module: 持仓管理
+- Parent tool: PAM
+- First release focus: current holdings only
+- Quote scope: A-share and fund quotes first
+
+## Product Goal
+
+持仓管理 lets users maintain current positions under each investment account, review current market value, cost, unrealized profit/loss, asset-class allocation, and account allocation. Holdings must be bound to an existing account.
+
+## Confirmed Decisions
+
+- First release tracks current holdings only, not historical holding snapshots.
+- Holdings must be bound to an account.
+- Price can be manually entered.
+- A-share and fund quote refresh is planned first; unsupported markets remain manual.
+- No transaction ledger, dividend handling, fee handling, or cost-basis automation in this release.
+
+## In Scope
+
+- Enable `持仓管理` navigation in PAM.
+- Add, edit, and delete holdings.
+- Filter holdings by account, asset class, and market.
+- Sort holdings table.
+- Calculate market value, cost amount, unrealized profit/loss, profit/loss percentage, and portfolio weight.
+- Show overview cards: total market value, total cost, unrealized profit/loss, holdings count.
+- Show allocation summaries by asset class and account.
+- Persist holdings in localStorage.
+- Include holdings in JSON import/export.
+- Add demo holdings.
+- Refresh supported A-share and fund quotes through `/api/quotes`.
+
+## Out Of Scope
+
+- Historical holdings.
+- Transaction ledger.
+- Brokerage import or sync.
+- CSV/Excel import.
+- Multi-currency conversion.
+- Real-time quotes for HK and US markets in the first quote release.
+- Tax, dividend, fee, or realized profit/loss calculation.
+
+## Holding Data Model
+
+```js
+{
+  id: "holding-001",
+  accountId: "account-001",
+  symbol: "600519",
+  name: "贵州茅台",
+  assetClass: "stock",
+  market: "CN",
+  quantity: 100,
+  costPrice: 1500,
+  currentPrice: 1680,
+  currency: "CNY",
+  priceSource: "manual",
+  priceUpdatedAt: "2026-08-05T10:00:00.000Z",
+  asOfDate: "2026-08-05",
+  note: ""
+}
+```
+
+## Asset Classes
+
+```text
+stock: 股票
+fund: 基金
+bond: 债券
+cash: 现金
+other: 其他
+```
+
+## Markets
+
+```text
+CN: A股/境内
+Fund: 基金
+HK: 港股
+US: 美股
+Other: 其他
+```
+
+Only `CN` and `Fund` are quote-refresh targets in the first quote release.
+
+## Calculations
+
+```text
+costAmount = quantity * costPrice
+marketValue = quantity * currentPrice
+unrealizedPnl = marketValue - costAmount
+unrealizedPnlPct = costAmount > 0 ? unrealizedPnl / costAmount * 100 : null
+weight = totalMarketValue > 0 ? marketValue / totalMarketValue * 100 : null
+```
+
+## Quote API
+
+Path:
+
+```text
+/api/quotes?items=CN:600519,Fund:003026
+```
+
+Response:
+
+```js
+{
+  source: "eastmoney",
+  updatedAt: "2026-08-05T10:00:00.000Z",
+  quotes: [
+    {
+      market: "CN",
+      symbol: "600519",
+      name: "贵州茅台",
+      price: 1680.12,
+      changePct: 1.24,
+      currency: "CNY",
+      quoteTime: "2026-08-05 15:00:00"
+    }
+  ],
+  failedItems: []
+}
+```
+
+## Acceptance Criteria
+
+- Holdings can be added only when at least one account exists.
+- Every holding is bound to an account.
+- Invalid quantity, cost price, or current price cannot be saved.
+- Holdings persist after refresh.
+- Holdings are included in JSON export and restored by JSON import.
+- Old PAM backups without holdings import successfully with an empty holdings list.
+- Holdings table supports filtering and sorting.
+- A-share and fund quote refresh updates current price, name when available, price source, and price update time.
+- Quote refresh failure does not block manual holding maintenance.

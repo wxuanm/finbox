@@ -39,3 +39,15 @@
 - [x] Implement responsive mobile layout.
 - [x] Update `README.md` with PAM details.
 - [x] Run local verification.
+
+## Phase 6: Holdings Management
+
+- [x] Add holdings SDD and technical design.
+- [x] Enable `持仓管理` navigation.
+- [x] Implement holdings storage with `pam:v1:holdings`.
+- [x] Implement holdings metrics and allocation summaries.
+- [x] Implement holding form, filters, and sortable table.
+- [x] Include holdings in demo data and JSON import/export.
+- [x] Add `/api/quotes` for A-share and fund quotes.
+- [x] Implement quote refresh for supported holdings.
+- [x] Update README and run verification.

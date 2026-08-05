@@ -7,15 +7,23 @@ import { readSnapshotForm, renderSnapshotForm, resetSnapshotForm, showFormMessag
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
+import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
+import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
+import { bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
+import { fetchQuotes } from './modules/holdings/quoteApi.js';
 import { todayKey } from './utils/formatter.js';
 
 function init() {
     const preferences = loadPreferences();
     state.accounts = loadAccounts();
     state.snapshots = loadSnapshots();
+    state.holdings = loadHoldings();
     state.theme = preferences.theme || 'light';
     state.selectedPeriod = preferences.selectedPeriod || '3M';
     state.activeView = preferences.activeView || 'analysis';
+    state.holdingFilters = preferences.holdingFilters || state.holdingFilters;
+    state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
+    state.holdingSortOrder = preferences.holdingSortOrder || state.holdingSortOrder;
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
 
     applyTheme(state.theme);
@@ -73,12 +81,26 @@ function bindEvents() {
         onDelete: deleteSnapshot
     });
     bindSnapshotTableAccountSwitch(selectAccount);
+    bindHoldingsPanel({
+        onFilter: updateHoldingFilter,
+        onSubmit: saveHolding,
+        onCancelEdit: () => {
+            resetHoldingForm();
+            showHoldingMessage('已取消编辑。');
+            renderApp();
+        },
+        onEdit: editHolding,
+        onDelete: deleteHolding,
+        onSort: sortHoldings,
+        onRefreshQuotes: refreshHoldingQuotes
+    });
     window.addEventListener('resize', resizeChart, { passive: true });
 }
 
 function renderApp() {
     state.selectedAccountId = resolveSelectedAccount(state.selectedAccountId);
     const metrics = buildAccountMetrics(state.accounts, state.snapshots, state.selectedPeriod);
+    const holdingsMetrics = buildHoldingsMetrics(state.holdings, state.accounts, state.holdingFilters);
     renderActiveView();
     renderOverviewCards(metrics);
     renderAccountList(metrics);
@@ -87,10 +109,11 @@ function renderApp() {
     renderPerformanceChart(metrics);
     renderAccountComparison(metrics);
     renderSnapshotTable();
+    renderHoldingsPanel(holdingsMetrics);
 }
 
 function switchView(view) {
-    state.activeView = view === 'data' ? 'data' : 'analysis';
+    state.activeView = ['data', 'holdings'].includes(view) ? view : 'analysis';
     persistPreferences();
     renderApp();
     requestAnimationFrame(resizeChart);
@@ -155,10 +178,12 @@ function deleteAccount(accountId) {
     const account = state.accounts.find(item => item.id === accountId);
     if (!account) return;
     const count = state.snapshots.filter(snapshot => snapshot.accountId === accountId).length;
-    if (!confirm(`确认删除账户「${account.name}」及其 ${count} 条快照吗？此操作不可恢复。`)) return;
+    const holdingCount = state.holdings.filter(holding => holding.accountId === accountId).length;
+    if (!confirm(`确认删除账户「${account.name}」及其 ${count} 条快照、${holdingCount} 条持仓吗？此操作不可恢复。`)) return;
 
     state.accounts = state.accounts.filter(item => item.id !== accountId);
     state.snapshots = state.snapshots.filter(snapshot => snapshot.accountId !== accountId);
+    state.holdings = state.holdings.filter(holding => holding.accountId !== accountId);
     if (state.selectedAccountId === accountId) state.selectedAccountId = state.accounts[0]?.id || '';
     if (state.selectedHighlightAccountId === accountId) state.selectedHighlightAccountId = '';
     persistAll();
@@ -280,9 +305,35 @@ function addDemoData() {
         netFlow,
         note
     }));
+    const demoHoldings = [
+        [steady.id, '510300', '沪深300ETF', 'fund', 'Fund', 18000, 4.25, 4.42],
+        [steady.id, '019547', '中短债基金', 'fund', 'Fund', 30000, 1.03, 1.05],
+        [growth.id, '600519', '贵州茅台', 'stock', 'CN', 30, 1550, 1680],
+        [growth.id, '300750', '宁德时代', 'stock', 'CN', 200, 185, 205],
+        [hk.id, '00700', '腾讯控股', 'stock', 'HK', 100, 310, 335],
+        [us.id, 'AAPL', 'Apple', 'stock', 'US', 80, 180, 195],
+        [pension.id, '017512', '养老目标基金', 'fund', 'Fund', 42000, 1.08, 1.12],
+        [tactical.id, '159915', '创业板ETF', 'fund', 'Fund', 25000, 1.85, 1.76]
+    ].map(([accountId, symbol, name, assetClass, market, quantity, costPrice, currentPrice]) => ({
+        id: createId('holding'),
+        accountId,
+        symbol,
+        name,
+        assetClass,
+        market,
+        quantity,
+        costPrice,
+        currentPrice,
+        currency: 'CNY',
+        priceSource: 'manual',
+        priceUpdatedAt: now,
+        asOfDate: '2026-06-02',
+        note: ''
+    }));
 
     state.accounts.push(...demoAccounts);
     state.snapshots.push(...demoSnapshots);
+    state.holdings.push(...demoHoldings);
     state.selectedAccountId = steady.id;
     state.selectedPeriod = '3M';
     state.activeView = 'analysis';
@@ -299,11 +350,15 @@ function exportData() {
         data: {
             accounts: state.accounts,
             snapshots: state.snapshots,
+            holdings: state.holdings,
             preferences: {
                 theme: state.theme,
                 selectedAccountId: state.selectedAccountId,
                 selectedPeriod: state.selectedPeriod,
-                activeView: state.activeView
+                activeView: state.activeView,
+                holdingFilters: state.holdingFilters,
+                holdingSortKey: state.holdingSortKey,
+                holdingSortOrder: state.holdingSortOrder
             }
         }
     };
@@ -333,7 +388,7 @@ function importData(event) {
                 return;
             }
 
-            const hasCurrentData = state.accounts.length > 0 || state.snapshots.length > 0;
+            const hasCurrentData = state.accounts.length > 0 || state.snapshots.length > 0 || state.holdings.length > 0;
             const message = hasCurrentData
                 ? '导入会替换当前浏览器中的 PAM 账户和快照，确认继续吗？'
                 : '确认导入 PAM 备份数据吗？';
@@ -341,16 +396,21 @@ function importData(event) {
 
             state.accounts = data.accounts;
             state.snapshots = data.snapshots;
+            state.holdings = data.holdings;
             state.theme = data.preferences.theme || state.theme;
             state.selectedPeriod = data.preferences.selectedPeriod || '3M';
-            state.activeView = data.preferences.activeView === 'data' ? 'data' : 'analysis';
+            state.activeView = ['data', 'holdings'].includes(data.preferences.activeView) ? data.preferences.activeView : 'analysis';
+            state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
+            state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
+            state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
             state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
             state.selectedHighlightAccountId = '';
             state.editingSnapshotId = '';
+            state.editingHoldingId = '';
             applyTheme(state.theme);
             persistAll();
             renderApp();
-            alert(`导入完成：${state.accounts.length} 个账户，${state.snapshots.length} 条快照。`);
+            alert(`导入完成：${state.accounts.length} 个账户，${state.snapshots.length} 条快照，${state.holdings.length} 条持仓。`);
         } catch (error) {
             alert('导入失败：无法解析 JSON 文件。');
         } finally {
@@ -371,8 +431,11 @@ function parseImportPayload(payload) {
     const snapshots = Array.isArray(payload.data.snapshots)
         ? payload.data.snapshots.map(normalizeImportedSnapshot).filter(snapshot => snapshot && accountIds.has(snapshot.accountId))
         : [];
+    const holdings = Array.isArray(payload.data.holdings)
+        ? payload.data.holdings.map(normalizeImportedHolding).filter(holding => holding && accountIds.has(holding.accountId))
+        : [];
     const preferences = payload.data.preferences && typeof payload.data.preferences === 'object' ? payload.data.preferences : {};
-    return { accounts, snapshots, preferences };
+    return { accounts, snapshots, holdings, preferences };
 }
 
 function normalizeImportedAccount(account) {
@@ -408,6 +471,137 @@ function normalizeImportedSnapshot(snapshot) {
     };
 }
 
+function normalizeImportedHolding(holding) {
+    if (!holding || typeof holding !== 'object') return null;
+    const id = String(holding.id || '').trim();
+    const accountId = String(holding.accountId || '').trim();
+    const name = String(holding.name || '').trim();
+    const quantity = Number(holding.quantity);
+    const costPrice = Number(holding.costPrice);
+    const currentPrice = Number(holding.currentPrice);
+    if (!id || !accountId || !name) return null;
+    if (![quantity, costPrice, currentPrice].every(Number.isFinite) || quantity < 0 || costPrice < 0 || currentPrice < 0) return null;
+    return {
+        id,
+        accountId,
+        symbol: String(holding.symbol || '').trim(),
+        name,
+        assetClass: ['stock', 'fund', 'bond', 'cash', 'other'].includes(holding.assetClass) ? holding.assetClass : 'other',
+        market: ['CN', 'Fund', 'HK', 'US', 'Other'].includes(holding.market) ? holding.market : 'Other',
+        quantity,
+        costPrice,
+        currentPrice,
+        currency: 'CNY',
+        priceSource: holding.priceSource === 'quote' ? 'quote' : 'manual',
+        priceUpdatedAt: holding.priceUpdatedAt || '',
+        asOfDate: holding.asOfDate || todayKey(),
+        note: String(holding.note || '').trim()
+    };
+}
+
+function updateHoldingFilter(key, value) {
+    state.holdingFilters = { ...state.holdingFilters, [key]: value };
+    renderApp();
+}
+
+function saveHolding(payload) {
+    const validationError = validateHolding(payload);
+    if (validationError) {
+        showHoldingMessage(validationError, true);
+        return;
+    }
+
+    const now = new Date().toISOString();
+    if (state.editingHoldingId) {
+        state.holdings = state.holdings.map(holding => holding.id === state.editingHoldingId
+            ? { ...holding, ...payload, currency: 'CNY', priceSource: holding.priceSource || 'manual', priceUpdatedAt: holding.priceUpdatedAt || now }
+            : holding);
+        showHoldingMessage('持仓已更新。');
+    } else {
+        state.holdings.push({
+            id: createId('holding'),
+            ...payload,
+            currency: 'CNY',
+            priceSource: 'manual',
+            priceUpdatedAt: now
+        });
+        showHoldingMessage('持仓已保存。');
+    }
+
+    resetHoldingForm();
+    persistAll();
+    renderApp();
+}
+
+function editHolding(holdingId) {
+    if (!state.holdings.some(holding => holding.id === holdingId)) return;
+    state.editingHoldingId = holdingId;
+    state.activeView = 'holdings';
+    renderApp();
+}
+
+function deleteHolding(holdingId) {
+    const holding = state.holdings.find(item => item.id === holdingId);
+    if (!holding) return;
+    if (!confirm(`确认删除持仓「${holding.name}」吗？`)) return;
+    state.holdings = state.holdings.filter(item => item.id !== holdingId);
+    if (state.editingHoldingId === holdingId) state.editingHoldingId = '';
+    persistAll();
+    showHoldingMessage('持仓已删除。');
+    renderApp();
+}
+
+function sortHoldings(sortKey) {
+    if (state.holdingSortKey === sortKey) {
+        state.holdingSortOrder *= -1;
+    } else {
+        state.holdingSortKey = sortKey;
+        state.holdingSortOrder = ['name', 'accountName', 'assetClass', 'priceUpdatedAt'].includes(sortKey) ? 1 : -1;
+    }
+    renderApp();
+}
+
+async function refreshHoldingQuotes() {
+    const supported = state.holdings.filter(holding => ['CN', 'Fund'].includes(holding.market) && holding.symbol);
+    if (supported.length === 0) {
+        showHoldingMessage('没有可刷新行情的 A股或基金持仓。', true);
+        return;
+    }
+
+    try {
+        showHoldingMessage('正在刷新行情...');
+        const data = await fetchQuotes(supported);
+        const quoteMap = new Map((data.quotes || []).map(quote => [`${quote.market}:${quote.symbol}`, quote]));
+        let updatedCount = 0;
+        state.holdings = state.holdings.map(holding => {
+            const quote = quoteMap.get(`${holding.market}:${holding.symbol}`);
+            if (!quote || !Number.isFinite(Number(quote.price))) return holding;
+            updatedCount += 1;
+            return {
+                ...holding,
+                name: quote.name || holding.name,
+                currentPrice: Number(quote.price),
+                priceSource: 'quote',
+                priceUpdatedAt: quote.quoteTime || data.updatedAt || new Date().toISOString(),
+                asOfDate: todayKey()
+            };
+        });
+        persistAll();
+        renderApp();
+        showHoldingMessage(`行情已刷新：${updatedCount} 条成功，${(data.failedItems || []).length} 条失败。`, (data.failedItems || []).length > 0);
+    } catch (error) {
+        showHoldingMessage('行情刷新失败，请稍后重试或手动维护当前价。', true);
+    }
+}
+
+function validateHolding(payload) {
+    if (!payload.accountId) return '请选择账户。';
+    if (!payload.name) return '持仓名称不能为空。';
+    if (![payload.quantity, payload.costPrice, payload.currentPrice].every(Number.isFinite)) return '数量、成本价、当前价必须是数字。';
+    if (payload.quantity < 0 || payload.costPrice < 0 || payload.currentPrice < 0) return '数量、成本价、当前价不能为负数。';
+    return '';
+}
+
 function validateSnapshot(payload) {
     if (!payload.accountId) return '请先选择账户。';
     if (!payload.date) return '日期不能为空。';
@@ -426,6 +620,7 @@ function resolveSelectedAccount(accountId) {
 function persistAll() {
     saveAccounts(state.accounts);
     saveSnapshots(state.snapshots);
+    saveHoldings(state.holdings);
     persistPreferences();
 }
 
@@ -434,7 +629,10 @@ function persistPreferences() {
         theme: state.theme,
         selectedAccountId: state.selectedAccountId,
         selectedPeriod: state.selectedPeriod,
-        activeView: state.activeView
+        activeView: state.activeView,
+        holdingFilters: state.holdingFilters,
+        holdingSortKey: state.holdingSortKey,
+        holdingSortOrder: state.holdingSortOrder
     });
 }
 

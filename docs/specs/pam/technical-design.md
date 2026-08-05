@@ -5,11 +5,11 @@
 - Tool: PAM
 - Path: `/pam/`
 - Spec source: `docs/specs/pam/sdd.md`
-- Release target: first account performance module
+- Release target: account performance and current holdings modules
 
 ## Architecture
 
-PAM is a standalone static ES module application. It does not import `fundmonitor` code and does not require a backend API for the first release.
+PAM is a standalone static ES module application. It does not import `fundmonitor` code. Holdings quote refresh uses a dedicated Cloudflare Pages Function at `/api/quotes`.
 
 ```text
 pam/
@@ -32,6 +32,13 @@ pam/
    │     ├─ snapshotTable.js
    │     ├─ metrics.js
    │     └─ storage.js
+   │  └─ holdings/
+   │     ├─ holdingForm.js
+   │     ├─ holdingTable.js
+   │     ├─ holdingsMetrics.js
+   │     ├─ holdingsPanel.js
+   │     ├─ quoteApi.js
+   │     └─ storage.js
    └─ utils/
       └─ formatter.js
 ```
@@ -44,9 +51,14 @@ pam/
 {
   accounts: [],
   snapshots: [],
+  holdings: [],
   selectedAccountId: '',
   selectedPeriod: '3M',
   selectedHighlightAccountId: '',
+  holdingFilters: { accountId: 'all', assetClass: 'all', market: 'all' },
+  holdingSortKey: 'marketValue',
+  holdingSortOrder: -1,
+  editingHoldingId: '',
   editingSnapshotId: '',
   activeView: 'analysis',
   theme: 'light'
@@ -60,6 +72,7 @@ Storage keys:
 ```text
 pam:v1:accounts
 pam:v1:snapshots
+pam:v1:holdings
 pam:v1:preferences
 ```
 
@@ -83,6 +96,15 @@ Snapshots:
 - First valid performance snapshot must have `totalValue > 0`.
 - `netFlow` must be numeric and can be positive, negative, or 0.
 - Same-account same-date overwrite requires confirmation.
+
+Holdings:
+
+- `accountId` must reference an existing account.
+- `name` is required and trimmed.
+- `assetClass` is one of `stock`, `fund`, `bond`, `cash`, `other`.
+- `market` is one of `CN`, `Fund`, `HK`, `US`, `Other`.
+- `quantity`, `costPrice`, and `currentPrice` must be finite numbers greater than or equal to 0.
+- First quote refresh supports `CN` and `Fund`; unsupported markets remain manual.
 
 ## Calculation Flow
 
@@ -121,9 +143,9 @@ This avoids treating sparse manual snapshots as daily market data.
 3. Render account list.
 4. Render snapshot form.
 5. Calculate metrics.
-6. Render overview cards, chart, metric cards, and snapshot table.
+6. Render overview cards, chart, account comparison table, holdings views, and snapshot table.
 7. Keep the snapshot table account switch synchronized with the selected account.
-7. Bind global actions.
+8. Bind global actions.
 
 UI modules render into fixed DOM containers and expose bind functions through global event handlers only where simple static HTML event binding is pragmatic.
 
@@ -146,8 +168,9 @@ The performance chart uses ECharts from CDN.
 - Snapshot input includes short inline guidance for total value, net flow, and unit-NAV return logic.
 - Account list items expose readiness status and selected-period return to reduce navigation ambiguity.
 - Account performance is compared in a sortable table rather than per-account cards, because table rows make return, drawdown, volatility, asset value, and data freshness easier to compare across accounts.
+- Comparison table labels must distinguish period-scoped metrics from cumulative/current metrics. `区间收益`, `区间回撤`, and `区间波动` are controlled by the active period switch.
 - The top module navigation includes `账户收益` and `账户数据` alongside disabled future modules, avoiding two separate menu rows while keeping performance review separate from account maintenance.
-- The interface favors compact decision screens: shorter copy, fewer decorative elements, four overview cards, and six high-signal metrics per account card.
+- The interface favors compact decision screens: shorter copy, fewer decorative elements, four overview cards, and table-first comparisons.
 
 ## Demo Data
 
@@ -171,6 +194,7 @@ Export payload:
   data: {
     accounts: [],
     snapshots: [],
+    holdings: [],
     preferences: {}
   }
 }
@@ -181,8 +205,23 @@ Import behavior:
 - Accept only `app: 'pam'` and `schemaVersion: 1`.
 - Normalize accounts and snapshots before applying.
 - Drop snapshots whose `accountId` does not exist in the imported accounts.
+- Drop holdings whose `accountId` does not exist in the imported accounts.
+- Older backups without holdings import with `holdings: []`.
 - Replace current local PAM data only after confirmation.
 - Preserve local-only design: no upload or backend API.
+
+## Quote API
+
+`/api/quotes` normalizes supported quote responses into JSON.
+
+```text
+/api/quotes?items=CN:600519,Fund:003026
+```
+
+- `CN` uses Eastmoney stock quote data.
+- `Fund` uses Eastmoney fund comparison data.
+- Unsupported markets are returned in `failedItems`.
+- Quote refresh updates only current price, name when available, price source, and price update time.
 
 ## Verification
 

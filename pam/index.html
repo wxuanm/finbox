@@ -32,7 +32,7 @@
         <nav class="module-tabs" aria-label="PAM modules">
             <button class="module-tab active" type="button" data-view="analysis">账户收益</button>
             <button class="module-tab" type="button" data-view="data">账户数据</button>
-            <button class="module-tab" type="button" disabled>持仓管理</button>
+            <button class="module-tab" type="button" data-view="holdings">持仓管理</button>
             <button class="module-tab" type="button" disabled>资产配置</button>
             <button class="module-tab" type="button" disabled>交易记录</button>
         </nav>
@@ -132,6 +132,64 @@
                             <div id="snapshotTable" class="snapshot-table-wrap"></div>
                         </section>
                     </section>
+                </section>
+            </section>
+
+            <section id="holdingsView" class="workspace-view" data-workspace-view="holdings">
+                <section id="holdingsOverview" class="overview-grid" aria-live="polite"></section>
+
+                <section class="panel holdings-panel">
+                    <div class="panel-head split-head">
+                        <div>
+                            <h2>持仓筛选</h2>
+                            <p>当前持仓按账户、类别和市场筛选。</p>
+                        </div>
+                        <button id="refreshQuotesBtn" class="secondary-btn" type="button">刷新行情</button>
+                    </div>
+                    <div class="holding-filter-bar">
+                        <label><span>账户</span><select id="holdingFilterAccount"></select></label>
+                        <label><span>类别</span><select id="holdingFilterAssetClass"></select></label>
+                        <label><span>市场</span><select id="holdingFilterMarket"></select></label>
+                    </div>
+                    <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
+                </section>
+
+                <section class="holding-layout-grid">
+                    <section class="panel holding-form-panel">
+                        <div class="panel-head split-head">
+                            <div>
+                                <h2>录入持仓</h2>
+                                <p>当前价可手动维护，A股和基金可刷新行情。</p>
+                            </div>
+                            <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                        </div>
+                        <form id="holdingForm" class="holding-form">
+                            <label><span>账户</span><select id="holdingAccountSelect"></select></label>
+                            <label><span>名称</span><input id="holdingNameInput" type="text" maxlength="40" placeholder="贵州茅台" required></label>
+                            <label><span>代码</span><input id="holdingSymbolInput" type="text" maxlength="20" placeholder="600519"></label>
+                            <label><span>类别</span><select id="holdingAssetClassSelect"></select></label>
+                            <label><span>市场</span><select id="holdingMarketSelect"></select></label>
+                            <label><span>数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
+                            <label><span>成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
+                            <label><span>当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
+                            <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
+                            <label><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选"></label>
+                            <button id="holdingSubmitBtn" class="primary-btn" type="submit">保存持仓</button>
+                        </form>
+                    </section>
+
+                    <section class="panel allocation-panel">
+                        <div class="panel-head"><h2>持仓分布</h2><p>按类别和账户查看市值占比。</p></div>
+                        <div class="allocation-columns">
+                            <div><h3>资产类别</h3><div id="assetAllocation" class="allocation-list"></div></div>
+                            <div><h3>账户分布</h3><div id="accountAllocation" class="allocation-list"></div></div>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="panel holding-table-panel">
+                    <div class="panel-head"><h2>持仓明细</h2><p>点击表头排序，A股和基金可批量刷新当前价。</p></div>
+                    <div id="holdingTable" class="holding-table-wrap"></div>
                 </section>
             </section>
         </main>

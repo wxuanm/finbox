@@ -36,8 +36,8 @@ export function renderAccountComparison(metrics) {
         ['cumulativeReturn', '累计收益'],
         ['latestValue', '最新资产'],
         ['profitLoss', '累计盈亏'],
-        ['maxDrawdown', '最大回撤'],
-        ['annualizedVolatility', '年化波动'],
+        ['maxDrawdown', '区间回撤'],
+        ['annualizedVolatility', '区间波动'],
         ['latestDate', '最新快照']
     ];
 

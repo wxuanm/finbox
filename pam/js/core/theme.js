@@ -13,7 +13,10 @@ export function toggleTheme() {
         theme: state.theme,
         selectedAccountId: state.selectedAccountId,
         selectedPeriod: state.selectedPeriod,
-        activeView: state.activeView
+        activeView: state.activeView,
+        holdingFilters: state.holdingFilters,
+        holdingSortKey: state.holdingSortKey,
+        holdingSortOrder: state.holdingSortOrder
     });
 }
 

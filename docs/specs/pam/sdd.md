@@ -17,13 +17,13 @@ This document belongs only to PAM. Other FinBox tools should use their own folde
 - Full English name: Portfolio & Asset Manager
 - Chinese name: 投资组合与资产管理
 - Path: `/pam/`
-- First module: 账户收益
+- Current modules: 账户收益, 账户数据, 持仓管理
 
 ### Product Goal
 
-PAM helps users manually track multiple investment accounts, calculate account-level performance after excluding cash flow impact, and compare return trends, drawdowns, and risk metrics across accounts.
+PAM helps users manually track multiple investment accounts, calculate account-level performance after excluding cash flow impact, compare return trends and risk metrics, and manage current holdings under each account.
 
-The first release focuses on account performance. The product name and structure should leave room for future modules such as holdings, allocation, transactions, attribution, and risk analysis.
+The first release started with account performance. PAM now expands toward current holdings management while preserving room for allocation, transactions, attribution, and risk analysis.
 
 ### Confirmed Decisions
 
@@ -33,6 +33,8 @@ The first release focuses on account performance. The product name and structure
 - PAM is an independent static tool and must not be mixed into `fundmonitor`.
 - PAM may reference good product and implementation patterns from `fundmonitor`, but it must not share runtime state, localStorage keys, or business modules with it.
 - PAM specs, design notes, and implementation tasks live under `docs/specs/pam/`.
+- 持仓管理 tracks current holdings only in its first release, and holdings must be bound to accounts.
+- A-share and fund quote refresh are the first supported real-time quote targets for holdings.
 
 ### In Scope For First Release
 
@@ -46,10 +48,13 @@ The first release focuses on account performance. The product name and structure
 - Support chart periods: `1M`, `3M`, `6M`, `YTD`, `1Y`, `3Y`, `ALL`.
 - The default account return period is `3M`; saved user preference takes precedence.
 - Show account metrics: latest value, net contribution, cumulative profit/loss, cumulative return, selected-period return, max drawdown, annualized volatility, Calmar ratio, and latest date.
+- In the account comparison table, period-scoped risk columns must be labeled as `区间回撤` and `区间波动` to distinguish them from all-history metrics.
 - Persist all user data in browser `localStorage`.
 - Support dark mode.
 - Provide empty, insufficient-data, and invalid-data states.
 - Support desktop and mobile layouts.
+- Manage current holdings bound to accounts.
+- Refresh supported A-share and fund prices through `/api/quotes`.
 
 ### Out Of Scope For First Release
 
@@ -57,10 +62,10 @@ The first release focuses on account performance. The product name and structure
 - CSV or Excel import.
 - Cloud sync.
 - Login or user accounts.
-- Holdings detail.
+- Historical holdings.
 - Transaction ledger.
 - Multi-currency conversion.
-- Backend APIs or Cloudflare Pages Functions.
+- Brokerage APIs or cloud sync APIs.
 - Reusing `fundmonitor` groups, state, storage, or UI modules.
 - English UI.
 
@@ -82,7 +87,9 @@ First release:
 
 ```text
 PAM
-└─ 账户收益
+├─ 账户收益
+├─ 账户数据
+└─ 持仓管理
 ```
 
 Future modules:
@@ -91,7 +98,6 @@ Future modules:
 PAM
 ├─ 总览
 ├─ 账户收益
-├─ 持仓管理
 ├─ 资产配置
 ├─ 交易记录
 ├─ 收益归因
@@ -104,17 +110,19 @@ PAM
 /pam/
 ├─ Header: product name, description, theme toggle
 ├─ Module navigation: 账户收益, future modules disabled or hidden
-├─ Unified module navigation: 账户收益 / 账户数据 / future modules
+├─ Unified module navigation: 账户收益 / 账户数据 / 持仓管理 / future modules
 ├─ 账户收益: overview cards, performance chart, sortable account comparison table
-└─ 账户数据: account list, snapshot input form, snapshot table with account switch
+├─ 账户数据: account list, snapshot input form, snapshot table with account switch
+└─ 持仓管理: holding overview, allocation summaries, holding form, holding table
 ```
 
 UI direction:
 
-- Keep the default experience decision-first: account return overview, chart, and compact metric cards.
+- Keep the default experience decision-first: account return overview, chart, and sortable comparison table.
 - Keep account maintenance separate under `账户数据`.
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
+- Keep holdings focused on current positions, valuation, unrealized profit/loss, and allocation.
 
 ### Account Data Model
 
@@ -191,6 +199,11 @@ Empty state:
 - Import replaces current PAM accounts, snapshots, and preferences only after user confirmation.
 - Import validates schema version, account records, snapshot records, and account references before applying data.
 - CSV import/export is out of scope for the first backup feature and can be added later for batch snapshot entry.
+- Holdings are included in PAM JSON backups. Older backups without holdings are imported with an empty holdings list.
+
+### Holdings
+
+See `docs/specs/pam/holdings.md` for detailed holdings requirements, data model, quote scope, and acceptance criteria.
 
 ## 3. Calculation Spec
 
@@ -252,7 +265,7 @@ This formula is intentionally approximate for manual snapshot tracking. It is de
 - `1M`, `3M`, `6M`, `1Y`, and `3Y` are calendar lookback windows from the latest valid snapshot date.
 - `YTD` starts from January 1 of the latest valid snapshot year.
 - `ALL` starts from the first valid snapshot.
-- Summary cards, chart series, and account metric cards must use the same active period.
+- Summary cards, chart series, and account comparison table must use the same active period.
 - Chart series are normalized to the active period anchor, so the latest chart value matches the account comparison table's selected-period return.
 
 ### Invalid Data Cases
@@ -303,6 +316,7 @@ pam/
 ```text
 pam:v1:accounts
 pam:v1:snapshots
+pam:v1:holdings
 pam:v1:preferences
 ```
 
@@ -315,7 +329,7 @@ Preferences include selected account, selected period, and theme. Future modules
 - Browser `localStorage`.
 - Cloudflare Pages static hosting.
 
-No backend API is required for the first release.
+The first account-performance release required no backend API. Holdings quote refresh adds `/api/quotes` as a Cloudflare Pages Function for supported A-share and fund prices.
 
 ## 5. Acceptance Criteria
 
@@ -365,7 +379,7 @@ No backend API is required for the first release.
 - Implement snapshot form.
 - Implement snapshot table.
 - Implement performance chart and period switch.
-- Implement metric cards and overview cards.
+- Implement overview cards and account comparison table.
 - Implement demo data action.
 - Implement empty, invalid, and insufficient-data states.
 - Implement mobile responsive layout.

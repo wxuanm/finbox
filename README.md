@@ -43,22 +43,30 @@ Key features:
 - Cash-flow-adjusted account unit NAV calculation for fair account comparison.
 - Multi-account performance chart with period switches: 1M, 3M, 6M, YTD, 1Y, 3Y, and ALL.
 - Account metrics including latest value, net contribution, profit/loss, cumulative return, period return, max drawdown, annualized volatility, and Calmar ratio.
+- Current holdings management with account binding, manual valuation, allocation summaries, and A-share/fund quote refresh.
 - Optional demo data generated only by user action.
 - Dark mode and local-only persistence using `pam:v1:*` `localStorage` keys.
 
-## Data Proxy
+## Data Proxies
 
-The app uses a Cloudflare Pages Function at:
+Fund Monitor uses Cloudflare Pages Functions at:
 
-`/api/fundgz`
+```text
+/api/fundgz
+/api/fundnav
+```
 
-The proxy forwards requests to Eastmoney's fund data endpoint.
+`/api/fundgz` forwards real-time fund comparison and period-return requests to Eastmoney's fund data endpoint.
+
+`/api/fundnav` fetches and normalizes Eastmoney fund historical NAV scripts for the historical trend modal.
 
 Examples:
 
 ```text
 /api/fundgz?code=003026
 /api/fundgz?code=003026,001123,017512
+/api/fundgz?code=003026,001123&t=1
+/api/fundnav?code=003026,001123
 ```
 
 Notes:
@@ -66,6 +74,23 @@ Notes:
 - Eastmoney's `bzdm` parameter reliably supports up to 10 fund codes per request.
 - For more than 10 codes, the proxy splits requests into chunks of 10 and merges the returned `fundinfo` arrays.
 - `t=1` is used by the deep analysis modal and is kept as a single-code request path.
+- `/api/fundnav` supports up to 10 six-digit fund codes per request and returns JSON with normalized three-year NAV points plus `failedCodes` for partial failures.
+
+PAM uses a Cloudflare Pages Function at:
+
+`/api/quotes`
+
+Examples:
+
+```text
+/api/quotes?items=CN:600519
+/api/quotes?items=CN:600519,Fund:003026
+```
+
+Notes:
+
+- The first quote release supports A-share (`CN`) and fund (`Fund`) holdings.
+- Unsupported markets remain manually priced in PAM.
 
 ## Project Structure
 
@@ -73,7 +98,9 @@ Notes:
 finbox/
 ├─ functions/
 │  └─ api/
-│     └─ fundgz.js              # Cloudflare Pages API proxy
+│     ├─ fundgz.js              # Cloudflare Pages API proxy
+│     ├─ fundnav.js             # Fund NAV trend proxy
+│     └─ quotes.js              # PAM A-share/fund quote proxy
 ├─ fundmonitor/
 │  ├─ index.html                # Fund Monitor page
 │  ├─ css/
@@ -107,7 +134,8 @@ finbox/
 │     ├─ core/
 │     │  └─ theme.js            # Theme handling
 │     ├─ modules/
-│     │  └─ accountPerformance/ # Account performance module
+│     │  ├─ accountPerformance/ # Account performance module
+│     │  └─ holdings/           # Current holdings module
 │     └─ utils/
 │        └─ formatter.js        # Formatting helpers
 ├─ docs/
@@ -137,7 +165,7 @@ Then open the local URL printed by Wrangler and navigate to:
 Why use Wrangler locally:
 
 - Static files are served correctly.
-- `/api/fundgz` is available locally through the Pages Function runtime.
+- `/api/fundgz`, `/api/fundnav`, and `/api/quotes` are available locally through the Pages Function runtime.
 - The app can test the same proxy path used in production.
 
 ## Persistence
@@ -154,6 +182,7 @@ PAM stores user data in browser `localStorage`:
 
 - `pam:v1:accounts`.
 - `pam:v1:snapshots`.
+- `pam:v1:holdings`.
 - `pam:v1:preferences`.
 
 No backend database is required.
