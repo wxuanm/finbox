@@ -112,6 +112,7 @@ finbox/
 │        └─ formatter.js        # Formatting helpers
 ├─ docs/
 │  └─ specs/
+│     ├─ fundmonitor/           # Fund Monitor SDD specs and implementation tasks
 │     └─ pam/                   # PAM SDD specs and implementation tasks
 └─ README.md
 ```
