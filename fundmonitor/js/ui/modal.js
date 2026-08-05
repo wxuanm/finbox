@@ -681,7 +681,7 @@ export function navigateToAnalysis(codes, groupName = '') {
     // Generate native UI on load
     script.onload = () => {
         if (!isActiveModalRequest('returns', requestId)) {
-            delete window.fundinfo_yjpj;
+            window.fundinfo_yjpj = undefined;
             script.remove();
             return;
         }
@@ -702,7 +702,7 @@ export function navigateToAnalysis(codes, groupName = '') {
                 content.style.display = 'block';
                 content.style.opacity = '1';
                 content.innerHTML = `<div class="error-message modal-error">${i18n[state.currentLang].fetchError} (No Data)</div>`;
-                delete window.fundinfo_yjpj;
+                window.fundinfo_yjpj = undefined;
                 script.remove();
                 return;
             }
@@ -797,7 +797,7 @@ export function navigateToAnalysis(codes, groupName = '') {
             content.style.opacity = '1';
             content.innerHTML = `<div class="error-message modal-error">${i18n[state.currentLang].fetchError} (No Data)</div>`;
         }
-        delete window.fundinfo_yjpj;
+        window.fundinfo_yjpj = undefined;
         script.remove();
     };
     

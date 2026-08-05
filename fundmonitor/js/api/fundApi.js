@@ -39,7 +39,7 @@ export function fetchDataForCode(codeStr) {
         } else {
             handleFetchError(codeStr);
         }
-        delete window.fundinfo;
+        window.fundinfo = undefined;
         script.remove();
     };
     script.onerror = () => {
