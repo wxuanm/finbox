@@ -1,5 +1,5 @@
 import { state } from '../../config/state.js';
-import { escapeHtml, formatCurrency, formatNumber, formatPercent, signedClass, todayKey } from '../../utils/formatter.js';
+import { escapeHtml, formatCurrency, formatPercent, signedClass, todayKey } from '../../utils/formatter.js';
 import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel } from './holdingsMetrics.js';
 
 export function renderHoldingsPanel(metrics) {
@@ -12,7 +12,6 @@ export function renderHoldingsPanel(metrics) {
 }
 
 export function bindHoldingsPanel({ onFilter, onSubmit, onCancelEdit, onEdit, onDelete, onSort, onRefreshQuotes, onGenerateSnapshots }) {
-    document.getElementById('holdingFilterAccount')?.addEventListener('change', event => onFilter('accountId', event.target.value));
     document.getElementById('holdingFilterAssetClass')?.addEventListener('change', event => onFilter('assetClass', event.target.value));
     document.getElementById('holdingFilterMarket')?.addEventListener('change', event => onFilter('market', event.target.value));
     document.getElementById('holdingAssetClassSelect')?.addEventListener('change', updateCashMode);
@@ -67,13 +66,8 @@ function renderHoldingOverview(metrics) {
 }
 
 function renderHoldingFilters() {
-    const accountSelect = document.getElementById('holdingFilterAccount');
     const assetSelect = document.getElementById('holdingFilterAssetClass');
     const marketSelect = document.getElementById('holdingFilterMarket');
-    if (accountSelect) {
-        accountSelect.innerHTML = '<option value="all">全部账户</option>' + state.accounts.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
-        accountSelect.value = state.holdingFilters.accountId;
-    }
     if (assetSelect) {
         assetSelect.innerHTML = '<option value="all">全部类别</option>' + ASSET_CLASSES.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
         assetSelect.value = state.holdingFilters.assetClass;
@@ -95,6 +89,7 @@ function renderHoldingForm() {
     accountSelect.innerHTML = state.accounts.length === 0
         ? '<option value="">请先新增账户</option>'
         : state.accounts.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
+    if (state.selectedAccountId) accountSelect.value = state.selectedAccountId;
     accountSelect.disabled = state.accounts.length === 0;
     submitBtn.disabled = state.accounts.length === 0;
     assetSelect.innerHTML = ASSET_CLASSES.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
@@ -102,7 +97,8 @@ function renderHoldingForm() {
 
     const editing = state.holdings.find(holding => holding.id === state.editingHoldingId);
     submitBtn.textContent = editing ? '更新持仓' : '保存持仓';
-    cancelBtn.classList.toggle('hidden', !editing);
+    cancelBtn.classList.remove('hidden');
+    cancelBtn.textContent = editing ? '取消编辑' : '取消录入';
     document.getElementById('holdingAsOfDateInput').value ||= todayKey();
 
     if (!editing) return;
@@ -139,11 +135,11 @@ function renderHoldingTable(rows) {
     const wrap = document.getElementById('holdingTable');
     if (!wrap) return;
     if (state.accounts.length === 0) {
-        wrap.innerHTML = '<div class="empty-state">请先在“账户数据”中新增账户。</div>';
+        wrap.innerHTML = '<div class="empty-state">请先在“资产数据”中新增账户。</div>';
         return;
     }
     if (rows.length === 0) {
-        wrap.innerHTML = '<div class="empty-state">暂无持仓。录入持仓后可查看市值、占比和浮盈亏。</div>';
+        wrap.innerHTML = '<div class="empty-state">当前账户暂无持仓。新增持仓后可查看市值、占比和浮盈亏。</div>';
         return;
     }
 

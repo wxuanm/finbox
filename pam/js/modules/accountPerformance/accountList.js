@@ -14,6 +14,7 @@ export function renderAccountList(metrics) {
         const metric = metrics.find(item => item.account.id === account.id);
         const active = account.id === state.selectedAccountId;
         const snapshotCount = state.snapshots.filter(snapshot => snapshot.accountId === account.id).length;
+        const holdingCount = state.holdings.filter(holding => holding.accountId === account.id).length;
         const valueText = metric?.valid ? formatCurrency(metric.latestValue) : `${snapshotCount} 条快照`;
         const statusText = metric?.valid ? '可计算收益' : (snapshotCount === 0 ? '待录入' : '需至少两条');
         const statusClass = metric?.valid ? 'ready' : 'warning';
@@ -25,6 +26,7 @@ export function renderAccountList(metrics) {
                     <span>${valueText}</span>
                     <div class="account-meta-row">
                         <span class="status-pill ${statusClass}">${statusText}</span>
+                        <span class="status-pill">${holdingCount} 个持仓</span>
                         <span class="status-pill ${signedClass(metric?.periodReturn)}">区间 ${returnText}</span>
                     </div>
                 </button>

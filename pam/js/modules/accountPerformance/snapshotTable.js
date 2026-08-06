@@ -3,17 +3,8 @@ import { escapeHtml, formatCurrency } from '../../utils/formatter.js';
 
 export function renderSnapshotTable() {
     const wrap = document.getElementById('snapshotTable');
-    const select = document.getElementById('snapshotTableAccountSelect');
     const context = document.getElementById('snapshotTableContext');
     if (!wrap) return;
-
-    if (select) {
-        select.innerHTML = state.accounts.length === 0
-            ? '<option value="">暂无账户</option>'
-            : state.accounts.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
-        select.value = state.selectedAccountId || state.accounts[0]?.id || '';
-        select.disabled = state.accounts.length === 0;
-    }
 
     if (state.accounts.length === 0) {
         if (context) context.textContent = '暂无可查看的账户。';
@@ -28,7 +19,7 @@ export function renderSnapshotTable() {
         .sort((a, b) => b.date.localeCompare(a.date));
 
     if (context) {
-        context.textContent = `${account?.name || '未选择账户'} · ${rows.length} 条快照`;
+        context.textContent = `${account?.name || '未选择账户'} · ${rows.length} 条资产记录`;
     }
 
     if (rows.length === 0) {
@@ -78,8 +69,5 @@ export function bindSnapshotTable({ onEdit, onDelete }) {
     });
 }
 
-export function bindSnapshotTableAccountSwitch(onSelect) {
-    const select = document.getElementById('snapshotTableAccountSelect');
-    if (!select) return;
-    select.addEventListener('change', () => onSelect(select.value));
+export function bindSnapshotTableAccountSwitch() {
 }

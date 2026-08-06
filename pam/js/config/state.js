@@ -13,6 +13,9 @@ export const state = {
     editingHoldingId: '',
     editingSnapshotId: '',
     activeView: 'analysis',
+    assetDataAction: 'snapshot',
+    assetDataMaintenanceOpen: false,
+    accountManagementOpen: false,
     theme: 'light'
 };
 

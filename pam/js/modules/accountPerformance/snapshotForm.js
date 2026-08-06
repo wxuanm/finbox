@@ -19,7 +19,8 @@ export function renderSnapshotForm() {
 
     const editing = state.snapshots.find(snapshot => snapshot.id === state.editingSnapshotId);
     submitBtn.textContent = editing ? '更新快照' : '保存快照';
-    cancelBtn.classList.toggle('hidden', !editing);
+    cancelBtn.classList.remove('hidden');
+    cancelBtn.textContent = editing ? '取消编辑' : '取消录入';
 
     if (editing) {
         select.value = editing.accountId;

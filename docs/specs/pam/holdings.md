@@ -2,14 +2,14 @@
 
 ## Scope
 
-- Module: 持仓管理
+- Module: 资产数据 current holdings capability
 - Parent tool: PAM
 - First release focus: current holdings only
 - Quote scope: A-share and fund quotes first
 
 ## Product Goal
 
-持仓管理 lets users maintain current positions under each investment account, review current market value, cost, unrealized profit/loss, asset-class allocation, and account allocation. Holdings must be bound to an existing account.
+The current holdings capability lets users maintain current positions under each investment account from `资产数据`, review current market value, cost, unrealized profit/loss, asset-class allocation, and account allocation. Holdings must be bound to an existing account.
 
 ## Confirmed Decisions
 
@@ -21,9 +21,9 @@
 
 ## In Scope
 
-- Enable `持仓管理` navigation in PAM.
+- Integrate holdings into `资产数据` instead of exposing a separate top-level `持仓管理` navigation item.
 - Add, edit, and delete holdings.
-- Filter holdings by account, asset class, and market.
+- Filter holdings by the selected account plus asset class and market.
 - Sort holdings table.
 - Calculate market value, cost amount, unrealized profit/loss, profit/loss percentage, and portfolio weight.
 - Show overview cards: total market value, total cost, unrealized profit/loss, holdings count.

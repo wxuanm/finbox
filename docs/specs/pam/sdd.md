@@ -17,7 +17,7 @@ This document belongs only to PAM. Other FinBox tools should use their own folde
 - Full English name: Portfolio & Asset Manager
 - Chinese name: 投资组合与资产管理
 - Path: `/pam/`
-- Current modules: 账户收益, 账户数据, 持仓管理
+- Current modules: 账户收益, 资产数据
 
 ### Product Goal
 
@@ -33,7 +33,8 @@ The first release started with account performance. PAM now expands toward curre
 - PAM is an independent static tool and must not be mixed into `fundmonitor`.
 - PAM may reference good product and implementation patterns from `fundmonitor`, but it must not share runtime state, localStorage keys, or business modules with it.
 - PAM specs, design notes, and implementation tasks live under `docs/specs/pam/`.
-- 持仓管理 tracks current holdings only in its first release, and holdings must be bound to accounts.
+- 资产数据 combines account snapshots and current holdings in one account-scoped maintenance page.
+- Current holdings track current positions only in the first release, and holdings must be bound to accounts.
 - A-share and fund quote refresh are the first supported real-time quote targets for holdings.
 - Cash is a supported holding type and is manually maintained as CNY-equivalent amount; no currency conversion is performed.
 
@@ -90,8 +91,7 @@ First release:
 ```text
 PAM
 ├─ 账户收益
-├─ 账户数据
-└─ 持仓管理
+└─ 资产数据
 ```
 
 Future modules:
@@ -112,19 +112,20 @@ PAM
 /pam/
 ├─ Header: product name, description, theme toggle
 ├─ Module navigation: 账户收益, future modules disabled or hidden
-├─ Unified module navigation: 账户收益 / 账户数据 / 持仓管理 / future modules
+├─ Unified module navigation: 账户收益 / 资产数据 / future modules
 ├─ 账户收益: overview cards, performance chart, sortable account comparison table
-├─ 账户数据: account list, snapshot input form, snapshot table with account switch
-└─ 持仓管理: holding overview, allocation summaries, holding form, holding table
+└─ 资产数据: current account selector, current account summary, context action menu, on-demand quick maintenance, holdings table, allocation summary, asset records, collapsible account management
 ```
 
 UI direction:
 
 - Keep the default experience decision-first: account return overview, chart, and sortable comparison table.
-- Keep account maintenance separate under `账户数据`.
+- Keep account snapshots and current holdings together under `资产数据`, organized by the selected account rather than by separate modules.
+- Show module-specific actions on the right side of the top navigation; when `资产数据` is active, show icon actions for snapshot entry, holding entry, snapshot generation, quote refresh, and account management.
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 - Keep holdings focused on current positions, valuation, unrealized profit/loss, and allocation.
+- Keep the `资产数据` layout mobile-first: current account summary first, compact account switching, on-demand maintenance forms, holdings detail, asset records, then collapsible account management.
 
 ### Account Data Model
 
@@ -177,7 +178,7 @@ Subtitle:
 Input help:
 
 ```text
-账户数据只做手动快照：总资产按券商账户总资产填写；净流入填写上次快照后至本次快照期间的净投入/取出。持仓管理可用当前持仓市值生成快照。
+总资产填账户总额；净流入填本次与上次之间的投入/取出。资产数据可用当前持仓市值生成快照。
 ```
 
 Empty state:

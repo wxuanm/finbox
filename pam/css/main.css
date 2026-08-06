@@ -164,12 +164,106 @@ button:disabled {
 .module-tabs {
     display: flex;
     gap: 6px;
-    overflow-x: auto;
+    overflow: visible;
     margin: 12px 0;
     padding: 5px;
     border: 1px solid var(--border-color);
     border-radius: 16px;
     background: var(--surface-glass);
+}
+
+.module-bar {
+    align-items: center;
+    justify-content: space-between;
+}
+
+.module-tab-list {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+}
+
+.context-actions {
+    display: none;
+    gap: 5px;
+    margin-left: auto;
+}
+
+.context-actions.active {
+    display: flex;
+}
+
+.mobile-context-actions {
+    position: relative;
+    display: none;
+    margin-left: auto;
+}
+
+.mobile-context-actions.active {
+    display: none;
+}
+
+.context-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 42px;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--muted-text);
+    background: var(--surface-muted);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.context-action:hover,
+.context-action.active {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: var(--primary-soft);
+}
+
+.context-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.context-action-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 35;
+    display: none;
+    min-width: 132px;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--surface-color);
+    box-shadow: var(--shadow-md);
+}
+
+.mobile-context-actions.menu-open .context-action-menu {
+    display: grid;
+    gap: 4px;
+}
+
+.context-action-menu button {
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 9px;
+    color: var(--text-color);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: left;
+}
+
+.context-action-menu button:hover {
+    background: var(--primary-soft);
 }
 
 .workspace-view {
@@ -204,6 +298,12 @@ button:disabled {
 .overview-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px;
+}
+
+.asset-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 10px;
 }
 
@@ -288,6 +388,11 @@ button:disabled {
     gap: 8px;
 }
 
+.compact-account-form {
+    grid-template-columns: minmax(220px, 1fr) auto;
+    max-width: 560px;
+}
+
 .holding-filter-bar,
 .holding-form {
     display: grid;
@@ -323,6 +428,84 @@ button:disabled {
 .holding-layout-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.asset-data-view {
+    gap: 14px;
+}
+
+.asset-data-hero-panel,
+.account-management-panel {
+    display: grid;
+    gap: 12px;
+}
+
+.current-account-select {
+    display: grid;
+    min-width: min(320px, 100%);
+    gap: 6px;
+    color: var(--muted-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.account-strip {
+    display: flex;
+    gap: 10px;
+    margin-top: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scroll-snap-type: x proximity;
+}
+
+.account-strip .account-item {
+    flex: 0 0 min(310px, 86vw);
+    scroll-snap-align: start;
+}
+
+.quick-maintenance-panel {
+    display: grid;
+    gap: 12px;
+}
+
+.quick-maintenance-panel.collapsed .maintenance-pane,
+.account-management-panel.collapsed .account-management-body {
+    display: none;
+}
+
+.account-management-body {
+    display: grid;
+    gap: 12px;
+}
+
+.maintenance-pane {
+    display: none;
+}
+
+.maintenance-pane.active {
+    display: block;
+}
+
+.asset-tool-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr)) auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.asset-tool-bar label {
+    display: grid;
+    gap: 6px;
+    color: var(--muted-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.asset-bottom-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.28fr);
     gap: 14px;
     align-items: start;
 }
@@ -490,7 +673,7 @@ select:focus {
 }
 
 .snapshot-form {
-    grid-template-columns: 1.15fr repeat(3, 1fr) 1.2fr auto;
+    grid-template-columns: 1.15fr repeat(3, 1fr) 1.2fr auto auto;
     align-items: end;
 }
 
@@ -702,12 +885,17 @@ select:focus {
 @media (max-width: 1100px) {
     .layout-grid,
     .data-layout-grid,
-    .holding-layout-grid {
+    .holding-layout-grid,
+    .asset-bottom-grid {
         grid-template-columns: 1fr;
     }
 
     .snapshot-form {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .asset-tool-bar {
+        width: 100%;
     }
 }
 
@@ -726,9 +914,12 @@ select:focus {
     }
 
     .account-form,
+    .compact-account-form,
     .snapshot-form,
     .holding-filter-bar,
-    .holding-form {
+    .holding-form,
+    .asset-tool-bar,
+    .current-account-select {
         grid-template-columns: 1fr;
         width: 100%;
     }
@@ -750,6 +941,32 @@ select:focus {
         width: 100%;
     }
 
+    .module-tabs {
+        align-items: center;
+    }
+
+    .module-tab-list {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .context-actions.active {
+        display: none;
+    }
+
+    .mobile-context-actions.active {
+        display: block;
+        flex: 0 0 auto;
+    }
+
+    .asset-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .asset-summary-grid .overview-card:first-child {
+        grid-column: 1 / -1;
+    }
+
     .mobile-more-actions .icon-btn {
         width: 44px;
     }
@@ -758,7 +975,97 @@ select:focus {
         padding: 16px;
     }
 
+    .holding-table,
+    .snapshot-table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    .holding-table thead,
+    .snapshot-table thead {
+        display: none;
+    }
+
+    .holding-table tbody,
+    .holding-table tr,
+    .holding-table td,
+    .snapshot-table tbody,
+    .snapshot-table tr,
+    .snapshot-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .holding-table tr,
+    .snapshot-table tr {
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        background: var(--surface-color);
+    }
+
+    .holding-table td,
+    .snapshot-table td {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 7px 0;
+        border-bottom: 0;
+        text-align: right;
+    }
+
+    .holding-table td::before,
+    .snapshot-table td::before {
+        flex: 0 0 auto;
+        color: var(--muted-text);
+        font-size: 12px;
+        font-weight: 900;
+        text-align: left;
+    }
+
+    .holding-table td:nth-child(1),
+    .snapshot-table td:nth-child(1) {
+        display: block;
+        text-align: left;
+    }
+
+    .holding-table td:nth-child(1)::before,
+    .snapshot-table td:nth-child(1)::before {
+        display: none;
+    }
+
+    .holding-table td:nth-child(2)::before { content: "账户"; }
+    .holding-table td:nth-child(3)::before { content: "类别"; }
+    .holding-table td:nth-child(4)::before { content: "市值"; }
+    .holding-table td:nth-child(5)::before { content: "占比"; }
+    .holding-table td:nth-child(6)::before { content: "成本"; }
+    .holding-table td:nth-child(7)::before { content: "浮盈亏"; }
+    .holding-table td:nth-child(8)::before { content: "浮盈率"; }
+    .holding-table td:nth-child(9)::before { content: "估值日"; }
+    .holding-table td:nth-child(10)::before { content: "操作"; }
+
+    .snapshot-table td:nth-child(2)::before { content: "总资产"; }
+    .snapshot-table td:nth-child(3)::before { content: "净流入"; }
+    .snapshot-table td:nth-child(4)::before { content: "备注"; }
+    .snapshot-table td:nth-child(5)::before { content: "操作"; }
+
+    .number-cell {
+        text-align: right !important;
+    }
+
+    .row-actions {
+        justify-content: flex-end;
+    }
+
     .performance-chart {
         height: 310px;
     }
+}
+
+@media (max-width: 460px) {
+    .asset-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
 }

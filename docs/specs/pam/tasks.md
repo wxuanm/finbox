@@ -43,7 +43,7 @@
 ## Phase 6: Holdings Management
 
 - [x] Add holdings SDD and technical design.
-- [x] Enable `持仓管理` navigation.
+- [x] Integrate holdings into `资产数据` navigation.
 - [x] Implement holdings storage with `pam:v1:holdings`.
 - [x] Implement holdings metrics and allocation summaries.
 - [x] Implement holding form, filters, and sortable table.

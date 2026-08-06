@@ -38,12 +38,42 @@
             </div>
         </header>
 
-        <nav class="module-tabs" aria-label="PAM modules">
-            <button class="module-tab active" type="button" data-view="analysis">账户收益</button>
-            <button class="module-tab" type="button" data-view="data">账户数据</button>
-            <button class="module-tab" type="button" data-view="holdings">持仓管理</button>
-            <button class="module-tab" type="button" disabled>资产配置</button>
-            <button class="module-tab" type="button" disabled>交易记录</button>
+        <nav class="module-tabs module-bar" aria-label="PAM modules">
+            <div class="module-tab-list">
+                <button class="module-tab active" type="button" data-view="analysis">账户收益</button>
+                <button class="module-tab" type="button" data-view="assetData">资产数据</button>
+                <button class="module-tab" type="button" disabled>资产配置</button>
+                <button class="module-tab" type="button" disabled>交易记录</button>
+            </div>
+            <div class="context-actions" data-context-actions="assetData" aria-label="资产数据操作">
+                <button class="context-action" type="button" data-asset-action="snapshot" title="录入快照" aria-label="录入快照">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg><span>快照</span>
+                </button>
+                <button class="context-action" type="button" data-asset-action="holding" title="新增持仓" aria-label="新增持仓">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7h16M7 7v13h10V7M9 7V4h6v3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>持仓</span>
+                </button>
+                <button id="generateSnapshotsBtn" class="context-action" type="button" title="用持仓生成快照" aria-label="用持仓生成快照">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span>生成</span>
+                </button>
+                <button id="refreshQuotesBtn" class="context-action" type="button" title="刷新行情" aria-label="刷新行情">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v5h5M4 13a8 8 0 0 0 14.9 4M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>刷新</span>
+                </button>
+                <button id="accountManagementToggle" class="context-action" type="button" title="账户管理" aria-label="账户管理" aria-expanded="false">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" stroke-linecap="round"/><circle cx="9.5" cy="7" r="4"/><path d="M19 8v6M16 11h6" stroke-linecap="round"/></svg><span>账户</span>
+                </button>
+            </div>
+            <div class="mobile-context-actions" data-context-actions="assetData">
+                <button id="contextMenuBtn" class="context-action" type="button" title="资产数据操作" aria-label="资产数据操作" aria-expanded="false">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+                </button>
+                <div class="context-action-menu" aria-label="资产数据操作菜单">
+                    <button type="button" data-asset-action="snapshot">录入快照</button>
+                    <button type="button" data-asset-action="holding">新增持仓</button>
+                    <button type="button" data-context-command="generate-snapshot">生成快照</button>
+                    <button type="button" data-context-command="refresh-quotes">刷新行情</button>
+                    <button type="button" data-context-command="account-management">账户管理</button>
+                </div>
+            </div>
         </nav>
 
         <main class="workspace">
@@ -74,107 +104,60 @@
                 </section>
             </section>
 
-            <section id="dataView" class="workspace-view" data-workspace-view="data">
-                <section class="data-layout-grid">
-                    <aside class="panel account-panel">
-                        <div class="panel-head">
-                            <div>
-                                <h2>投资账户</h2>
-                                <p>按券商、平台或策略创建。</p>
-                            </div>
-                        </div>
-                        <form id="accountForm" class="account-form">
-                            <input id="accountNameInput" type="text" maxlength="32" placeholder="账户名，例如：招商证券" autocomplete="off">
-                            <button class="primary-btn" type="submit">新增</button>
-                        </form>
-                        <div id="accountList" class="account-list"></div>
-                    </aside>
-
-                    <section class="main-stack">
-                        <section class="panel snapshot-panel">
-                            <div class="panel-head split-head">
-                                <div>
-                                    <h2>录入快照</h2>
-                                    <p>记录总资产和净流入即可。</p>
-                                </div>
-                                <button id="cancelEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
-                            </div>
-                            <div class="input-guide">账户数据只做手动快照：总资产按券商账户总资产填写；净流入为上次快照后至本次快照期间的净投入/取出。</div>
-                            <form id="snapshotForm" class="snapshot-form">
-                                <label>
-                                    <span>账户</span>
-                                    <select id="snapshotAccountSelect"></select>
-                                </label>
-                                <label>
-                                    <span>日期</span>
-                                    <input id="snapshotDateInput" type="date" required>
-                                </label>
-                                <label>
-                                    <span>总资产</span>
-                                    <input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="券商账户总资产" required>
-                                </label>
-                                <label>
-                                    <span>净流入</span>
-                                    <input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" placeholder="0" value="0" required>
-                                </label>
-                                <label class="note-field">
-                                    <span>备注</span>
-                                    <input id="snapshotNoteInput" type="text" maxlength="60" placeholder="可选">
-                                </label>
-                                <button id="snapshotSubmitBtn" class="primary-btn" type="submit">保存快照</button>
-                            </form>
-                            <div id="formMessage" class="form-message" role="status" aria-live="polite"></div>
-                        </section>
-
-                        <section class="panel table-panel">
-                            <div class="panel-head split-head">
-                                <div>
-                                    <h2>历史快照</h2>
-                                    <p>查看、编辑、删除快照。</p>
-                                </div>
-                                <label class="table-account-switch">
-                                    <span>账户</span>
-                                    <select id="snapshotTableAccountSelect"></select>
-                                </label>
-                            </div>
-                            <div id="snapshotTableContext" class="table-context"></div>
-                            <div id="snapshotTable" class="snapshot-table-wrap"></div>
-                        </section>
-                    </section>
-                </section>
-            </section>
-
-            <section id="holdingsView" class="workspace-view" data-workspace-view="holdings">
-                <section id="holdingsOverview" class="overview-grid" aria-live="polite"></section>
-
-                <section class="panel holdings-panel">
+            <section id="assetDataView" class="workspace-view asset-data-view" data-workspace-view="assetData">
+                <section class="panel asset-data-hero-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2>持仓筛选</h2>
-                            <p>当前持仓按账户、类别和市场筛选。</p>
+                            <h2>资产数据</h2>
+                            <p>围绕当前账户维护快照、持仓和资产记录。</p>
                         </div>
-                        <div class="panel-actions">
-                            <button id="generateSnapshotsBtn" class="secondary-btn" type="button">生成快照</button>
-                            <button id="refreshQuotesBtn" class="secondary-btn" type="button">刷新行情</button>
-                        </div>
+                        <label class="current-account-select">
+                            <span>当前账户</span>
+                            <select id="assetAccountSelect"></select>
+                        </label>
                     </div>
-                    <div class="holding-filter-bar">
-                        <label><span>账户</span><select id="holdingFilterAccount"></select></label>
-                        <label><span>类别</span><select id="holdingFilterAssetClass"></select></label>
-                        <label><span>市场</span><select id="holdingFilterMarket"></select></label>
-                    </div>
-                    <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
+                    <section id="assetDataSummary" class="asset-summary-grid" aria-live="polite"></section>
                 </section>
 
-                <section class="holding-layout-grid">
-                    <section class="panel holding-form-panel">
-                        <div class="panel-head split-head">
-                            <div>
-                                <h2>录入持仓</h2>
-                                <p>A股、基金可刷新行情；现金直接录入金额。</p>
-                            </div>
-                            <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                <section class="panel quick-maintenance-panel collapsed">
+                    <div class="panel-head split-head">
+                        <div>
+                            <h2>快速维护</h2>
+                            <p>通过顶部右侧操作菜单展开录入表单。</p>
                         </div>
+                    </div>
+
+                    <div class="maintenance-pane active" data-maintenance-pane="snapshot">
+                        <div class="input-guide">总资产填账户总额；净流入填本次与上次之间的投入/取出。</div>
+                        <form id="snapshotForm" class="snapshot-form">
+                            <label>
+                                <span>账户</span>
+                                <select id="snapshotAccountSelect"></select>
+                            </label>
+                            <label>
+                                <span>日期</span>
+                                <input id="snapshotDateInput" type="date" required>
+                            </label>
+                            <label>
+                                <span>总资产</span>
+                                <input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="券商账户总资产" required>
+                            </label>
+                            <label>
+                                <span>净流入</span>
+                                <input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" placeholder="0" value="0" required>
+                            </label>
+                            <label class="note-field">
+                                <span>备注</span>
+                                <input id="snapshotNoteInput" type="text" maxlength="60" placeholder="可选">
+                            </label>
+                            <button id="snapshotSubmitBtn" class="primary-btn" type="submit">保存快照</button>
+                            <button id="cancelEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                        </form>
+                        <div id="formMessage" class="form-message" role="status" aria-live="polite"></div>
+                    </div>
+
+                    <div class="maintenance-pane" data-maintenance-pane="holding">
+                        <div class="input-guide">A股、基金可刷新行情；现金直接录入金额。</div>
                         <form id="holdingForm" class="holding-form">
                             <label><span>账户</span><select id="holdingAccountSelect"></select></label>
                             <label><span>名称</span><input id="holdingNameInput" type="text" maxlength="40" placeholder="贵州茅台" required></label>
@@ -187,21 +170,59 @@
                             <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
                             <label><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选"></label>
                             <button id="holdingSubmitBtn" class="primary-btn" type="submit">保存持仓</button>
+                            <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
                         </form>
-                    </section>
+                    </div>
+                </section>
 
+                <section class="panel asset-holdings-panel">
+                    <div class="panel-head split-head">
+                        <div>
+                            <h2>持仓明细</h2>
+                            <p>当前账户的持仓、市值占比和浮动盈亏。</p>
+                        </div>
+                        <div class="asset-tool-bar">
+                            <label><span>类别</span><select id="holdingFilterAssetClass"></select></label>
+                            <label><span>市场</span><select id="holdingFilterMarket"></select></label>
+                        </div>
+                    </div>
+                    <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
+                    <div id="holdingTable" class="holding-table-wrap"></div>
+                </section>
+
+                <section class="asset-bottom-grid">
                     <section class="panel allocation-panel">
-                        <div class="panel-head"><h2>持仓分布</h2><p>按类别和账户查看市值占比。</p></div>
+                        <div class="panel-head"><h2>持仓分布</h2><p>按类别查看当前账户市值占比。</p></div>
                         <div class="allocation-columns">
                             <div><h3>资产类别</h3><div id="assetAllocation" class="allocation-list"></div></div>
                             <div><h3>账户分布</h3><div id="accountAllocation" class="allocation-list"></div></div>
                         </div>
                     </section>
+
+                    <section class="panel table-panel">
+                        <div class="panel-head">
+                            <h2>资产记录</h2>
+                            <p>当前账户的历史总资产快照。</p>
+                        </div>
+                        <div id="snapshotTableContext" class="table-context"></div>
+                        <div id="snapshotTable" class="snapshot-table-wrap"></div>
+                    </section>
                 </section>
 
-                <section class="panel holding-table-panel">
-                    <div class="panel-head"><h2>持仓明细</h2><p>点击表头排序，A股和基金可批量刷新当前价。</p></div>
-                    <div id="holdingTable" class="holding-table-wrap"></div>
+                <section class="panel account-management-panel collapsed">
+                    <div class="panel-head split-head">
+                        <div>
+                            <h2>账户管理</h2>
+                            <p>新增、编辑或删除投资账户，日常查看时可保持收起。</p>
+                        </div>
+                    </div>
+                    <div class="account-management-body">
+                        <form id="accountForm" class="account-form compact-account-form">
+                            <input id="accountNameInput" type="text" maxlength="32" placeholder="新增账户，例如：招商证券" autocomplete="off">
+                            <button class="primary-btn" type="submit">新增账户</button>
+                        </form>
+                        <div id="accountList" class="account-list account-strip"></div>
+                    </div>
                 </section>
             </section>
         </main>

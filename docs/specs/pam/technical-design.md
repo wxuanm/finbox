@@ -172,7 +172,9 @@ The performance chart uses ECharts from CDN.
 - Account list items expose readiness status and selected-period return to reduce navigation ambiguity.
 - Account performance is compared in a sortable table rather than per-account cards, because table rows make return, drawdown, volatility, asset value, and data freshness easier to compare across accounts.
 - Comparison table labels must distinguish period-scoped metrics from cumulative/current metrics. `区间收益`, `区间回撤`, and `区间波动` are controlled by the active period switch.
-- The top module navigation includes `账户收益` and `账户数据` alongside disabled future modules, avoiding two separate menu rows while keeping performance review separate from account maintenance.
+- The top module navigation includes `账户收益` and `资产数据` alongside disabled future modules, keeping performance review separate from data maintenance while combining account snapshots and holdings under one account-scoped page.
+- The top navigation exposes module-specific context actions on the right. For `资产数据`, icon actions open snapshot and holding forms, generate snapshots, refresh quotes, and toggle account management.
+- `资产数据` uses a mobile-first single flow: current account summary, compact account switcher, on-demand quick maintenance actions, holdings detail, allocation, asset records, and collapsible account management.
 - The interface favors compact decision screens: shorter copy, fewer decorative elements, four overview cards, and table-first comparisons.
 
 ## Demo Data
