@@ -90,35 +90,36 @@ function renderHoldingForm() {
     const cancelBtn = document.getElementById('cancelHoldingEditBtn');
     if (!accountSelect || !assetSelect || !marketSelect || !submitBtn || !cancelBtn) return;
 
-    accountSelect.innerHTML = state.accounts.length === 0
-        ? '<option value="">请先新增账户</option>'
-        : state.accounts.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
-    if (state.selectedAccountId) accountSelect.value = state.selectedAccountId;
-    accountSelect.disabled = state.accounts.length === 0;
-    submitBtn.disabled = state.accounts.length === 0;
+    const account = state.accounts.find(item => item.id === state.selectedAccountId) || state.accounts[0];
+    accountSelect.innerHTML = account
+        ? `<option value="${account.id}">${escapeHtml(account.name)}</option>`
+        : '<option value="">请先新增账户</option>';
+    accountSelect.value = account?.id || '';
+    accountSelect.disabled = true;
+    submitBtn.disabled = !account;
     assetSelect.innerHTML = ASSET_CLASSES.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
-    marketSelect.innerHTML = MARKETS.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
 
     const editing = state.holdings.find(holding => holding.id === state.editingHoldingId);
     const dialogTitle = document.getElementById('holdingDialogTitle');
     if (dialogTitle) dialogTitle.textContent = editing ? '编辑持仓' : '新增持仓';
-    submitBtn.textContent = editing ? '更新持仓' : '保存持仓';
-    cancelBtn.classList.remove('hidden');
-    cancelBtn.textContent = editing ? '取消编辑' : '取消录入';
+    submitBtn.textContent = editing ? '更新持仓' : '新增持仓';
+    cancelBtn.classList.toggle('hidden', !editing);
+    cancelBtn.textContent = '取消编辑';
     document.getElementById('holdingAsOfDateInput').value ||= todayKey();
 
-    if (!editing) return;
-    accountSelect.value = editing.accountId;
+    if (!editing) {
+        updateCashMode();
+        return;
+    }
+    assetSelect.value = editing.assetClass || 'stock';
+    updateCashMode(editing.market);
     document.getElementById('holdingNameInput').value = editing.name || '';
     document.getElementById('holdingSymbolInput').value = editing.symbol || '';
-    assetSelect.value = editing.assetClass || 'stock';
-    marketSelect.value = editing.market || 'CN';
     document.getElementById('holdingQuantityInput').value = editing.quantity;
     document.getElementById('holdingCostPriceInput').value = editing.costPrice;
     document.getElementById('holdingCurrentPriceInput').value = editing.currentPrice;
     document.getElementById('holdingAsOfDateInput').value = editing.asOfDate || todayKey();
     document.getElementById('holdingNoteInput').value = editing.note || '';
-    updateCashMode();
 }
 
 function renderAllocation(elementId, allocation) {
@@ -192,7 +193,7 @@ export function readHoldingForm() {
     const isCash = assetClass === 'cash';
 
     return {
-        accountId: document.getElementById('holdingAccountSelect').value,
+        accountId: state.selectedAccountId,
         name: document.getElementById('holdingNameInput').value.trim() || (isCash ? '现金' : ''),
         symbol: isCash ? '' : document.getElementById('holdingSymbolInput').value.trim(),
         assetClass,
@@ -205,7 +206,7 @@ export function readHoldingForm() {
     };
 }
 
-function updateCashMode() {
+function updateCashMode(preferredMarket = '') {
     const form = document.getElementById('holdingForm');
     const assetSelect = document.getElementById('holdingAssetClassSelect');
     const marketSelect = document.getElementById('holdingMarketSelect');
@@ -213,11 +214,21 @@ function updateCashMode() {
     const quantityInput = document.getElementById('holdingQuantityInput');
     const costInput = document.getElementById('holdingCostPriceInput');
     const currentInput = document.getElementById('holdingCurrentPriceInput');
-    if (!form || !assetSelect || !marketSelect || !symbolInput || !quantityInput || !costInput || !currentInput) return;
+    const nameInput = document.getElementById('holdingNameInput');
+    const currentPriceLabel = document.getElementById('holdingCurrentPriceLabel');
+    if (!form || !assetSelect || !marketSelect || !symbolInput || !quantityInput || !costInput || !currentInput || !nameInput || !currentPriceLabel) return;
 
     const isCash = assetSelect.value === 'cash';
+    const supportedMarkets = getMarketsForAssetClass(assetSelect.value);
+    marketSelect.innerHTML = supportedMarkets.map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
+    marketSelect.value = supportedMarkets.some(([key]) => key === preferredMarket)
+        ? preferredMarket
+        : supportedMarkets[0][0];
     form.classList.toggle('cash-mode', isCash);
     if (!isCash) {
+        currentPriceLabel.textContent = '当前价';
+        nameInput.placeholder = '贵州茅台';
+        currentInput.placeholder = '';
         marketSelect.disabled = false;
         symbolInput.disabled = false;
         quantityInput.readOnly = false;
@@ -226,6 +237,10 @@ function updateCashMode() {
     }
 
     marketSelect.value = 'Cash';
+    currentPriceLabel.textContent = '现金余额';
+    nameInput.placeholder = '现金';
+    currentInput.placeholder = '账户可用现金';
+    if (!nameInput.value) nameInput.value = '现金';
     marketSelect.disabled = true;
     symbolInput.value = '';
     symbolInput.disabled = true;
@@ -234,6 +249,17 @@ function updateCashMode() {
     costInput.value = currentInput.value || costInput.value || '0';
     costInput.readOnly = true;
     syncCashAmountFields();
+}
+
+function getMarketsForAssetClass(assetClass) {
+    const marketKeys = {
+        stock: ['CN', 'Other'],
+        fund: ['Fund', 'Other'],
+        bond: ['Other'],
+        cash: ['Cash'],
+        other: ['Other']
+    }[assetClass] || ['Other'];
+    return MARKETS.filter(([key]) => marketKeys.includes(key));
 }
 
 function syncCashAmountFields() {

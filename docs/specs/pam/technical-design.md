@@ -175,6 +175,8 @@ The performance chart uses ECharts from CDN.
 - The top module navigation includes `账户收益` and `账户管理` alongside disabled future modules, keeping performance review separate from data maintenance while combining account snapshots and holdings under one account-scoped page.
 - The top navigation exposes module-specific context actions on the right. For `账户管理`, icon actions open snapshot and holding forms, generate snapshots, refresh quotes, and open the add-account dialog.
 - `账户管理` uses a mobile-first single flow: account cards, current account summary, dialog-based snapshot/holding forms, holdings detail, allocation, and asset records. Account cards show name, update date, total assets, cumulative return, annualized return, and account-level actions.
+- Snapshot and holding forms are bound to the selected account. To record data for a different account, the user switches account cards before opening the form.
+- When the holding type is cash, the form accepts a cash balance and hides instrument-only fields such as code, market, quantity, and cost price.
 - The interface favors compact decision screens: shorter copy, fewer decorative elements, four overview cards, and table-first comparisons.
 
 ## Demo Data

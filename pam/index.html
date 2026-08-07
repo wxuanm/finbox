@@ -116,29 +116,21 @@
                             </button>
                         </div>
                         <div class="asset-dialog-body">
-                            <form id="snapshotForm" class="snapshot-form">
-                                <label>
-                                    <span>账户</span>
-                                    <select id="snapshotAccountSelect"></select>
-                                </label>
-                                <label>
-                                    <span>日期</span>
-                                    <input id="snapshotDateInput" type="date" required>
-                                </label>
-                                <label>
-                                    <span>总资产</span>
-                                    <input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="券商账户总资产" required>
-                                </label>
-                                <label>
-                                    <span>净流入</span>
-                                    <input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" placeholder="0" value="0" required>
-                                </label>
-                                <label class="note-field">
-                                    <span>备注</span>
-                                    <input id="snapshotNoteInput" type="text" maxlength="60" placeholder="可选">
-                                </label>
-                                <button id="snapshotSubmitBtn" class="primary-btn" type="submit">保存快照</button>
-                                <button id="cancelEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                            <form id="snapshotForm" class="management-form snapshot-form">
+                                <div class="form-section form-context-grid">
+                                    <label><span>当前账户</span><select id="snapshotAccountSelect"></select></label>
+                                    <label><span>快照日期</span><input id="snapshotDateInput" type="date" required></label>
+                                </div>
+                                <div class="form-section snapshot-value-grid">
+                                    <label><span>账户总资产</span><input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="例如 125000.00" required></label>
+                                    <label><span>本期净流入</span><input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" placeholder="无资金变动填 0" value="0" required></label>
+                                </div>
+                                <p class="form-guide">总资产填写该账户当日总额；净流入填写相对上次快照的入金或出金。</p>
+                                <label class="form-note-field"><span>备注</span><input id="snapshotNoteInput" type="text" maxlength="60" placeholder="可选，例如月末核对"></label>
+                                <div class="form-actions">
+                                    <button id="snapshotSubmitBtn" class="primary-btn" type="submit">新增快照</button>
+                                    <button id="cancelEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                                </div>
                             </form>
                             <div id="formMessage" class="form-message" role="status" aria-live="polite"></div>
                         </div>
@@ -157,19 +149,28 @@
                             </button>
                         </div>
                         <div class="asset-dialog-body">
-                            <form id="holdingForm" class="holding-form">
-                                <label><span>账户</span><select id="holdingAccountSelect"></select></label>
-                                <label><span>名称</span><input id="holdingNameInput" type="text" maxlength="40" placeholder="贵州茅台" required></label>
-                                <label><span>代码</span><input id="holdingSymbolInput" type="text" maxlength="20" placeholder="600519"></label>
-                                <label><span>类别</span><select id="holdingAssetClassSelect"></select></label>
-                                <label><span>市场</span><select id="holdingMarketSelect"></select></label>
-                                <label><span>数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
-                                <label><span>成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
-                                <label><span>当前价/现金金额</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
-                                <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
-                                <label><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选"></label>
-                                <button id="holdingSubmitBtn" class="primary-btn" type="submit">保存持仓</button>
-                                <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                            <form id="holdingForm" class="management-form holding-form">
+                                <div class="form-section holding-context-grid">
+                                    <label><span>当前账户</span><select id="holdingAccountSelect"></select></label>
+                                    <label><span>类别</span><select id="holdingAssetClassSelect"></select></label>
+                                    <label><span>市场</span><select id="holdingMarketSelect"></select></label>
+                                </div>
+                                <div class="form-section holding-instrument-grid">
+                                    <label><span>名称</span><input id="holdingNameInput" type="text" maxlength="40" placeholder="例如 贵州茅台" required></label>
+                                    <label><span>代码</span><input id="holdingSymbolInput" type="text" maxlength="20" placeholder="例如 600519"></label>
+                                </div>
+                                <div class="form-section holding-valuation-grid">
+                                    <label><span>数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
+                                    <label><span>成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
+                                    <label><span id="holdingCurrentPriceLabel">当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
+                                    <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
+                                </div>
+                                <p class="holding-cash-hint">现金按余额录入，无需填写代码、市场、数量和成本价。</p>
+                                <label class="form-note-field"><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选，例如长期配置"></label>
+                                <div class="form-actions">
+                                    <button id="holdingSubmitBtn" class="primary-btn" type="submit">新增持仓</button>
+                                    <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                                </div>
                             </form>
                         </div>
                     </div>

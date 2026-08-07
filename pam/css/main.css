@@ -434,6 +434,86 @@ button:disabled {
     align-items: end;
 }
 
+.management-form {
+    display: grid;
+    gap: 16px;
+}
+
+.management-form label {
+    display: grid;
+    min-width: 0;
+    gap: 6px;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.management-form label > span {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+}
+
+.management-form input,
+.management-form select {
+    min-height: 42px;
+    padding: 9px 11px;
+    border-color: var(--border-color);
+    background: var(--surface-color);
+}
+
+.management-form input:focus,
+.management-form select:focus {
+    border-color: var(--primary-color);
+}
+
+.form-section {
+    display: grid;
+    gap: 12px;
+}
+
+.form-context-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(160px, 0.8fr);
+}
+
+.snapshot-value-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.holding-context-grid {
+    grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(140px, 0.8fr));
+}
+
+.holding-instrument-grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(160px, 0.65fr);
+}
+
+.holding-valuation-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.form-guide {
+    margin: -4px 0 0;
+    padding: 10px 12px;
+    border-left: 3px solid var(--primary-color);
+    color: var(--muted-text);
+    background: var(--surface-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border-color);
+}
+
+.form-actions .primary-btn,
+.form-actions .ghost-btn {
+    min-height: 42px;
+}
+
 .holding-filter-bar label,
 .holding-form label {
     display: grid;
@@ -449,6 +529,35 @@ button:disabled {
 .holding-form.cash-mode #holdingCostPriceInput {
     color: var(--muted-text);
     background: var(--surface-muted);
+}
+
+.holding-cash-hint {
+    display: none;
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 9px 11px;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 26%, var(--border-color));
+    border-radius: 12px;
+    color: var(--muted-text);
+    background: var(--primary-soft);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.holding-form.cash-mode .form-market-field,
+.holding-form.cash-mode .holding-instrument-grid label:has(#holdingSymbolInput),
+.holding-form.cash-mode .holding-valuation-grid label:has(#holdingQuantityInput),
+.holding-form.cash-mode .holding-valuation-grid label:has(#holdingCostPriceInput) {
+    display: none;
+}
+
+.holding-form.cash-mode .holding-instrument-grid,
+.holding-form.cash-mode .holding-valuation-grid {
+    grid-template-columns: 1fr;
+}
+
+.holding-form.cash-mode .holding-cash-hint {
+    display: block;
 }
 
 .holding-layout-grid {
@@ -1380,7 +1489,7 @@ select:focus {
         grid-template-columns: 1fr;
     }
 
-    .snapshot-form {
+    .holding-valuation-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -1405,11 +1514,27 @@ select:focus {
 
     .account-form,
     .compact-account-form,
-    .snapshot-form,
     .holding-filter-bar,
-    .holding-form,
     .asset-tool-bar {
         grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .form-context-grid,
+    .snapshot-value-grid,
+    .holding-context-grid,
+    .holding-instrument-grid,
+    .holding-valuation-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions .primary-btn,
+    .form-actions .ghost-btn {
         width: 100%;
     }
 

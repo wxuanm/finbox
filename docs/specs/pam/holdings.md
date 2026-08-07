@@ -24,6 +24,7 @@ The current holdings capability lets users maintain current positions under each
 - Integrate holdings into `账户管理` instead of exposing a separate top-level `持仓管理` navigation item.
 - Add, edit, and delete holdings.
 - Filter holdings by the selected account plus asset class and market.
+- Holding market options are constrained by asset class: stocks use A-share/other, funds use fund/other, bonds and other assets use other, and cash is fixed to cash.
 - Sort holdings table.
 - Calculate market value, cost amount, unrealized profit/loss, profit/loss percentage, and portfolio weight.
 - Keep account cards as the only asset and return overview. Holdings detail instead shows a lightweight count and valuation-quality status for the active filter.
