@@ -296,6 +296,7 @@ The historical trend chart uses ECharts from CDN.
 - Selected fund metric card highlights its chart series and dims others.
 - Lowest point markers are shown when available.
 - Latest point marker is shown for selected fund.
+- Selected fund chart shows the current period max-drawdown peak-to-trough segment with peak/trough markers and a dashed arrow label.
 - Inside data zoom is enabled, and zoom end is kept anchored at 100.
 
 ## Responsive Behavior
