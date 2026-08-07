@@ -28,7 +28,7 @@ export function renderPerformanceChart(metrics) {
 
     const validMetrics = metrics.filter(metric => metric.valid && metric.periodPoints.length >= 2);
     if (typeof window.echarts === 'undefined') {
-        messageEl.textContent = '图表库加载失败，资产数据仍可正常维护。';
+        messageEl.textContent = '图表库加载失败，账户管理仍可正常维护。';
         messageEl.classList.add('error');
         chartEl.innerHTML = '';
         return;

@@ -11,7 +11,9 @@ import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
 import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
 import { bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
 import { fetchQuotes } from './modules/holdings/quoteApi.js';
-import { escapeHtml, formatCurrency, formatPercent, signedClass, todayKey } from './utils/formatter.js';
+import { todayKey } from './utils/formatter.js';
+
+let quoteRefreshInProgress = false;
 
 function init() {
     const preferences = loadPreferences();
@@ -22,8 +24,7 @@ function init() {
     state.selectedPeriod = preferences.selectedPeriod || '3M';
     state.activeView = normalizeActiveView(preferences.activeView);
     state.assetDataAction = normalizeAssetDataAction(preferences.assetDataAction);
-    state.assetDataMaintenanceOpen = Boolean(preferences.assetDataMaintenanceOpen);
-    state.accountManagementOpen = Boolean(preferences.accountManagementOpen);
+    state.assetDataMaintenanceOpen = false;
     state.holdingFilters = preferences.holdingFilters || state.holdingFilters;
     state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
     state.holdingSortOrder = preferences.holdingSortOrder || state.holdingSortOrder;
@@ -49,10 +50,27 @@ function bindEvents() {
     document.addEventListener('click', closeMobileActionMenu);
     document.getElementById('accountForm')?.addEventListener('submit', handleAddAccount);
     document.getElementById('snapshotForm')?.addEventListener('submit', handleSaveSnapshot);
-    document.getElementById('assetAccountSelect')?.addEventListener('change', event => selectAccount(event.target.value));
-    document.getElementById('accountManagementToggle')?.addEventListener('click', toggleAccountManagement);
-    document.querySelectorAll('[data-asset-action]').forEach(button => {
-        button.addEventListener('click', () => setAssetDataAction(button.dataset.assetAction));
+    document.getElementById('addSnapshotBtn')?.addEventListener('click', () => openSnapshotForAccount(state.selectedAccountId));
+    document.querySelectorAll('[data-dialog-close]').forEach(button => {
+        button.addEventListener('click', () => {
+            if (button.dataset.dialogClose === 'account') {
+                closeAccountDialog();
+                return;
+            }
+            cancelAssetDialog(button.dataset.dialogClose);
+        });
+    });
+    document.getElementById('accountDialog')?.addEventListener('cancel', event => {
+        event.preventDefault();
+        closeAccountDialog();
+    });
+    document.getElementById('snapshotDialog')?.addEventListener('cancel', event => {
+        event.preventDefault();
+        cancelAssetDialog('snapshot');
+    });
+    document.getElementById('holdingDialog')?.addEventListener('cancel', event => {
+        event.preventDefault();
+        cancelAssetDialog('holding');
     });
     document.querySelectorAll('[data-context-command]').forEach(button => {
         button.addEventListener('click', () => runContextCommand(button.dataset.contextCommand));
@@ -61,17 +79,14 @@ function bindEvents() {
         tab.addEventListener('click', () => switchView(tab.dataset.view));
     });
     document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
-        const wasEditing = Boolean(state.editingSnapshotId);
-        resetSnapshotForm();
-        state.assetDataMaintenanceOpen = false;
-        showFormMessage(wasEditing ? '已取消编辑。' : '已取消录入。');
-        renderApp();
+        cancelAssetDialog('snapshot');
     });
 
     bindAccountList({
         onSelect: selectAccount,
         onRename: renameAccount,
-        onDelete: deleteAccount
+        onDelete: deleteAccount,
+        onAdd: openAccountDialog
     });
     bindPeriodSwitch(period => {
         state.selectedPeriod = period;
@@ -103,13 +118,10 @@ function bindEvents() {
     bindSnapshotTableAccountSwitch();
     bindHoldingsPanel({
         onFilter: updateHoldingFilter,
+        onAdd: () => openHoldingForAccount(state.selectedAccountId),
         onSubmit: saveHolding,
         onCancelEdit: () => {
-            const wasEditing = Boolean(state.editingHoldingId);
-            resetHoldingForm();
-            state.assetDataMaintenanceOpen = false;
-            showHoldingMessage(wasEditing ? '已取消编辑。' : '已取消录入。');
-            renderApp();
+            cancelAssetDialog('holding');
         },
         onEdit: editHolding,
         onDelete: deleteHolding,
@@ -153,10 +165,6 @@ function renderApp() {
     const metrics = buildAccountMetrics(state.accounts, state.snapshots, state.selectedPeriod);
     const holdingsMetrics = buildHoldingsMetrics(state.holdings, state.accounts, state.holdingFilters);
     renderActiveView();
-    renderAssetDataAction();
-    renderAccountManagement();
-    renderAssetAccountSelect();
-    renderAssetDataSummary(holdingsMetrics);
     renderOverviewCards(metrics);
     renderAccountList(metrics);
     renderSnapshotForm();
@@ -174,52 +182,95 @@ function switchView(view) {
     requestAnimationFrame(resizeChart);
 }
 
-function setAssetDataAction(action) {
-    closeMobileActionMenu();
-    state.assetDataAction = normalizeAssetDataAction(action);
+function openSnapshotForAccount(accountId) {
+    if (!state.accounts.some(account => account.id === accountId)) return;
+    state.selectedAccountId = accountId;
+    state.activeView = 'assetData';
+    state.assetDataAction = 'snapshot';
     state.assetDataMaintenanceOpen = true;
+    resetSnapshotForm();
+    persistPreferences();
+    renderApp();
+    openAssetDialog('snapshot');
+}
+
+function openHoldingForAccount(accountId) {
+    if (!state.accounts.some(account => account.id === accountId)) return;
+    state.selectedAccountId = accountId;
+    state.activeView = 'assetData';
+    state.assetDataAction = 'holding';
+    state.assetDataMaintenanceOpen = true;
+    resetHoldingForm();
+    persistPreferences();
+    renderApp();
+    openAssetDialog('holding');
+}
+
+function openAssetDialog(action) {
+    if (state.accounts.length === 0) {
+        openAccountDialog();
+        return;
+    }
+
+    const dialog = document.getElementById(action === 'holding' ? 'holdingDialog' : 'snapshotDialog');
+    if (!dialog) return;
+    if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+    }
+    requestAnimationFrame(() => {
+        const selector = action === 'holding' ? '#holdingNameInput' : '#snapshotValueInput';
+        document.querySelector(selector)?.focus();
+    });
+}
+
+function closeAssetDialog(action) {
+    const dialog = document.getElementById(action === 'holding' ? 'holdingDialog' : 'snapshotDialog');
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') {
+        dialog.close();
+    } else {
+        dialog.removeAttribute('open');
+    }
+}
+
+function cancelAssetDialog(action) {
+    const isHolding = action === 'holding';
+    const wasEditing = isHolding ? Boolean(state.editingHoldingId) : Boolean(state.editingSnapshotId);
+    if (isHolding) {
+        resetHoldingForm();
+        showHoldingMessage(wasEditing ? '已取消编辑。' : '已取消录入。');
+    } else {
+        resetSnapshotForm();
+        showFormMessage(wasEditing ? '已取消编辑。' : '已取消录入。');
+    }
+    state.assetDataMaintenanceOpen = false;
+    closeAssetDialog(action);
     persistPreferences();
     renderApp();
 }
 
-function renderAssetDataAction() {
-    document.querySelector('.quick-maintenance-panel')?.classList.toggle('collapsed', !state.assetDataMaintenanceOpen);
-    document.querySelectorAll('[data-asset-action]').forEach(button => {
-        button.classList.toggle('active', button.dataset.assetAction === state.assetDataAction);
-    });
-    document.querySelectorAll('[data-maintenance-pane]').forEach(pane => {
-        pane.classList.toggle('active', state.assetDataMaintenanceOpen && pane.dataset.maintenancePane === state.assetDataAction);
-    });
+function openAccountDialog() {
+    closeMobileActionMenu();
+    const dialog = document.getElementById('accountDialog');
+    if (!dialog) return;
+    if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+    }
+    requestAnimationFrame(() => document.getElementById('accountNameInput')?.focus());
 }
 
-function toggleAccountManagement() {
-    state.accountManagementOpen = !state.accountManagementOpen;
-    persistPreferences();
-    renderApp();
-}
-
-function renderAccountManagement() {
-    const panel = document.querySelector('.account-management-panel');
-    const button = document.getElementById('accountManagementToggle');
-    if (!panel || !button) return;
-    const isOpen = state.accountManagementOpen || state.accounts.length === 0;
-    panel.classList.toggle('collapsed', !isOpen);
-    const label = button.querySelector('span');
-    if (label) label.textContent = isOpen ? '收起' : '账户';
-    button.title = isOpen ? '收起账户管理' : '账户管理';
-    button.setAttribute('aria-label', button.title);
-    button.disabled = state.accounts.length === 0;
-    button.setAttribute('aria-expanded', String(isOpen));
-}
-
-function renderAssetAccountSelect() {
-    const select = document.getElementById('assetAccountSelect');
-    if (!select) return;
-    select.innerHTML = state.accounts.length === 0
-        ? '<option value="">暂无账户</option>'
-        : state.accounts.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
-    select.value = state.selectedAccountId || state.accounts[0]?.id || '';
-    select.disabled = state.accounts.length === 0;
+function closeAccountDialog() {
+    const dialog = document.getElementById('accountDialog');
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') {
+        dialog.close();
+    } else {
+        dialog.removeAttribute('open');
+    }
 }
 
 function renderActiveView() {
@@ -244,46 +295,6 @@ function runContextCommand(command) {
         refreshHoldingQuotes();
         return;
     }
-    if (command === 'account-management') {
-        toggleAccountManagement();
-    }
-}
-
-function renderAssetDataSummary(holdingsMetrics) {
-    const wrap = document.getElementById('assetDataSummary');
-    if (!wrap) return;
-    if (state.accounts.length === 0) {
-        wrap.innerHTML = '<div class="overview-card wide-card"><span>当前账户</span><strong>暂无账户</strong><small>先新增账户，再维护资产快照和持仓。</small></div>';
-        return;
-    }
-
-    const account = state.accounts.find(item => item.id === state.selectedAccountId) || state.accounts[0];
-    const accountSnapshots = state.snapshots
-        .filter(snapshot => snapshot.accountId === account.id)
-        .sort((a, b) => b.date.localeCompare(a.date));
-    const latestSnapshot = accountSnapshots[0];
-    const accountHoldings = holdingsMetrics.allRows.filter(row => row.accountId === account.id);
-    const holdingValue = accountHoldings.reduce((sum, row) => sum + row.marketValue, 0);
-    const holdingCost = accountHoldings.reduce((sum, row) => sum + row.costAmount, 0);
-    const holdingPnl = holdingValue - holdingCost;
-    const holdingPnlPct = holdingCost > 0 ? holdingPnl / holdingCost * 100 : null;
-    const difference = latestSnapshot ? Number(latestSnapshot.totalValue) - holdingValue : null;
-    const latestHoldingDate = accountHoldings
-        .map(row => row.priceUpdatedAt ? row.priceUpdatedAt.slice(0, 10) : row.asOfDate)
-        .filter(Boolean)
-        .sort((a, b) => b.localeCompare(a))[0] || '-';
-
-    wrap.innerHTML = [
-        assetSummaryCard('当前账户', escapeHtml(account.name), `${accountSnapshots.length} 条快照 · ${accountHoldings.length} 个持仓`),
-        assetSummaryCard('最新快照', latestSnapshot ? formatCurrency(latestSnapshot.totalValue) : '-', latestSnapshot ? latestSnapshot.date : '尚未录入'),
-        assetSummaryCard('持仓市值', formatCurrency(holdingValue), `最近估值 ${latestHoldingDate}`),
-        assetSummaryCard('快照差额', difference === null ? '-' : formatCurrency(difference), difference === null ? '无快照可对比' : '快照总资产 - 持仓市值', signedClass(difference)),
-        assetSummaryCard('浮动盈亏', formatCurrency(holdingPnl), formatPercent(holdingPnlPct), signedClass(holdingPnl))
-    ].join('');
-}
-
-function assetSummaryCard(label, value, note, className = '') {
-    return `<div class="overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${escapeHtml(note)}</small></div>`;
 }
 
 function handleAddAccount(event) {
@@ -307,11 +318,10 @@ function handleAddAccount(event) {
     state.selectedAccountId = account.id;
     state.activeView = 'assetData';
     state.assetDataAction = 'snapshot';
-    state.accountManagementOpen = false;
-    state.assetDataMaintenanceOpen = true;
+    state.assetDataMaintenanceOpen = false;
     input.value = '';
+    closeAccountDialog();
     persistAll();
-    showFormMessage(`已新增账户：${name}`);
     renderApp();
 }
 
@@ -319,7 +329,6 @@ function selectAccount(accountId) {
     if (!state.accounts.some(account => account.id === accountId)) return;
     state.selectedAccountId = accountId;
     state.activeView = 'assetData';
-    state.accountManagementOpen = false;
     persistPreferences();
     renderApp();
 }
@@ -387,6 +396,7 @@ function handleSaveSnapshot(event) {
     state.assetDataAction = 'snapshot';
     state.assetDataMaintenanceOpen = false;
     resetSnapshotForm();
+    closeAssetDialog('snapshot');
     persistAll();
     renderApp();
 }
@@ -400,7 +410,7 @@ function editSnapshot(snapshotId) {
     state.assetDataAction = 'snapshot';
     state.assetDataMaintenanceOpen = true;
     renderApp();
-    document.getElementById('snapshotDateInput')?.focus();
+    openAssetDialog('snapshot');
 }
 
 function deleteSnapshot(snapshotId) {
@@ -426,60 +436,28 @@ function addDemoData() {
         { id: createId('account'), name: '示例 实验策略', currency: 'CNY', createdAt: now, updatedAt: now }
     ];
     const [steady, growth, hk, us, pension, tactical] = demoAccounts;
-    const demoSnapshots = [
-        [steady.id, '2026-01-02', 100000, 0, '初始记录'],
-        [steady.id, '2026-02-02', 102400, 0, ''],
-        [steady.id, '2026-03-02', 113100, 10000, '追加资金'],
-        [steady.id, '2026-04-02', 112300, 0, ''],
-        [steady.id, '2026-05-02', 116800, 0, ''],
-        [steady.id, '2026-06-02', 119200, 0, ''],
-        [growth.id, '2026-01-02', 80000, 0, '初始记录'],
-        [growth.id, '2026-02-02', 86000, 0, ''],
-        [growth.id, '2026-03-02', 82000, 0, ''],
-        [growth.id, '2026-04-02', 127000, 40000, '追加资金'],
-        [growth.id, '2026-05-02', 134500, 0, ''],
-        [growth.id, '2026-06-02', 142800, 0, ''],
-        [hk.id, '2026-01-02', 60000, 0, '初始记录'],
-        [hk.id, '2026-02-02', 57300, 0, ''],
-        [hk.id, '2026-03-02', 59000, 0, ''],
-        [hk.id, '2026-04-02', 65000, 5000, '追加资金'],
-        [hk.id, '2026-05-02', 63300, 0, ''],
-        [hk.id, '2026-06-02', 67000, 0, ''],
-        [us.id, '2026-01-02', 120000, 0, '初始记录'],
-        [us.id, '2026-02-02', 126500, 0, ''],
-        [us.id, '2026-03-02', 131800, 0, ''],
-        [us.id, '2026-04-02', 128200, 0, ''],
-        [us.id, '2026-05-02', 136400, 0, ''],
-        [us.id, '2026-06-02', 148200, 0, ''],
-        [pension.id, '2026-01-02', 50000, 0, '初始记录'],
-        [pension.id, '2026-02-02', 53000, 2000, '定投'],
-        [pension.id, '2026-03-02', 56000, 2000, '定投'],
-        [pension.id, '2026-04-02', 59200, 2000, '定投'],
-        [pension.id, '2026-05-02', 62500, 2000, '定投'],
-        [pension.id, '2026-06-02', 65800, 2000, '定投'],
-        [tactical.id, '2026-01-02', 70000, 0, '初始记录'],
-        [tactical.id, '2026-02-02', 76000, 0, ''],
-        [tactical.id, '2026-03-02', 69000, 0, ''],
-        [tactical.id, '2026-04-02', 73500, -8000, '取出资金'],
-        [tactical.id, '2026-05-02', 81000, 0, ''],
-        [tactical.id, '2026-06-02', 77000, 0, '']
-    ].map(([accountId, date, totalValue, netFlow, note]) => ({
-        id: createId('snapshot'),
-        accountId,
-        date,
-        totalValue,
-        netFlow,
-        note
-    }));
+    const demoSnapshots = buildDemoSnapshots([
+        [steady.id, 100000, 0.006, 0.012, { 6: 10000, 12: 5000 }],
+        [growth.id, 80000, 0.011, 0.035, { 5: 20000, 13: 20000 }],
+        [hk.id, 60000, 0.004, 0.028, { 8: 5000 }],
+        [us.id, 120000, 0.009, 0.022, { 10: 10000 }],
+        [pension.id, 50000, 0.005, 0.009, { 2: 2000, 5: 2000, 8: 2000, 11: 2000, 14: 2000, 17: 2000 }],
+        [tactical.id, 70000, 0.007, 0.05, { 7: -8000, 14: 10000 }]
+    ]);
     const demoHoldings = [
         [steady.id, '510300', '沪深300ETF', 'fund', 'Fund', 18000, 4.25, 4.42],
         [steady.id, '019547', '中短债基金', 'fund', 'Fund', 30000, 1.03, 1.05],
+        [steady.id, '', '账户现金', 'cash', 'Cash', 1, 15000, 15000],
         [growth.id, '600519', '贵州茅台', 'stock', 'CN', 30, 1550, 1680],
         [growth.id, '300750', '宁德时代', 'stock', 'CN', 200, 185, 205],
-        [hk.id, '', '港股账户现金', 'cash', 'Cash', 1, 67000, 67000],
-        [us.id, '', '美股账户现金', 'cash', 'Cash', 1, 148200, 148200],
+        [growth.id, '159919', '沪深300ETF', 'fund', 'Fund', 8000, 3.85, 4.12],
+        [hk.id, '', '港股账户现金', 'cash', 'Cash', 1, 18000, 18000],
+        [hk.id, '', '港股科技基金', 'other', 'Other', 1, 42000, 45100],
+        [us.id, '', '美股账户现金', 'cash', 'Cash', 1, 28000, 28000],
+        [us.id, '', '美股指数基金', 'other', 'Other', 1, 102000, 116000],
         [pension.id, '017512', '养老目标基金', 'fund', 'Fund', 42000, 1.08, 1.12],
-        [tactical.id, '159915', '创业板ETF', 'fund', 'Fund', 25000, 1.85, 1.76]
+        [tactical.id, '159915', '创业板ETF', 'fund', 'Fund', 25000, 1.85, 1.76],
+        [tactical.id, '', '策略备用金', 'cash', 'Cash', 1, 18000, 18000]
     ].map(([accountId, symbol, name, assetClass, market, quantity, costPrice, currentPrice]) => ({
         id: createId('holding'),
         accountId,
@@ -493,7 +471,7 @@ function addDemoData() {
         currency: 'CNY',
         priceSource: 'manual',
         priceUpdatedAt: now,
-        asOfDate: '2026-06-02',
+        asOfDate: demoSnapshotDate(0),
         note: ''
     }));
 
@@ -505,8 +483,41 @@ function addDemoData() {
     state.activeView = 'assetData';
     state.assetDataAction = 'snapshot';
     persistAll();
-    showFormMessage('示例数据已添加，可在资产数据中查看。');
+    showFormMessage('示例数据已添加，可在账户管理中查看。');
     renderApp();
+}
+
+function buildDemoSnapshots(configs) {
+    return configs.flatMap(([accountId, initialValue, monthlyReturn, volatility, flows]) => {
+        let totalValue = initialValue;
+        return Array.from({ length: 19 }, (_, index) => {
+            const netFlow = flows[index] || 0;
+            const returnRate = monthlyReturn + demoMonthlyVariation(index, volatility);
+            if (index > 0) totalValue = Math.round(totalValue * (1 + returnRate) + netFlow);
+            return {
+                id: createId('snapshot'),
+                accountId,
+                date: demoSnapshotDate(18 - index),
+                totalValue,
+                netFlow,
+                note: index === 0 ? '初始记录' : (netFlow > 0 ? '追加资金' : (netFlow < 0 ? '取出资金' : ''))
+            };
+        });
+    });
+}
+
+function demoMonthlyVariation(index, volatility) {
+    const pattern = [0.45, -0.8, 0.3, 0.9, -0.4, 0.15, -0.65, 0.55, -0.2, 0.75, -0.5, 0.1];
+    return pattern[index % pattern.length] * volatility;
+}
+
+function demoSnapshotDate(monthsAgo) {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - monthsAgo);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}-01`;
 }
 
 function exportData() {
@@ -525,7 +536,6 @@ function exportData() {
                 activeView: state.activeView,
                 assetDataAction: state.assetDataAction,
                 assetDataMaintenanceOpen: state.assetDataMaintenanceOpen,
-                accountManagementOpen: state.accountManagementOpen,
                 holdingFilters: state.holdingFilters,
                 holdingSortKey: state.holdingSortKey,
                 holdingSortOrder: state.holdingSortOrder
@@ -572,7 +582,6 @@ function importData(event) {
             state.activeView = normalizeActiveView(data.preferences.activeView);
             state.assetDataAction = normalizeAssetDataAction(data.preferences.assetDataAction || (data.preferences.activeView === 'holdings' ? 'holding' : 'snapshot'));
             state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
-            state.accountManagementOpen = Boolean(data.preferences.accountManagementOpen);
             state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
             state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
             state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
@@ -707,6 +716,7 @@ function saveHolding(payload) {
     state.assetDataAction = 'holding';
     state.assetDataMaintenanceOpen = false;
     resetHoldingForm();
+    closeAssetDialog('holding');
     persistAll();
     renderApp();
 }
@@ -720,12 +730,15 @@ function editHolding(holdingId) {
     state.assetDataAction = 'holding';
     state.assetDataMaintenanceOpen = true;
     renderApp();
+    openAssetDialog('holding');
 }
 
 function deleteHolding(holdingId) {
     const holding = state.holdings.find(item => item.id === holdingId);
     if (!holding) return;
-    if (!confirm(`确认删除持仓「${holding.name}」吗？`)) return;
+    const accountName = state.accounts.find(account => account.id === holding.accountId)?.name || '当前账户';
+    const identifier = holding.symbol ? `（${holding.symbol}）` : '';
+    if (!confirm(`确认删除持仓「${holding.name}${identifier}」吗？\n所属账户：${accountName}\n此操作不会影响已保存的账户快照。`)) return;
     state.holdings = state.holdings.filter(item => item.id !== holdingId);
     if (state.editingHoldingId === holdingId) state.editingHoldingId = '';
     persistAll();
@@ -744,24 +757,22 @@ function sortHoldings(sortKey) {
 }
 
 async function refreshHoldingQuotes() {
+    if (quoteRefreshInProgress) return;
     state.assetDataAction = 'holding';
-    state.assetDataMaintenanceOpen = true;
-    const accountId = state.selectedAccountId;
-    const supported = state.holdings.filter(holding => {
-        return holding.accountId === accountId && ['CN', 'Fund'].includes(holding.market) && holding.symbol;
-    });
+    const supported = state.holdings.filter(holding => ['CN', 'Fund'].includes(holding.market) && holding.symbol);
     if (supported.length === 0) {
-        showHoldingMessage('当前账户没有可刷新行情的 A股或基金持仓。', true);
+        showHoldingMessage('没有可刷新行情的 A股或基金持仓。', true);
         return;
     }
 
     try {
-        showHoldingMessage('正在刷新行情...');
+        quoteRefreshInProgress = true;
+        setQuoteRefreshState(true);
+        showHoldingMessage(`正在刷新 ${supported.length} 项可支持行情，现金和其他市场将保留手动估值。`);
         const data = await fetchQuotes(supported);
         const quoteMap = new Map((data.quotes || []).map(quote => [`${quote.market}:${quote.symbol}`, quote]));
         let updatedCount = 0;
         state.holdings = state.holdings.map(holding => {
-            if (holding.accountId !== accountId) return holding;
             const quote = quoteMap.get(`${holding.market}:${holding.symbol}`);
             if (!quote || !Number.isFinite(Number(quote.price))) return holding;
             updatedCount += 1;
@@ -779,7 +790,20 @@ async function refreshHoldingQuotes() {
         showHoldingMessage(`行情已刷新：${updatedCount} 条成功，${(data.failedItems || []).length} 条失败。`, (data.failedItems || []).length > 0);
     } catch (error) {
         showHoldingMessage('行情刷新失败，请稍后重试或手动维护当前价。', true);
+    } finally {
+        quoteRefreshInProgress = false;
+        setQuoteRefreshState(false);
     }
+}
+
+function setQuoteRefreshState(isRefreshing) {
+    ['refreshQuotesBtn'].forEach(id => {
+        const button = document.getElementById(id);
+        if (!button) return;
+        button.disabled = isRefreshing;
+        button.classList.toggle('is-loading', isRefreshing);
+        button.setAttribute('aria-busy', String(isRefreshing));
+    });
 }
 
 function validateHolding(payload) {
@@ -800,13 +824,8 @@ function validateSnapshot(payload) {
 }
 
 function generateSnapshotsFromHoldings() {
-    state.assetDataMaintenanceOpen = true;
     state.assetDataAction = 'snapshot';
-    syncSelectedHoldingFilter();
-    const selectedAccountId = state.holdingFilters.accountId;
-    const accountIds = selectedAccountId === 'all'
-        ? state.accounts.map(account => account.id)
-        : [selectedAccountId];
+    const accountIds = state.accounts.map(account => account.id);
     const rows = accountIds
         .map(accountId => {
             const account = state.accounts.find(item => item.id === accountId);
@@ -816,14 +835,14 @@ function generateSnapshotsFromHoldings() {
         .filter(row => row.account && row.totalValue > 0);
 
     if (rows.length === 0) {
-        showHoldingMessage('没有可生成快照的持仓市值。请先录入持仓或选择有持仓的账户。', true);
-        showFormMessage('没有可生成快照的持仓市值。请先录入持仓或选择有持仓的账户。', true);
+        showHoldingMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
+        showFormMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
         return;
     }
 
     const date = todayKey();
     const existingCount = rows.filter(row => state.snapshots.some(snapshot => snapshot.accountId === row.accountId && snapshot.date === date)).length;
-    const scopeText = selectedAccountId === 'all' ? `${rows.length} 个账户` : `账户「${rows[0].account.name}」`;
+    const scopeText = `${rows.length} 个账户`;
     const overwriteText = existingCount > 0 ? `，其中 ${existingCount} 条会覆盖今日已有快照` : '';
     if (!confirm(`将用当前持仓市值为${scopeText}生成今日账户快照，净流入默认为 0${overwriteText}。是否继续？`)) return;
 
@@ -834,7 +853,7 @@ function generateSnapshotsFromHoldings() {
             date,
             totalValue: Number(row.totalValue.toFixed(2)),
             netFlow: 0,
-            note: '由资产数据生成',
+            note: '由账户管理生成',
             source: 'holdings'
         };
         const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
@@ -900,7 +919,6 @@ function persistPreferences() {
         activeView: state.activeView,
         assetDataAction: state.assetDataAction,
         assetDataMaintenanceOpen: state.assetDataMaintenanceOpen,
-        accountManagementOpen: state.accountManagementOpen,
         holdingFilters: state.holdingFilters,
         holdingSortKey: state.holdingSortKey,
         holdingSortOrder: state.holdingSortOrder

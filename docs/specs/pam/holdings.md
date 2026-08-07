@@ -2,14 +2,14 @@
 
 ## Scope
 
-- Module: 资产数据 current holdings capability
+- Module: 账户管理 current holdings capability
 - Parent tool: PAM
 - First release focus: current holdings only
 - Quote scope: A-share and fund quotes first
 
 ## Product Goal
 
-The current holdings capability lets users maintain current positions under each investment account from `资产数据`, review current market value, cost, unrealized profit/loss, asset-class allocation, and account allocation. Holdings must be bound to an existing account.
+The current holdings capability lets users maintain current positions under each investment account from `账户管理`, review current market value, cost, unrealized profit/loss, asset-class allocation, and account allocation. Holdings must be bound to an existing account.
 
 ## Confirmed Decisions
 
@@ -21,12 +21,12 @@ The current holdings capability lets users maintain current positions under each
 
 ## In Scope
 
-- Integrate holdings into `资产数据` instead of exposing a separate top-level `持仓管理` navigation item.
+- Integrate holdings into `账户管理` instead of exposing a separate top-level `持仓管理` navigation item.
 - Add, edit, and delete holdings.
 - Filter holdings by the selected account plus asset class and market.
 - Sort holdings table.
 - Calculate market value, cost amount, unrealized profit/loss, profit/loss percentage, and portfolio weight.
-- Show overview cards: total market value, total cost, unrealized profit/loss, holdings count.
+- Keep account cards as the only asset and return overview. Holdings detail instead shows a lightweight count and valuation-quality status for the active filter.
 - Show allocation summaries by asset class and account.
 - Persist holdings in localStorage.
 - Include holdings in JSON import/export.
@@ -136,5 +136,6 @@ Response:
 - Holdings management can generate account snapshots from current holdings market value. Account data remains the manual-entry path for snapshots, including net cash flow.
 - Cash holdings use amount mode: quantity is stored as 1, and cost/current price both represent the cash amount.
 - Holdings table supports filtering and sorting.
+- Holdings detail provides a clear add-holding action and identifies manual, quoted, and stale (over three days old) valuations.
 - A-share and fund quote refresh updates current price, name when available, price source, and price update time.
 - Quote refresh failure does not block manual holding maintenance.

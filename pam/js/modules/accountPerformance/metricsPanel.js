@@ -25,7 +25,7 @@ export function renderAccountComparison(metrics) {
     if (!wrap) return;
 
     if (state.accounts.length === 0) {
-        wrap.innerHTML = '<div class="empty-state">暂无账户。进入“资产数据”新增账户并录入快照。</div>';
+        wrap.innerHTML = '<div class="empty-state">暂无账户。进入“账户管理”新增账户并录入快照。</div>';
         return;
     }
 
@@ -75,7 +75,7 @@ export function bindAccountComparison({ onHighlight, onSort }) {
 }
 
 function card(label, value, note, className = '') {
-    return `<div class="overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${escapeHtml(note)}</small></div>`;
+    return `<div class="overview-card management-overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${escapeHtml(note)}</small></div>`;
 }
 
 function renderComparisonRow(metric) {

@@ -16,7 +16,6 @@ export function toggleTheme() {
         activeView: state.activeView,
         assetDataAction: state.assetDataAction,
         assetDataMaintenanceOpen: state.assetDataMaintenanceOpen,
-        accountManagementOpen: state.accountManagementOpen,
         holdingFilters: state.holdingFilters,
         holdingSortKey: state.holdingSortKey,
         holdingSortOrder: state.holdingSortOrder
