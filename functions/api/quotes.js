@@ -35,7 +35,7 @@ export async function onRequest(context) {
   });
 
   return jsonResponse({
-    source: 'eastmoney',
+    source: 'mixed',
     updatedAt: new Date().toISOString(),
     quotes,
     failedItems
@@ -60,8 +60,33 @@ function parseItems(value) {
 async function fetchAshareQuotes(items) {
   if (items.length === 0) return { quotes: [], failedItems: [] };
 
-  const secids = items.map(item => `${getAshareExchangePrefix(item.symbol)}.${item.symbol}`).join(',');
-  const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f14,f2,f3,f18,f124&secids=${encodeURIComponent(secids)}`;
+  const quotes = [];
+  const failedItems = [];
+
+  const sinaResults = await Promise.allSettled(items.map(fetchSinaAshareQuote));
+  sinaResults.forEach(result => {
+    if (result.status === 'fulfilled' && result.value) quotes.push(result.value);
+  });
+
+  const missingItems = items.filter(item => !quotes.some(quote => quote.symbol === item.symbol));
+  if (missingItems.length > 0) {
+    const fallbackResults = await Promise.allSettled(missingItems.map(fetchSingleEastmoneyAshareQuote));
+    fallbackResults.forEach((result, index) => {
+      const itemKey = formatItemKey(missingItems[index]);
+      if (result.status === 'fulfilled' && result.value) {
+        quotes.push(result.value);
+        return;
+      }
+      if (!failedItems.includes(itemKey)) failedItems.push(itemKey);
+    });
+  }
+
+  return { quotes, failedItems };
+}
+
+async function fetchSingleEastmoneyAshareQuote(item) {
+  const secid = `${getAshareExchangePrefix(item.symbol)}.${item.symbol}`;
+  const targetUrl = `https://push2.eastmoney.com/api/qt/stock/get?fltt=2&fields=f57,f58,f43,f60,f86,f170&secid=${encodeURIComponent(secid)}`;
   const response = await fetch(targetUrl, {
     headers: {
       'Referer': 'https://quote.eastmoney.com/',
@@ -69,37 +94,56 @@ async function fetchAshareQuotes(items) {
     }
   });
 
-  if (!response.ok) throw new Error(`Eastmoney stock quote failed: ${response.status}`);
+  if (!response.ok) throw new Error(`Eastmoney single stock quote failed: ${response.status}`);
   const data = await response.json();
-  const rows = Array.isArray(data?.data?.diff) ? data.data.diff : [];
-  const quoteMap = new Map(rows.map(row => [String(row.f12), row]));
+  const row = data?.data;
+  const latestPrice = toNumber(row?.f43);
+  const previousClose = toNumber(row?.f60);
+  const price = latestPrice ?? previousClose;
+  if (!row || price === null) return null;
+  return {
+    market: item.market,
+    symbol: item.symbol,
+    name: row.f58 || item.symbol,
+    price,
+    latestPrice,
+    previousClose,
+    changePct: toNumber(row.f170),
+    currency: 'CNY',
+    quoteTime: formatEastmoneyTimestamp(row.f86),
+    source: 'eastmoney'
+  };
+}
 
-  const quotes = [];
-  const failedItems = [];
+async function fetchSinaAshareQuote(item) {
+  const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(getSinaAshareSymbol(item.symbol))}`;
+  const response = await fetch(targetUrl, {
+    headers: {
+      'Referer': 'https://finance.sina.com.cn/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+  });
 
-  items.forEach(item => {
-      const row = quoteMap.get(item.symbol);
-      const latestPrice = toNumber(row?.f2);
-      const previousClose = toNumber(row?.f18);
-      const price = latestPrice ?? previousClose;
-      if (!row || price === null) {
-        failedItems.push(formatItemKey(item));
-        return;
-      }
-      quotes.push({
-        market: item.market,
-        symbol: item.symbol,
-        name: row.f14 || item.symbol,
-        price,
-        latestPrice,
-        previousClose,
-        changePct: toNumber(row.f3),
-        currency: 'CNY',
-        quoteTime: formatEastmoneyTimestamp(row.f124)
-      });
-    });
-
-  return { quotes, failedItems };
+  if (!response.ok) throw new Error(`Sina quote failed: ${response.status}`);
+  const script = await decodeResponseText(response);
+  const match = script.match(/="([^"]*)"/);
+  const fields = match ? match[1].split(',') : [];
+  const latestPrice = toNumber(fields[3]);
+  const previousClose = toNumber(fields[2]);
+  const price = latestPrice ?? previousClose;
+  if (price === null) return null;
+  return {
+    market: item.market,
+    symbol: item.symbol,
+    name: fields[0] || item.symbol,
+    price,
+    latestPrice,
+    previousClose,
+    changePct: previousClose ? (price - previousClose) / previousClose * 100 : null,
+    currency: 'CNY',
+    quoteTime: formatSinaTimestamp(fields[30], fields[31]),
+    source: 'sina'
+  };
 }
 
 async function fetchFundQuotes(items) {
@@ -149,7 +193,8 @@ async function fetchFundQuotes(items) {
         changePct: toNumber(fields[5] ?? fields[9]),
         currency: 'CNY',
         quoteTime: navDate || fields[7] || new Date().toISOString(),
-        navDate
+        navDate,
+        source: 'eastmoney'
       });
     });
 
@@ -157,7 +202,12 @@ async function fetchFundQuotes(items) {
 }
 
 function getAshareExchangePrefix(symbol) {
+  if (['000016', '000300', '000688', '000852', '000905'].includes(symbol)) return '1';
   return /^6/.test(symbol) ? '1' : '0';
+}
+
+function getSinaAshareSymbol(symbol) {
+  return getAshareExchangePrefix(symbol) === '1' ? `sh${symbol}` : `sz${symbol}`;
 }
 
 function formatItemKey(item) {
@@ -175,6 +225,22 @@ function normalizeDateKey(value) {
   if (!match) return '';
   const [year, month, day] = match[0].split('-');
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+async function decodeResponseText(response) {
+  const buffer = await response.arrayBuffer();
+  try {
+    return new TextDecoder('gbk').decode(buffer);
+  } catch (error) {
+    return new TextDecoder('utf-8').decode(buffer);
+  }
+}
+
+function formatSinaTimestamp(date, time) {
+  const dateText = String(date || '');
+  const timeText = String(time || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText) || !/^\d{2}:\d{2}:\d{2}$/.test(timeText)) return new Date().toISOString();
+  return `${dateText}T${timeText}+08:00`;
 }
 
 function toNumber(value) {
