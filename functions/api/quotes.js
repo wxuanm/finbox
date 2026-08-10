@@ -61,7 +61,7 @@ async function fetchAshareQuotes(items) {
   if (items.length === 0) return { quotes: [], failedItems: [] };
 
   const secids = items.map(item => `${getAshareExchangePrefix(item.symbol)}.${item.symbol}`).join(',');
-  const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f14,f2,f3,f124&secids=${encodeURIComponent(secids)}`;
+  const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f14,f2,f3,f18,f124&secids=${encodeURIComponent(secids)}`;
   const response = await fetch(targetUrl, {
     headers: {
       'Referer': 'https://quote.eastmoney.com/',
@@ -74,23 +74,32 @@ async function fetchAshareQuotes(items) {
   const rows = Array.isArray(data?.data?.diff) ? data.data.diff : [];
   const quoteMap = new Map(rows.map(row => [String(row.f12), row]));
 
-  return {
-    quotes: items.map(item => {
+  const quotes = [];
+  const failedItems = [];
+
+  items.forEach(item => {
       const row = quoteMap.get(item.symbol);
-      const price = toNumber(row?.f2);
-      if (!row || price === null) return null;
-      return {
+      const latestPrice = toNumber(row?.f2);
+      const previousClose = toNumber(row?.f18);
+      const price = latestPrice ?? previousClose;
+      if (!row || price === null) {
+        failedItems.push(formatItemKey(item));
+        return;
+      }
+      quotes.push({
         market: item.market,
         symbol: item.symbol,
         name: row.f14 || item.symbol,
         price,
+        latestPrice,
+        previousClose,
         changePct: toNumber(row.f3),
         currency: 'CNY',
         quoteTime: formatEastmoneyTimestamp(row.f124)
-      };
-    }).filter(Boolean),
-    failedItems: items.filter(item => !quoteMap.has(item.symbol)).map(formatItemKey)
-  };
+      });
+    });
+
+  return { quotes, failedItems };
 }
 
 async function fetchFundQuotes(items) {
@@ -113,25 +122,38 @@ async function fetchFundQuotes(items) {
     return [fields[0], fields];
   }));
 
-  return {
-    quotes: items.map(item => {
+  const quotes = [];
+  const failedItems = [];
+
+  items.forEach(item => {
       const fields = quoteMap.get(item.symbol);
       const estimatedNav = toNumber(fields?.[4]);
       const unitNav = toNumber(fields?.[6]);
-      const price = estimatedNav ?? unitNav;
-      if (!fields || price === null) return null;
-      return {
+      const refreshPrice = estimatedNav ?? unitNav;
+      const snapshotUnitNav = unitNav;
+      const price = refreshPrice;
+      if (!fields || price === null) {
+        failedItems.push(formatItemKey(item));
+        return;
+      }
+      const navDate = normalizeDateKey(fields[7]);
+      quotes.push({
         market: item.market,
         symbol: item.symbol,
         name: fields[1] || item.symbol,
         price,
+        refreshPrice,
+        snapshotUnitNav,
+        estimatedNav,
+        unitNav,
         changePct: toNumber(fields[5] ?? fields[9]),
         currency: 'CNY',
-        quoteTime: fields[7] || new Date().toISOString()
-      };
-    }).filter(Boolean),
-    failedItems: items.filter(item => !quoteMap.has(item.symbol)).map(formatItemKey)
-  };
+        quoteTime: navDate || fields[7] || new Date().toISOString(),
+        navDate
+      });
+    });
+
+  return { quotes, failedItems };
 }
 
 function getAshareExchangePrefix(symbol) {
@@ -146,6 +168,13 @@ function formatEastmoneyTimestamp(value) {
   const seconds = Number(value);
   if (!Number.isFinite(seconds) || seconds <= 0) return new Date().toISOString();
   return new Date(seconds * 1000).toISOString();
+}
+
+function normalizeDateKey(value) {
+  const match = String(value || '').match(/\d{4}-\d{1,2}-\d{1,2}/);
+  if (!match) return '';
+  const [year, month, day] = match[0].split('-');
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
 function toNumber(value) {

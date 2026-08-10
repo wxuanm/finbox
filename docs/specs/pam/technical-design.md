@@ -96,7 +96,7 @@ Snapshots:
 - First valid performance snapshot must have `totalValue > 0`.
 - `netFlow` must be numeric and can be positive, negative, or 0.
 - `netFlow` remains manually maintained by the user and represents the net cash flow between snapshots.
-- In holdings management, users can generate account snapshots from current holdings market value. Generated snapshots use `netFlow = 0`, `source = 'holdings'`, and may overwrite same-account same-date snapshots after confirmation.
+- In holdings management, users can generate account snapshots from current holdings market value for either the previous trading day or the current day. For previous-trading-day snapshots, A-shares use previous close, funds use latest disclosed unit NAV, and the snapshot date is resolved before writing snapshots from built-in ordinary-fund NAV disclosure references: `110001` 易方达平稳增长混合, `000001` 华夏成长混合, and `270002` 广发稳健增长混合A. If the built-in reference disclosure date cannot be obtained, the confirmation prompt states that the date has fallen back to the local previous trading day. For current-day snapshots, A-shares use latest price and fall back to previous close when latest price is unavailable, while funds use latest disclosed unit NAV. Generated snapshots use `netFlow = 0`, `source = 'holdings'`, and may overwrite same-account same-date snapshots after confirmation.
 - Same-account same-date overwrite requires confirmation.
 
 Holdings:

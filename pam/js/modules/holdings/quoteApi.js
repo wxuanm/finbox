@@ -5,7 +5,8 @@ export async function fetchQuotes(holdings) {
     const uniqueItems = [...new Set(items)];
     if (uniqueItems.length === 0) return { quotes: [], failedItems: [] };
 
-    const response = await fetch(`/api/quotes?items=${encodeURIComponent(uniqueItems.join(','))}`);
+    const params = new URLSearchParams({ items: uniqueItems.join(',') });
+    const response = await fetch(`/api/quotes?${params.toString()}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Quote refresh failed');
     return data;

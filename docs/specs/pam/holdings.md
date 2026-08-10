@@ -134,7 +134,7 @@ Response:
 - Holdings persist after refresh.
 - Holdings are included in JSON export and restored by JSON import.
 - Old PAM backups without holdings import successfully with an empty holdings list.
-- Holdings management can generate account snapshots from current holdings market value. Account data remains the manual-entry path for snapshots, including net cash flow.
+- Holdings management can generate account snapshots from current holdings market value for either the previous trading day or the current day. Previous-trading-day snapshots use A-share previous close and fund latest disclosed unit NAV, with the snapshot date resolved before writing snapshots from built-in ordinary-fund NAV disclosure references: `110001` 易方达平稳增长混合, `000001` 华夏成长混合, and `270002` 广发稳健增长混合A. If the built-in reference disclosure date cannot be obtained, the confirmation prompt states that the date has fallen back to the local previous trading day. Current-day snapshots use A-share latest price, falling back to previous close when latest price is unavailable, and fund latest disclosed unit NAV. Account data remains the manual-entry path for snapshots, including net cash flow.
 - Cash holdings use amount mode: quantity is stored as 1, and cost/current price both represent the cash amount.
 - Holdings table supports filtering and sorting.
 - Holdings detail provides a clear add-holding action and identifies manual, quoted, and stale (over three days old) valuations.

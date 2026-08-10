@@ -14,6 +14,13 @@ import { fetchQuotes } from './modules/holdings/quoteApi.js';
 import { todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
+let snapshotGenerationInProgress = false;
+
+const SNAPSHOT_DATE_REFERENCE_FUNDS = [
+    { market: 'Fund', symbol: '110001', name: '易方达平稳增长混合' },
+    { market: 'Fund', symbol: '000001', name: '华夏成长混合' },
+    { market: 'Fund', symbol: '270002', name: '广发稳健增长混合A' }
+];
 
 function init() {
     const preferences = loadPreferences();
@@ -806,6 +813,19 @@ function setQuoteRefreshState(isRefreshing) {
     });
 }
 
+function setSnapshotGenerationState(isGenerating) {
+    const buttons = [
+        document.getElementById('generateSnapshotsBtn'),
+        document.querySelector('[data-context-command="generate-snapshot"]')
+    ];
+    buttons.forEach(button => {
+        if (!button) return;
+        button.disabled = isGenerating;
+        button.classList.toggle('is-loading', isGenerating);
+        button.setAttribute('aria-busy', String(isGenerating));
+    });
+}
+
 function validateHolding(payload) {
     if (!payload.accountId) return '请选择账户。';
     if (!payload.name) return '持仓名称不能为空。';
@@ -823,62 +843,200 @@ function validateSnapshot(payload) {
     return '';
 }
 
-function generateSnapshotsFromHoldings() {
+async function generateSnapshotsFromHoldings() {
+    if (snapshotGenerationInProgress) return;
     state.assetDataAction = 'snapshot';
-    const accountIds = state.accounts.map(account => account.id);
-    const rows = accountIds
-        .map(accountId => {
-            const account = state.accounts.find(item => item.id === accountId);
-            const totalValue = getAccountHoldingMarketValue(accountId);
-            return { account, accountId, totalValue };
-        })
-        .filter(row => row.account && row.totalValue > 0);
 
-    if (rows.length === 0) {
-        showHoldingMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
-        showFormMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
-        return;
-    }
+    try {
+        snapshotGenerationInProgress = true;
+        setSnapshotGenerationState(true);
 
-    const date = todayKey();
-    const existingCount = rows.filter(row => state.snapshots.some(snapshot => snapshot.accountId === row.accountId && snapshot.date === date)).length;
-    const scopeText = `${rows.length} 个账户`;
-    const overwriteText = existingCount > 0 ? `，其中 ${existingCount} 条会覆盖今日已有快照` : '';
-    if (!confirm(`将用当前持仓市值为${scopeText}生成今日账户快照，净流入默认为 0${overwriteText}。是否继续？`)) return;
-
-    rows.forEach(row => {
-        const snapshot = {
-            id: createId('snapshot'),
-            accountId: row.accountId,
-            date,
-            totalValue: Number(row.totalValue.toFixed(2)),
-            netFlow: 0,
-            note: '由账户管理生成',
-            source: 'holdings'
-        };
-        const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
-        if (existing) {
-            Object.assign(existing, { ...snapshot, id: existing.id });
-        } else {
-            state.snapshots.push(snapshot);
+        const dateOption = prompt('请选择快照日期：输入 1 生成上个交易日快照，输入 2 生成当日快照。', '1');
+        if (dateOption === null) return;
+        const normalizedOption = dateOption.trim();
+        if (!['1', '2'].includes(normalizedOption)) {
+            showHoldingMessage('未生成快照：请输入 1 或 2 选择快照日期。', true);
+            showFormMessage('未生成快照：请输入 1 或 2 选择快照日期。', true);
+            return;
         }
-    });
 
-    state.selectedAccountId = rows[0].accountId;
-    state.activeView = 'assetData';
-    state.assetDataAction = 'snapshot';
-    persistAll();
-    renderApp();
-    showFormMessage(`已生成 ${rows.length} 条账户快照。`);
-    showHoldingMessage(`已生成 ${rows.length} 条账户快照。`);
+        showHoldingMessage('正在按所选日期口径计算快照市值。');
+        let valuation;
+        try {
+            valuation = await buildSnapshotValuation(normalizedOption);
+        } catch (error) {
+            const message = error.message || '快照估值行情获取失败，已中止生成。';
+            showHoldingMessage(message, true);
+            showFormMessage(message, true);
+            return;
+        }
+        const accountIds = state.accounts.map(account => account.id);
+        const rows = accountIds
+            .map(accountId => {
+                const account = state.accounts.find(item => item.id === accountId);
+                const totalValue = getAccountHoldingMarketValue(accountId, valuation.priceByHoldingId);
+                return { account, accountId, totalValue };
+            })
+            .filter(row => row.account && row.totalValue > 0);
+
+        if (rows.length === 0) {
+            showHoldingMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
+            showFormMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
+            return;
+        }
+
+        const date = valuation.date;
+        const dateLabel = normalizedOption === '1' ? '上个交易日' : '当日';
+        const existingCount = rows.filter(row => state.snapshots.some(snapshot => snapshot.accountId === row.accountId && snapshot.date === date)).length;
+        const scopeText = `${rows.length} 个账户`;
+        const overwriteText = existingCount > 0 ? `，其中 ${existingCount} 条会覆盖 ${date} 已有快照` : '';
+        const fallbackText = valuation.fallbackCount > 0 ? `；${valuation.fallbackCount} 项持仓将使用手动当前价` : '';
+        const failedText = valuation.failedCount > 0 ? `；${valuation.failedCount} 项行情获取失败` : '';
+        const dateSourceText = valuation.dateFallback ? '；未取得内置普通基金参考披露日，已回退到本地上个交易日' : '';
+        if (!confirm(`将用${valuation.description}为${scopeText}生成${dateLabel}（${date}）账户快照，净流入默认为 0${overwriteText}${fallbackText}${failedText}${dateSourceText}。是否继续？`)) return;
+
+        rows.forEach(row => {
+            const snapshot = {
+                id: createId('snapshot'),
+                accountId: row.accountId,
+                date,
+                totalValue: Number(row.totalValue.toFixed(2)),
+                netFlow: 0,
+                note: '由账户管理生成',
+                source: 'holdings'
+            };
+            const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
+            if (existing) {
+                Object.assign(existing, { ...snapshot, id: existing.id });
+            } else {
+                state.snapshots.push(snapshot);
+            }
+        });
+
+        state.selectedAccountId = rows[0].accountId;
+        state.activeView = 'assetData';
+        state.assetDataAction = 'snapshot';
+        persistAll();
+        renderApp();
+        showFormMessage(`已生成 ${rows.length} 条账户快照。`);
+        showHoldingMessage(`已生成 ${rows.length} 条账户快照。`);
+    } finally {
+        snapshotGenerationInProgress = false;
+        setSnapshotGenerationState(false);
+    }
 }
 
-function getAccountHoldingMarketValue(accountId) {
+async function buildSnapshotValuation(dateOption) {
+    const priceByHoldingId = new Map();
+    const supported = state.holdings.filter(holding => ['CN', 'Fund'].includes(holding.market) && holding.symbol);
+    const quoteByKey = new Map();
+    const referenceFundQuoteByKey = new Map();
+    let failedCount = 0;
+    let dateReferenceFailed = false;
+
+    if (supported.length > 0) {
+        try {
+            const data = await fetchQuotes(supported);
+            (data.quotes || []).forEach(quote => quoteByKey.set(`${quote.market}:${quote.symbol}`, quote));
+            failedCount = (data.failedItems || []).length;
+        } catch (error) {
+            failedCount = supported.length;
+            if (dateOption === '1') {
+                throw new Error('上个交易日快照行情获取失败，无法取得 A股前收或基金最新净值，已中止生成。');
+            }
+            showHoldingMessage('快照估值行情获取失败，将使用手动当前价生成。', true);
+        }
+    }
+
+    if (dateOption === '1') {
+        try {
+            const data = await fetchQuotes(SNAPSHOT_DATE_REFERENCE_FUNDS);
+            (data.quotes || []).forEach(quote => referenceFundQuoteByKey.set(`${quote.market}:${quote.symbol}`, quote));
+        } catch (error) {
+            referenceFundQuoteByKey.clear();
+            dateReferenceFailed = true;
+        }
+    }
+
+    const dateResult = resolveSnapshotDate(dateOption, referenceFundQuoteByKey);
+    let fallbackCount = 0;
+    state.holdings.forEach(holding => {
+        const quote = quoteByKey.get(`${holding.market}:${holding.symbol}`);
+        const valuationPrice = resolveSnapshotPrice(holding, quote, dateOption);
+        if (valuationPrice.price === null) return;
+        priceByHoldingId.set(holding.id, valuationPrice.price);
+        if (valuationPrice.isFallback) fallbackCount += 1;
+    });
+
+    return {
+        date: dateResult.date,
+        dateSource: dateResult.source,
+        dateFallback: dateResult.isFallback,
+        dateReferenceFailed,
+        priceByHoldingId,
+        fallbackCount,
+        failedCount,
+        description: dateOption === '1' ? 'A股前一交易日收盘价、基金最新净值' : 'A股最新价、基金最新净值'
+    };
+}
+
+function resolveSnapshotDate(dateOption, quoteByKey) {
+    if (dateOption !== '1') return { date: todayKey(), source: 'today', isFallback: false };
+
+    const referenceFundNavDates = SNAPSHOT_DATE_REFERENCE_FUNDS
+        .map(fund => quoteByKey.get(`${fund.market}:${fund.symbol}`)?.navDate)
+        .filter(Boolean)
+        .sort();
+
+    const referenceDate = referenceFundNavDates[referenceFundNavDates.length - 1];
+    if (referenceDate) return { date: referenceDate, source: 'reference-fund-nav-date', isFallback: false };
+
+    return { date: previousTradingDayKey(), source: 'local-previous-trading-day', isFallback: true };
+}
+
+function resolveSnapshotPrice(holding, quote, dateOption) {
+    if (holding.market === 'CN') {
+        const quotePrice = dateOption === '1' ? Number(quote?.previousClose) : Number(quote?.latestPrice ?? quote?.previousClose);
+        if (Number.isFinite(quotePrice) && quotePrice > 0) return { price: quotePrice, isFallback: false };
+        return { price: manualHoldingPrice(holding), isFallback: true };
+    }
+
+    if (holding.market === 'Fund') {
+        const unitNav = Number(quote?.snapshotUnitNav);
+        if (Number.isFinite(unitNav) && unitNav > 0) return { price: unitNav, isFallback: false };
+        return { price: manualHoldingPrice(holding), isFallback: true };
+    }
+
+    return { price: manualHoldingPrice(holding), isFallback: true };
+}
+
+function manualHoldingPrice(holding) {
+    const price = Number(holding.currentPrice);
+    return Number.isFinite(price) ? price : null;
+}
+
+function previousTradingDayKey() {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    while ([0, 6].includes(date.getDay())) {
+        date.setDate(date.getDate() - 1);
+    }
+    return formatDateKey(date);
+}
+
+function formatDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getAccountHoldingMarketValue(accountId, priceByHoldingId = new Map()) {
     return state.holdings
         .filter(holding => holding.accountId === accountId)
         .reduce((sum, holding) => {
             const quantity = Number(holding.quantity);
-            const currentPrice = Number(holding.currentPrice);
+            const currentPrice = Number(priceByHoldingId.get(holding.id) ?? holding.currentPrice);
             if (!Number.isFinite(quantity) || !Number.isFinite(currentPrice)) return sum;
             return sum + quantity * currentPrice;
         }, 0);
