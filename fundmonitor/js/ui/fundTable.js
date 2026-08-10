@@ -439,6 +439,19 @@ function toggleMobileFundInfo(row) {
     row.after(detailRow);
 }
 
+function handleFundRowClick(row, event) {
+    if (event.target.closest('button, a, input, select, textarea')) return;
+
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        toggleMobileFundInfo(row);
+        return;
+    }
+
+    const code = row.id.replace('fund-', '');
+    const name = row.querySelector('.name-main')?.textContent?.trim();
+    navigateToNavTrend([code], name || code);
+}
+
 export function updateFundRow(code, fields) {
     const row = document.getElementById(`fund-${code}`);
     if (!row) return;
@@ -504,7 +517,7 @@ export function addRow(code) {
     const row = document.createElement('tr');
     row.id = `fund-${code}`;
     row.classList.add('loading');
-    row.onclick = () => toggleMobileFundInfo(row);
+    row.onclick = event => handleFundRowClick(row, event);
     
     row.innerHTML = `
         <td>
