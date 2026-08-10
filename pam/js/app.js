@@ -15,6 +15,7 @@ import { todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
 let snapshotGenerationInProgress = false;
+let pendingSnapshotGeneration = null;
 
 const SNAPSHOT_DATE_REFERENCE_FUNDS = [
     { market: 'Fund', symbol: '110001', name: '易方达平稳增长混合' },
@@ -79,6 +80,14 @@ function bindEvents() {
         event.preventDefault();
         cancelAssetDialog('holding');
     });
+    document.getElementById('snapshotGenerateDialog')?.addEventListener('cancel', event => {
+        event.preventDefault();
+        closeSnapshotGenerateDialog();
+    });
+    document.getElementById('snapshotGenerateForm')?.addEventListener('submit', handleSnapshotGeneratePreview);
+    document.getElementById('snapshotGenerateConfirmBtn')?.addEventListener('click', confirmSnapshotGeneration);
+    document.getElementById('snapshotGenerateCancelBtn')?.addEventListener('click', closeSnapshotGenerateDialog);
+    document.querySelector('[data-snapshot-generate-close]')?.addEventListener('click', closeSnapshotGenerateDialog);
     document.querySelectorAll('[data-context-command]').forEach(button => {
         button.addEventListener('click', () => runContextCommand(button.dataset.contextCommand));
     });
@@ -846,21 +855,54 @@ function validateSnapshot(payload) {
 async function generateSnapshotsFromHoldings() {
     if (snapshotGenerationInProgress) return;
     state.assetDataAction = 'snapshot';
+    openSnapshotGenerateDialog();
+}
+
+function openSnapshotGenerateDialog() {
+    closeMobileActionMenu();
+    const dialog = document.getElementById('snapshotGenerateDialog');
+    const form = document.getElementById('snapshotGenerateForm');
+    if (!dialog || !form) return;
+    pendingSnapshotGeneration = null;
+    form.reset();
+    const defaultOption = form.querySelector('input[name="snapshotDateOption"][value="1"]');
+    if (defaultOption) defaultOption.checked = true;
+    renderSnapshotGeneratePreview();
+    showSnapshotGenerateMessage('选择快照口径后，先计算并核对结果，再确认生成。');
+    setSnapshotGenerateConfirmVisible(false);
+    if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+    }
+}
+
+function closeSnapshotGenerateDialog() {
+    const dialog = document.getElementById('snapshotGenerateDialog');
+    pendingSnapshotGeneration = null;
+    setSnapshotGenerateConfirmVisible(false);
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') {
+        dialog.close();
+    } else {
+        dialog.removeAttribute('open');
+    }
+}
+
+async function handleSnapshotGeneratePreview(event) {
+    event.preventDefault();
+    if (snapshotGenerationInProgress) return;
 
     try {
         snapshotGenerationInProgress = true;
         setSnapshotGenerationState(true);
+        pendingSnapshotGeneration = null;
+        setSnapshotGenerateConfirmVisible(false);
 
-        const dateOption = prompt('请选择快照日期：输入 1 生成上个交易日快照，输入 2 生成当日快照。', '1');
-        if (dateOption === null) return;
-        const normalizedOption = dateOption.trim();
-        if (!['1', '2'].includes(normalizedOption)) {
-            showHoldingMessage('未生成快照：请输入 1 或 2 选择快照日期。', true);
-            showFormMessage('未生成快照：请输入 1 或 2 选择快照日期。', true);
-            return;
-        }
+        const normalizedOption = getSelectedSnapshotDateOption();
 
         showHoldingMessage('正在按所选日期口径计算快照市值。');
+        showSnapshotGenerateMessage('正在获取行情并计算快照预览...');
         let valuation;
         try {
             valuation = await buildSnapshotValuation(normalizedOption);
@@ -868,6 +910,7 @@ async function generateSnapshotsFromHoldings() {
             const message = error.message || '快照估值行情获取失败，已中止生成。';
             showHoldingMessage(message, true);
             showFormMessage(message, true);
+            showSnapshotGenerateMessage(message, true);
             return;
         }
         const accountIds = state.accounts.map(account => account.id);
@@ -882,48 +925,116 @@ async function generateSnapshotsFromHoldings() {
         if (rows.length === 0) {
             showHoldingMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
             showFormMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
+            showSnapshotGenerateMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
             return;
         }
 
         const date = valuation.date;
         const dateLabel = normalizedOption === '1' ? '上个交易日' : '当日';
         const existingCount = rows.filter(row => state.snapshots.some(snapshot => snapshot.accountId === row.accountId && snapshot.date === date)).length;
-        const scopeText = `${rows.length} 个账户`;
-        const overwriteText = existingCount > 0 ? `，其中 ${existingCount} 条会覆盖 ${date} 已有快照` : '';
-        const fallbackText = valuation.fallbackCount > 0 ? `；${valuation.fallbackCount} 项持仓将使用手动当前价` : '';
-        const failedText = valuation.failedCount > 0 ? `；${valuation.failedCount} 项行情获取失败` : '';
-        const dateSourceText = valuation.dateFallback ? '；未取得内置普通基金参考披露日，已回退到本地上个交易日' : '';
-        if (!confirm(`将用${valuation.description}为${scopeText}生成${dateLabel}（${date}）账户快照，净流入默认为 0${overwriteText}${fallbackText}${failedText}${dateSourceText}。是否继续？`)) return;
 
-        rows.forEach(row => {
-            const snapshot = {
-                id: createId('snapshot'),
-                accountId: row.accountId,
-                date,
-                totalValue: Number(row.totalValue.toFixed(2)),
-                netFlow: 0,
-                note: '由账户管理生成',
-                source: 'holdings'
-            };
-            const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
-            if (existing) {
-                Object.assign(existing, { ...snapshot, id: existing.id });
-            } else {
-                state.snapshots.push(snapshot);
-            }
-        });
-
-        state.selectedAccountId = rows[0].accountId;
-        state.activeView = 'assetData';
-        state.assetDataAction = 'snapshot';
-        persistAll();
-        renderApp();
-        showFormMessage(`已生成 ${rows.length} 条账户快照。`);
-        showHoldingMessage(`已生成 ${rows.length} 条账户快照。`);
+        pendingSnapshotGeneration = { date, dateLabel, rows, valuation, existingCount };
+        renderSnapshotGeneratePreview(pendingSnapshotGeneration);
+        showSnapshotGenerateMessage('快照预览已生成。请核对日期、覆盖数量和手动估值提示后确认。');
+        setSnapshotGenerateConfirmVisible(true);
     } finally {
         snapshotGenerationInProgress = false;
         setSnapshotGenerationState(false);
     }
+}
+
+function confirmSnapshotGeneration() {
+    if (!pendingSnapshotGeneration || snapshotGenerationInProgress) return;
+    const { date, rows } = pendingSnapshotGeneration;
+
+    rows.forEach(row => {
+        const snapshot = {
+            id: createId('snapshot'),
+            accountId: row.accountId,
+            date,
+            totalValue: Number(row.totalValue.toFixed(2)),
+            netFlow: 0,
+            note: '由账户管理生成',
+            source: 'holdings'
+        };
+        const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
+        if (existing) {
+            Object.assign(existing, { ...snapshot, id: existing.id });
+        } else {
+            state.snapshots.push(snapshot);
+        }
+    });
+
+    state.selectedAccountId = rows[0].accountId;
+    state.activeView = 'assetData';
+    state.assetDataAction = 'snapshot';
+    persistAll();
+    renderApp();
+    closeSnapshotGenerateDialog();
+    showFormMessage(`已生成 ${rows.length} 条账户快照。`);
+    showHoldingMessage(`已生成 ${rows.length} 条账户快照。`);
+}
+
+function getSelectedSnapshotDateOption() {
+    return document.querySelector('input[name="snapshotDateOption"]:checked')?.value || '1';
+}
+
+function setSnapshotGenerateConfirmVisible(isVisible) {
+    document.getElementById('snapshotGenerateConfirmBtn')?.classList.toggle('hidden', !isVisible);
+    const calculateBtn = document.getElementById('snapshotGenerateCalculateBtn');
+    if (calculateBtn) calculateBtn.textContent = isVisible ? '重新计算' : '计算快照';
+}
+
+function showSnapshotGenerateMessage(message, isError = false) {
+    const el = document.getElementById('snapshotGenerateMessage');
+    if (!el) return;
+    el.textContent = message || '';
+    el.classList.toggle('error', Boolean(isError));
+}
+
+function renderSnapshotGeneratePreview(generation = null) {
+    const wrap = document.getElementById('snapshotGeneratePreview');
+    if (!wrap) return;
+    if (!generation) {
+        wrap.innerHTML = '<div class="preview-empty">选择口径后点击“计算快照”，这里会展示快照日期、账户数量和估值提示。</div>';
+        return;
+    }
+
+    const { date, dateLabel, rows, valuation, existingCount } = generation;
+    const totalValue = rows.reduce((sum, row) => sum + row.totalValue, 0);
+    const warnings = [];
+    if (existingCount > 0) warnings.push(`${existingCount} 条同日快照将被覆盖`);
+    if (valuation.fallbackCount > 0) warnings.push(`${valuation.fallbackCount} 项持仓使用手动当前价`);
+    if (valuation.failedCount > 0) warnings.push(`${valuation.failedCount} 项行情获取失败`);
+    if (valuation.dateFallback) warnings.push('未取得内置普通基金参考披露日，已回退到本地上个交易日');
+    wrap.innerHTML = `
+        <div class="snapshot-preview-hero">
+            <div><span>快照日期</span><strong>${date}</strong><small>${dateLabel} · ${valuation.description}</small></div>
+            <div><span>账户范围</span><strong>${rows.length} 个账户</strong><small>净流入默认记为 0</small></div>
+            <div><span>合计市值</span><strong>${formatPreviewCurrency(totalValue)}</strong><small>基于当前持仓数量计算</small></div>
+        </div>
+        <div class="snapshot-preview-warning${warnings.length === 0 ? ' ready' : ''}">
+            ${warnings.length === 0 ? '估值数据完整，未发现同日覆盖。' : warnings.join('；')}
+        </div>
+        <div class="snapshot-preview-accounts">
+            ${rows.map(row => `<div><span>${escapePreviewText(row.account.name)}</span><strong>${formatPreviewCurrency(row.totalValue)}</strong></div>`).join('')}
+        </div>
+    `;
+}
+
+function formatPreviewCurrency(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    return num.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 });
+}
+
+function escapePreviewText(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 
 async function buildSnapshotValuation(dateOption) {
