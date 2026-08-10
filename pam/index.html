@@ -107,9 +107,10 @@
                 <dialog id="snapshotDialog" class="asset-dialog" aria-labelledby="snapshotDialogTitle">
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
-                            <div>
+                            <div class="asset-dialog-heading">
+                                <span class="dialog-eyebrow">Performance Snapshot</span>
                                 <h2 id="snapshotDialogTitle">新增快照</h2>
-                                <p>总资产填账户总额；净流入填本次与上次之间的投入/取出。</p>
+                                <p>记录账户当日净值点位，用于计算现金流调整后的收益曲线。</p>
                             </div>
                             <button class="asset-dialog-close" type="button" data-dialog-close="snapshot" title="关闭" aria-label="关闭">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
@@ -117,16 +118,34 @@
                         </div>
                         <div class="asset-dialog-body">
                             <form id="snapshotForm" class="management-form snapshot-form">
-                                <div class="form-section form-context-grid">
-                                    <label><span>当前账户</span><select id="snapshotAccountSelect"></select></label>
-                                    <label><span>快照日期</span><input id="snapshotDateInput" type="date" required></label>
+                                <div class="form-card form-card-accent">
+                                    <div class="form-card-head">
+                                        <span>01</span>
+                                        <div>
+                                            <h3>快照范围</h3>
+                                            <p>确认账户和估值日期。</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-section form-context-grid">
+                                        <label><span>当前账户</span><select id="snapshotAccountSelect"></select></label>
+                                        <label><span>快照日期</span><input id="snapshotDateInput" type="date" required></label>
+                                    </div>
                                 </div>
-                                <div class="form-section snapshot-value-grid">
-                                    <label><span>账户总资产</span><input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="例如 125000.00" required></label>
-                                    <label><span>本期净流入</span><input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" placeholder="无资金变动填 0" value="0" required></label>
+                                <div class="form-card">
+                                    <div class="form-card-head">
+                                        <span>02</span>
+                                        <div>
+                                            <h3>资产与现金流</h3>
+                                            <p>总资产用于净值，净流入只记录本期新增或取出资金。</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-section snapshot-value-grid">
+                                        <label class="metric-input"><span>账户总资产</span><input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="例如 125000.00" required><small>含现金、基金、股票等全部资产市值。</small></label>
+                                        <label class="metric-input"><span>本期净流入</span><input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" placeholder="入金为正，出金为负" value="0" required><small>没有资金变动时填写 0。</small></label>
+                                    </div>
+                                    <p class="form-guide">收益计算会剔除净流入影响；请勿把投资盈亏填入净流入。</p>
                                 </div>
-                                <p class="form-guide">总资产填写该账户当日总额；净流入填写相对上次快照的入金或出金。</p>
-                                <label class="form-note-field"><span>备注</span><input id="snapshotNoteInput" type="text" maxlength="60" placeholder="可选，例如月末核对"></label>
+                                <label class="form-note-field"><span>备注</span><input id="snapshotNoteInput" type="text" maxlength="60" placeholder="可选，例如月末核对、季度复盘"></label>
                                 <div class="form-actions">
                                     <button id="snapshotSubmitBtn" class="primary-btn" type="submit">新增快照</button>
                                     <button id="cancelEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
@@ -140,9 +159,10 @@
                 <dialog id="holdingDialog" class="asset-dialog wide-dialog" aria-labelledby="holdingDialogTitle">
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
-                            <div>
+                            <div class="asset-dialog-heading">
+                                <span class="dialog-eyebrow">Position Setup</span>
                                 <h2 id="holdingDialogTitle">新增持仓</h2>
-                                <p>A股、基金可刷新行情；现金直接录入金额。</p>
+                                <p>录入资产标的、成本和估值，形成账户级持仓与盈亏视图。</p>
                             </div>
                             <button class="asset-dialog-close" type="button" data-dialog-close="holding" title="关闭" aria-label="关闭">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
@@ -150,23 +170,50 @@
                         </div>
                         <div class="asset-dialog-body">
                             <form id="holdingForm" class="management-form holding-form">
-                                <div class="form-section holding-context-grid">
-                                    <label><span>当前账户</span><select id="holdingAccountSelect"></select></label>
-                                    <label><span>类别</span><select id="holdingAssetClassSelect"></select></label>
-                                    <label><span>市场</span><select id="holdingMarketSelect"></select></label>
+                                <div class="form-card form-card-accent">
+                                    <div class="form-card-head">
+                                        <span>01</span>
+                                        <div>
+                                            <h3>账户与资产类型</h3>
+                                            <p>选择归属账户、资产类别和可用行情市场。</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-section holding-context-grid">
+                                        <label><span>当前账户</span><select id="holdingAccountSelect"></select></label>
+                                        <label><span>类别</span><select id="holdingAssetClassSelect"></select></label>
+                                        <label class="form-market-field"><span>市场</span><select id="holdingMarketSelect"></select></label>
+                                    </div>
                                 </div>
-                                <div class="form-section holding-instrument-grid">
-                                    <label><span>名称</span><input id="holdingNameInput" type="text" maxlength="40" placeholder="例如 贵州茅台" required></label>
-                                    <label><span>代码</span><input id="holdingSymbolInput" type="text" maxlength="20" placeholder="例如 600519"></label>
+                                <div class="form-card">
+                                    <div class="form-card-head">
+                                        <span>02</span>
+                                        <div>
+                                            <h3>标的信息</h3>
+                                            <p>A股和基金填写代码后可批量刷新行情。</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-section holding-instrument-grid">
+                                        <label><span>名称</span><input id="holdingNameInput" type="text" maxlength="40" placeholder="例如 贵州茅台" required><small>显示在持仓明细中的资产名称。</small></label>
+                                        <label><span>代码</span><input id="holdingSymbolInput" type="text" maxlength="20" placeholder="例如 600519"><small>现金或无行情资产可留空。</small></label>
+                                    </div>
                                 </div>
-                                <div class="form-section holding-valuation-grid">
-                                    <label><span>数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
-                                    <label><span>成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
-                                    <label><span id="holdingCurrentPriceLabel">当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" required></label>
-                                    <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
+                                <div class="form-card valuation-card">
+                                    <div class="form-card-head">
+                                        <span>03</span>
+                                        <div>
+                                            <h3>估值与成本</h3>
+                                            <p>市值 = 数量 × 当前价；浮盈亏基于成本价计算。</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-section holding-valuation-grid">
+                                        <label class="metric-input"><span>数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" placeholder="例如 100" required></label>
+                                        <label class="metric-input"><span>成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" placeholder="买入均价" required></label>
+                                        <label class="metric-input"><span id="holdingCurrentPriceLabel">当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" placeholder="最新估值" required></label>
+                                        <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
+                                    </div>
+                                    <p class="holding-cash-hint">现金模式：只需填写名称和现金余额，系统会自动将数量设为 1，并用余额同步成本与当前价。</p>
                                 </div>
-                                <p class="holding-cash-hint">现金按余额录入，无需填写代码、市场、数量和成本价。</p>
-                                <label class="form-note-field"><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选，例如长期配置"></label>
+                                <label class="form-note-field"><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选，例如长期配置、核心仓位"></label>
                                 <div class="form-actions">
                                     <button id="holdingSubmitBtn" class="primary-btn" type="submit">新增持仓</button>
                                     <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>

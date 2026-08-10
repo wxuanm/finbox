@@ -240,10 +240,10 @@ function cancelAssetDialog(action) {
     const wasEditing = isHolding ? Boolean(state.editingHoldingId) : Boolean(state.editingSnapshotId);
     if (isHolding) {
         resetHoldingForm();
-        showHoldingMessage(wasEditing ? '已取消编辑。' : '已取消录入。');
+        showHoldingMessage(wasEditing ? '已取消编辑。' : '');
     } else {
         resetSnapshotForm();
-        showFormMessage(wasEditing ? '已取消编辑。' : '已取消录入。');
+        showFormMessage(wasEditing ? '已取消编辑。' : '');
     }
     state.assetDataMaintenanceOpen = false;
     closeAssetDialog(action);

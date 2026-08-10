@@ -436,7 +436,13 @@ button:disabled {
 
 .management-form {
     display: grid;
-    gap: 16px;
+    gap: 14px;
+}
+
+.management-form.holding-form,
+.management-form.snapshot-form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
 }
 
 .management-form label {
@@ -453,10 +459,17 @@ button:disabled {
     letter-spacing: 0.03em;
 }
 
+.management-form small {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
 .management-form input,
 .management-form select {
-    min-height: 42px;
-    padding: 9px 11px;
+    min-height: 46px;
+    padding: 10px 12px;
     border-color: var(--border-color);
     background: var(--surface-color);
 }
@@ -469,6 +482,57 @@ button:disabled {
 .form-section {
     display: grid;
     gap: 12px;
+}
+
+.form-card {
+    display: grid;
+    gap: 14px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: var(--surface-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.form-card-accent {
+    border-color: color-mix(in srgb, var(--primary-color) 26%, var(--border-color));
+    background:
+        linear-gradient(135deg, var(--primary-soft), transparent 48%),
+        var(--surface-color);
+}
+
+.form-card-head {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.form-card-head > span {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 11px;
+    color: var(--primary-color);
+    background: var(--primary-soft);
+    font-size: 12px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.form-card-head h3 {
+    margin: 0 0 3px;
+    color: var(--heading-color);
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.form-card-head p {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 12px;
+    line-height: 1.45;
 }
 
 .form-context-grid {
@@ -494,18 +558,41 @@ button:disabled {
 .form-guide {
     margin: -4px 0 0;
     padding: 10px 12px;
-    border-left: 3px solid var(--primary-color);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 28%, var(--border-color));
+    border-left: 3px solid var(--accent-color);
+    border-radius: 12px;
     color: var(--muted-text);
-    background: var(--surface-muted);
+    background: color-mix(in srgb, var(--accent-color) 9%, var(--surface-color));
     font-size: 12px;
     line-height: 1.5;
+}
+
+.metric-input input {
+    color: var(--heading-color);
+    font-size: 16px;
+    font-weight: 850;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-input input::placeholder {
+    color: var(--muted-text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.form-note-field {
+    padding: 13px 15px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--surface-muted) 72%, transparent);
 }
 
 .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    padding-top: 4px;
+    padding-top: 12px;
     border-top: 1px solid var(--border-color);
 }
 
@@ -551,9 +638,19 @@ button:disabled {
     display: none;
 }
 
-.holding-form.cash-mode .holding-instrument-grid,
 .holding-form.cash-mode .holding-valuation-grid {
     grid-template-columns: 1fr;
+}
+
+.holding-form.cash-mode .holding-instrument-grid {
+    grid-template-columns: 1fr;
+}
+
+.holding-form.cash-mode .valuation-card {
+    border-color: color-mix(in srgb, var(--accent-color) 28%, var(--border-color));
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 12%, transparent), transparent 45%),
+        var(--surface-color);
 }
 
 .holding-form.cash-mode .holding-cash-hint {
@@ -740,13 +837,14 @@ button:disabled {
 
 .asset-dialog {
     width: min(760px, calc(100vw - 32px));
-    max-height: min(760px, calc(100vh - 32px));
+    max-height: min(840px, calc(100vh - 32px));
     overflow: hidden;
     padding: 0;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
     color: var(--text-color);
-    background: var(--surface-color);
+    background:
+        linear-gradient(180deg, var(--surface-color), var(--surface-muted));
     box-shadow: var(--shadow-lg);
 }
 
@@ -773,15 +871,31 @@ button:disabled {
     align-items: flex-start;
     justify-content: space-between;
     gap: 14px;
-    padding: 18px 18px 12px;
+    padding: 20px 22px 16px;
     border-bottom: 1px solid var(--border-color);
-    background: linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+    background:
+        radial-gradient(circle at 10% 0%, var(--primary-soft), transparent 34%),
+        linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+}
+
+.asset-dialog-heading {
+    display: grid;
+    gap: 5px;
+}
+
+.dialog-eyebrow {
+    color: var(--primary-color);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
 .asset-dialog-header h2 {
-    margin: 0 0 4px;
+    margin: 0;
     color: var(--heading-color);
-    font-size: 18px;
+    font-size: 22px;
+    letter-spacing: -0.02em;
 }
 
 .asset-dialog-header p {
@@ -810,7 +924,7 @@ button:disabled {
 
 .asset-dialog-body {
     overflow-y: auto;
-    padding: 16px 18px 18px;
+    padding: 18px 22px 22px;
 }
 
 .asset-tool-bar {
@@ -1271,11 +1385,6 @@ select:focus {
     min-width: 0;
 }
 
-.snapshot-form {
-    grid-template-columns: 1.15fr repeat(3, 1fr) 1.2fr auto auto;
-    align-items: end;
-}
-
 .input-guide,
 .method-note {
     padding: 8px 10px;
@@ -1652,11 +1761,33 @@ select:focus {
     }
 
     .asset-dialog-header {
-        padding: 15px 15px 10px;
+        padding: 16px 16px 12px;
+    }
+
+    .asset-dialog-header h2 {
+        font-size: 20px;
     }
 
     .asset-dialog-body {
         padding: 14px 15px 16px;
+    }
+
+    .form-card {
+        padding: 13px;
+        border-radius: 16px;
+    }
+
+    .form-card-head {
+        gap: 8px;
+    }
+
+    .form-card-head > span {
+        width: 30px;
+        height: 30px;
+    }
+
+    .form-note-field {
+        padding: 12px;
     }
 
     .holding-table,
