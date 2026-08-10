@@ -863,6 +863,7 @@ button:disabled {
 
 .asset-dialog-shell {
     display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     max-height: inherit;
 }
 
@@ -923,8 +924,11 @@ button:disabled {
 }
 
 .asset-dialog-body {
+    min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 18px 22px 22px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .asset-tool-bar {
@@ -1629,6 +1633,10 @@ select:focus {
         width: 100%;
     }
 
+    .asset-holdings-panel .asset-tool-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .form-context-grid,
     .snapshot-value-grid,
     .holding-context-grid,
@@ -1717,7 +1725,30 @@ select:focus {
     }
 
     .management-panel .panel-head {
+        position: relative;
         padding-bottom: 12px;
+    }
+
+    .asset-holdings-panel .panel-head,
+    .table-panel .panel-head {
+        padding-right: 116px;
+    }
+
+    #addHoldingBtn,
+    #addSnapshotBtn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-height: 34px;
+        padding: 8px 10px;
+        border-radius: 11px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    #addHoldingBtn::before,
+    #addSnapshotBtn::before {
+        font-size: 15px;
     }
 
     .management-panel .asset-tool-bar {
@@ -1755,9 +1786,12 @@ select:focus {
     .asset-dialog,
     .asset-dialog.wide-dialog,
     .asset-dialog.narrow-dialog {
+        inset: auto 10px max(10px, env(safe-area-inset-bottom));
+        margin: 0 auto;
         width: calc(100vw - 20px);
         max-height: calc(100vh - 20px);
-        border-radius: 18px;
+        max-height: calc(100dvh - 20px - env(safe-area-inset-bottom));
+        border-radius: 20px 20px 18px 18px;
     }
 
     .asset-dialog-header {
