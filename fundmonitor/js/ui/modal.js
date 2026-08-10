@@ -332,36 +332,6 @@ function getLastSeriesPoint(seriesData) {
     return null;
 }
 
-function getMaxDrawdownSegment(seriesData) {
-    let peakPoint = null;
-    let peakRatio = null;
-    let deepest = null;
-
-    (seriesData || []).forEach(point => {
-        const value = Number(point?.[1]);
-        if (!point?.[0] || !Number.isFinite(value)) return;
-
-        const ratio = 1 + value / 100;
-        if (ratio <= 0) return;
-
-        if (!peakPoint || ratio > peakRatio) {
-            peakPoint = [point[0], value];
-            peakRatio = ratio;
-        }
-
-        const drawdown = peakRatio ? (ratio / peakRatio - 1) * 100 : 0;
-        if (!deepest || drawdown < deepest.drawdown) {
-            deepest = {
-                peakPoint: [...peakPoint],
-                troughPoint: [point[0], value],
-                drawdown
-            };
-        }
-    });
-
-    return deepest && deepest.drawdown < 0 ? deepest : null;
-}
-
 function getActiveNavChartPeriod() {
     return document.querySelector('.nav-chart-range-chip.active')?.dataset.navChartPeriod || defaultNavChartPeriod;
 }
@@ -398,23 +368,15 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     const existingChart = window.echarts.getInstanceByDom(chartEl);
     if (existingChart) existingChart.dispose();
 
-    const dict = i18n[state.currentLang];
-    const styles = getComputedStyle(document.documentElement);
-    const textColor = styles.getPropertyValue('--text-color').trim() || '#111827';
-    const labelColor = styles.getPropertyValue('--secondary-color').trim() || '#0f172a';
-    const borderColor = styles.getPropertyValue('--border-color').trim() || '#e5e7eb';
-    const primaryColor = styles.getPropertyValue('--primary-color').trim() || '#2563eb';
-    const drawdownColor = styles.getPropertyValue('--negative-color').trim() || '#10b981';
     const chart = window.echarts.init(chartEl);
     const chartSeries = metrics.map(metric => {
         const seriesData = metric.chartSeries?.[periodKey] || metric.series;
         const isSelected = selectedNavFundCode === metric.code;
         const lowPoint = getLowestSeriesPoint(seriesData);
         const lastPoint = isSelected ? getLastSeriesPoint(seriesData) : null;
-        const drawdownSegment = isSelected ? getMaxDrawdownSegment(seriesData) : null;
         const markPointData = [];
 
-        if (lowPoint && !drawdownSegment) {
+        if (lowPoint) {
             markPointData.push({
                 name: 'Low',
                 coord: lowPoint,
@@ -430,25 +392,6 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
                 value: lastPoint[1],
                 label: { position: 'top' }
             });
-        }
-
-        if (drawdownSegment) {
-            markPointData.push(
-                {
-                    name: dict.navDrawdownPeak,
-                    coord: drawdownSegment.peakPoint,
-                    value: drawdownSegment.peakPoint[1],
-                    label: { position: 'top' },
-                    itemStyle: { color: primaryColor }
-                },
-                {
-                    name: dict.navDeepestDrawdown,
-                    coord: drawdownSegment.troughPoint,
-                    value: drawdownSegment.troughPoint[1],
-                    label: { position: 'bottom' },
-                    itemStyle: { color: drawdownColor }
-                }
-            );
         }
 
         return {
@@ -470,37 +413,13 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
                     opacity: !selectedNavFundCode || isSelected ? 1 : 0
                 },
                 label: {
-                    formatter: params => {
-                        const value = `${Number(params.value).toFixed(2)}%`;
-                        return params.name === dict.navDrawdownPeak || params.name === dict.navDeepestDrawdown
-                            ? `${params.name}\n${value}`
-                            : value;
-                    },
-                    color: labelColor,
+                    formatter: params => `${Number(params.value).toFixed(2)}%`,
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#0f172a',
                     fontSize: 10,
                     fontWeight: 800,
                     opacity: !selectedNavFundCode || isSelected ? 1 : 0
                 },
                 data: markPointData
-            } : undefined,
-            markLine: drawdownSegment ? {
-                symbol: ['none', 'arrow'],
-                symbolSize: 8,
-                lineStyle: {
-                    color: drawdownColor,
-                    width: 1.5,
-                    type: 'dashed'
-                },
-                label: {
-                    formatter: `${dict.navMaxDrawdown} ${drawdownSegment.drawdown.toFixed(2)}%`,
-                    color: drawdownColor,
-                    fontSize: 11,
-                    fontWeight: 800
-                },
-                data: [[
-                    { coord: drawdownSegment.peakPoint },
-                    { coord: drawdownSegment.troughPoint }
-                ]]
             } : undefined
         };
     });
@@ -527,7 +446,7 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             type: 'scroll',
             top: 0,
             data: chartSeries.map(series => series.name),
-            textStyle: { color: textColor }
+            textStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#111827' }
         },
         grid: { top: 42, right: 48, bottom: 34, left: 48 },
         xAxis: { type: 'time', boundaryGap: false },
@@ -535,7 +454,7 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             {
                 type: 'value',
                 axisLabel: { formatter: '{value}%' },
-                splitLine: { lineStyle: { color: borderColor } }
+                splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#e5e7eb' } }
             },
             {
                 type: 'value',
