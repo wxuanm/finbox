@@ -273,6 +273,7 @@ This formula is intentionally approximate for manual snapshot tracking. It is de
 - `ALL` starts from the first valid snapshot.
 - Summary cards, chart series, and account comparison table must use the same active period.
 - Chart series are normalized to the active period anchor, so the latest chart value matches the account comparison table's selected-period return.
+- The chart should keep personal-user review compact: show a `0%` reference line, show each account's active-period return in the legend, and only show drawdown shading for the selected highlighted account.
 
 ### Invalid Data Cases
 
