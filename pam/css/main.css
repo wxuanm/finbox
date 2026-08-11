@@ -159,6 +159,12 @@ button:disabled {
     place-items: center;
 }
 
+.icon-btn svg {
+    display: block;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .primary-btn:hover,
 .secondary-btn:hover,
 .ghost-btn:hover,
