@@ -1,4 +1,5 @@
 import { PERIODS, state } from '../../config/state.js';
+import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency, formatPercent, signedClass } from '../../utils/formatter.js';
 
 export function renderOverviewCards(metrics) {
@@ -13,10 +14,10 @@ export function renderOverviewCards(metrics) {
     const laggedCount = Math.max(valid.length - syncedCount, 0);
 
     wrap.innerHTML = [
-        card('最新总资产', formatCurrency(latestValue, state.amountsHidden), '有效账户合计'),
-        card('累计盈亏', formatCurrency(profitLoss, state.amountsHidden), '基于净投入估算', signedClass(profitLoss)),
-        card('区间最佳', best ? formatPercent(best.periodReturn) : '-', best ? best.account.name : '等待有效快照', signedClass(best?.periodReturn)),
-        card('数据状态', `${valid.length}/${state.accounts.length}`, latestDate ? `${syncedCount}/${valid.length} 已更新到 ${latestDate}${laggedCount > 0 ? `，${laggedCount} 个滞后` : ''}` : '可计算 / 全部账户')
+        card(t('latestTotalAssets'), formatCurrency(latestValue, state.amountsHidden), t('validAccountsTotal')),
+        card(t('cumulativePnl'), formatCurrency(profitLoss, state.amountsHidden), t('estimatedByNetInput'), signedClass(profitLoss)),
+        card(t('bestInPeriod'), best ? formatPercent(best.periodReturn) : '-', best ? best.account.name : t('waitingValidSnapshot'), signedClass(best?.periodReturn)),
+        card(t('dataStatus'), `${valid.length}/${state.accounts.length}`, latestDate ? `${syncedCount}/${valid.length} ${t('updatedTo')} ${latestDate}${laggedCount > 0 ? `, ${laggedCount} ${t('lagged')}` : ''}` : t('computableAllAccounts'))
     ].join('');
 }
 
@@ -27,20 +28,20 @@ export function renderAccountComparison(metrics) {
     if (periodLabel) periodLabel.textContent = currentPeriodLabel();
 
     if (state.accounts.length === 0) {
-        wrap.innerHTML = '<div class="empty-state">暂无账户。进入“账户管理”新增账户并录入快照。</div>';
+        wrap.innerHTML = `<div class="empty-state">${t('noAccountsAddSnapshot')}</div>`;
         return;
     }
 
     const sortedMetrics = [...metrics].sort(compareMetrics);
     const columns = [
-        ['name', '账户'],
-        ['periodReturn', '区间收益'],
-        ['cumulativeReturn', '累计收益'],
-        ['latestValue', '最新资产'],
-        ['profitLoss', '累计盈亏'],
-        ['maxDrawdown', '区间回撤'],
-        ['annualizedVolatility', '区间波动'],
-        ['latestDate', '最新快照']
+        ['name', t('account')],
+        ['periodReturn', t('periodReturn')],
+        ['cumulativeReturn', t('cumulativeReturn')],
+        ['latestValue', t('latestAssets')],
+        ['profitLoss', t('cumulativePnl')],
+        ['maxDrawdown', t('maxDrawdown')],
+        ['annualizedVolatility', t('annualizedVolatility')],
+        ['latestDate', t('latestSnapshot')]
     ];
 
     wrap.innerHTML = `
@@ -85,15 +86,15 @@ function renderComparisonRow(metric) {
     if (!metric.valid) {
         return `
             <tr class="comparison-row invalid${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
-                <td><strong>${escapeHtml(metric.account.name)}</strong><small>${escapeHtml(metric.error || '数据不足')}</small></td>
-                <td colspan="7">至少需要两条有效快照</td>
+                <td><strong>${escapeHtml(metric.account.name)}</strong><small>${escapeHtml(metric.error || t('insufficientData'))}</small></td>
+                <td colspan="7">${t('needTwoSnapshots')}</td>
             </tr>
         `;
     }
 
     return `
         <tr class="comparison-row${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
-            <td><strong>${escapeHtml(metric.account.name)}</strong><small>点击高亮走势</small></td>
+            <td><strong>${escapeHtml(metric.account.name)}</strong><small>${t('clickHighlight')}</small></td>
             <td class="number-cell ${signedClass(metric.periodReturn)}">${formatPercent(metric.periodReturn)}</td>
             <td class="number-cell ${signedClass(metric.cumulativeReturn)}">${formatPercent(metric.cumulativeReturn)}</td>
             <td class="number-cell">${formatCurrency(metric.latestValue, state.amountsHidden)}</td>
@@ -125,5 +126,5 @@ function sortIcon(key) {
 }
 
 function currentPeriodLabel() {
-    return PERIODS.find(([key]) => key === state.selectedPeriod)?.[1] || state.selectedPeriod;
+    return periodLabel(PERIODS.find(([key]) => key === state.selectedPeriod)?.[0] || state.selectedPeriod);
 }

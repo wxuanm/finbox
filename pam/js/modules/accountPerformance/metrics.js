@@ -1,3 +1,5 @@
+import { t } from '../../config/i18n.js';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function buildAccountMetrics(accounts, snapshots, periodKey) {
@@ -43,8 +45,8 @@ export function buildAccountSeries(account, snapshots) {
         .filter(Boolean)
         .sort((a, b) => a.date.localeCompare(b.date));
 
-    if (items.length < 2) return { error: '至少需要两条有效快照' };
-    if (items[0].totalValue <= 0) return { error: '首条快照总资产必须大于 0' };
+    if (items.length < 2) return { error: t('needTwoSnapshots') };
+    if (items[0].totalValue <= 0) return { error: t('firstSnapshotPositive') };
 
     let unitNav = 1;
     let shares = items[0].totalValue;
@@ -58,12 +60,12 @@ export function buildAccountSeries(account, snapshots) {
         netContribution += item.netFlow;
 
         if (shares <= 0) {
-            return { error: `${item.date} 的净流出导致份额小于等于 0，请检查数据` };
+            return { error: t('flowSharesInvalid', { date: item.date }) };
         }
 
         unitNav = item.totalValue / shares;
         if (!Number.isFinite(unitNav) || unitNav <= 0) {
-            return { error: `${item.date} 无法计算账户净值，请检查总资产` };
+            return { error: t('unitNavInvalid', { date: item.date }) };
         }
 
         points.push(buildPoint(item, unitNav, shares, netContribution, (unitNav - 1) * 100));

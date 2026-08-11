@@ -1,8 +1,10 @@
+import { state } from '../config/state.js';
+
 export function formatCurrency(value, masked = false) {
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
     if (masked) return '****';
-    return new Intl.NumberFormat('zh-CN', {
+    return new Intl.NumberFormat(currentLocale(), {
         style: 'currency',
         currency: 'CNY',
         maximumFractionDigits: 2
@@ -12,7 +14,7 @@ export function formatCurrency(value, masked = false) {
 export function formatNumber(value, digits = 2) {
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
-    return num.toLocaleString('zh-CN', {
+    return num.toLocaleString(currentLocale(), {
         minimumFractionDigits: digits,
         maximumFractionDigits: digits
     });
@@ -45,4 +47,8 @@ export function escapeHtml(value) {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
+}
+
+export function currentLocale() {
+    return state.currentLang === 'en' ? 'en-US' : 'zh-CN';
 }

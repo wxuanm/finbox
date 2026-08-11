@@ -110,7 +110,10 @@ export const i18n = {
         navPartialFailed: "部分基金加载失败",
         navFetchError: "近3年历史净值加载失败，请稍后重试。",
         periodReturnTitle: "阶段收益对比",
-        periodReturnDesc: "按东方财富返回的阶段收益口径展示，点击列头可排序。"
+        periodReturnDesc: "按东方财富返回的阶段收益口径展示，点击列头可排序。",
+        moreActions: "更多",
+        morePeriods: "展开更多",
+        sortLabel: "排序"
     },
     en: {
         title: "Fund Real-time Monitor",
@@ -223,6 +226,9 @@ export const i18n = {
         navPartialFailed: "Some funds failed",
         navFetchError: "Failed to load 3-year historical NAV. Try again later.",
         periodReturnTitle: "Period Return Comparison",
-        periodReturnDesc: "Period returns from Eastmoney. Click column headers to sort."
+        periodReturnDesc: "Period returns from Eastmoney. Click column headers to sort.",
+        moreActions: "More",
+        morePeriods: "More periods",
+        sortLabel: "Sort"
     }
 };

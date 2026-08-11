@@ -1,4 +1,5 @@
 import { state } from '../../config/state.js';
+import { t } from '../../config/i18n.js';
 import { escapeHtml, todayKey } from '../../utils/formatter.js';
 
 export function renderSnapshotForm() {
@@ -11,7 +12,7 @@ export function renderSnapshotForm() {
     const account = state.accounts.find(item => item.id === state.selectedAccountId) || state.accounts[0];
     select.innerHTML = account
         ? `<option value="${account.id}">${escapeHtml(account.name)}</option>`
-        : '<option value="">请先新增账户</option>';
+        : `<option value="">${t('pleaseAddAccountFirst')}</option>`;
     select.value = account?.id || '';
     select.disabled = true;
     submitBtn.disabled = !account;
@@ -20,10 +21,10 @@ export function renderSnapshotForm() {
 
     const editing = state.snapshots.find(snapshot => snapshot.id === state.editingSnapshotId);
     const dialogTitle = document.getElementById('snapshotDialogTitle');
-    if (dialogTitle) dialogTitle.textContent = editing ? '编辑快照' : '新增快照';
-    submitBtn.textContent = editing ? '更新快照' : '新增快照';
+    if (dialogTitle) dialogTitle.textContent = editing ? t('editSnapshot') : t('addSnapshot');
+    submitBtn.textContent = editing ? t('updateSnapshot') : t('addSnapshot');
     cancelBtn.classList.toggle('hidden', !editing);
-    cancelBtn.textContent = editing ? '取消编辑' : '取消新增';
+    cancelBtn.textContent = editing ? t('cancelEdit') : t('cancelAdd');
 
     if (editing) {
         dateInput.value = editing.date;

@@ -27,7 +27,7 @@ The first release started with account performance. PAM now expands toward curre
 
 ### Confirmed Decisions
 
-- The first release uses Chinese UI only.
+- The first release supports Chinese and English UI switching, following the Fund Monitor pattern of a local dictionary plus persisted language preference.
 - Deleting an account requires confirmation and removes all snapshots for that account.
 - A demo data button is allowed, but no demo data is shown by default.
 - PAM is an independent static tool and must not be mixed into `fundmonitor`.
@@ -38,6 +38,7 @@ The first release started with account performance. PAM now expands toward curre
 - A-share and fund quote refresh are the first supported real-time quote targets for holdings.
 - Cash is a supported holding type and is manually maintained as CNY-equivalent amount; no currency conversion is performed.
 - PAM provides a lightweight hide-amount toggle for personal privacy. It masks displayed money amounts only and does not hide quantities, prices, percentages, calculations, imports, or backup data.
+- PAM provides a Chinese/English language toggle in the header. The selected language is saved in `pam:v1:preferences.currentLang`; supported values are `zh` and `en`, with Chinese as the safe fallback.
 
 ### In Scope For First Release
 
@@ -71,7 +72,7 @@ The first release started with account performance. PAM now expands toward curre
 - Multi-currency conversion.
 - Brokerage APIs or cloud sync APIs.
 - Reusing `fundmonitor` groups, state, storage, or UI modules.
-- English UI.
+- Sharing Fund Monitor i18n runtime code or localStorage keys.
 
 ### Core User Stories
 
@@ -112,7 +113,7 @@ PAM
 
 ```text
 /pam/
-├─ Header: product name, description, theme toggle
+├─ Header: product name, description, language toggle, theme toggle
 ├─ Module navigation: 账户收益, future modules disabled or hidden
 ├─ Unified module navigation: 账户收益 / 账户管理 / future modules
 ├─ 账户收益: overview cards, performance chart, sortable account comparison table

@@ -20,6 +20,7 @@ pam/
 └─ js/
    ├─ app.js
    ├─ config/
+   │  ├─ i18n.js
    │  └─ state.js
    ├─ core/
    │  └─ theme.js
@@ -62,7 +63,8 @@ pam/
   editingSnapshotId: '',
   activeView: 'analysis',
   amountsHidden: false,
-  theme: 'light'
+  theme: 'light',
+  currentLang: 'zh'
 }
 ```
 
@@ -78,6 +80,8 @@ pam:v1:preferences
 ```
 
 Stored objects include `schemaVersion: 1`. Reads must tolerate missing or malformed data and return safe defaults.
+
+`pam:v1:preferences.currentLang` stores the UI language. Supported values are `zh` and `en`; missing or invalid values fall back to `zh`.
 
 ## Data Rules
 
@@ -143,7 +147,7 @@ This avoids treating sparse manual snapshots as daily market data.
 `app.js` coordinates rendering:
 
 1. Load state from storage.
-2. Initialize theme.
+2. Initialize theme and language.
 3. Render account list.
 4. Render snapshot form.
 5. Calculate metrics.
@@ -177,6 +181,7 @@ The performance chart uses ECharts from CDN.
 - Account list items expose readiness status and selected-period return to reduce navigation ambiguity.
 - Account performance is compared in a sortable table rather than per-account cards, because table rows make return, drawdown, volatility, asset value, and data freshness easier to compare across accounts.
 - The header includes a lightweight hide-amount toggle. When enabled, rendered money amounts use `****`, while quantities, prices, percentages, chart returns, calculations, form inputs, and JSON backups remain unchanged.
+- The header includes a Chinese/English language toggle. Static HTML uses `data-i18n`, `data-i18n-title`, `data-i18n-placeholder`, and `data-i18n-aria-label`; dynamic render modules use `t()` from `pam/js/config/i18n.js`. The language preference is persisted separately from Fund Monitor and PAM does not import Fund Monitor i18n code.
 - Comparison table labels must distinguish period-scoped metrics from cumulative/current metrics. `区间收益`, `区间回撤`, and `区间波动` are controlled by the active period switch.
 - The top module navigation includes `账户收益` and `账户管理` alongside disabled future modules, keeping performance review separate from data maintenance while combining account snapshots and holdings under one account-scoped page.
 - The top navigation exposes module-specific context actions on the right. For `账户管理`, icon actions open snapshot and holding forms, generate snapshots, refresh quotes, and open the add-account dialog.

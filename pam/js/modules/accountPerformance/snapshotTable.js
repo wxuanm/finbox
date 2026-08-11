@@ -1,4 +1,5 @@
 import { state } from '../../config/state.js';
+import { t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency } from '../../utils/formatter.js';
 
 const DEFAULT_SNAPSHOT_LIMIT = 5;
@@ -10,8 +11,8 @@ export function renderSnapshotTable() {
     if (!wrap) return;
 
     if (state.accounts.length === 0) {
-        if (context) context.textContent = '暂无可查看的账户。';
-        wrap.innerHTML = '<div class="empty-state">暂无账户。</div>';
+        if (context) context.textContent = t('noViewableAccount');
+        wrap.innerHTML = `<div class="empty-state">${t('noAccounts')}</div>`;
         return;
     }
 
@@ -22,11 +23,11 @@ export function renderSnapshotTable() {
         .sort((a, b) => b.date.localeCompare(a.date));
 
     if (context) {
-        context.textContent = `${account?.name || '未选择账户'} · ${rows.length} 条资产记录`;
+        context.textContent = `${account?.name || t('notSelectedAccount')} · ${rows.length} ${t('assetRecords')}`;
     }
 
     if (rows.length === 0) {
-        wrap.innerHTML = `<div class="empty-state">${escapeHtml(account?.name || '当前账户')} 还没有快照。</div>`;
+        wrap.innerHTML = `<div class="empty-state">${escapeHtml(t('currentAccountNoSnapshot', { account: account?.name || t('currentAccount') }))}</div>`;
         return;
     }
 
@@ -37,11 +38,11 @@ export function renderSnapshotTable() {
         <table class="snapshot-table">
             <thead>
                 <tr>
-                    <th>日期</th>
-                    <th class="number-cell">总资产</th>
-                    <th class="number-cell">净流入</th>
-                    <th>备注</th>
-                    <th>操作</th>
+                    <th>${t('date')}</th>
+                    <th class="number-cell">${t('totalAssets')}</th>
+                    <th class="number-cell">${t('netFlow')}</th>
+                    <th>${t('note')}</th>
+                    <th>${t('actions')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,8 +54,8 @@ export function renderSnapshotTable() {
                         <td>${escapeHtml(row.note || '-')}</td>
                         <td>
                             <div class="row-actions">
-                                <button class="mini-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}">编辑</button>
-                                <button class="mini-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}">删除</button>
+                                <button class="mini-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}">${t('edit')}</button>
+                                <button class="mini-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}">${t('delete')}</button>
                             </div>
                         </td>
                     </tr>
@@ -64,9 +65,9 @@ export function renderSnapshotTable() {
         ${rows.length > DEFAULT_SNAPSHOT_LIMIT ? `
             <div class="snapshot-table-footer">
                 <button class="mini-btn snapshot-toggle-btn" type="button" data-action="toggle-snapshots">
-                    ${showAllSnapshots ? '收起' : `查看全部 ${rows.length} 条`}
+                    ${showAllSnapshots ? t('collapse') : t('viewAllCount', { count: rows.length })}
                 </button>
-                ${showAllSnapshots ? '' : `<span>已显示最近 ${visibleRows.length} 条，隐藏 ${hiddenCount} 条</span>`}
+                ${showAllSnapshots ? '' : `<span>${t('snapshotHiddenSummary', { visible: visibleRows.length, hidden: hiddenCount })}</span>`}
             </div>
         ` : ''}
     `;

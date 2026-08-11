@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAM 投资组合与资产管理</title>
+    <title id="pageTitle">PAM 投资组合与资产管理</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237c3aed'/%3E%3Cpath d='M14 44h36M18 38l8-9 7 5 13-17' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='20' cy='22' r='4' fill='white'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,42 +20,47 @@
                 </div>
                 <div class="brand-copy hero-copy">
                     <div class="brand-meta">
-                        <div class="hero-badge">资产收益管理</div>
+                        <div class="hero-badge" data-i18n="heroBadge">资产收益管理</div>
                     </div>
-                    <h1>PAM 投资组合与资产管理</h1>
-                    <p>手动快照，扣除现金流，对比账户真实收益。</p>
+                    <h1 data-i18n="heroTitle">PAM 投资组合与资产管理</h1>
+                    <p data-i18n="heroDesc">手动快照，扣除现金流，对比账户真实收益。</p>
                 </div>
             </div>
             <div class="hero-actions">
-                <button id="demoDataBtn" class="icon-btn desktop-action" type="button" title="示例数据" aria-label="示例数据">
+                <button id="demoDataBtn" class="icon-btn desktop-action" type="button" data-i18n-title="demoData" title="示例数据" aria-label="示例数据">
                     <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v9.2c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V7.4Z" stroke-linejoin="round"/><path d="M8.2 10h7.6M8.2 13.2h4.9" stroke-linecap="round"/><path d="M16.2 14.2c.9 0 1.6-.7 1.6-1.6S17.1 11 16.2 11s-1.6.7-1.6 1.6.7 1.6 1.6 1.6Z"/></svg>
                 </button>
-                <button id="exportDataBtn" class="icon-btn desktop-action" type="button" title="导出" aria-label="导出">
+                <button id="exportDataBtn" class="icon-btn desktop-action" type="button" data-i18n-title="exportData" title="导出" aria-label="导出">
                     <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v9" stroke-linecap="round"/><path d="m8.5 10.2 3.5 3.5 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 16.8v.9c0 1 .8 1.8 1.8 1.8h9.4c1 0 1.8-.8 1.8-1.8v-.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-                <button id="importDataBtn" class="icon-btn desktop-action" type="button" title="导入" aria-label="导入">
+                <button id="importDataBtn" class="icon-btn desktop-action" type="button" data-i18n-title="importData" title="导入" aria-label="导入">
                     <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5v-9" stroke-linecap="round"/><path d="m8.5 13.8 3.5-3.5 3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 7.2v-.9c0-1 .8-1.8 1.8-1.8h9.4c1 0 1.8.8 1.8 1.8v.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-                <button id="amountPrivacyBtn" class="icon-btn privacy-toggle" type="button" title="隐藏金额" aria-label="隐藏金额" aria-pressed="false">
+                <button id="amountPrivacyBtn" class="icon-btn privacy-toggle" type="button" data-i18n-title="hideAmounts" title="隐藏金额" aria-label="隐藏金额" aria-pressed="false">
                     <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.4-5.8 9-5.8 9 5.8 9 5.8-3.4 5.8-9 5.8S3 12 3 12Z" stroke-linejoin="round"/><path d="M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4Z"/></svg>
                 </button>
-                <button id="themeBtn" class="icon-btn" type="button" title="切换主题" aria-label="切换主题">
+                <button id="themeBtn" class="icon-btn" type="button" data-i18n-title="themeDark" title="切换主题" aria-label="切换主题">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
+                <button id="langBtn" class="icon-btn" type="button">EN</button>
                 <div class="mobile-more-actions">
-                    <button id="mobileMenuBtn" class="icon-btn" type="button" title="更多" aria-label="更多操作" aria-expanded="false">...</button>
-                    <div class="header-action-menu" aria-label="更多操作">
+                    <button id="mobileMenuBtn" class="icon-btn" type="button" data-i18n-title="moreActions" title="更多" aria-label="更多操作" aria-expanded="false">...</button>
+                    <div class="header-action-menu" data-i18n-aria-label="moreActions" aria-label="更多操作">
                         <button id="mobileDemoDataBtn" type="button">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v9.2c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V7.4Z" stroke-linejoin="round"/><path d="M8.2 10h7.6M8.2 13.2h4.9" stroke-linecap="round"/><path d="M16.2 14.2c.9 0 1.6-.7 1.6-1.6S17.1 11 16.2 11s-1.6.7-1.6 1.6.7 1.6 1.6 1.6Z"/></svg>
-                            <span>示例数据</span>
+                            <span data-i18n="demoData">示例数据</span>
                         </button>
                         <button id="mobileExportDataBtn" type="button">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v9" stroke-linecap="round"/><path d="m8.5 10.2 3.5 3.5 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 16.8v.9c0 1 .8 1.8 1.8 1.8h9.4c1 0 1.8-.8 1.8-1.8v-.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            <span>导出</span>
+                            <span data-i18n="exportData">导出</span>
                         </button>
                         <button id="mobileImportDataBtn" type="button">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5v-9" stroke-linecap="round"/><path d="m8.5 13.8 3.5-3.5 3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 7.2v-.9c0-1 .8-1.8 1.8-1.8h9.4c1 0 1.8.8 1.8 1.8v.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            <span>导入</span>
+                            <span data-i18n="importData">导入</span>
+                        </button>
+                        <button id="mobileLangBtn" type="button">
+                            <span class="menu-icon-text">文</span>
+                            <span id="mobileLangMenuText">EN</span>
                         </button>
                     </div>
                 </div>
@@ -65,43 +70,43 @@
 
         <nav class="module-tabs module-bar" aria-label="PAM modules">
             <div class="module-tab-list">
-                <button class="module-tab active" type="button" data-view="analysis">账户收益</button>
-                <button class="module-tab" type="button" data-view="assetData">账户管理</button>
-                <button class="module-tab" type="button" disabled>资产配置</button>
-                <button class="module-tab" type="button" disabled>交易记录</button>
+                <button class="module-tab active" type="button" data-view="analysis" data-i18n="tabAnalysis">账户收益</button>
+                <button class="module-tab" type="button" data-view="assetData" data-i18n="tabAssetData">账户管理</button>
+                <button class="module-tab" type="button" disabled data-i18n="tabAssetAllocation">资产配置</button>
+                <button class="module-tab" type="button" disabled data-i18n="tabTransactions">交易记录</button>
             </div>
-            <div class="context-actions" data-context-actions="assetData" aria-label="账户管理批量操作">
-                <button id="generateSnapshotsBtn" class="context-action" type="button" title="为全部账户生成快照" aria-label="为全部账户生成快照">
-                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span>生成</span>
+            <div class="context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataBatchActions" aria-label="账户管理批量操作">
+                <button id="generateSnapshotsBtn" class="context-action" type="button" data-i18n-title="generateSnapshotsTitle" title="为全部账户生成快照" aria-label="为全部账户生成快照">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span data-i18n="generate">生成</span>
                 </button>
-                <button id="refreshQuotesBtn" class="context-action" type="button" title="刷新全部账户行情" aria-label="刷新全部账户行情">
-                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v5h5M4 13a8 8 0 0 0 14.9 4M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>刷新</span>
+                <button id="refreshQuotesBtn" class="context-action" type="button" data-i18n-title="refreshQuotesTitle" title="刷新全部账户行情" aria-label="刷新全部账户行情">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v5h5M4 13a8 8 0 0 0 14.9 4M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="refresh">刷新</span>
                 </button>
             </div>
             <div class="mobile-context-actions" data-context-actions="assetData">
-                <button id="contextMenuBtn" class="context-action" type="button" title="账户管理操作" aria-label="账户管理操作" aria-expanded="false">
+                <button id="contextMenuBtn" class="context-action" type="button" data-i18n-title="assetDataActions" title="账户管理操作" aria-label="账户管理操作" aria-expanded="false">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
                 </button>
-                <div class="context-action-menu" aria-label="账户管理操作菜单">
+                <div class="context-action-menu" data-i18n-aria-label="assetDataActionMenu" aria-label="账户管理操作菜单">
                     <button type="button" data-context-command="add-account">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
-                        <span>新增账户</span>
+                        <span data-i18n="addAccount">新增账户</span>
                     </button>
                     <button type="button" data-context-command="add-holding">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <span>新增持仓</span>
+                        <span data-i18n="addHolding">新增持仓</span>
                     </button>
                     <button type="button" data-context-command="add-snapshot">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12A1.5 1.5 0 0 1 19.5 6v12a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V6A1.5 1.5 0 0 1 6 4.5Z" stroke-linejoin="round"/><path d="M8 9h8M8 13h5" stroke-linecap="round"/></svg>
-                        <span>新增快照</span>
+                        <span data-i18n="addSnapshot">新增快照</span>
                     </button>
                     <button type="button" data-context-command="generate-snapshot">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg>
-                        <span>生成快照</span>
+                        <span data-i18n="generateSnapshot">生成快照</span>
                     </button>
                     <button type="button" data-context-command="refresh-quotes">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v5h5M4 13a8 8 0 0 0 14.9 4M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <span>刷新行情</span>
+                        <span data-i18n="refreshQuotes">刷新行情</span>
                     </button>
                 </div>
             </div>
@@ -114,12 +119,12 @@
                 <section class="panel management-panel chart-panel focus-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2>收益走势</h2>
-                            <p>现金流调整后收益率，非资产规模变化。</p>
+                            <h2 data-i18n="performanceTitle">收益走势</h2>
+                            <p data-i18n="performanceDesc">现金流调整后收益率，非资产规模变化。</p>
                         </div>
-                        <div id="periodSwitch" class="period-switch" aria-label="选择区间"></div>
+                        <div id="periodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
                     </div>
-                    <div class="method-note">口径：入金增加份额，出金减少份额；曲线变化代表投资表现。</div>
+                    <div class="method-note" data-i18n="methodNote">口径：入金增加份额，出金减少份额；曲线变化代表投资表现。</div>
                     <div id="chartMessage" class="chart-message"></div>
                     <div id="performanceChart" class="performance-chart"></div>
                 </section>
@@ -127,8 +132,8 @@
                 <section class="panel management-panel comparison-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2>账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2>
-                            <p>点击表头排序，点击账户行高亮走势图。</p>
+                            <h2 data-i18n="comparisonTitle">账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2>
+                            <p data-i18n="comparisonDesc">点击表头排序，点击账户行高亮走势图。</p>
                         </div>
                     </div>
                     <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
@@ -138,15 +143,15 @@
             <section id="assetDataView" class="workspace-view asset-data-view" data-workspace-view="assetData">
                 <section class="account-card-strip-panel">
                     <div id="accountList" class="account-list account-card-strip"></div>
-                    <div class="context-actions account-context-actions" data-context-actions="assetData" aria-label="账户管理操作">
-                        <button id="addAccountToolbarBtn" class="context-action" type="button" title="新增账户" aria-label="新增账户">
-                            <span>新增账户</span>
+                    <div class="context-actions account-context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataActions" aria-label="账户管理操作">
+                        <button id="addAccountToolbarBtn" class="context-action" type="button" data-i18n-title="addAccount" title="新增账户" aria-label="新增账户">
+                            <span data-i18n="addAccount">新增账户</span>
                         </button>
-                        <button id="addHoldingBtn" class="context-action" type="button" title="新增持仓" aria-label="新增持仓">
-                            <span>新增持仓</span>
+                        <button id="addHoldingBtn" class="context-action" type="button" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
+                            <span data-i18n="addHolding">新增持仓</span>
                         </button>
-                        <button id="addSnapshotBtn" class="context-action" type="button" title="新增快照" aria-label="新增快照">
-                            <span>新增快照</span>
+                        <button id="addSnapshotBtn" class="context-action" type="button" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
+                            <span data-i18n="addSnapshot">新增快照</span>
                         </button>
                     </div>
                 </section>
@@ -155,11 +160,11 @@
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
                             <div class="asset-dialog-heading">
-                                <span class="dialog-eyebrow">Performance Snapshot</span>
-                                <h2 id="snapshotDialogTitle">新增快照</h2>
-                                <p>记录账户当日净值点位，用于计算现金流调整后的收益曲线。</p>
+                                <span class="dialog-eyebrow" data-i18n="snapshotEyebrow">Performance Snapshot</span>
+                                <h2 id="snapshotDialogTitle" data-i18n="snapshotDialogTitle">新增快照</h2>
+                                <p data-i18n="snapshotDialogDesc">记录账户当日净值点位，用于计算现金流调整后的收益曲线。</p>
                             </div>
-                            <button class="asset-dialog-close" type="button" data-dialog-close="snapshot" title="关闭" aria-label="关闭">
+                            <button class="asset-dialog-close" type="button" data-dialog-close="snapshot" data-i18n-title="close" title="关闭" aria-label="关闭">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
                             </button>
                         </div>
@@ -169,33 +174,33 @@
                                     <div class="form-card-head">
                                         <span>01</span>
                                         <div>
-                                            <h3>快照范围</h3>
-                                            <p>确认账户和估值日期。</p>
+                                            <h3 data-i18n="snapshotScopeTitle">快照范围</h3>
+                                            <p data-i18n="snapshotScopeDesc">确认账户和估值日期。</p>
                                         </div>
                                     </div>
                                     <div class="form-section form-context-grid">
-                                        <label><span>当前账户</span><select id="snapshotAccountSelect"></select></label>
-                                        <label><span>快照日期</span><input id="snapshotDateInput" type="date" required></label>
+                                        <label><span data-i18n="currentAccount">当前账户</span><select id="snapshotAccountSelect"></select></label>
+                                        <label><span data-i18n="snapshotDate">快照日期</span><input id="snapshotDateInput" type="date" required></label>
                                     </div>
                                 </div>
                                 <div class="form-card">
                                     <div class="form-card-head">
                                         <span>02</span>
                                         <div>
-                                            <h3>资产与现金流</h3>
-                                            <p>总资产用于净值，净流入只记录本期新增或取出资金。</p>
+                                            <h3 data-i18n="snapshotAssetFlowTitle">资产与现金流</h3>
+                                            <p data-i18n="snapshotAssetFlowDesc">总资产用于净值，净流入只记录本期新增或取出资金。</p>
                                         </div>
                                     </div>
                                     <div class="form-section snapshot-value-grid">
-                                        <label class="metric-input"><span>账户总资产</span><input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="例如 125000.00" required><small>含现金、基金、股票等全部资产市值。</small></label>
-                                        <label class="metric-input"><span>本期净流入</span><input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" placeholder="入金为正，出金为负" value="0" required><small>没有资金变动时填写 0。</small></label>
+                                        <label class="metric-input"><span data-i18n="accountTotalValue">账户总资产</span><input id="snapshotValueInput" type="number" inputmode="decimal" min="0" step="0.01" data-i18n-placeholder="totalValuePlaceholder" placeholder="例如 125000.00" required><small data-i18n="totalValueHelp">含现金、基金、股票等全部资产市值。</small></label>
+                                        <label class="metric-input"><span data-i18n="periodNetFlow">本期净流入</span><input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" data-i18n-placeholder="netFlowPlaceholder" placeholder="入金为正，出金为负" value="0" required><small data-i18n="netFlowHelp">没有资金变动时填写 0。</small></label>
                                     </div>
-                                    <p class="form-guide">收益计算会剔除净流入影响；请勿把投资盈亏填入净流入。</p>
+                                    <p class="form-guide" data-i18n="snapshotGuide">收益计算会剔除净流入影响；请勿把投资盈亏填入净流入。</p>
                                 </div>
-                                <label class="form-note-field"><span>备注</span><input id="snapshotNoteInput" type="text" maxlength="60" placeholder="可选，例如月末核对、季度复盘"></label>
+                                <label class="form-note-field"><span data-i18n="note">备注</span><input id="snapshotNoteInput" type="text" maxlength="60" data-i18n-placeholder="snapshotNotePlaceholder" placeholder="可选，例如月末核对、季度复盘"></label>
                                 <div class="form-actions">
-                                    <button id="snapshotSubmitBtn" class="primary-btn" type="submit">新增快照</button>
-                                    <button id="cancelEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                                    <button id="snapshotSubmitBtn" class="primary-btn" type="submit" data-i18n="addSnapshot">新增快照</button>
+                                    <button id="cancelEditBtn" class="ghost-btn hidden" type="button" data-i18n="cancelEdit">取消编辑</button>
                                 </div>
                             </form>
                             <div id="formMessage" class="form-message" role="status" aria-live="polite"></div>
@@ -207,11 +212,11 @@
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
                             <div class="asset-dialog-heading">
-                                <span class="dialog-eyebrow">Position Setup</span>
-                                <h2 id="holdingDialogTitle">新增持仓</h2>
-                                <p>录入资产标的、成本和估值，形成账户级持仓与盈亏视图。</p>
+                                <span class="dialog-eyebrow" data-i18n="holdingEyebrow">Position Setup</span>
+                                <h2 id="holdingDialogTitle" data-i18n="holdingDialogTitle">新增持仓</h2>
+                                <p data-i18n="holdingDialogDesc">录入资产标的、成本和估值，形成账户级持仓与盈亏视图。</p>
                             </div>
-                            <button class="asset-dialog-close" type="button" data-dialog-close="holding" title="关闭" aria-label="关闭">
+                            <button class="asset-dialog-close" type="button" data-dialog-close="holding" data-i18n-title="close" title="关闭" aria-label="关闭">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
                             </button>
                         </div>
@@ -221,49 +226,49 @@
                                     <div class="form-card-head">
                                         <span>01</span>
                                         <div>
-                                            <h3>账户与资产类型</h3>
-                                            <p>选择归属账户、资产类别和可用行情市场。</p>
+                                            <h3 data-i18n="holdingAccountTypeTitle">账户与资产类型</h3>
+                                            <p data-i18n="holdingAccountTypeDesc">选择归属账户、资产类别和可用行情市场。</p>
                                         </div>
                                     </div>
                                     <div class="form-section holding-context-grid">
-                                        <label><span>当前账户</span><select id="holdingAccountSelect"></select></label>
-                                        <label><span>类别</span><select id="holdingAssetClassSelect"></select></label>
-                                        <label class="form-market-field"><span>市场</span><select id="holdingMarketSelect"></select></label>
+                                        <label><span data-i18n="currentAccount">当前账户</span><select id="holdingAccountSelect"></select></label>
+                                        <label><span data-i18n="assetClass">类别</span><select id="holdingAssetClassSelect"></select></label>
+                                        <label class="form-market-field"><span data-i18n="market">市场</span><select id="holdingMarketSelect"></select></label>
                                     </div>
                                 </div>
                                 <div class="form-card">
                                     <div class="form-card-head">
                                         <span>02</span>
                                         <div>
-                                            <h3>标的信息</h3>
-                                            <p>A股和基金填写代码后可批量刷新行情。</p>
+                                            <h3 data-i18n="instrumentTitle">标的信息</h3>
+                                            <p data-i18n="instrumentDesc">A股和基金填写代码后可批量刷新行情。</p>
                                         </div>
                                     </div>
                                     <div class="form-section holding-instrument-grid">
-                                        <label><span>名称</span><input id="holdingNameInput" type="text" maxlength="40" placeholder="例如 贵州茅台" required><small>显示在持仓明细中的资产名称。</small></label>
-                                        <label><span>代码</span><input id="holdingSymbolInput" type="text" maxlength="20" placeholder="例如 600519"><small>现金或无行情资产可留空。</small></label>
+                                        <label><span data-i18n="name">名称</span><input id="holdingNameInput" type="text" maxlength="40" data-i18n-placeholder="holdingNamePlaceholder" placeholder="例如 贵州茅台" required><small data-i18n="holdingNameHelp">显示在持仓明细中的资产名称。</small></label>
+                                        <label><span data-i18n="symbol">代码</span><input id="holdingSymbolInput" type="text" maxlength="20" data-i18n-placeholder="holdingSymbolPlaceholder" placeholder="例如 600519"><small data-i18n="holdingSymbolHelp">现金或无行情资产可留空。</small></label>
                                     </div>
                                 </div>
                                 <div class="form-card valuation-card">
                                     <div class="form-card-head">
                                         <span>03</span>
                                         <div>
-                                            <h3>估值与成本</h3>
-                                            <p>市值 = 数量 × 当前价；浮盈亏基于成本价计算。</p>
+                                            <h3 data-i18n="valuationCostTitle">估值与成本</h3>
+                                            <p data-i18n="valuationCostDesc">市值 = 数量 × 当前价；浮盈亏基于成本价计算。</p>
                                         </div>
                                     </div>
                                     <div class="form-section holding-valuation-grid">
-                                        <label class="metric-input"><span>数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" placeholder="例如 100" required></label>
-                                        <label class="metric-input"><span>成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" placeholder="买入均价" required></label>
-                                        <label class="metric-input"><span id="holdingCurrentPriceLabel">当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" placeholder="最新估值" required></label>
-                                        <label><span>估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
+                                        <label class="metric-input"><span data-i18n="quantity">数量</span><input id="holdingQuantityInput" type="number" inputmode="decimal" min="0" step="0.0001" data-i18n-placeholder="quantityPlaceholder" placeholder="例如 100" required></label>
+                                        <label class="metric-input"><span data-i18n="costPrice">成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" data-i18n-placeholder="costPricePlaceholder" placeholder="买入均价" required></label>
+                                        <label class="metric-input"><span id="holdingCurrentPriceLabel" data-i18n="currentPrice">当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" data-i18n-placeholder="latestValuationPlaceholder" placeholder="最新估值" required></label>
+                                        <label><span data-i18n="valuationDate">估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
                                     </div>
-                                    <p class="holding-cash-hint">现金模式：只需填写名称和现金余额，系统会自动将数量设为 1，并用余额同步成本与当前价。</p>
+                                    <p class="holding-cash-hint" data-i18n="cashModeHint">现金模式：只需填写名称和现金余额，系统会自动将数量设为 1，并用余额同步成本与当前价。</p>
                                 </div>
-                                <label class="form-note-field"><span>备注</span><input id="holdingNoteInput" type="text" maxlength="60" placeholder="可选，例如长期配置、核心仓位"></label>
+                                <label class="form-note-field"><span data-i18n="note">备注</span><input id="holdingNoteInput" type="text" maxlength="60" data-i18n-placeholder="holdingNotePlaceholder" placeholder="可选，例如长期配置、核心仓位"></label>
                                 <div class="form-actions">
-                                    <button id="holdingSubmitBtn" class="primary-btn" type="submit">新增持仓</button>
-                                    <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button">取消编辑</button>
+                                    <button id="holdingSubmitBtn" class="primary-btn" type="submit" data-i18n="addHolding">新增持仓</button>
+                                    <button id="cancelHoldingEditBtn" class="ghost-btn hidden" type="button" data-i18n="cancelEdit">取消编辑</button>
                                 </div>
                             </form>
                         </div>
@@ -274,38 +279,38 @@
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
                             <div class="asset-dialog-heading">
-                                <span class="dialog-eyebrow">Snapshot Builder</span>
-                                <h2 id="snapshotGenerateTitle">生成账户快照</h2>
-                                <p>选择估值口径后，系统会先计算快照日期和市值，再由你确认写入。</p>
+                                <span class="dialog-eyebrow" data-i18n="snapshotBuilderEyebrow">Snapshot Builder</span>
+                                <h2 id="snapshotGenerateTitle" data-i18n="snapshotGenerateTitle">生成账户快照</h2>
+                                <p data-i18n="snapshotGenerateDesc">选择估值口径后，系统会先计算快照日期和市值，再由你确认写入。</p>
                             </div>
-                            <button class="asset-dialog-close" type="button" data-snapshot-generate-close title="关闭" aria-label="关闭">
+                            <button class="asset-dialog-close" type="button" data-snapshot-generate-close data-i18n-title="close" title="关闭" aria-label="关闭">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
                             </button>
                         </div>
                         <div class="asset-dialog-body">
                             <form id="snapshotGenerateForm" class="snapshot-generate-form">
-                                <div class="snapshot-choice-grid" role="radiogroup" aria-label="选择快照日期口径">
+                                <div class="snapshot-choice-grid" role="radiogroup" data-i18n-aria-label="snapshotDateOptionLabel" aria-label="选择快照日期口径">
                                     <label class="snapshot-choice-card">
                                         <input type="radio" name="snapshotDateOption" value="1" checked>
                                         <span class="choice-marker">01</span>
-                                        <strong>上个交易日快照</strong>
-                                        <small>A股使用前一交易日收盘价，基金使用最新披露单位净值；快照日期优先采用普通基金披露日。</small>
+                                        <strong data-i18n="previousTradingDaySnapshot">上个交易日快照</strong>
+                                        <small data-i18n="previousTradingDayDesc">A股使用前一交易日收盘价，基金使用最新披露单位净值；快照日期优先采用普通基金披露日。</small>
                                     </label>
                                     <label class="snapshot-choice-card">
                                         <input type="radio" name="snapshotDateOption" value="2">
                                         <span class="choice-marker">02</span>
-                                        <strong>当日快照</strong>
-                                        <small>A股使用最新价，基金使用最新披露单位净值；无法取价的资产会提示并使用手动当前价。</small>
+                                        <strong data-i18n="todaySnapshot">当日快照</strong>
+                                        <small data-i18n="todaySnapshotDesc">A股使用最新价，基金使用最新披露单位净值；无法取价的资产会提示并使用手动当前价。</small>
                                     </label>
                                 </div>
                                 <div id="snapshotGeneratePreview" class="snapshot-generate-preview" aria-live="polite">
-                                    <div class="preview-empty">选择口径后点击“计算快照”，这里会展示快照日期、账户数量和估值提示。</div>
+                                    <div class="preview-empty" data-i18n="snapshotPreviewEmpty">选择口径后点击“计算快照”，这里会展示快照日期、账户数量和估值提示。</div>
                                 </div>
                                 <div id="snapshotGenerateMessage" class="form-message snapshot-generate-message" role="status" aria-live="polite"></div>
                                 <div class="form-actions snapshot-generate-actions">
-                                    <button id="snapshotGenerateCalculateBtn" class="primary-btn" type="submit">计算快照</button>
-                                    <button id="snapshotGenerateConfirmBtn" class="primary-btn hidden" type="button">确认生成</button>
-                                    <button id="snapshotGenerateCancelBtn" class="ghost-btn" type="button">取消</button>
+                                    <button id="snapshotGenerateCalculateBtn" class="primary-btn" type="submit" data-i18n="calculateSnapshot">计算快照</button>
+                                    <button id="snapshotGenerateConfirmBtn" class="primary-btn hidden" type="button" data-i18n="confirmGenerate">确认生成</button>
+                                    <button id="snapshotGenerateCancelBtn" class="ghost-btn" type="button" data-i18n="cancel">取消</button>
                                 </div>
                             </form>
                         </div>
@@ -316,22 +321,22 @@
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
                             <div class="asset-dialog-heading">
-                                <span id="confirmDialogEyebrow" class="dialog-eyebrow">Confirm</span>
-                                <h2 id="confirmDialogTitle">确认操作</h2>
-                                <p id="confirmDialogDescription">请确认是否继续。</p>
+                                <span id="confirmDialogEyebrow" class="dialog-eyebrow" data-i18n="confirmEyebrow">Confirm</span>
+                                <h2 id="confirmDialogTitle" data-i18n="confirmTitle">确认操作</h2>
+                                <p id="confirmDialogDescription" data-i18n="confirmDesc">请确认是否继续。</p>
                             </div>
-                            <button class="asset-dialog-close" type="button" data-confirm-cancel title="关闭" aria-label="关闭">
+                            <button class="asset-dialog-close" type="button" data-confirm-cancel data-i18n-title="close" title="关闭" aria-label="关闭">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
                             </button>
                         </div>
                         <div class="asset-dialog-body">
                             <div class="confirm-dialog-copy">
-                                <strong id="confirmDialogMessage">确认继续吗？</strong>
+                                <strong id="confirmDialogMessage" data-i18n="confirmMessage">确认继续吗？</strong>
                                 <p id="confirmDialogDetail"></p>
                             </div>
                             <div class="form-actions confirm-dialog-actions">
-                                <button id="confirmDialogConfirmBtn" class="primary-btn" type="button">确认</button>
-                                <button class="ghost-btn" type="button" data-confirm-cancel>取消</button>
+                                <button id="confirmDialogConfirmBtn" class="primary-btn" type="button" data-i18n="confirm">确认</button>
+                                <button class="ghost-btn" type="button" data-confirm-cancel data-i18n="cancel">取消</button>
                             </div>
                         </div>
                     </div>
@@ -340,12 +345,12 @@
                 <section class="panel management-panel asset-holdings-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2>持仓明细 <span id="holdingAccountBadge" class="title-account-badge"></span></h2>
-                            <p id="holdingContext">当前账户的持仓、市值占比和浮动盈亏。</p>
+                            <h2 data-i18n="holdingsTitle">持仓明细 <span id="holdingAccountBadge" class="title-account-badge"></span></h2>
+                            <p id="holdingContext" data-i18n="holdingsDesc">当前账户的持仓、市值占比和浮动盈亏。</p>
                         </div>
                         <div class="asset-tool-bar">
-                            <label><span>类别</span><select id="holdingFilterAssetClass"></select></label>
-                            <label><span>市场</span><select id="holdingFilterMarket"></select></label>
+                            <label><span data-i18n="assetClass">类别</span><select id="holdingFilterAssetClass"></select></label>
+                            <label><span data-i18n="market">市场</span><select id="holdingFilterMarket"></select></label>
                         </div>
                     </div>
                     <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
@@ -354,17 +359,17 @@
 
                 <section class="asset-bottom-grid">
                     <section class="panel management-panel allocation-panel">
-                        <div class="panel-head"><h2>持仓分布</h2><p>按类别查看当前账户市值占比。</p></div>
+                        <div class="panel-head"><h2 data-i18n="allocationTitle">持仓分布</h2><p data-i18n="allocationDesc">按类别查看当前账户市值占比。</p></div>
                         <div class="allocation-columns">
-                            <div><h3>资产类别</h3><div id="assetAllocation" class="allocation-list"></div></div>
+                            <div><h3 data-i18n="assetClassTitle">资产类别</h3><div id="assetAllocation" class="allocation-list"></div></div>
                         </div>
                     </section>
 
                     <section class="panel management-panel table-panel">
                         <div class="panel-head split-head">
                             <div>
-                                <h2>资产记录 <span id="snapshotTableContext" class="title-account-badge"></span></h2>
-                                <p>当前账户的历史总资产快照。</p>
+                                <h2 data-i18n="assetRecordTitle">资产记录 <span id="snapshotTableContext" class="title-account-badge"></span></h2>
+                                <p data-i18n="assetRecordDesc">当前账户的历史总资产快照。</p>
                             </div>
                         </div>
                         <div id="snapshotTable" class="snapshot-table-wrap"></div>
@@ -375,17 +380,17 @@
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
                             <div>
-                                <h2 id="accountDialogTitle">新增账户</h2>
-                                <p>创建一个投资账户后，可继续录入快照和持仓。</p>
+                                <h2 id="accountDialogTitle" data-i18n="accountDialogTitle">新增账户</h2>
+                                <p data-i18n="accountDialogDesc">创建一个投资账户后，可继续录入快照和持仓。</p>
                             </div>
-                            <button class="asset-dialog-close" type="button" data-dialog-close="account" title="关闭" aria-label="关闭">
+                            <button class="asset-dialog-close" type="button" data-dialog-close="account" data-i18n-title="close" title="关闭" aria-label="关闭">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
                             </button>
                         </div>
                         <div class="asset-dialog-body">
                             <form id="accountForm" class="account-form compact-account-form">
-                                <input id="accountNameInput" type="text" maxlength="32" placeholder="账户名，例如：招商证券" autocomplete="off">
-                                <button class="primary-btn management-add-btn" type="submit">新增账户</button>
+                                <input id="accountNameInput" type="text" maxlength="32" data-i18n-placeholder="accountNamePlaceholder" placeholder="账户名，例如：招商证券" autocomplete="off">
+                                <button class="primary-btn management-add-btn" type="submit" data-i18n="addAccount">新增账户</button>
                             </form>
                         </div>
                     </div>

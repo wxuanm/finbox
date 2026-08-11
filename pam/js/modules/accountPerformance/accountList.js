@@ -1,4 +1,5 @@
 import { state } from '../../config/state.js';
+import { t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency, formatPercent, signedClass } from '../../utils/formatter.js';
 
 export function renderAccountList(metrics) {
@@ -11,9 +12,9 @@ export function renderAccountList(metrics) {
         wrap.innerHTML = `
             <div class="empty-state account-empty-state">
                 <span class="account-empty-mark" aria-hidden="true">+</span>
-                <strong>还没有投资账户</strong>
-                <p>创建账户后，即可新增快照和持仓，查看真实收益。</p>
-                <button class="primary-btn management-add-btn" type="button" data-action="add-account">新增账户</button>
+                <strong>${t('noInvestmentAccounts')}</strong>
+                <p>${t('createAccountHint')}</p>
+                <button class="primary-btn management-add-btn" type="button" data-action="add-account">${t('addAccount')}</button>
             </div>
         `;
         return;
@@ -33,22 +34,22 @@ export function renderAccountList(metrics) {
                     <div class="account-card-heading">
                         <span class="account-card-mark" aria-hidden="true">A</span>
                         <div>
-                            <span>资产账户</span>
+                            <span>${t('assetAccount')}</span>
                             <strong title="${escapeHtml(account.name)}">${escapeHtml(account.name)}</strong>
-                            <small>最近更新 ${latestSnapshot?.date || '暂无快照'}</small>
+                            <small>${t('recentlyUpdated')} ${latestSnapshot?.date || t('noSnapshot')}</small>
                         </div>
                     </div>
                     <div class="account-card-metrics">
-                        <div><span>总资产</span><strong>${latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-'}</strong></div>
-                        <div><span>累计收益</span><strong class="${signedClass(metric?.profitLoss)}">${metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-'}</strong></div>
-                        <div><span>年化收益</span><strong class="${signedClass(annualizedReturn)}">${Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-'}</strong></div>
+                        <div><span>${t('totalAssets')}</span><strong>${latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-'}</strong></div>
+                        <div><span>${t('cumulativeProfit')}</span><strong class="${signedClass(metric?.profitLoss)}">${metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-'}</strong></div>
+                        <div><span>${t('annualizedReturn')}</span><strong class="${signedClass(annualizedReturn)}">${Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-'}</strong></div>
                     </div>
                 </button>
                 <details class="account-card-menu">
-                    <summary aria-label="账户菜单">...</summary>
+                    <summary aria-label="${t('accountMenu')}">...</summary>
                     <div>
-                        <button type="button" data-action="rename-account" data-account-id="${account.id}">修改名称</button>
-                        <button type="button" data-action="delete-account" data-account-id="${account.id}">删除账户</button>
+                        <button type="button" data-action="rename-account" data-account-id="${account.id}">${t('renameAccount')}</button>
+                        <button type="button" data-action="delete-account" data-account-id="${account.id}">${t('deleteAccount')}</button>
                     </div>
                 </details>
             </div>

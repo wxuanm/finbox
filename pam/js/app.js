@@ -1,4 +1,5 @@
 import { state } from './config/state.js';
+import { i18n, t } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
 import { loadAccounts, loadPreferences, loadSnapshots, saveAccounts, savePreferences, saveSnapshots } from './modules/accountPerformance/storage.js';
 import { buildAccountMetrics } from './modules/accountPerformance/metrics.js';
@@ -24,6 +25,45 @@ const SNAPSHOT_DATE_REFERENCE_FUNDS = [
     { market: 'Fund', symbol: '270002', name: '广发稳健增长混合A' }
 ];
 
+function applyLanguage() {
+    document.documentElement.lang = state.currentLang === 'en' ? 'en' : 'zh-CN';
+    const title = document.getElementById('pageTitle');
+    if (title) title.textContent = t('title');
+    document.title = t('title');
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key && i18n[state.currentLang]?.[key]) el.innerHTML = t(key);
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (key && i18n[state.currentLang]?.[key]) el.placeholder = t(key);
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (!key || !i18n[state.currentLang]?.[key]) return;
+        const value = t(key);
+        el.title = value;
+        if (el.hasAttribute('aria-label')) el.setAttribute('aria-label', value);
+    });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria-label');
+        if (key && i18n[state.currentLang]?.[key]) el.setAttribute('aria-label', t(key));
+    });
+    const langLabel = t('langSwitch');
+    const langBtn = document.getElementById('langBtn');
+    const mobileLangMenuText = document.getElementById('mobileLangMenuText');
+    if (langBtn) langBtn.textContent = langLabel;
+    if (mobileLangMenuText) mobileLangMenuText.textContent = langLabel;
+}
+
+function toggleLang() {
+    state.currentLang = state.currentLang === 'zh' ? 'en' : 'zh';
+    persistPreferences();
+    applyLanguage();
+    applyTheme(state.theme);
+    renderApp();
+}
+
 function init() {
     const preferences = loadPreferences();
     state.accounts = loadAccounts();
@@ -35,18 +75,22 @@ function init() {
     state.assetDataAction = normalizeAssetDataAction(preferences.assetDataAction);
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
+    state.currentLang = normalizeLang(preferences.currentLang);
     state.holdingFilters = preferences.holdingFilters || state.holdingFilters;
     state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
     state.holdingSortOrder = preferences.holdingSortOrder || state.holdingSortOrder;
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
 
     applyTheme(state.theme);
+    applyLanguage();
     bindEvents();
     renderApp();
 }
 
 function bindEvents() {
     document.getElementById('themeBtn')?.addEventListener('click', toggleTheme);
+    document.getElementById('langBtn')?.addEventListener('click', toggleLang);
+    document.getElementById('mobileLangBtn')?.addEventListener('click', toggleLang);
     document.getElementById('demoDataBtn')?.addEventListener('click', handleDemoDataRequest);
     document.getElementById('mobileDemoDataBtn')?.addEventListener('click', handleDemoDataRequest);
     document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
@@ -185,6 +229,7 @@ function closeMobileActionMenu() {
 }
 
 function renderApp() {
+    applyLanguage();
     state.selectedAccountId = resolveSelectedAccount(state.selectedAccountId);
     syncSelectedHoldingFilter();
     const metrics = buildAccountMetrics(state.accounts, state.snapshots, state.selectedPeriod);
@@ -208,7 +253,7 @@ function toggleAmountPrivacy() {
 }
 
 function renderAmountPrivacyToggle() {
-    const label = state.amountsHidden ? '显示金额' : '隐藏金额';
+    const label = state.amountsHidden ? t('showAmounts') : t('hideAmounts');
     ['amountPrivacyBtn'].forEach(id => {
         const button = document.getElementById(id);
         if (!button) return;
@@ -291,10 +336,10 @@ function cancelAssetDialog(action) {
     const wasEditing = isHolding ? Boolean(state.editingHoldingId) : Boolean(state.editingSnapshotId);
     if (isHolding) {
         resetHoldingForm();
-        showHoldingMessage(wasEditing ? '已取消编辑。' : '');
+        showHoldingMessage(wasEditing ? t('editingCancelled') : '');
     } else {
         resetSnapshotForm();
-        showFormMessage(wasEditing ? '已取消编辑。' : '');
+        showFormMessage(wasEditing ? t('editingCancelled') : '');
     }
     state.assetDataMaintenanceOpen = false;
     closeAssetDialog(action);
@@ -365,7 +410,7 @@ function handleAddAccount(event) {
     const input = document.getElementById('accountNameInput');
     const name = input.value.trim();
     if (!name) {
-        showFormMessage('账户名称不能为空。', true);
+        showFormMessage(t('accountNameRequired'), true);
         return;
     }
 
@@ -399,12 +444,12 @@ function selectAccount(accountId) {
 function renameAccount(accountId) {
     const account = state.accounts.find(item => item.id === accountId);
     if (!account) return;
-    const nextName = prompt('请输入新的账户名称', account.name)?.trim();
+    const nextName = prompt(t('promptNewAccountName'), account.name)?.trim();
     if (!nextName) return;
     account.name = nextName;
     account.updatedAt = new Date().toISOString();
     persistAll();
-    showFormMessage('账户名称已更新。');
+    showFormMessage(t('accountNameUpdated'));
     renderApp();
 }
 
@@ -415,11 +460,11 @@ function deleteAccount(accountId) {
     const holdingCount = state.holdings.filter(holding => holding.accountId === accountId).length;
     showConfirmDialog({
         eyebrow: 'Delete Account',
-        title: '删除账户',
-        description: '删除账户会同时移除关联的快照和持仓。',
-        message: `确认删除账户「${account.name}」吗？`,
-        detail: `将删除 ${count} 条快照、${holdingCount} 条持仓。此操作不可恢复。`,
-        confirmLabel: '删除账户',
+        title: t('deleteAccountTitle'),
+        description: t('deleteAccountDesc'),
+        message: t('deleteAccountMessage', { name: account.name }),
+        detail: t('deleteAccountDetail', { snapshots: count, holdings: holdingCount }),
+        confirmLabel: t('deleteAccount'),
         onConfirm: () => deleteAccountNow(accountId)
     });
 }
@@ -431,7 +476,7 @@ function deleteAccountNow(accountId) {
     if (state.selectedAccountId === accountId) state.selectedAccountId = state.accounts[0]?.id || '';
     if (state.selectedHighlightAccountId === accountId) state.selectedHighlightAccountId = '';
     persistAll();
-    showFormMessage('账户已删除。');
+    showFormMessage(t('accountDeleted'));
     renderApp();
 }
 
@@ -450,11 +495,11 @@ function handleSaveSnapshot(event) {
     if (existing) {
         showConfirmDialog({
             eyebrow: 'Overwrite Snapshot',
-            title: '覆盖同日快照',
-            description: '该账户在同一天已有快照。',
-            message: '是否覆盖原记录？',
-            detail: '覆盖后将保留当前表单中的总资产、净流入和备注。',
-            confirmLabel: '覆盖快照',
+            title: t('overwriteSnapshotTitle'),
+            description: t('overwriteSnapshotDesc'),
+            message: t('overwriteSnapshotMessage'),
+            detail: t('overwriteSnapshotDetail'),
+            confirmLabel: t('overwriteSnapshotConfirm'),
             onConfirm: () => saveSnapshotPayload(payload, existing)
         });
         return;
@@ -470,13 +515,13 @@ function saveSnapshotPayload(payload, existing) {
             return { ...snapshot, ...payload };
         });
         if (existing) state.snapshots = state.snapshots.filter(snapshot => snapshot.id !== existing.id);
-        showFormMessage('快照已更新。');
+        showFormMessage(t('snapshotUpdated'));
     } else if (existing) {
         Object.assign(existing, payload);
-        showFormMessage('同日快照已覆盖。');
+        showFormMessage(t('sameDaySnapshotOverwritten'));
     } else {
         state.snapshots.push({ id: createId('snapshot'), ...payload });
-        showFormMessage('快照已保存。');
+        showFormMessage(t('snapshotSaved'));
     }
 
     state.selectedAccountId = payload.accountId;
@@ -506,11 +551,11 @@ function deleteSnapshot(snapshotId) {
     if (!snapshot) return;
     showConfirmDialog({
         eyebrow: 'Delete Snapshot',
-        title: '删除快照',
-        description: '删除后收益曲线会按剩余快照重新计算。',
-        message: `确认删除 ${snapshot.date} 的快照吗？`,
+        title: t('deleteSnapshotTitle'),
+        description: t('deleteSnapshotDesc'),
+        message: t('deleteSnapshotMessage', { date: snapshot.date }),
         detail: '',
-        confirmLabel: '删除快照',
+        confirmLabel: t('deleteSnapshotConfirm'),
         onConfirm: () => deleteSnapshotNow(snapshotId)
     });
 }
@@ -519,7 +564,7 @@ function deleteSnapshotNow(snapshotId) {
     state.snapshots = state.snapshots.filter(item => item.id !== snapshotId);
     if (state.editingSnapshotId === snapshotId) state.editingSnapshotId = '';
     persistAll();
-    showFormMessage('快照已删除。');
+    showFormMessage(t('snapshotDeleted'));
     renderApp();
 }
 
@@ -528,11 +573,11 @@ function handleDemoDataRequest() {
     if (state.accounts.length > 0 || state.snapshots.length > 0) {
         showConfirmDialog({
             eyebrow: 'Demo Data',
-            title: '添加示例数据',
-            description: '当前已有账户或快照数据，示例数据会作为独立账户追加，不会覆盖现有记录。',
-            message: '确认添加独立示例账户吗？',
-            detail: '系统会添加 6 个示例账户、历史快照和代表性持仓，用于体验收益走势和账户管理。',
-            confirmLabel: '添加示例数据',
+            title: t('addDemoDataTitle'),
+            description: t('addDemoDataDesc'),
+            message: t('addDemoDataMessage'),
+            detail: t('addDemoDataDetail'),
+            confirmLabel: t('addDemoDataConfirm'),
             onConfirm: addDemoData
         });
         return;
@@ -543,12 +588,12 @@ function handleDemoDataRequest() {
 function addDemoData() {
     const now = new Date().toISOString();
     const demoAccounts = [
-        { id: createId('account'), name: '示例 稳健账户', currency: 'CNY', createdAt: now, updatedAt: now },
-        { id: createId('account'), name: '示例 成长账户', currency: 'CNY', createdAt: now, updatedAt: now },
-        { id: createId('account'), name: '示例 港股账户', currency: 'CNY', createdAt: now, updatedAt: now },
-        { id: createId('account'), name: '示例 美股账户', currency: 'CNY', createdAt: now, updatedAt: now },
-        { id: createId('account'), name: '示例 养老账户', currency: 'CNY', createdAt: now, updatedAt: now },
-        { id: createId('account'), name: '示例 实验策略', currency: 'CNY', createdAt: now, updatedAt: now }
+        { id: createId('account'), name: t('demoSteadyAccount'), currency: 'CNY', createdAt: now, updatedAt: now },
+        { id: createId('account'), name: t('demoGrowthAccount'), currency: 'CNY', createdAt: now, updatedAt: now },
+        { id: createId('account'), name: t('demoHkAccount'), currency: 'CNY', createdAt: now, updatedAt: now },
+        { id: createId('account'), name: t('demoUsAccount'), currency: 'CNY', createdAt: now, updatedAt: now },
+        { id: createId('account'), name: t('demoPensionAccount'), currency: 'CNY', createdAt: now, updatedAt: now },
+        { id: createId('account'), name: t('demoTacticalAccount'), currency: 'CNY', createdAt: now, updatedAt: now }
     ];
     const [steady, growth, hk, us, pension, tactical] = demoAccounts;
     const demoSnapshots = buildDemoSnapshots([
@@ -560,19 +605,19 @@ function addDemoData() {
         [tactical.id, 70000, 0.007, 0.05, { 7: -8000, 14: 10000 }]
     ]);
     const demoHoldings = [
-        [steady.id, '510300', '沪深300ETF', 'fund', 'Fund', 18000, 4.25, 4.42],
-        [steady.id, '019547', '中短债基金', 'fund', 'Fund', 30000, 1.03, 1.05],
-        [steady.id, '', '账户现金', 'cash', 'Cash', 1, 15000, 15000],
-        [growth.id, '600519', '贵州茅台', 'stock', 'CN', 30, 1550, 1680],
-        [growth.id, '300750', '宁德时代', 'stock', 'CN', 200, 185, 205],
-        [growth.id, '159919', '沪深300ETF', 'fund', 'Fund', 8000, 3.85, 4.12],
-        [hk.id, '', '港股账户现金', 'cash', 'Cash', 1, 18000, 18000],
-        [hk.id, '', '港股科技基金', 'other', 'Other', 1, 42000, 45100],
-        [us.id, '', '美股账户现金', 'cash', 'Cash', 1, 28000, 28000],
-        [us.id, '', '美股指数基金', 'other', 'Other', 1, 102000, 116000],
-        [pension.id, '017512', '养老目标基金', 'fund', 'Fund', 42000, 1.08, 1.12],
-        [tactical.id, '159915', '创业板ETF', 'fund', 'Fund', 25000, 1.85, 1.76],
-        [tactical.id, '', '策略备用金', 'cash', 'Cash', 1, 18000, 18000]
+        [steady.id, '510300', t('demoCsi300Etf'), 'fund', 'Fund', 18000, 4.25, 4.42],
+        [steady.id, '019547', t('demoShortBondFund'), 'fund', 'Fund', 30000, 1.03, 1.05],
+        [steady.id, '', t('demoAccountCash'), 'cash', 'Cash', 1, 15000, 15000],
+        [growth.id, '600519', t('demoMoutai'), 'stock', 'CN', 30, 1550, 1680],
+        [growth.id, '300750', t('demoCatl'), 'stock', 'CN', 200, 185, 205],
+        [growth.id, '159919', t('demoCsi300Etf'), 'fund', 'Fund', 8000, 3.85, 4.12],
+        [hk.id, '', t('demoHkCash'), 'cash', 'Cash', 1, 18000, 18000],
+        [hk.id, '', t('demoHkTechFund'), 'other', 'Other', 1, 42000, 45100],
+        [us.id, '', t('demoUsCash'), 'cash', 'Cash', 1, 28000, 28000],
+        [us.id, '', t('demoUsIndexFund'), 'other', 'Other', 1, 102000, 116000],
+        [pension.id, '017512', t('demoPensionFund'), 'fund', 'Fund', 42000, 1.08, 1.12],
+        [tactical.id, '159915', t('demoChiNextEtf'), 'fund', 'Fund', 25000, 1.85, 1.76],
+        [tactical.id, '', t('demoTacticalCash'), 'cash', 'Cash', 1, 18000, 18000]
     ].map(([accountId, symbol, name, assetClass, market, quantity, costPrice, currentPrice]) => ({
         id: createId('holding'),
         accountId,
@@ -598,7 +643,7 @@ function addDemoData() {
     state.activeView = 'assetData';
     state.assetDataAction = 'snapshot';
     persistAll();
-    showFormMessage('示例数据已添加，可在账户管理中查看。');
+    showFormMessage(t('demoDataAdded'));
     renderApp();
 }
 
@@ -615,7 +660,7 @@ function buildDemoSnapshots(configs) {
                 date: demoSnapshotDate(18 - index),
                 totalValue,
                 netFlow,
-                note: index === 0 ? '初始记录' : (netFlow > 0 ? '追加资金' : (netFlow < 0 ? '取出资金' : ''))
+                note: index === 0 ? t('initialRecord') : (netFlow > 0 ? t('additionalCapital') : (netFlow < 0 ? t('withdrawCapital') : ''))
             };
         });
     });
@@ -654,7 +699,8 @@ function exportData() {
                 amountsHidden: state.amountsHidden,
                 holdingFilters: state.holdingFilters,
                 holdingSortKey: state.holdingSortKey,
-                holdingSortOrder: state.holdingSortOrder
+                holdingSortOrder: state.holdingSortOrder,
+                currentLang: state.currentLang
             }
         }
     };
@@ -680,31 +726,31 @@ function importData(event) {
             const parsed = JSON.parse(String(reader.result || ''));
             const data = parseImportPayload(parsed);
             if (!data) {
-                alert('导入失败：文件不是有效的 PAM 备份。');
+                alert(t('importInvalid'));
                 return;
             }
 
             const hasCurrentData = state.accounts.length > 0 || state.snapshots.length > 0 || state.holdings.length > 0;
             const message = hasCurrentData
-                ? '导入会替换当前浏览器中的 PAM 账户和快照，确认继续吗？'
-                : '确认导入 PAM 备份数据吗？';
+                ? t('importReplaceMessage')
+                : t('importConfirmMessage');
             showConfirmDialog({
                 eyebrow: 'Import Data',
-                title: '导入备份数据',
-                description: hasCurrentData ? '导入会替换当前浏览器中的 PAM 数据。' : '将导入 PAM 备份数据。',
+                title: t('importBackupTitle'),
+                description: hasCurrentData ? t('importReplaceDesc') : t('importBackupDesc'),
                 message,
-                detail: `备份包含 ${data.accounts.length} 个账户、${data.snapshots.length} 条快照、${data.holdings.length} 条持仓。`,
-                confirmLabel: '确认导入',
+                detail: t('importBackupDetail', { accounts: data.accounts.length, snapshots: data.snapshots.length, holdings: data.holdings.length }),
+                confirmLabel: t('importConfirm'),
                 onConfirm: () => applyImportedData(data)
             });
         } catch (error) {
-            alert('导入失败：无法解析 JSON 文件。');
+            alert(t('importParseFailed'));
         } finally {
             input.value = '';
         }
     };
     reader.onerror = () => {
-        alert('导入失败：无法读取文件。');
+        alert(t('importReadFailed'));
         input.value = '';
     };
     reader.readAsText(file, 'utf-8');
@@ -720,6 +766,7 @@ function applyImportedData(data) {
     state.assetDataAction = normalizeAssetDataAction(data.preferences.assetDataAction || (data.preferences.activeView === 'holdings' ? 'holding' : 'snapshot'));
     state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
     state.amountsHidden = Boolean(data.preferences.amountsHidden);
+    state.currentLang = normalizeLang(data.preferences.currentLang || state.currentLang);
     state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
     state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
     state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
@@ -730,7 +777,7 @@ function applyImportedData(data) {
     applyTheme(state.theme);
     persistAll();
     renderApp();
-    alert(`导入完成：${state.accounts.length} 个账户，${state.snapshots.length} 条快照，${state.holdings.length} 条持仓。`);
+    alert(t('importDone', { accounts: state.accounts.length, snapshots: state.snapshots.length, holdings: state.holdings.length }));
 }
 
 function parseImportPayload(payload) {
@@ -827,7 +874,7 @@ function saveHolding(payload) {
         state.holdings = state.holdings.map(holding => holding.id === state.editingHoldingId
             ? { ...holding, ...payload, currency: 'CNY', priceSource: holding.priceSource || 'manual', priceUpdatedAt: holding.priceUpdatedAt || now }
             : holding);
-        showHoldingMessage('持仓已更新。');
+        showHoldingMessage(t('holdingUpdated'));
     } else {
         state.holdings.push({
             id: createId('holding'),
@@ -836,7 +883,7 @@ function saveHolding(payload) {
             priceSource: 'manual',
             priceUpdatedAt: now
         });
-        showHoldingMessage('持仓已保存。');
+        showHoldingMessage(t('holdingSaved'));
     }
 
     state.selectedAccountId = payload.accountId;
@@ -863,15 +910,15 @@ function editHolding(holdingId) {
 function deleteHolding(holdingId) {
     const holding = state.holdings.find(item => item.id === holdingId);
     if (!holding) return;
-    const accountName = state.accounts.find(account => account.id === holding.accountId)?.name || '当前账户';
+    const accountName = state.accounts.find(account => account.id === holding.accountId)?.name || t('currentAccount');
     const identifier = holding.symbol ? `（${holding.symbol}）` : '';
     showConfirmDialog({
         eyebrow: 'Delete Holding',
-        title: '删除持仓',
-        description: `所属账户：${accountName}`,
-        message: `确认删除持仓「${holding.name}${identifier}」吗？`,
-        detail: '此操作不会影响已保存的账户快照。',
-        confirmLabel: '删除持仓',
+        title: t('deleteHoldingTitle'),
+        description: t('holdingBelongsTo', { account: accountName }),
+        message: t('deleteHoldingMessage', { name: holding.name, identifier }),
+        detail: t('deleteHoldingDetail'),
+        confirmLabel: t('deleteHoldingConfirm'),
         onConfirm: () => deleteHoldingNow(holdingId)
     });
 }
@@ -880,7 +927,7 @@ function deleteHoldingNow(holdingId) {
     state.holdings = state.holdings.filter(item => item.id !== holdingId);
     if (state.editingHoldingId === holdingId) state.editingHoldingId = '';
     persistAll();
-    showHoldingMessage('持仓已删除。');
+    showHoldingMessage(t('holdingDeleted'));
     renderApp();
 }
 
@@ -899,14 +946,14 @@ async function refreshHoldingQuotes() {
     state.assetDataAction = 'holding';
     const supported = state.holdings.filter(holding => ['CN', 'Fund'].includes(holding.market) && holding.symbol);
     if (supported.length === 0) {
-        showHoldingMessage('没有可刷新行情的 A股或基金持仓。', true);
+        showHoldingMessage(t('noRefreshableHoldings'), true);
         return;
     }
 
     try {
         quoteRefreshInProgress = true;
         setQuoteRefreshState(true);
-        showHoldingMessage(`正在刷新 ${supported.length} 项可支持行情，现金和其他市场将保留手动估值。`);
+        showHoldingMessage(t('refreshingQuotes', { count: supported.length }));
         const data = await fetchQuotes(supported);
         const quoteMap = new Map((data.quotes || []).map(quote => [`${quote.market}:${quote.symbol}`, quote]));
         let updatedCount = 0;
@@ -925,9 +972,9 @@ async function refreshHoldingQuotes() {
         });
         persistAll();
         renderApp();
-        showHoldingMessage(`行情已刷新：${updatedCount} 条成功，${(data.failedItems || []).length} 条失败。`, (data.failedItems || []).length > 0);
+        showHoldingMessage(t('quotesRefreshed', { updated: updatedCount, failed: (data.failedItems || []).length }), (data.failedItems || []).length > 0);
     } catch (error) {
-        showHoldingMessage('行情刷新失败，请稍后重试或手动维护当前价。', true);
+        showHoldingMessage(t('quotesRefreshFailed'), true);
     } finally {
         quoteRefreshInProgress = false;
         setQuoteRefreshState(false);
@@ -961,19 +1008,19 @@ function setSnapshotGenerationState(isGenerating) {
 }
 
 function validateHolding(payload) {
-    if (!payload.accountId) return '请选择账户。';
-    if (!payload.name) return '持仓名称不能为空。';
-    if (![payload.quantity, payload.costPrice, payload.currentPrice].every(Number.isFinite)) return '数量、成本价、当前价必须是数字。';
-    if (payload.quantity < 0 || payload.costPrice < 0 || payload.currentPrice < 0) return '数量、成本价、当前价不能为负数。';
+    if (!payload.accountId) return t('holdingAccountRequired');
+    if (!payload.name) return t('holdingNameRequired');
+    if (![payload.quantity, payload.costPrice, payload.currentPrice].every(Number.isFinite)) return t('holdingNumbersRequired');
+    if (payload.quantity < 0 || payload.costPrice < 0 || payload.currentPrice < 0) return t('holdingNumbersPositive');
     return '';
 }
 
 function validateSnapshot(payload) {
-    if (!payload.accountId) return '请先选择账户。';
-    if (!payload.date) return '日期不能为空。';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.date)) return '日期格式无效。';
-    if (!Number.isFinite(payload.totalValue) || payload.totalValue <= 0) return '总资产必须大于 0，请按券商账户总资产手动录入。';
-    if (!Number.isFinite(payload.netFlow)) return '净流入必须是数字。';
+    if (!payload.accountId) return t('snapshotAccountRequired');
+    if (!payload.date) return t('dateRequired');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.date)) return t('invalidDate');
+    if (!Number.isFinite(payload.totalValue) || payload.totalValue <= 0) return t('totalValuePositive');
+    if (!Number.isFinite(payload.netFlow)) return t('netFlowNumber');
     return '';
 }
 
@@ -993,7 +1040,7 @@ function openSnapshotGenerateDialog() {
     const defaultOption = form.querySelector('input[name="snapshotDateOption"][value="1"]');
     if (defaultOption) defaultOption.checked = true;
     renderSnapshotGeneratePreview();
-    showSnapshotGenerateMessage('选择快照口径后，先计算并核对结果，再确认生成。');
+    showSnapshotGenerateMessage(t('snapshotGenerateInitial'));
     setSnapshotGenerateConfirmVisible(false);
     if (!dialog.open && typeof dialog.showModal === 'function') {
         dialog.showModal();
@@ -1026,13 +1073,13 @@ async function handleSnapshotGeneratePreview(event) {
 
         const normalizedOption = getSelectedSnapshotDateOption();
 
-        showHoldingMessage('正在按所选日期口径计算快照市值。');
-        showSnapshotGenerateMessage('正在获取行情并计算快照预览...');
+        showHoldingMessage(t('calculatingSnapshot'));
+        showSnapshotGenerateMessage(t('fetchingSnapshotPreview'));
         let valuation;
         try {
             valuation = await buildSnapshotValuation(normalizedOption);
         } catch (error) {
-            const message = error.message || '快照估值行情获取失败，已中止生成。';
+            const message = error.message || t('snapshotValuationFailed');
             showHoldingMessage(message, true);
             showFormMessage(message, true);
             showSnapshotGenerateMessage(message, true);
@@ -1048,19 +1095,19 @@ async function handleSnapshotGeneratePreview(event) {
             .filter(row => row.account && row.totalValue > 0);
 
         if (rows.length === 0) {
-            showHoldingMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
-            showFormMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
-            showSnapshotGenerateMessage('没有可生成快照的持仓市值。请先录入持仓。', true);
+            showHoldingMessage(t('noSnapshotMarketValue'), true);
+            showFormMessage(t('noSnapshotMarketValue'), true);
+            showSnapshotGenerateMessage(t('noSnapshotMarketValue'), true);
             return;
         }
 
         const date = valuation.date;
-        const dateLabel = normalizedOption === '1' ? '上个交易日' : '当日';
+        const dateLabel = normalizedOption === '1' ? t('previousTradingDay') : t('today');
         const existingCount = rows.filter(row => state.snapshots.some(snapshot => snapshot.accountId === row.accountId && snapshot.date === date)).length;
 
         pendingSnapshotGeneration = { date, dateLabel, rows, valuation, existingCount };
         renderSnapshotGeneratePreview(pendingSnapshotGeneration);
-        showSnapshotGenerateMessage('快照预览已生成。请核对日期、覆盖数量和手动估值提示后确认。');
+        showSnapshotGenerateMessage(t('snapshotPreviewGenerated'));
         setSnapshotGenerateConfirmVisible(true);
     } finally {
         snapshotGenerationInProgress = false;
@@ -1079,7 +1126,7 @@ function confirmSnapshotGeneration() {
             date,
             totalValue: Number(row.totalValue.toFixed(2)),
             netFlow: 0,
-            note: '由账户管理生成',
+            note: t('generatedByHoldings'),
             source: 'holdings'
         };
         const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
@@ -1096,8 +1143,8 @@ function confirmSnapshotGeneration() {
     persistAll();
     renderApp();
     closeSnapshotGenerateDialog();
-    showFormMessage(`已生成 ${rows.length} 条账户快照。`);
-    showHoldingMessage(`已生成 ${rows.length} 条账户快照。`);
+    showFormMessage(t('generatedSnapshots', { count: rows.length }));
+    showHoldingMessage(t('generatedSnapshots', { count: rows.length }));
 }
 
 function getSelectedSnapshotDateOption() {
@@ -1107,7 +1154,7 @@ function getSelectedSnapshotDateOption() {
 function setSnapshotGenerateConfirmVisible(isVisible) {
     document.getElementById('snapshotGenerateConfirmBtn')?.classList.toggle('hidden', !isVisible);
     const calculateBtn = document.getElementById('snapshotGenerateCalculateBtn');
-    if (calculateBtn) calculateBtn.textContent = isVisible ? '重新计算' : '计算快照';
+    if (calculateBtn) calculateBtn.textContent = isVisible ? t('recalculate') : t('calculateSnapshot');
 }
 
 function showSnapshotGenerateMessage(message, isError = false) {
@@ -1121,25 +1168,25 @@ function renderSnapshotGeneratePreview(generation = null) {
     const wrap = document.getElementById('snapshotGeneratePreview');
     if (!wrap) return;
     if (!generation) {
-        wrap.innerHTML = '<div class="preview-empty">选择口径后点击“计算快照”，这里会展示快照日期、账户数量和估值提示。</div>';
+        wrap.innerHTML = `<div class="preview-empty">${t('snapshotPreviewEmpty')}</div>`;
         return;
     }
 
     const { date, dateLabel, rows, valuation, existingCount } = generation;
     const totalValue = rows.reduce((sum, row) => sum + row.totalValue, 0);
     const warnings = [];
-    if (existingCount > 0) warnings.push(`${existingCount} 条同日快照将被覆盖`);
-    if (valuation.fallbackCount > 0) warnings.push(`${valuation.fallbackCount} 项持仓使用手动当前价`);
-    if (valuation.failedCount > 0) warnings.push(`${valuation.failedCount} 项行情获取失败`);
-    if (valuation.dateFallback) warnings.push('未取得内置普通基金参考披露日，已回退到本地上个交易日');
+    if (existingCount > 0) warnings.push(t('sameDayOverwriteWarning', { count: existingCount }));
+    if (valuation.fallbackCount > 0) warnings.push(t('manualPriceWarning', { count: valuation.fallbackCount }));
+    if (valuation.failedCount > 0) warnings.push(t('quoteFailedWarning', { count: valuation.failedCount }));
+    if (valuation.dateFallback) warnings.push(t('dateFallbackWarning'));
     wrap.innerHTML = `
         <div class="snapshot-preview-hero">
-            <div><span>快照日期</span><strong>${date}</strong><small>${dateLabel} · ${valuation.description}</small></div>
-            <div><span>账户范围</span><strong>${rows.length} 个账户</strong><small>净流入默认记为 0</small></div>
-            <div><span>合计市值</span><strong>${formatPreviewCurrency(totalValue)}</strong><small>基于当前持仓数量计算</small></div>
+            <div><span>${t('snapshotDateLabel')}</span><strong>${date}</strong><small>${dateLabel} · ${valuation.description}</small></div>
+            <div><span>${t('accountScope')}</span><strong>${t('accountsCount', { count: rows.length })}</strong><small>${t('netFlowDefaultsZero')}</small></div>
+            <div><span>${t('totalMarketValue')}</span><strong>${formatPreviewCurrency(totalValue)}</strong><small>${t('basedOnHoldingQuantity')}</small></div>
         </div>
         <div class="snapshot-preview-warning${warnings.length === 0 ? ' ready' : ''}">
-            ${warnings.length === 0 ? '估值数据完整，未发现同日覆盖。' : warnings.join('；')}
+            ${warnings.length === 0 ? t('valuationReady') : warnings.join('; ')}
         </div>
         <div class="snapshot-preview-accounts">
             ${rows.map(row => `<div><span>${escapePreviewText(row.account.name)}</span><strong>${formatPreviewCurrency(row.totalValue)}</strong></div>`).join('')}
@@ -1151,7 +1198,7 @@ function formatPreviewCurrency(value) {
     if (state.amountsHidden) return '****';
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
-    return num.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 });
+    return num.toLocaleString(state.currentLang === 'en' ? 'en-US' : 'zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 });
 }
 
 function escapePreviewText(value) {
@@ -1179,9 +1226,9 @@ async function buildSnapshotValuation(dateOption) {
         } catch (error) {
             failedCount = supported.length;
             if (dateOption === '1') {
-                throw new Error('上个交易日快照行情获取失败，无法取得 A股前收或基金最新净值，已中止生成。');
+                throw new Error(t('previousDayQuotesFailed'));
             }
-            showHoldingMessage('快照估值行情获取失败，将使用手动当前价生成。', true);
+            showHoldingMessage(t('snapshotQuoteFallback'), true);
         }
     }
 
@@ -1213,7 +1260,7 @@ async function buildSnapshotValuation(dateOption) {
         priceByHoldingId,
         fallbackCount,
         failedCount,
-        description: dateOption === '1' ? 'A股前一交易日收盘价、基金最新净值' : 'A股最新价、基金最新净值'
+        description: dateOption === '1' ? t('previousDayValuationDesc') : t('todayValuationDesc')
     };
 }
 
@@ -1290,7 +1337,7 @@ function syncSelectedHoldingFilter() {
     state.holdingFilters = { ...state.holdingFilters, accountId: selected };
 }
 
-function showConfirmDialog({ eyebrow = 'Confirm', title = '确认操作', description = '请确认是否继续。', message = '确认继续吗？', detail = '', confirmLabel = '确认', onConfirm }) {
+function showConfirmDialog({ eyebrow = 'Confirm', title = t('confirmTitle'), description = t('confirmDesc'), message = t('confirmMessage'), detail = '', confirmLabel = t('confirm'), onConfirm }) {
     const dialog = document.getElementById('confirmDialog');
     if (!dialog || typeof onConfirm !== 'function') return;
 
@@ -1339,6 +1386,10 @@ function normalizeAssetDataAction(action) {
     return action === 'holding' ? 'holding' : 'snapshot';
 }
 
+function normalizeLang(lang) {
+    return lang === 'en' ? 'en' : 'zh';
+}
+
 function persistAll() {
     saveAccounts(state.accounts);
     saveSnapshots(state.snapshots);
@@ -1357,7 +1408,8 @@ function persistPreferences() {
         amountsHidden: state.amountsHidden,
         holdingFilters: state.holdingFilters,
         holdingSortKey: state.holdingSortKey,
-        holdingSortOrder: state.holdingSortOrder
+        holdingSortOrder: state.holdingSortOrder,
+        currentLang: state.currentLang
     });
 }
 

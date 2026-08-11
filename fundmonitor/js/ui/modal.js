@@ -101,7 +101,7 @@ function renderMobileCompareCards(rows, primaryColumn, defaultColumns, moreColum
                 `).join('')}
             </div>
             <details class="compare-mobile-more">
-                <summary>${state.currentLang === 'zh' ? '展开更多' : 'More periods'}</summary>
+                <summary>${i18n[state.currentLang].morePeriods}</summary>
                 <div class="compare-mobile-grid">
                     ${moreColumns.map(([label, key]) => `
                         <div class="compare-mobile-item"><span>${dict[label]}</span>${formatRet(row[key])}</div>
@@ -776,7 +776,7 @@ export function navigateToAnalysis(codes, groupName = '') {
 
                     <div class="analysis-compare-cards">
                         <div class="compare-mobile-sort-bar">
-                            <span>${state.currentLang === 'zh' ? '排序' : 'Sort'}</span>
+                            <span>${i18n[state.currentLang].sortLabel}</span>
                             <div class="compare-mobile-sort-chips">
                                 ${mobileSortColumns.map(([label, key]) => `<button class="compare-mobile-sort-chip${key === mobileCompareSortKey ? ' active' : ''}" type="button" data-compare-sort="${key}" data-label="${dict[label]}">${dict[label]}${key === mobileCompareSortKey ? ' ▼' : ''}</button>`).join('')}
                             </div>

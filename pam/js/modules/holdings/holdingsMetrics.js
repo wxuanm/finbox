@@ -1,16 +1,18 @@
+import { t } from '../../config/i18n.js';
+
 export const ASSET_CLASSES = [
-    ['stock', '股票'],
-    ['fund', '基金'],
-    ['bond', '债券'],
-    ['cash', '现金'],
-    ['other', '其他']
+    ['stock', 'assetStock'],
+    ['fund', 'assetFund'],
+    ['bond', 'assetBond'],
+    ['cash', 'assetCash'],
+    ['other', 'assetOther']
 ];
 
 export const MARKETS = [
-    ['CN', 'A股/境内'],
-    ['Fund', '基金'],
-    ['Cash', '现金'],
-    ['Other', '其他']
+    ['CN', 'marketCN'],
+    ['Fund', 'marketFund'],
+    ['Cash', 'marketCash'],
+    ['Other', 'marketOther']
 ];
 
 export function buildHoldingsMetrics(holdings, accounts, filters) {
@@ -49,11 +51,11 @@ export function buildHoldingsMetrics(holdings, accounts, filters) {
 }
 
 export function getAssetClassLabel(value) {
-    return ASSET_CLASSES.find(([key]) => key === value)?.[1] || '其他';
+    return t(ASSET_CLASSES.find(([key]) => key === value)?.[1] || 'assetOther');
 }
 
 export function getMarketLabel(value) {
-    return MARKETS.find(([key]) => key === value)?.[1] || '其他';
+    return t(MARKETS.find(([key]) => key === value)?.[1] || 'marketOther');
 }
 
 function normalizeHolding(holding, account) {

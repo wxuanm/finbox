@@ -1,4 +1,5 @@
 import { state, PERIODS } from '../../config/state.js';
+import { periodLabel, t } from '../../config/i18n.js';
 import { formatPercent } from '../../utils/formatter.js';
 
 let chartInstance = null;
@@ -6,8 +7,8 @@ let chartInstance = null;
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
     if (!wrap) return;
-    wrap.innerHTML = PERIODS.map(([key, label]) => `
-        <button class="period-chip${state.selectedPeriod === key ? ' active' : ''}" type="button" data-period="${key}">${label}</button>
+    wrap.innerHTML = PERIODS.map(([key]) => `
+        <button class="period-chip${state.selectedPeriod === key ? ' active' : ''}" type="button" data-period="${key}">${periodLabel(key)}</button>
     `).join('');
 }
 
@@ -28,14 +29,14 @@ export function renderPerformanceChart(metrics) {
 
     const validMetrics = metrics.filter(metric => metric.valid && metric.periodPoints.length >= 2);
     if (typeof window.echarts === 'undefined') {
-        messageEl.textContent = '图表库加载失败，账户管理仍可正常维护。';
+        messageEl.textContent = t('chartLibraryFailed');
         messageEl.classList.add('error');
         chartEl.innerHTML = '';
         return;
     }
 
     if (validMetrics.length === 0) {
-        messageEl.textContent = '录入至少一个账户的两条有效快照后，将显示收益走势。';
+        messageEl.textContent = t('chartEmpty');
         messageEl.classList.remove('error');
         if (chartInstance) chartInstance.dispose();
         chartInstance = null;
