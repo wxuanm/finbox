@@ -146,6 +146,12 @@ button:disabled {
     padding: 11px 14px;
 }
 
+.privacy-toggle[aria-pressed="true"] {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: var(--primary-soft);
+}
+
 .icon-btn {
     display: inline-grid;
     width: 44px;

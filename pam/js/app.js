@@ -33,6 +33,7 @@ function init() {
     state.activeView = normalizeActiveView(preferences.activeView);
     state.assetDataAction = normalizeAssetDataAction(preferences.assetDataAction);
     state.assetDataMaintenanceOpen = false;
+    state.amountsHidden = Boolean(preferences.amountsHidden);
     state.holdingFilters = preferences.holdingFilters || state.holdingFilters;
     state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
     state.holdingSortOrder = preferences.holdingSortOrder || state.holdingSortOrder;
@@ -52,6 +53,8 @@ function bindEvents() {
     document.getElementById('mobileExportDataBtn')?.addEventListener('click', exportData);
     document.getElementById('importDataBtn')?.addEventListener('click', openImportDataPicker);
     document.getElementById('mobileImportDataBtn')?.addEventListener('click', openImportDataPicker);
+    document.getElementById('amountPrivacyBtn')?.addEventListener('click', toggleAmountPrivacy);
+    document.getElementById('mobileAmountPrivacyBtn')?.addEventListener('click', toggleAmountPrivacy);
     document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleMobileActionMenu);
     document.getElementById('contextMenuBtn')?.addEventListener('click', toggleContextActionMenu);
     document.getElementById('importDataInput')?.addEventListener('change', importData);
@@ -181,6 +184,7 @@ function renderApp() {
     const metrics = buildAccountMetrics(state.accounts, state.snapshots, state.selectedPeriod);
     const holdingsMetrics = buildHoldingsMetrics(state.holdings, state.accounts, state.holdingFilters);
     renderActiveView();
+    renderAmountPrivacyToggle();
     renderOverviewCards(metrics);
     renderAccountList(metrics);
     renderSnapshotForm();
@@ -189,6 +193,31 @@ function renderApp() {
     renderAccountComparison(metrics);
     renderSnapshotTable();
     renderHoldingsPanel(holdingsMetrics);
+}
+
+function toggleAmountPrivacy() {
+    state.amountsHidden = !state.amountsHidden;
+    persistPreferences();
+    renderApp();
+}
+
+function renderAmountPrivacyToggle() {
+    const label = state.amountsHidden ? '显示金额' : '隐藏金额';
+    ['amountPrivacyBtn', 'mobileAmountPrivacyBtn'].forEach(id => {
+        const button = document.getElementById(id);
+        if (!button) return;
+        if (id === 'amountPrivacyBtn') button.innerHTML = amountPrivacyIcon(state.amountsHidden);
+        else button.textContent = label;
+        button.setAttribute('aria-pressed', String(state.amountsHidden));
+        button.setAttribute('aria-label', label);
+        button.title = label;
+    });
+}
+
+function amountPrivacyIcon(isHidden) {
+    return isHidden
+        ? '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3l18 18" stroke-linecap="round"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" stroke-linecap="round"/><path d="M9.9 5.2A10.3 10.3 0 0 1 12 5c6 0 9.5 7 9.5 7a17.6 17.6 0 0 1-2.7 3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.4 6.8C3.9 8.5 2.5 12 2.5 12s3.5 7 9.5 7a9.7 9.7 0 0 0 4.1-.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 
 function switchView(view) {
@@ -552,6 +581,7 @@ function exportData() {
                 activeView: state.activeView,
                 assetDataAction: state.assetDataAction,
                 assetDataMaintenanceOpen: state.assetDataMaintenanceOpen,
+                amountsHidden: state.amountsHidden,
                 holdingFilters: state.holdingFilters,
                 holdingSortKey: state.holdingSortKey,
                 holdingSortOrder: state.holdingSortOrder
@@ -598,6 +628,7 @@ function importData(event) {
             state.activeView = normalizeActiveView(data.preferences.activeView);
             state.assetDataAction = normalizeAssetDataAction(data.preferences.assetDataAction || (data.preferences.activeView === 'holdings' ? 'holding' : 'snapshot'));
             state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
+            state.amountsHidden = Boolean(data.preferences.amountsHidden);
             state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
             state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
             state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
@@ -1023,6 +1054,7 @@ function renderSnapshotGeneratePreview(generation = null) {
 }
 
 function formatPreviewCurrency(value) {
+    if (state.amountsHidden) return '****';
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
     return num.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 });
@@ -1188,6 +1220,7 @@ function persistPreferences() {
         activeView: state.activeView,
         assetDataAction: state.assetDataAction,
         assetDataMaintenanceOpen: state.assetDataMaintenanceOpen,
+        amountsHidden: state.amountsHidden,
         holdingFilters: state.holdingFilters,
         holdingSortKey: state.holdingSortKey,
         holdingSortOrder: state.holdingSortOrder

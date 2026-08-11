@@ -131,7 +131,7 @@ function renderAllocation(elementId, allocation) {
     }
     wrap.innerHTML = allocation.map(item => `
         <div class="allocation-row">
-            <div><strong>${escapeHtml(item.label)}</strong><span>${formatCurrency(item.value)}</span></div>
+            <div><strong>${escapeHtml(item.label)}</strong><span>${formatCurrency(item.value, state.amountsHidden)}</span></div>
             <div class="allocation-bar"><i style="width:${Math.max(Number(item.weight) || 0, 1)}%"></i></div>
             <span>${formatPercent(item.weight, 1)}</span>
         </div>
@@ -176,10 +176,10 @@ function renderHoldingRow(row) {
             <td><strong>${escapeHtml(row.name)}</strong><small>${escapeHtml(row.symbol || '-')} · ${getMarketLabel(row.market)}</small></td>
             <td>${escapeHtml(row.accountName)}</td>
             <td>${getAssetClassLabel(row.assetClass)}</td>
-            <td class="number-cell">${formatCurrency(row.marketValue)}</td>
+            <td class="number-cell">${formatCurrency(row.marketValue, state.amountsHidden)}</td>
             <td class="number-cell">${formatPercent(row.weight, 1)}</td>
-            <td class="number-cell">${formatCurrency(row.costAmount)}</td>
-            <td class="number-cell ${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl)}</td>
+            <td class="number-cell">${formatCurrency(row.costAmount, state.amountsHidden)}</td>
+            <td class="number-cell ${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)}</td>
             <td class="number-cell ${signedClass(row.unrealizedPnlPct)}">${formatPercent(row.unrealizedPnlPct)}</td>
             <td class="number-cell"><span class="valuation-status${isStalePrice(row) ? ' stale' : ''}">${formatPriceStatus(row)}</span></td>
             <td><div class="row-actions"><button class="mini-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}">编辑</button><button class="mini-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}">删除</button></div></td>

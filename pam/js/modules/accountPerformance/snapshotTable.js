@@ -42,8 +42,8 @@ export function renderSnapshotTable() {
                 ${rows.map(row => `
                     <tr>
                         <td>${row.date}</td>
-                        <td class="number-cell">${formatCurrency(row.totalValue)}</td>
-                        <td class="number-cell">${formatCurrency(row.netFlow)}</td>
+                        <td class="number-cell">${formatCurrency(row.totalValue, state.amountsHidden)}</td>
+                        <td class="number-cell">${formatCurrency(row.netFlow, state.amountsHidden)}</td>
                         <td>${escapeHtml(row.note || '-')}</td>
                         <td>
                             <div class="row-actions">

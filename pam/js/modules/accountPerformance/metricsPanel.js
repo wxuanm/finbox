@@ -13,8 +13,8 @@ export function renderOverviewCards(metrics) {
     const laggedCount = Math.max(valid.length - syncedCount, 0);
 
     wrap.innerHTML = [
-        card('最新总资产', formatCurrency(latestValue), '有效账户合计'),
-        card('累计盈亏', formatCurrency(profitLoss), '基于净投入估算', signedClass(profitLoss)),
+        card('最新总资产', formatCurrency(latestValue, state.amountsHidden), '有效账户合计'),
+        card('累计盈亏', formatCurrency(profitLoss, state.amountsHidden), '基于净投入估算', signedClass(profitLoss)),
         card('区间最佳', best ? formatPercent(best.periodReturn) : '-', best ? best.account.name : '等待有效快照', signedClass(best?.periodReturn)),
         card('数据状态', `${valid.length}/${state.accounts.length}`, latestDate ? `${syncedCount}/${valid.length} 已更新到 ${latestDate}${laggedCount > 0 ? `，${laggedCount} 个滞后` : ''}` : '可计算 / 全部账户')
     ].join('');
@@ -94,8 +94,8 @@ function renderComparisonRow(metric) {
             <td><strong>${escapeHtml(metric.account.name)}</strong><small>点击高亮走势</small></td>
             <td class="number-cell ${signedClass(metric.periodReturn)}">${formatPercent(metric.periodReturn)}</td>
             <td class="number-cell ${signedClass(metric.cumulativeReturn)}">${formatPercent(metric.cumulativeReturn)}</td>
-            <td class="number-cell">${formatCurrency(metric.latestValue)}</td>
-            <td class="number-cell ${signedClass(metric.profitLoss)}">${formatCurrency(metric.profitLoss)}</td>
+            <td class="number-cell">${formatCurrency(metric.latestValue, state.amountsHidden)}</td>
+            <td class="number-cell ${signedClass(metric.profitLoss)}">${formatCurrency(metric.profitLoss, state.amountsHidden)}</td>
             <td class="number-cell ${signedClass(metric.maxDrawdown)}">${formatPercent(metric.maxDrawdown)}</td>
             <td class="number-cell">${formatPercent(metric.annualizedVolatility)}</td>
             <td class="number-cell">${metric.latestDate || '-'}</td>

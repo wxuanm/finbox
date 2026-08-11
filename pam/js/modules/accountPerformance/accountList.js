@@ -39,8 +39,8 @@ export function renderAccountList(metrics) {
                         </div>
                     </div>
                     <div class="account-card-metrics">
-                        <div><span>总资产</span><strong>${latestSnapshot ? formatCurrency(latestSnapshot.totalValue) : '-'}</strong></div>
-                        <div><span>累计收益</span><strong class="${signedClass(metric?.profitLoss)}">${metric?.valid ? formatCurrency(metric.profitLoss) : '-'}</strong></div>
+                        <div><span>总资产</span><strong>${latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-'}</strong></div>
+                        <div><span>累计收益</span><strong class="${signedClass(metric?.profitLoss)}">${metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-'}</strong></div>
                         <div><span>年化收益</span><strong class="${signedClass(annualizedReturn)}">${Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-'}</strong></div>
                     </div>
                 </button>

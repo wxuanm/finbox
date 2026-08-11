@@ -37,6 +37,7 @@ The first release started with account performance. PAM now expands toward curre
 - Current holdings track current positions only in the first release, and holdings must be bound to accounts.
 - A-share and fund quote refresh are the first supported real-time quote targets for holdings.
 - Cash is a supported holding type and is manually maintained as CNY-equivalent amount; no currency conversion is performed.
+- PAM provides a lightweight hide-amount toggle for personal privacy. It masks displayed money amounts only and does not hide quantities, prices, percentages, calculations, imports, or backup data.
 
 ### In Scope For First Release
 
@@ -57,6 +58,7 @@ The first release started with account performance. PAM now expands toward curre
 - Support desktop and mobile layouts.
 - Manage current holdings bound to accounts.
 - Refresh supported A-share and fund prices through `/api/quotes`.
+- Hide displayed money amounts through a global header toggle.
 
 ### Out Of Scope For First Release
 
@@ -203,6 +205,7 @@ Empty state:
 - Import validates schema version, account records, snapshot records, and account references before applying data.
 - CSV import/export is out of scope for the first backup feature and can be added later for batch snapshot entry.
 - Holdings are included in PAM JSON backups. Older backups without holdings are imported with an empty holdings list.
+- The hide-amount preference is included in preferences, but exported account, snapshot, and holding data remains unchanged.
 
 ### Holdings
 

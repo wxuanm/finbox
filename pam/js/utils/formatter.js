@@ -1,6 +1,7 @@
-export function formatCurrency(value) {
+export function formatCurrency(value, masked = false) {
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
+    if (masked) return '****';
     return new Intl.NumberFormat('zh-CN', {
         style: 'currency',
         currency: 'CNY',

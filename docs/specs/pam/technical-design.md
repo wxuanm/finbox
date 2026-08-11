@@ -61,6 +61,7 @@ pam/
   editingHoldingId: '',
   editingSnapshotId: '',
   activeView: 'analysis',
+  amountsHidden: false,
   theme: 'light'
 }
 ```
@@ -171,6 +172,7 @@ The performance chart uses ECharts from CDN.
 - Snapshot input includes short inline guidance for total value, net flow, and unit-NAV return logic.
 - Account list items expose readiness status and selected-period return to reduce navigation ambiguity.
 - Account performance is compared in a sortable table rather than per-account cards, because table rows make return, drawdown, volatility, asset value, and data freshness easier to compare across accounts.
+- The header includes a lightweight hide-amount toggle. When enabled, rendered money amounts use `****`, while quantities, prices, percentages, chart returns, calculations, form inputs, and JSON backups remain unchanged.
 - Comparison table labels must distinguish period-scoped metrics from cumulative/current metrics. `区间收益`, `区间回撤`, and `区间波动` are controlled by the active period switch.
 - The top module navigation includes `账户收益` and `账户管理` alongside disabled future modules, keeping performance review separate from data maintenance while combining account snapshots and holdings under one account-scoped page.
 - The top navigation exposes module-specific context actions on the right. For `账户管理`, icon actions open snapshot and holding forms, generate snapshots, refresh quotes, and open the add-account dialog.

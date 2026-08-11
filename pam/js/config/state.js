@@ -15,6 +15,7 @@ export const state = {
     activeView: 'analysis',
     assetDataAction: 'snapshot',
     assetDataMaintenanceOpen: false,
+    amountsHidden: false,
     theme: 'light'
 };
 
