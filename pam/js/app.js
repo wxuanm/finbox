@@ -100,6 +100,7 @@ function bindEvents() {
     document.getElementById('amountPrivacyBtn')?.addEventListener('click', toggleAmountPrivacy);
     document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleMobileActionMenu);
     document.getElementById('contextMenuBtn')?.addEventListener('click', toggleContextActionMenu);
+    bindAccountFloatingActions();
     document.getElementById('importDataInput')?.addEventListener('change', importData);
     document.addEventListener('click', closeMobileActionMenu);
     document.getElementById('accountForm')?.addEventListener('submit', handleAddAccount);
@@ -199,6 +200,103 @@ function bindEvents() {
         onGenerateSnapshots: generateSnapshotsFromHoldings
     });
     window.addEventListener('resize', resizeChart, { passive: true });
+    window.addEventListener('resize', keepAccountFloatingActionsInView, { passive: true });
+}
+
+function bindAccountFloatingActions() {
+    const wrap = document.getElementById('accountFloatingActions');
+    const toggle = document.getElementById('accountFloatingToggle');
+    if (!wrap || !toggle) return;
+
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let startRight = 0;
+    let startBottom = 0;
+    let dragged = false;
+
+    toggle.addEventListener('pointerdown', event => {
+        if (window.matchMedia('(max-width: 720px)').matches) return;
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startY = event.clientY;
+        const rect = wrap.getBoundingClientRect();
+        startRight = window.innerWidth - rect.right;
+        startBottom = window.innerHeight - rect.bottom;
+        dragged = false;
+        toggle.setPointerCapture(pointerId);
+    });
+
+    toggle.addEventListener('pointermove', event => {
+        if (pointerId !== event.pointerId) return;
+        const deltaX = event.clientX - startX;
+        const deltaY = event.clientY - startY;
+        if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) dragged = true;
+        if (!dragged) return;
+        positionAccountFloatingActions(startRight - deltaX, startBottom - deltaY);
+    });
+
+    toggle.addEventListener('pointerup', event => {
+        if (pointerId !== event.pointerId) return;
+        toggle.releasePointerCapture(pointerId);
+        pointerId = null;
+    });
+
+    toggle.addEventListener('pointercancel', event => {
+        if (pointerId !== event.pointerId) return;
+        pointerId = null;
+        dragged = false;
+    });
+
+    toggle.addEventListener('click', event => {
+        event.stopPropagation();
+        if (dragged) {
+            dragged = false;
+            return;
+        }
+        updateAccountFloatingMenuPlacement();
+        const isOpen = wrap.classList.toggle('is-open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        wrap.querySelector('.account-floating-menu')?.setAttribute('aria-hidden', String(!isOpen));
+    });
+
+    wrap.querySelector('.account-floating-menu')?.addEventListener('click', () => closeAccountFloatingActions());
+    document.addEventListener('click', closeAccountFloatingActions);
+}
+
+function positionAccountFloatingActions(right, bottom) {
+    const wrap = document.getElementById('accountFloatingActions');
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const margin = 16;
+    const maxRight = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maxBottom = Math.max(margin, window.innerHeight - rect.height - margin);
+    wrap.style.right = `${Math.min(Math.max(right, margin), maxRight)}px`;
+    wrap.style.bottom = `${Math.min(Math.max(bottom, margin), maxBottom)}px`;
+    updateAccountFloatingMenuPlacement();
+}
+
+function keepAccountFloatingActionsInView() {
+    const wrap = document.getElementById('accountFloatingActions');
+    if (!wrap || window.matchMedia('(max-width: 720px)').matches) return;
+    const rect = wrap.getBoundingClientRect();
+    positionAccountFloatingActions(window.innerWidth - rect.right, window.innerHeight - rect.bottom);
+}
+
+function updateAccountFloatingMenuPlacement() {
+    const wrap = document.getElementById('accountFloatingActions');
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    wrap.classList.toggle('is-menu-below', rect.top < 180);
+    wrap.classList.toggle('is-menu-left', rect.left < 160);
+}
+
+function closeAccountFloatingActions() {
+    const wrap = document.getElementById('accountFloatingActions');
+    if (!wrap) return;
+    wrap.classList.remove('is-open');
+    document.getElementById('accountFloatingToggle')?.setAttribute('aria-expanded', 'false');
+    wrap.querySelector('.account-floating-menu')?.setAttribute('aria-hidden', 'true');
 }
 
 function openImportDataPicker() {
@@ -376,6 +474,7 @@ function renderActiveView() {
     document.querySelectorAll('[data-context-actions]').forEach(actions => {
         actions.classList.toggle('active', actions.dataset.contextActions === state.activeView);
     });
+    if (state.activeView !== 'assetData') closeAccountFloatingActions();
     document.querySelectorAll('[data-workspace-view]').forEach(view => {
         view.classList.toggle('active', view.dataset.workspaceView === state.activeView);
     });

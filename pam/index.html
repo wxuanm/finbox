@@ -112,6 +112,23 @@
             </div>
         </nav>
 
+        <div id="accountFloatingActions" class="context-actions account-context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataActions" aria-label="账户管理操作">
+            <div class="account-floating-menu" aria-hidden="true">
+                <button id="addAccountToolbarBtn" class="context-action" type="button" data-i18n-title="addAccount" title="新增账户" aria-label="新增账户">
+                    <span data-i18n="addAccount">新增账户</span>
+                </button>
+                <button id="addHoldingBtn" class="context-action" type="button" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
+                    <span data-i18n="addHolding">新增持仓</span>
+                </button>
+                <button id="addSnapshotBtn" class="context-action" type="button" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
+                    <span data-i18n="addSnapshot">新增快照</span>
+                </button>
+            </div>
+            <button id="accountFloatingToggle" class="account-floating-toggle" type="button" data-i18n-title="assetDataActions" title="账户管理操作" aria-label="账户管理操作" aria-expanded="false">
+                <span aria-hidden="true">+</span>
+            </button>
+        </div>
+
         <main class="workspace">
             <section id="analysisView" class="workspace-view active" data-workspace-view="analysis">
                 <section id="overviewCards" class="overview-grid" aria-live="polite"></section>
@@ -143,17 +160,6 @@
             <section id="assetDataView" class="workspace-view asset-data-view" data-workspace-view="assetData">
                 <section class="account-card-strip-panel">
                     <div id="accountList" class="account-list account-card-strip"></div>
-                    <div class="context-actions account-context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataActions" aria-label="账户管理操作">
-                        <button id="addAccountToolbarBtn" class="context-action" type="button" data-i18n-title="addAccount" title="新增账户" aria-label="新增账户">
-                            <span data-i18n="addAccount">新增账户</span>
-                        </button>
-                        <button id="addHoldingBtn" class="context-action" type="button" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
-                            <span data-i18n="addHolding">新增持仓</span>
-                        </button>
-                        <button id="addSnapshotBtn" class="context-action" type="button" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
-                            <span data-i18n="addSnapshot">新增快照</span>
-                        </button>
-                    </div>
                 </section>
 
                 <dialog id="snapshotDialog" class="asset-dialog" aria-labelledby="snapshotDialogTitle">

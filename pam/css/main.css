@@ -908,6 +908,97 @@ button:disabled {
     box-shadow: none;
 }
 
+.account-floating-toggle {
+    display: none;
+}
+
+@media (min-width: 721px) {
+    .account-context-actions.active {
+        position: fixed;
+        right: 28px;
+        bottom: 28px;
+        z-index: 90;
+        display: block;
+        width: auto;
+        min-width: 0;
+        filter: drop-shadow(0 18px 26px rgb(15 23 42 / 0.16));
+        touch-action: none;
+        user-select: none;
+    }
+
+    .account-floating-toggle {
+        display: grid;
+        width: 58px;
+        height: 58px;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        color: #ffffff;
+        background:
+            radial-gradient(circle at 28% 22%, rgb(255 255 255 / 0.3), transparent 28%),
+            linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .account-floating-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 22px 38px rgb(37 99 235 / 0.32);
+    }
+
+    .account-context-actions.is-open .account-floating-toggle span {
+        transform: rotate(45deg);
+    }
+
+    .account-floating-toggle span {
+        transition: transform 0.16s ease;
+    }
+
+    .account-floating-menu {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 10px);
+        display: grid;
+        width: 148px;
+        gap: 8px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px) scale(0.98);
+        transform-origin: right bottom;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+
+    .account-context-actions.is-open .account-floating-menu {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+    }
+
+    .account-context-actions.is-menu-below .account-floating-menu {
+        top: calc(100% + 10px);
+        bottom: auto;
+        transform: translateY(-8px) scale(0.98);
+        transform-origin: right top;
+    }
+
+    .account-context-actions.is-menu-below.is-open .account-floating-menu {
+        transform: translateY(0) scale(1);
+    }
+
+    .account-context-actions.is-menu-left .account-floating-menu {
+        right: auto;
+        left: 0;
+        transform-origin: left bottom;
+    }
+
+    .account-context-actions.is-menu-left.is-menu-below .account-floating-menu {
+        transform-origin: left top;
+    }
+}
+
 .account-context-actions .context-action {
     position: relative;
     overflow: hidden;
