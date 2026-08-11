@@ -46,7 +46,6 @@ function init() {
 
 function bindEvents() {
     document.getElementById('themeBtn')?.addEventListener('click', toggleTheme);
-    document.getElementById('mobileThemeBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('demoDataBtn')?.addEventListener('click', addDemoData);
     document.getElementById('mobileDemoDataBtn')?.addEventListener('click', addDemoData);
     document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
@@ -54,13 +53,13 @@ function bindEvents() {
     document.getElementById('importDataBtn')?.addEventListener('click', openImportDataPicker);
     document.getElementById('mobileImportDataBtn')?.addEventListener('click', openImportDataPicker);
     document.getElementById('amountPrivacyBtn')?.addEventListener('click', toggleAmountPrivacy);
-    document.getElementById('mobileAmountPrivacyBtn')?.addEventListener('click', toggleAmountPrivacy);
     document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleMobileActionMenu);
     document.getElementById('contextMenuBtn')?.addEventListener('click', toggleContextActionMenu);
     document.getElementById('importDataInput')?.addEventListener('change', importData);
     document.addEventListener('click', closeMobileActionMenu);
     document.getElementById('accountForm')?.addEventListener('submit', handleAddAccount);
     document.getElementById('snapshotForm')?.addEventListener('submit', handleSaveSnapshot);
+    document.getElementById('addAccountToolbarBtn')?.addEventListener('click', openAccountDialog);
     document.getElementById('addSnapshotBtn')?.addEventListener('click', () => openSnapshotForAccount(state.selectedAccountId));
     document.querySelectorAll('[data-dialog-close]').forEach(button => {
         button.addEventListener('click', () => {
@@ -203,11 +202,11 @@ function toggleAmountPrivacy() {
 
 function renderAmountPrivacyToggle() {
     const label = state.amountsHidden ? '显示金额' : '隐藏金额';
-    ['amountPrivacyBtn', 'mobileAmountPrivacyBtn'].forEach(id => {
+    ['amountPrivacyBtn'].forEach(id => {
         const button = document.getElementById(id);
         if (!button) return;
         if (id === 'amountPrivacyBtn') button.innerHTML = amountPrivacyIcon(state.amountsHidden);
-        else button.textContent = label;
+        else button.innerHTML = `${amountPrivacyIcon(state.amountsHidden).replaceAll('width="19" height="19"', 'width="16" height="16"')}<span>${label}</span>`;
         button.setAttribute('aria-pressed', String(state.amountsHidden));
         button.setAttribute('aria-label', label);
         button.title = label;
@@ -332,6 +331,18 @@ function renderActiveView() {
 
 function runContextCommand(command) {
     closeMobileActionMenu();
+    if (command === 'add-account') {
+        openAccountDialog();
+        return;
+    }
+    if (command === 'add-holding') {
+        openHoldingForAccount(state.selectedAccountId);
+        return;
+    }
+    if (command === 'add-snapshot') {
+        openSnapshotForAccount(state.selectedAccountId);
+        return;
+    }
     if (command === 'generate-snapshot') {
         generateSnapshotsFromHoldings();
         return;
@@ -844,8 +855,11 @@ async function refreshHoldingQuotes() {
 }
 
 function setQuoteRefreshState(isRefreshing) {
-    ['refreshQuotesBtn'].forEach(id => {
-        const button = document.getElementById(id);
+    const buttons = [
+        document.getElementById('refreshQuotesBtn'),
+        document.querySelector('[data-context-command="refresh-quotes"]')
+    ];
+    buttons.forEach(button => {
         if (!button) return;
         button.disabled = isRefreshing;
         button.classList.toggle('is-loading', isRefreshing);

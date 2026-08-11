@@ -53,13 +53,7 @@ export function renderAccountList(metrics) {
                 </details>
             </div>
         `;
-    }).join('') + `
-        <button class="account-add-card account-add-card-mobile" type="button" data-action="add-account">
-            <span>+</span>
-            <strong>新增账户</strong>
-            <small>添加券商、平台或策略账户</small>
-        </button>
-    `;
+    }).join('');
 }
 
 function calculateAnnualizedReturn(metric) {

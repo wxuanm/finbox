@@ -233,7 +233,8 @@ button:disabled {
 }
 
 .desktop-action {
-    padding: 8px 14px;
+    width: 42px;
+    padding: 0;
 }
 
 .desktop-action svg {
@@ -262,6 +263,8 @@ button:disabled {
 }
 
 .module-tabs {
+    position: relative;
+    z-index: 20;
     display: flex;
     gap: 6px;
     overflow: visible;
@@ -288,12 +291,16 @@ button:disabled {
 
 .context-actions {
     display: none;
-    gap: 5px;
+    gap: 6px;
     margin-left: auto;
 }
 
 .context-actions.active {
     display: flex;
+}
+
+.account-context-actions.active {
+    display: grid;
 }
 
 .mobile-context-actions {
@@ -310,16 +317,24 @@ button:disabled {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
     min-width: 42px;
-    min-height: 38px;
-    padding: 8px 10px;
+    min-height: 40px;
+    padding: 8px 14px;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 13px;
     color: var(--muted-text);
     background: var(--surface-muted);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.context-actions-title {
+    color: var(--muted-text);
     font-size: 12px;
-    font-weight: 900;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 .context-action:hover,
@@ -338,9 +353,10 @@ button:disabled {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    z-index: 35;
+    z-index: 80;
     display: none;
-    min-width: 132px;
+    width: max-content;
+    min-width: 0;
     padding: 6px;
     border: 1px solid var(--border-color);
     border-radius: 14px;
@@ -354,15 +370,19 @@ button:disabled {
 }
 
 .context-action-menu button {
-    width: 100%;
+    width: max-content;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 9px 10px;
     border: 0;
     border-radius: 9px;
     color: var(--text-color);
     background: transparent;
-    font-size: 13px;
-    font-weight: 800;
-    text-align: left;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
 }
 
 .context-action-menu button:hover {
@@ -865,9 +885,9 @@ button:disabled {
 
 .account-card-strip-panel {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 60px;
+    grid-template-columns: minmax(0, 1fr) auto;
     min-width: 0;
-    gap: 10px;
+    gap: 16px;
     padding: 20px;
     border: 0;
     border-bottom: 1px solid var(--border-color);
@@ -876,6 +896,66 @@ button:disabled {
         radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
         linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
     box-shadow: none;
+}
+
+.account-context-actions {
+    align-self: stretch;
+    min-width: 148px;
+    margin-left: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.account-context-actions .context-action {
+    position: relative;
+    overflow: hidden;
+    justify-content: center;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 15px;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    box-shadow: 0 12px 22px rgb(37 99 235 / 0.2);
+    font-size: 13px;
+    font-weight: 850;
+    letter-spacing: 0.01em;
+}
+
+.account-context-actions .context-action:first-of-type {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+}
+
+.account-context-actions .context-action:nth-of-type(2) {
+    background: linear-gradient(135deg, var(--accent-color), #14b8a6);
+}
+
+.account-context-actions .context-action:nth-of-type(3) {
+    background: linear-gradient(135deg, #7c3aed, var(--primary-color));
+}
+
+.account-context-actions .context-action::after {
+    content: "";
+    position: absolute;
+    top: -28px;
+    right: -30px;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.16);
+}
+
+.account-context-actions .context-action span {
+    position: relative;
+    z-index: 1;
+}
+
+.account-context-actions .context-action:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .account-list.account-card-strip {
@@ -1289,7 +1369,7 @@ button:disabled {
 
 .asset-tool-bar {
     display: grid;
-    grid-template-columns: repeat(2, minmax(128px, 1fr)) auto;
+    grid-template-columns: repeat(2, minmax(128px, 1fr));
     gap: 8px;
     align-items: end;
 }
@@ -2133,7 +2213,13 @@ select:focus {
     }
 
     .hero-actions {
+        gap: 6px;
         margin-left: auto;
+    }
+
+    .hero-actions .icon-btn {
+        width: 38px;
+        min-height: 38px;
     }
 
     .desktop-action {
@@ -2192,6 +2278,12 @@ select:focus {
         display: none;
     }
 
+    .mobile-context-actions .context-action {
+        width: 38px;
+        min-height: 38px;
+        padding: 0;
+    }
+
     .mobile-context-actions.active {
         display: block;
         flex: 0 0 auto;
@@ -2218,13 +2310,8 @@ select:focus {
         display: block;
     }
 
-    .account-add-card-fixed {
+    .account-context-actions.active {
         display: none;
-    }
-
-    .account-add-card-mobile {
-        display: grid;
-        flex: 0 0 min(330px, 88vw);
     }
 
     .account-card-strip .account-item {
@@ -2234,28 +2321,6 @@ select:focus {
     .management-panel .panel-head {
         position: relative;
         padding-bottom: 12px;
-    }
-
-    .asset-holdings-panel .panel-head,
-    .table-panel .panel-head {
-        padding-right: 116px;
-    }
-
-    #addHoldingBtn,
-    #addSnapshotBtn {
-        position: absolute;
-        top: 0;
-        right: 0;
-        min-height: 34px;
-        padding: 8px 10px;
-        border-radius: 11px;
-        font-size: 12px;
-        white-space: nowrap;
-    }
-
-    #addHoldingBtn::before,
-    #addSnapshotBtn::before {
-        font-size: 15px;
     }
 
     .management-panel .asset-tool-bar {
