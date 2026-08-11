@@ -13,10 +13,18 @@
 </head>
 <body>
     <div class="app-shell">
-        <header class="hero">
-            <div class="hero-copy">
-                <h1>PAM 投资组合与资产管理</h1>
-                <p>手动快照，扣除现金流，对比账户真实收益。</p>
+        <header class="global-header hero">
+            <div class="brand-area">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 15l3-3 3 2 5-7"></path><circle cx="7.5" cy="8" r="1.8" fill="currentColor" stroke="none"></circle></svg>
+                </div>
+                <div class="brand-copy hero-copy">
+                    <div class="brand-meta">
+                        <div class="hero-badge">资产收益管理</div>
+                    </div>
+                    <h1>PAM 投资组合与资产管理</h1>
+                    <p>手动快照，扣除现金流，对比账户真实收益。</p>
+                </div>
             </div>
             <div class="hero-actions">
                 <button id="demoDataBtn" class="icon-btn desktop-action" type="button" title="示例数据" aria-label="示例数据">
@@ -37,11 +45,26 @@
                 <div class="mobile-more-actions">
                     <button id="mobileMenuBtn" class="icon-btn" type="button" title="更多" aria-label="更多操作" aria-expanded="false">...</button>
                     <div class="header-action-menu" aria-label="更多操作">
-                        <button id="mobileDemoDataBtn" type="button">示例数据</button>
-                        <button id="mobileExportDataBtn" type="button">导出</button>
-                        <button id="mobileImportDataBtn" type="button">导入</button>
-                        <button id="mobileAmountPrivacyBtn" type="button" aria-pressed="false">隐藏金额</button>
-                        <button id="mobileThemeBtn" type="button">切换主题</button>
+                        <button id="mobileDemoDataBtn" type="button">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v9.2c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V7.4Z" stroke-linejoin="round"/><path d="M8.2 10h7.6M8.2 13.2h4.9" stroke-linecap="round"/><path d="M16.2 14.2c.9 0 1.6-.7 1.6-1.6S17.1 11 16.2 11s-1.6.7-1.6 1.6.7 1.6 1.6 1.6Z"/></svg>
+                            <span>示例数据</span>
+                        </button>
+                        <button id="mobileExportDataBtn" type="button">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v9" stroke-linecap="round"/><path d="m8.5 10.2 3.5 3.5 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 16.8v.9c0 1 .8 1.8 1.8 1.8h9.4c1 0 1.8-.8 1.8-1.8v-.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>导出</span>
+                        </button>
+                        <button id="mobileImportDataBtn" type="button">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5v-9" stroke-linecap="round"/><path d="m8.5 13.8 3.5-3.5 3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 7.2v-.9c0-1 .8-1.8 1.8-1.8h9.4c1 0 1.8.8 1.8 1.8v.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>导入</span>
+                        </button>
+                        <button id="mobileAmountPrivacyBtn" type="button" aria-pressed="false">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.4-5.8 9-5.8 9 5.8 9 5.8-3.4 5.8-9 5.8S3 12 3 12Z" stroke-linejoin="round"/><path d="M12 14.7a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4Z"/></svg>
+                            <span>隐藏金额</span>
+                        </button>
+                        <button id="mobileThemeBtn" type="button" title="切换到暗色模式">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                            <span id="mobileThemeText">切换到暗色模式</span>
+                        </button>
                     </div>
                 </div>
                 <input id="importDataInput" class="hidden" type="file" accept="application/json,.json">
