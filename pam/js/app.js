@@ -16,6 +16,7 @@ import { todayKey } from './utils/formatter.js';
 let quoteRefreshInProgress = false;
 let snapshotGenerationInProgress = false;
 let pendingSnapshotGeneration = null;
+let pendingConfirmAction = null;
 
 const SNAPSHOT_DATE_REFERENCE_FUNDS = [
     { market: 'Fund', symbol: '110001', name: '易方达平稳增长混合' },
@@ -46,8 +47,8 @@ function init() {
 
 function bindEvents() {
     document.getElementById('themeBtn')?.addEventListener('click', toggleTheme);
-    document.getElementById('demoDataBtn')?.addEventListener('click', addDemoData);
-    document.getElementById('mobileDemoDataBtn')?.addEventListener('click', addDemoData);
+    document.getElementById('demoDataBtn')?.addEventListener('click', handleDemoDataRequest);
+    document.getElementById('mobileDemoDataBtn')?.addEventListener('click', handleDemoDataRequest);
     document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
     document.getElementById('mobileExportDataBtn')?.addEventListener('click', exportData);
     document.getElementById('importDataBtn')?.addEventListener('click', openImportDataPicker);
@@ -90,6 +91,12 @@ function bindEvents() {
     document.getElementById('snapshotGenerateConfirmBtn')?.addEventListener('click', confirmSnapshotGeneration);
     document.getElementById('snapshotGenerateCancelBtn')?.addEventListener('click', closeSnapshotGenerateDialog);
     document.querySelector('[data-snapshot-generate-close]')?.addEventListener('click', closeSnapshotGenerateDialog);
+    document.getElementById('confirmDialogConfirmBtn')?.addEventListener('click', runPendingConfirmAction);
+    document.querySelectorAll('[data-confirm-cancel]').forEach(button => button.addEventListener('click', closeConfirmDialog));
+    document.getElementById('confirmDialog')?.addEventListener('cancel', event => {
+        event.preventDefault();
+        closeConfirmDialog();
+    });
     document.querySelectorAll('[data-context-command]').forEach(button => {
         button.addEventListener('click', () => runContextCommand(button.dataset.contextCommand));
     });
@@ -406,8 +413,18 @@ function deleteAccount(accountId) {
     if (!account) return;
     const count = state.snapshots.filter(snapshot => snapshot.accountId === accountId).length;
     const holdingCount = state.holdings.filter(holding => holding.accountId === accountId).length;
-    if (!confirm(`确认删除账户「${account.name}」及其 ${count} 条快照、${holdingCount} 条持仓吗？此操作不可恢复。`)) return;
+    showConfirmDialog({
+        eyebrow: 'Delete Account',
+        title: '删除账户',
+        description: '删除账户会同时移除关联的快照和持仓。',
+        message: `确认删除账户「${account.name}」吗？`,
+        detail: `将删除 ${count} 条快照、${holdingCount} 条持仓。此操作不可恢复。`,
+        confirmLabel: '删除账户',
+        onConfirm: () => deleteAccountNow(accountId)
+    });
+}
 
+function deleteAccountNow(accountId) {
     state.accounts = state.accounts.filter(item => item.id !== accountId);
     state.snapshots = state.snapshots.filter(snapshot => snapshot.accountId !== accountId);
     state.holdings = state.holdings.filter(holding => holding.accountId !== accountId);
@@ -430,8 +447,23 @@ function handleSaveSnapshot(event) {
     const existing = state.snapshots.find(snapshot => {
         return snapshot.accountId === payload.accountId && snapshot.date === payload.date && snapshot.id !== state.editingSnapshotId;
     });
-    if (existing && !confirm('该账户在同一天已有快照，是否覆盖原记录？')) return;
+    if (existing) {
+        showConfirmDialog({
+            eyebrow: 'Overwrite Snapshot',
+            title: '覆盖同日快照',
+            description: '该账户在同一天已有快照。',
+            message: '是否覆盖原记录？',
+            detail: '覆盖后将保留当前表单中的总资产、净流入和备注。',
+            confirmLabel: '覆盖快照',
+            onConfirm: () => saveSnapshotPayload(payload, existing)
+        });
+        return;
+    }
 
+    saveSnapshotPayload(payload, existing);
+}
+
+function saveSnapshotPayload(payload, existing) {
     if (state.editingSnapshotId) {
         state.snapshots = state.snapshots.map(snapshot => {
             if (snapshot.id !== state.editingSnapshotId) return snapshot;
@@ -472,7 +504,18 @@ function editSnapshot(snapshotId) {
 function deleteSnapshot(snapshotId) {
     const snapshot = state.snapshots.find(item => item.id === snapshotId);
     if (!snapshot) return;
-    if (!confirm(`确认删除 ${snapshot.date} 的快照吗？`)) return;
+    showConfirmDialog({
+        eyebrow: 'Delete Snapshot',
+        title: '删除快照',
+        description: '删除后收益曲线会按剩余快照重新计算。',
+        message: `确认删除 ${snapshot.date} 的快照吗？`,
+        detail: '',
+        confirmLabel: '删除快照',
+        onConfirm: () => deleteSnapshotNow(snapshotId)
+    });
+}
+
+function deleteSnapshotNow(snapshotId) {
     state.snapshots = state.snapshots.filter(item => item.id !== snapshotId);
     if (state.editingSnapshotId === snapshotId) state.editingSnapshotId = '';
     persistAll();
@@ -480,8 +523,24 @@ function deleteSnapshot(snapshotId) {
     renderApp();
 }
 
+function handleDemoDataRequest() {
+    closeMobileActionMenu();
+    if (state.accounts.length > 0 || state.snapshots.length > 0) {
+        showConfirmDialog({
+            eyebrow: 'Demo Data',
+            title: '添加示例数据',
+            description: '当前已有账户或快照数据，示例数据会作为独立账户追加，不会覆盖现有记录。',
+            message: '确认添加独立示例账户吗？',
+            detail: '系统会添加 6 个示例账户、历史快照和代表性持仓，用于体验收益走势和账户管理。',
+            confirmLabel: '添加示例数据',
+            onConfirm: addDemoData
+        });
+        return;
+    }
+    addDemoData();
+}
+
 function addDemoData() {
-    if ((state.accounts.length > 0 || state.snapshots.length > 0) && !confirm('当前已有数据，确认添加独立示例账户吗？')) return;
     const now = new Date().toISOString();
     const demoAccounts = [
         { id: createId('account'), name: '示例 稳健账户', currency: 'CNY', createdAt: now, updatedAt: now },
@@ -629,28 +688,15 @@ function importData(event) {
             const message = hasCurrentData
                 ? '导入会替换当前浏览器中的 PAM 账户和快照，确认继续吗？'
                 : '确认导入 PAM 备份数据吗？';
-            if (!confirm(message)) return;
-
-            state.accounts = data.accounts;
-            state.snapshots = data.snapshots;
-            state.holdings = data.holdings;
-            state.theme = data.preferences.theme || state.theme;
-            state.selectedPeriod = data.preferences.selectedPeriod || '3M';
-            state.activeView = normalizeActiveView(data.preferences.activeView);
-            state.assetDataAction = normalizeAssetDataAction(data.preferences.assetDataAction || (data.preferences.activeView === 'holdings' ? 'holding' : 'snapshot'));
-            state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
-            state.amountsHidden = Boolean(data.preferences.amountsHidden);
-            state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
-            state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
-            state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
-            state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
-            state.selectedHighlightAccountId = '';
-            state.editingSnapshotId = '';
-            state.editingHoldingId = '';
-            applyTheme(state.theme);
-            persistAll();
-            renderApp();
-            alert(`导入完成：${state.accounts.length} 个账户，${state.snapshots.length} 条快照，${state.holdings.length} 条持仓。`);
+            showConfirmDialog({
+                eyebrow: 'Import Data',
+                title: '导入备份数据',
+                description: hasCurrentData ? '导入会替换当前浏览器中的 PAM 数据。' : '将导入 PAM 备份数据。',
+                message,
+                detail: `备份包含 ${data.accounts.length} 个账户、${data.snapshots.length} 条快照、${data.holdings.length} 条持仓。`,
+                confirmLabel: '确认导入',
+                onConfirm: () => applyImportedData(data)
+            });
         } catch (error) {
             alert('导入失败：无法解析 JSON 文件。');
         } finally {
@@ -662,6 +708,29 @@ function importData(event) {
         input.value = '';
     };
     reader.readAsText(file, 'utf-8');
+}
+
+function applyImportedData(data) {
+    state.accounts = data.accounts;
+    state.snapshots = data.snapshots;
+    state.holdings = data.holdings;
+    state.theme = data.preferences.theme || state.theme;
+    state.selectedPeriod = data.preferences.selectedPeriod || '3M';
+    state.activeView = normalizeActiveView(data.preferences.activeView);
+    state.assetDataAction = normalizeAssetDataAction(data.preferences.assetDataAction || (data.preferences.activeView === 'holdings' ? 'holding' : 'snapshot'));
+    state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
+    state.amountsHidden = Boolean(data.preferences.amountsHidden);
+    state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
+    state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
+    state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
+    state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
+    state.selectedHighlightAccountId = '';
+    state.editingSnapshotId = '';
+    state.editingHoldingId = '';
+    applyTheme(state.theme);
+    persistAll();
+    renderApp();
+    alert(`导入完成：${state.accounts.length} 个账户，${state.snapshots.length} 条快照，${state.holdings.length} 条持仓。`);
 }
 
 function parseImportPayload(payload) {
@@ -796,7 +865,18 @@ function deleteHolding(holdingId) {
     if (!holding) return;
     const accountName = state.accounts.find(account => account.id === holding.accountId)?.name || '当前账户';
     const identifier = holding.symbol ? `（${holding.symbol}）` : '';
-    if (!confirm(`确认删除持仓「${holding.name}${identifier}」吗？\n所属账户：${accountName}\n此操作不会影响已保存的账户快照。`)) return;
+    showConfirmDialog({
+        eyebrow: 'Delete Holding',
+        title: '删除持仓',
+        description: `所属账户：${accountName}`,
+        message: `确认删除持仓「${holding.name}${identifier}」吗？`,
+        detail: '此操作不会影响已保存的账户快照。',
+        confirmLabel: '删除持仓',
+        onConfirm: () => deleteHoldingNow(holdingId)
+    });
+}
+
+function deleteHoldingNow(holdingId) {
     state.holdings = state.holdings.filter(item => item.id !== holdingId);
     if (state.editingHoldingId === holdingId) state.editingHoldingId = '';
     persistAll();
@@ -1208,6 +1288,46 @@ function syncSelectedHoldingFilter() {
     const selected = resolveSelectedAccount(state.selectedAccountId);
     if (!selected) return;
     state.holdingFilters = { ...state.holdingFilters, accountId: selected };
+}
+
+function showConfirmDialog({ eyebrow = 'Confirm', title = '确认操作', description = '请确认是否继续。', message = '确认继续吗？', detail = '', confirmLabel = '确认', onConfirm }) {
+    const dialog = document.getElementById('confirmDialog');
+    if (!dialog || typeof onConfirm !== 'function') return;
+
+    document.getElementById('confirmDialogEyebrow').textContent = eyebrow;
+    document.getElementById('confirmDialogTitle').textContent = title;
+    document.getElementById('confirmDialogDescription').textContent = description;
+    document.getElementById('confirmDialogMessage').textContent = message;
+    const detailEl = document.getElementById('confirmDialogDetail');
+    detailEl.textContent = detail;
+    detailEl.classList.toggle('hidden', !detail);
+    const confirmBtn = document.getElementById('confirmDialogConfirmBtn');
+    confirmBtn.textContent = confirmLabel;
+    pendingConfirmAction = onConfirm;
+
+    if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+    }
+    requestAnimationFrame(() => confirmBtn.focus());
+}
+
+function closeConfirmDialog() {
+    pendingConfirmAction = null;
+    const dialog = document.getElementById('confirmDialog');
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') {
+        dialog.close();
+    } else {
+        dialog.removeAttribute('open');
+    }
+}
+
+function runPendingConfirmAction() {
+    const action = pendingConfirmAction;
+    closeConfirmDialog();
+    if (typeof action === 'function') action();
 }
 
 function normalizeActiveView(view) {

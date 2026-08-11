@@ -541,7 +541,31 @@ export function addRow(code) {
 }
 
 export function removeFund(code) {
-    if (!confirm(i18n[state.currentLang].confirmRemoveFund)) return;
+    const row = document.getElementById(`fund-${code}`);
+    if (row?.nextElementSibling?.classList.contains('fund-remove-confirm-row')) {
+        row.nextElementSibling.remove();
+        return;
+    }
+
+    document.querySelectorAll('.fund-remove-confirm-row, .fund-detail-row').forEach(confirmRow => confirmRow.remove());
+
+    if (row) {
+        const confirmRow = document.createElement('tr');
+        confirmRow.className = 'fund-remove-confirm-row';
+        confirmRow.innerHTML = `
+            <td colspan="8" class="inline-add-cell">
+                <div class="inline-confirm-wrap">
+                    <span class="inline-confirm-copy">${i18n[state.currentLang].confirmRemoveFund}</span>
+                    <button class="primary-btn mini-btn danger-mini-btn" onclick="event.stopPropagation(); confirmRemoveFund('${code}')" data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</button>
+                    <button class="secondary-btn mini-btn" onclick="event.stopPropagation(); this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
+                </div>
+            </td>
+        `;
+        row.after(confirmRow);
+    }
+}
+
+export function confirmRemoveFund(code) {
 
     state.fundCodes.delete(code);
     delete state.fundGroups[code];

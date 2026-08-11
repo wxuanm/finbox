@@ -153,6 +153,8 @@ This avoids treating sparse manual snapshots as daily market data.
 
 UI modules render into fixed DOM containers and expose bind functions through global event handlers only where simple static HTML event binding is pragmatic.
 
+Destructive and overwrite actions use an in-app confirmation dialog rather than browser `confirm` prompts. This includes deleting accounts, snapshots, holdings, overwriting same-day snapshots, importing backup data, and adding demo data when existing records are present.
+
 ## Chart Design
 
 The performance chart uses ECharts from CDN.
@@ -188,7 +190,7 @@ The performance chart uses ECharts from CDN.
 Demo data is generated only through user action.
 
 - If no data exists, demo accounts are added directly.
-- If data exists, user confirmation is required.
+- If data exists, user confirmation is required through an in-app dialog instead of the browser `confirm` prompt.
 - Demo account names are prefixed with `示例`.
 - Demo accounts include 19 monthly snapshots (covering more than one year) with deterministic return variation and representative holdings for account-management views.
 

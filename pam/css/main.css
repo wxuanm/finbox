@@ -1367,6 +1367,31 @@ button:disabled {
     justify-content: flex-end;
 }
 
+.confirm-dialog-copy {
+    display: grid;
+    gap: 8px;
+    padding: 14px 15px;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 22%, var(--border-color));
+    border-radius: 16px;
+    background: var(--primary-soft);
+}
+
+.confirm-dialog-copy strong {
+    color: var(--heading-color);
+    font-size: 16px;
+}
+
+.confirm-dialog-copy p {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.confirm-dialog-actions {
+    margin-top: 14px;
+}
+
 .asset-tool-bar {
     display: grid;
     grid-template-columns: repeat(2, minmax(128px, 1fr));

@@ -2,7 +2,7 @@ import { state } from './config/state.js';
 import { i18n } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
 import { loadSavedFundCodes, saveFundCodes, loadSavedGroups, loadSavedFundGroups } from './utils/storage.js';
-import { checkEmptyState, addRow, removeFund, sortTable, toggleGroup, updateGroupCounts, getOrCreateGroupBody, syncDefaultGroupVisibility, showInlineAdd, showInlineRename, showInlineDelete, showInlineNewGroup, showGroupAnalysis, showGroupTrend } from './ui/fundTable.js';
+import { checkEmptyState, addRow, removeFund, confirmRemoveFund, sortTable, toggleGroup, updateGroupCounts, getOrCreateGroupBody, syncDefaultGroupVisibility, showInlineAdd, showInlineRename, showInlineDelete, showInlineNewGroup, showGroupAnalysis, showGroupTrend } from './ui/fundTable.js';
 import { updateDashboardStats, updateLastRefreshTime } from './ui/dashboard.js';
 import { fetchDataForCode } from './api/fundApi.js';
 import { clearFundNavCache } from './api/fundNavApi.js';
@@ -193,10 +193,8 @@ function renameGroup(oldId, newId) {
 
 window.deleteGroup = function(groupId) {
     if (groupId === 'default') return;
-    
-    if (confirm(i18n[state.currentLang].confirmDeleteGroup)) {
-        deleteGroupNow(groupId);
-    }
+
+    showInlineDelete(groupId);
 };
 
 function deleteGroupNow(groupId) {
@@ -325,6 +323,7 @@ window.toggleTheme = toggleTheme;
 window.toggleLang = toggleLang;
 window.refreshData = refreshData;
 window.removeFund = removeFund;
+window.confirmRemoveFund = confirmRemoveFund;
 window.sortTable = sortTable;
 window.toggleGroup = toggleGroup;
 window.showInlineAdd = showInlineAdd;
