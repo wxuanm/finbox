@@ -9,7 +9,7 @@
 
 ## Product Goal
 
-The current holdings capability lets users maintain current positions under each investment account from `账户管理`, review current market value, cost, unrealized profit/loss, asset-class allocation, and account allocation. Holdings must be bound to an existing account.
+The current holdings capability lets users maintain current positions under each investment account from `账户管理`, review current market value, cost, unrealized profit/loss, and portfolio weight. Holdings must be bound to an existing account.
 
 ## Confirmed Decisions
 
@@ -28,7 +28,6 @@ The current holdings capability lets users maintain current positions under each
 - Sort holdings table.
 - Calculate market value, cost amount, unrealized profit/loss, profit/loss percentage, and portfolio weight.
 - Keep account cards as the only asset and return overview. Holdings detail instead shows a lightweight count and valuation-quality status for the active filter.
-- Show allocation summaries by asset class and account.
 - Persist holdings in localStorage.
 - Include holdings in JSON import/export.
 - Add demo holdings.

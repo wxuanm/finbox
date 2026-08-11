@@ -45,7 +45,7 @@
 - [x] Add holdings SDD and technical design.
 - [x] Integrate holdings into `账户管理` navigation.
 - [x] Implement holdings storage with `pam:v1:holdings`.
-- [x] Implement holdings metrics and allocation summaries.
+- [x] Implement holdings metrics.
 - [x] Implement holding form, filters, and sortable table.
 - [x] Include holdings in demo data and JSON import/export.
 - [x] Add `/api/quotes` for A-share and fund quotes.

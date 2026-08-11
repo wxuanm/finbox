@@ -117,7 +117,7 @@ PAM
 ├─ Module navigation: 账户收益, future modules disabled or hidden
 ├─ Unified module navigation: 账户收益 / 账户管理 / future modules
 ├─ 账户收益: overview cards, performance chart, sortable account comparison table
-└─ 账户管理: account cards, current account summary, context action menu, snapshot/holding dialogs, holdings table, allocation summary, asset records, add-account dialog
+└─ 账户管理: account cards, current account summary, context action menu, snapshot/holding dialogs, holdings table, asset records, add-account dialog
 ```
 
 UI direction:
@@ -127,7 +127,7 @@ UI direction:
 - Show module-specific actions on the right side of the top navigation; when `账户管理` is active, show icon actions for snapshot entry, holding entry, snapshot generation, quote refresh, and add-account.
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
-- Keep holdings focused on current positions, valuation, unrealized profit/loss, and allocation.
+- Keep holdings focused on current positions, valuation, unrealized profit/loss, and portfolio weight.
 - Keep the `账户管理` layout mobile-first: account cards first, current account summary, dialog-based snapshot/holding forms, holdings detail, and asset records.
 
 ### Account Data Model

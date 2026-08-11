@@ -272,7 +272,10 @@ function positionAccountFloatingActions(right, bottom) {
     const maxRight = Math.max(margin, window.innerWidth - rect.width - margin);
     const maxBottom = Math.max(margin, window.innerHeight - rect.height - margin);
     wrap.style.right = `${Math.min(Math.max(right, margin), maxRight)}px`;
+    wrap.style.left = 'auto';
     wrap.style.bottom = `${Math.min(Math.max(bottom, margin), maxBottom)}px`;
+    wrap.style.top = 'auto';
+    wrap.style.transform = 'none';
     updateAccountFloatingMenuPlacement();
 }
 

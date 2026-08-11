@@ -934,7 +934,7 @@ button:disabled {
 }
 
 .holding-form.cash-mode .holding-valuation-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .holding-form.cash-mode .holding-instrument-grid {
@@ -1001,7 +1001,8 @@ button:disabled {
     .account-context-actions.active {
         position: fixed;
         right: 28px;
-        bottom: 28px;
+        left: auto;
+        bottom: 96px;
         z-index: 90;
         display: block;
         width: auto;
@@ -1013,8 +1014,8 @@ button:disabled {
 
     .account-floating-toggle {
         display: grid;
-        width: 58px;
-        height: 58px;
+        width: 68px;
+        height: 68px;
         place-items: center;
         border: 0;
         border-radius: 50%;
@@ -1023,7 +1024,7 @@ button:disabled {
             radial-gradient(circle at 28% 22%, rgb(255 255 255 / 0.3), transparent 28%),
             linear-gradient(135deg, var(--primary-color), var(--accent-color));
         box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
-        font-size: 32px;
+        font-size: 38px;
         font-weight: 700;
         line-height: 1;
         transition: transform 0.16s ease, box-shadow 0.16s ease;
@@ -1081,6 +1082,14 @@ button:disabled {
 
     .account-context-actions.is-menu-left.is-menu-below .account-floating-menu {
         transform-origin: left top;
+    }
+}
+
+@media (min-width: 1540px) {
+    .account-context-actions.active {
+        right: auto;
+        left: calc(75vw + 370px);
+        transform: translateX(-50%);
     }
 }
 
@@ -1748,13 +1757,6 @@ button:disabled {
     font-weight: 800;
 }
 
-.asset-bottom-grid {
-    display: grid;
-    grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.28fr);
-    gap: 12px;
-    align-items: start;
-}
-
 .allocation-columns {
     display: grid;
     gap: 16px;
@@ -2376,8 +2378,7 @@ select:focus {
 
     .layout-grid,
     .data-layout-grid,
-    .holding-layout-grid,
-    .asset-bottom-grid {
+    .holding-layout-grid {
         grid-template-columns: 1fr;
     }
 
@@ -2459,6 +2460,10 @@ select:focus {
     .holding-instrument-grid,
     .holding-valuation-grid {
         grid-template-columns: 1fr;
+    }
+
+    .holding-form.cash-mode .holding-valuation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .form-actions {

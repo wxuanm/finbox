@@ -7,7 +7,6 @@ export function renderHoldingsPanel(metrics) {
     renderHoldingFilters();
     renderHoldingForm();
     renderHoldingContext(metrics);
-    renderAllocation('assetAllocation', metrics.assetAllocation);
     renderHoldingTable(metrics.rows);
 }
 
@@ -123,22 +122,6 @@ function renderHoldingForm() {
     document.getElementById('holdingCurrentPriceInput').value = editing.currentPrice;
     document.getElementById('holdingAsOfDateInput').value = editing.asOfDate || todayKey();
     document.getElementById('holdingNoteInput').value = editing.note || '';
-}
-
-function renderAllocation(elementId, allocation) {
-    const wrap = document.getElementById(elementId);
-    if (!wrap) return;
-    if (allocation.length === 0) {
-        wrap.innerHTML = `<div class="empty-state">${t('emptyHolding')}</div>`;
-        return;
-    }
-    wrap.innerHTML = allocation.map(item => `
-        <div class="allocation-row">
-            <div><strong>${escapeHtml(item.label)}</strong><span>${formatCurrency(item.value, state.amountsHidden)}</span></div>
-            <div class="allocation-bar"><i style="width:${Math.max(Number(item.weight) || 0, 1)}%"></i></div>
-            <span>${formatPercent(item.weight, 1)}</span>
-        </div>
-    `).join('');
 }
 
 function renderHoldingTable(rows) {

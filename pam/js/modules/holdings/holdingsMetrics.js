@@ -44,9 +44,7 @@ export function buildHoldingsMetrics(holdings, accounts, filters) {
             totalPnl,
             totalPnlPct,
             count: filteredRows.length
-        },
-        assetAllocation: groupAllocation(filteredRows, 'assetClass', totalMarketValue),
-        accountAllocation: groupAllocation(filteredRows, 'accountName', totalMarketValue)
+        }
     };
 }
 
@@ -80,15 +78,4 @@ function normalizeHolding(holding, account) {
         unrealizedPnl,
         unrealizedPnlPct
     };
-}
-
-function groupAllocation(rows, key, total) {
-    const map = new Map();
-    rows.forEach(row => {
-        const label = key === 'assetClass' ? getAssetClassLabel(row.assetClass) : row[key];
-        map.set(label, (map.get(label) || 0) + row.marketValue);
-    });
-    return [...map.entries()]
-        .map(([label, value]) => ({ label, value, weight: total > 0 ? value / total * 100 : null }))
-        .sort((a, b) => b.value - a.value);
 }
