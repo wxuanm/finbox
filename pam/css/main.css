@@ -1323,6 +1323,10 @@ button:disabled {
     gap: 16px;
 }
 
+.allocation-panel .allocation-columns {
+    grid-template-columns: 1fr;
+}
+
 .allocation-columns h3 {
     margin: 0 0 8px;
     color: var(--heading-color);

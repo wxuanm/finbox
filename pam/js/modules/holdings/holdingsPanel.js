@@ -7,7 +7,6 @@ export function renderHoldingsPanel(metrics) {
     renderHoldingForm();
     renderHoldingContext(metrics);
     renderAllocation('assetAllocation', metrics.assetAllocation);
-    renderAllocation('accountAllocation', metrics.accountAllocation);
     renderHoldingTable(metrics.rows);
 }
 
