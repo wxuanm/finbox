@@ -69,11 +69,14 @@ function renderHoldingFilters() {
 
 function renderHoldingContext(metrics) {
     const context = document.getElementById('holdingContext');
+    const accountBadge = document.getElementById('holdingAccountBadge');
     if (!context) return;
 
     const rows = metrics.rows;
+    const account = state.accounts.find(item => item.id === state.selectedAccountId) || state.accounts[0];
     const staleCount = rows.filter(row => isStalePrice(row)).length;
     const manualCount = rows.filter(row => row.priceSource !== 'quote').length;
+    if (accountBadge) accountBadge.textContent = account?.name || '未选择账户';
     const parts = [`当前筛选 ${rows.length} 项持仓`];
     if (staleCount > 0) parts.push(`${staleCount} 项估值已超过 3 天`);
     else if (manualCount > 0) parts.push(`${manualCount} 项为手动估值`);
@@ -152,8 +155,8 @@ function renderHoldingTable(rows) {
 
     const columns = [
         ['name', '名称'],
-        ['accountName', '账户'],
         ['assetClass', '类别'],
+        ['currentPrice', '最新价'],
         ['marketValue', '市值'],
         ['weight', '占比'],
         ['costAmount', '成本'],
@@ -164,7 +167,7 @@ function renderHoldingTable(rows) {
     const sortedRows = [...rows].sort(compareHoldings);
     wrap.innerHTML = `
         <table class="holding-table">
-            <thead><tr>${columns.map(([key, label]) => `<th class="${key === 'name' || key === 'accountName' || key === 'assetClass' ? '' : 'number-cell'}" data-holding-sort="${key}"><button type="button">${label}${sortIcon(key)}</button></th>`).join('')}<th>操作</th></tr></thead>
+            <thead><tr>${columns.map(([key, label]) => `<th class="${key === 'name' || key === 'assetClass' ? '' : 'number-cell'}" data-holding-sort="${key}"><button type="button">${label}${sortIcon(key)}</button></th>`).join('')}<th>操作</th></tr></thead>
             <tbody>${sortedRows.map(renderHoldingRow).join('')}</tbody>
         </table>
     `;
@@ -174,8 +177,8 @@ function renderHoldingRow(row) {
     return `
         <tr>
             <td><strong>${escapeHtml(row.name)}</strong><small>${escapeHtml(row.symbol || '-')} · ${getMarketLabel(row.market)}</small></td>
-            <td>${escapeHtml(row.accountName)}</td>
-            <td>${getAssetClassLabel(row.assetClass)}</td>
+            <td><span class="asset-class-pill">${getAssetClassLabel(row.assetClass)}</span></td>
+            <td class="number-cell">${formatPrice(row.currentPrice)}</td>
             <td class="number-cell">${formatCurrency(row.marketValue, state.amountsHidden)}</td>
             <td class="number-cell">${formatPercent(row.weight, 1)}</td>
             <td class="number-cell">${formatCurrency(row.costAmount, state.amountsHidden)}</td>
@@ -299,6 +302,13 @@ function compareHoldings(a, b) {
     if (!Number.isFinite(aValue)) return 1;
     if (!Number.isFinite(bValue)) return -1;
     return (aValue - bValue) * direction;
+}
+
+function formatPrice(value) {
+    if (state.amountsHidden) return '****';
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    return num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 }
 
 function sortIcon(key) {

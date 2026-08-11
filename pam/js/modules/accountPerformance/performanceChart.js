@@ -82,7 +82,7 @@ export function renderPerformanceChart(metrics) {
     };
 
     chartInstance.setOption({
-        color: ['#7c3aed', '#06b6d4', '#f59e0b', '#ef4444', '#10b981', '#2563eb', '#ec4899', '#64748b'],
+        color: ['#2563eb', '#0891b2', '#f59e0b', '#ef4444', '#059669', '#6366f1', '#ec4899', '#64748b'],
         tooltip: {
             trigger: 'axis',
             formatter: formatChartTooltip

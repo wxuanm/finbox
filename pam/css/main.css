@@ -8,9 +8,11 @@ body {
     font-family: Inter, "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
     color: var(--text-color);
     background:
-        radial-gradient(circle at 12% 12%, rgba(124, 58, 237, 0.18), transparent 32rem),
-        radial-gradient(circle at 88% 8%, rgba(6, 182, 212, 0.14), transparent 28rem),
+        linear-gradient(180deg, rgba(37, 99, 235, 0.08), transparent 21rem),
+        radial-gradient(circle at 8% 10%, rgba(8, 145, 178, 0.12), transparent 28rem),
+        radial-gradient(circle at 92% 4%, rgba(37, 99, 235, 0.1), transparent 24rem),
         var(--background-color);
+    font-size: 14px;
 }
 
 button,
@@ -29,27 +31,29 @@ button:disabled {
 }
 
 .app-shell {
-    width: min(1440px, 100%);
+    width: min(1500px, 100%);
     margin: 0 auto;
-    padding: 20px;
+    padding: 14px 16px 18px;
 }
 
 .hero {
     display: flex;
     justify-content: space-between;
-    gap: 18px;
+    gap: 16px;
     align-items: flex-start;
-    padding: 22px;
+    padding: 16px 18px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    background: linear-gradient(135deg, var(--surface-glass), var(--surface-color));
+    background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.08), transparent 38%),
+        linear-gradient(180deg, var(--surface-glass), var(--surface-color));
     box-shadow: var(--shadow-md);
 }
 
 .hero h1 {
-    margin: 0 0 8px;
+    margin: 0 0 5px;
     color: var(--heading-color);
-    font-size: clamp(26px, 4vw, 40px);
+    font-size: clamp(22px, 3vw, 32px);
     line-height: 1.12;
     letter-spacing: -0.03em;
 }
@@ -58,8 +62,8 @@ button:disabled {
     max-width: 720px;
     margin: 0;
     color: var(--muted-text);
-    font-size: 15px;
-    line-height: 1.55;
+    font-size: 13px;
+    line-height: 1.45;
 }
 
 .hero-actions {
@@ -121,13 +125,13 @@ button:disabled {
 .ghost-btn,
 .icon-btn {
     border: 0;
-    border-radius: 12px;
+    border-radius: 10px;
     font-weight: 800;
     transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
 }
 
 .primary-btn {
-    padding: 12px 16px;
+    padding: 10px 14px;
     color: #ffffff;
     background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
     box-shadow: var(--shadow-sm);
@@ -143,7 +147,7 @@ button:disabled {
 
 .secondary-btn,
 .ghost-btn {
-    padding: 11px 14px;
+    padding: 9px 12px;
 }
 
 .privacy-toggle[aria-pressed="true"] {
@@ -154,8 +158,8 @@ button:disabled {
 
 .icon-btn {
     display: inline-grid;
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     place-items: center;
 }
 
@@ -177,10 +181,10 @@ button:disabled {
     display: flex;
     gap: 6px;
     overflow: visible;
-    margin: 12px 0;
-    padding: 5px;
+    margin: 10px 0;
+    padding: 4px;
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: 14px;
     background: var(--surface-glass);
 }
 
@@ -284,33 +288,35 @@ button:disabled {
 
 .workspace-view.active {
     display: grid;
-    gap: 18px;
+    gap: 12px;
 }
 
 .module-tab {
     flex: 0 0 auto;
-    padding: 9px 12px;
+    padding: 8px 12px;
     border: 0;
-    border-radius: 12px;
+    border-radius: 10px;
     color: var(--muted-text);
     background: transparent;
-    font-weight: 800;
+    font-size: 13px;
+    font-weight: 850;
 }
 
 .module-tab.active {
     color: #ffffff;
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    box-shadow: 0 8px 18px rgb(37 99 235 / 0.18);
 }
 
 .workspace {
     display: grid;
-    gap: 14px;
+    gap: 12px;
 }
 
 .overview-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
 }
 
 .asset-summary-grid {
@@ -325,49 +331,52 @@ button:disabled {
     border-radius: var(--radius-lg);
     background: var(--surface-glass);
     box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px);
 }
 
 .overview-card {
-    padding: 14px;
+    padding: 12px 13px;
 }
 
 .overview-card span,
 .metric-label {
     color: var(--muted-text);
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.02em;
 }
 
 .overview-card strong {
     display: block;
-    margin-top: 6px;
+    margin-top: 5px;
     color: var(--heading-color);
-    font-size: 21px;
+    font-size: 20px;
     letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
 }
 
 .overview-card small {
     display: block;
-    margin-top: 3px;
+    margin-top: 2px;
     color: var(--muted-text);
 }
 
 .management-overview-card {
     position: relative;
     overflow: hidden;
-    padding: 16px;
+    padding: 13px 14px;
     border-color: color-mix(in srgb, var(--border-color) 82%, var(--primary-color));
     background:
-        radial-gradient(circle at 100% 0, var(--primary-soft), transparent 68%),
+        linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 8%, transparent), transparent 56%),
         var(--surface-glass);
 }
 
 .management-overview-card::before {
     position: absolute;
     top: 0;
-    left: 14px;
-    width: 28px;
-    height: 3px;
+    left: 13px;
+    width: 24px;
+    height: 2px;
     border-radius: 0 0 999px 999px;
     background: var(--primary-color);
     content: '';
@@ -393,11 +402,11 @@ button:disabled {
 }
 
 .panel {
-    padding: 16px;
+    padding: 14px;
 }
 
 .panel-head {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .split-head {
@@ -410,14 +419,51 @@ button:disabled {
 .panel h2 {
     margin: 0 0 4px;
     color: var(--heading-color);
-    font-size: 17px;
+    font-size: 16px;
+    letter-spacing: -0.015em;
+}
+
+.title-period-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    margin-left: 6px;
+    padding: 2px 8px;
+    vertical-align: 2px;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 24%, var(--border-color));
+    border-radius: 999px;
+    color: var(--primary-color);
+    background: var(--primary-soft);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0;
+}
+
+.title-account-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: min(260px, 42vw);
+    min-height: 22px;
+    margin-left: 6px;
+    padding: 2px 8px;
+    overflow: hidden;
+    vertical-align: 2px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--muted-text);
+    background: var(--surface-muted);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .panel p {
     margin: 0;
     color: var(--muted-text);
-    line-height: 1.45;
-    font-size: 13px;
+    line-height: 1.4;
+    font-size: 12px;
 }
 
 .account-form,
@@ -448,7 +494,7 @@ button:disabled {
 
 .management-form {
     display: grid;
-    gap: 14px;
+    gap: 12px;
 }
 
 .management-form.holding-form,
@@ -480,8 +526,8 @@ button:disabled {
 
 .management-form input,
 .management-form select {
-    min-height: 46px;
-    padding: 10px 12px;
+    min-height: 40px;
+    padding: 8px 10px;
     border-color: var(--border-color);
     background: var(--surface-color);
 }
@@ -493,15 +539,15 @@ button:disabled {
 
 .form-section {
     display: grid;
-    gap: 12px;
+    gap: 10px;
 }
 
 .form-card {
     display: grid;
-    gap: 14px;
-    padding: 15px;
+    gap: 12px;
+    padding: 13px;
     border: 1px solid var(--border-color);
-    border-radius: 18px;
+    border-radius: 14px;
     background: var(--surface-color);
     box-shadow: var(--shadow-sm);
 }
@@ -521,11 +567,11 @@ button:disabled {
 
 .form-card-head > span {
     display: grid;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     flex: 0 0 auto;
     place-items: center;
-    border-radius: 11px;
+    border-radius: 9px;
     color: var(--primary-color);
     background: var(--primary-soft);
     font-size: 12px;
@@ -536,14 +582,14 @@ button:disabled {
 .form-card-head h3 {
     margin: 0 0 3px;
     color: var(--heading-color);
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.2;
 }
 
 .form-card-head p {
     margin: 0;
     color: var(--muted-text);
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.45;
 }
 
@@ -604,7 +650,7 @@ button:disabled {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    padding-top: 12px;
+    padding-top: 10px;
     border-top: 1px solid var(--border-color);
 }
 
@@ -689,8 +735,8 @@ button:disabled {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 60px;
     min-width: 0;
-    gap: 12px;
-    padding: 16px;
+    gap: 10px;
+    padding: 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     background:
@@ -701,32 +747,32 @@ button:disabled {
 
 .account-list.account-card-strip {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     margin-top: 0;
     overflow-x: auto;
-    padding: 2px 1px 8px;
+    padding: 2px 1px 6px;
     scroll-snap-type: x proximity;
     scrollbar-width: thin;
 }
 
 .account-card-strip .account-item {
-    flex: 0 0 min(420px, calc(100vw - 70px));
+    flex: 0 0 min(390px, calc(100vw - 70px));
     position: relative;
-    min-height: 190px;
-    padding: 18px;
+    min-height: 160px;
+    padding: 14px;
     overflow: hidden;
     border-color: color-mix(in srgb, var(--border-color) 82%, var(--primary-color));
-    border-radius: var(--radius-lg);
+    border-radius: 13px;
     background:
-        radial-gradient(circle at 100% 0, var(--primary-soft), transparent 52%),
+        linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 9%, transparent), transparent 52%),
         linear-gradient(145deg, var(--surface-glass), var(--surface-color));
-    box-shadow: 0 8px 22px rgb(15 23 42 / 0.045);
+    box-shadow: 0 6px 18px rgb(15 23 42 / 0.04);
     scroll-snap-align: start;
 }
 
 .account-card-strip .account-item.active {
     border-color: color-mix(in srgb, var(--primary-color) 56%, var(--border-color));
-    box-shadow: inset 0 3px 0 var(--primary-color), var(--shadow-md);
+    box-shadow: inset 0 2px 0 var(--primary-color), var(--shadow-md);
 }
 
 .account-card-strip .account-item:hover {
@@ -735,7 +781,7 @@ button:disabled {
 }
 
 .account-add-card {
-    min-height: 184px;
+    min-height: 156px;
     display: grid;
     place-items: center;
     align-content: center;
@@ -774,13 +820,13 @@ button:disabled {
 
 .account-add-card span {
     display: grid;
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     place-items: center;
     border-radius: 50%;
     color: #ffffff;
     background: var(--primary-color);
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 900;
     line-height: 1;
 }
@@ -798,12 +844,12 @@ button:disabled {
 
 .account-empty-state {
     display: grid;
-    min-height: 184px;
+    min-height: 156px;
     place-items: center;
     align-content: center;
     gap: 7px;
     margin: 0;
-    padding: 24px;
+    padding: 18px;
     border: 1px dashed var(--border-strong);
     border-radius: var(--radius-lg);
     color: var(--muted-text);
@@ -887,8 +933,8 @@ button:disabled {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 14px;
-    padding: 20px 22px 16px;
+    gap: 12px;
+    padding: 16px 18px 13px;
     border-bottom: 1px solid var(--border-color);
     background:
         radial-gradient(circle at 10% 0%, var(--primary-soft), transparent 34%),
@@ -911,7 +957,7 @@ button:disabled {
 .asset-dialog-header h2 {
     margin: 0;
     color: var(--heading-color);
-    font-size: 22px;
+    font-size: 20px;
     letter-spacing: -0.02em;
 }
 
@@ -943,7 +989,7 @@ button:disabled {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 18px 22px 22px;
+    padding: 16px 18px 18px;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -955,17 +1001,17 @@ button:disabled {
 .snapshot-choice-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
 }
 
 .snapshot-choice-card {
     position: relative;
     display: grid;
     gap: 8px;
-    min-height: 172px;
-    padding: 16px;
+    min-height: 148px;
+    padding: 14px;
     border: 1px solid var(--border-color);
-    border-radius: 18px;
+    border-radius: 14px;
     background:
         radial-gradient(circle at 100% 0%, var(--primary-soft), transparent 42%),
         var(--surface-color);
@@ -989,7 +1035,7 @@ button:disabled {
 .snapshot-choice-card:has(input:checked) {
     border-color: var(--primary-color);
     background:
-        radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.18), transparent 44%),
+        radial-gradient(circle at 100% 0%, rgba(8, 145, 178, 0.16), transparent 44%),
         linear-gradient(145deg, var(--primary-soft), var(--surface-color));
     box-shadow: var(--shadow-md);
 }
@@ -1019,10 +1065,10 @@ button:disabled {
 }
 
 .snapshot-generate-preview {
-    min-height: 96px;
-    padding: 14px;
+    min-height: 88px;
+    padding: 12px;
     border: 1px dashed var(--border-strong);
-    border-radius: 18px;
+    border-radius: 14px;
     background: var(--surface-muted);
 }
 
@@ -1110,7 +1156,7 @@ button:disabled {
 
 .asset-tool-bar {
     display: grid;
-    grid-template-columns: repeat(2, minmax(140px, 1fr)) auto;
+    grid-template-columns: repeat(2, minmax(128px, 1fr)) auto;
     gap: 8px;
     align-items: end;
 }
@@ -1124,15 +1170,17 @@ button:disabled {
     position: relative;
     overflow: hidden;
     border-color: color-mix(in srgb, var(--border-color) 82%, var(--primary-color));
-    background: linear-gradient(160deg, var(--surface-glass), var(--surface-color));
+    background:
+        linear-gradient(160deg, color-mix(in srgb, var(--primary-color) 4%, transparent), transparent),
+        var(--surface-glass);
 }
 
 .management-panel::before {
     position: absolute;
     top: 0;
-    left: 16px;
-    width: 42px;
-    height: 3px;
+    left: 14px;
+    width: 34px;
+    height: 2px;
     border-radius: 0 0 999px 999px;
     background: var(--primary-color);
     content: '';
@@ -1140,7 +1188,7 @@ button:disabled {
 
 .management-panel .panel-head {
     position: relative;
-    padding-bottom: 13px;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -1150,7 +1198,7 @@ button:disabled {
 
 .panel-kicker {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     color: var(--primary-color);
     font-size: 10px;
     font-weight: 900;
@@ -1159,14 +1207,14 @@ button:disabled {
 }
 
 .management-panel .panel-head h2 {
-    margin-bottom: 5px;
-    font-size: 18px;
+    margin-bottom: 4px;
+    font-size: 17px;
 }
 
 .management-panel .asset-tool-bar {
-    padding: 6px;
+    padding: 5px;
     border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--surface-muted);
 }
 
@@ -1175,12 +1223,12 @@ button:disabled {
 }
 
 .management-panel .asset-tool-bar select {
-    padding: 8px 9px;
+    padding: 7px 9px;
     background: var(--surface-color);
 }
 
 .management-panel .primary-btn {
-    min-height: 40px;
+    min-height: 36px;
 }
 
 .management-add-btn {
@@ -1266,7 +1314,7 @@ button:disabled {
 .asset-bottom-grid {
     display: grid;
     grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.28fr);
-    gap: 14px;
+    gap: 12px;
     align-items: start;
 }
 
@@ -1293,6 +1341,22 @@ button:disabled {
     align-items: center;
 }
 
+.allocation-row:nth-child(1) .allocation-bar i {
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+}
+
+.allocation-row:nth-child(2) .allocation-bar i {
+    background: linear-gradient(90deg, #0891b2, #22d3ee);
+}
+
+.allocation-row:nth-child(3) .allocation-bar i {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.allocation-row:nth-child(4) .allocation-bar i {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+}
+
 .allocation-row strong,
 .allocation-row span {
     display: block;
@@ -1314,7 +1378,7 @@ button:disabled {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: var(--primary-color);
+    background: linear-gradient(90deg, #64748b, #94a3b8);
 }
 
 .account-form {
@@ -1324,9 +1388,9 @@ button:disabled {
 input,
 select {
     width: 100%;
-    padding: 10px 11px;
+    padding: 8px 10px;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 10px;
     color: var(--text-color);
     background: var(--surface-color);
     outline: none;
@@ -1348,9 +1412,9 @@ select:focus {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 8px;
-    padding: 11px;
+    padding: 10px;
     border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--surface-color);
     transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
@@ -1367,7 +1431,7 @@ select:focus {
 
 .account-main {
     display: grid;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
     width: 100%;
     height: 100%;
@@ -1380,7 +1444,7 @@ select:focus {
 
 .account-card-heading {
     display: flex;
-    gap: 10px;
+    gap: 9px;
     align-items: center;
     padding-right: 42px;
 }
@@ -1393,12 +1457,12 @@ select:focus {
 
 .account-card-mark {
     display: grid;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     flex: 0 0 auto;
     place-items: center;
     border: 1px solid color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
-    border-radius: 12px;
+    border-radius: 10px;
     color: var(--primary-color);
     background: var(--primary-soft);
     font-size: 14px;
@@ -1406,7 +1470,7 @@ select:focus {
 }
 
 .account-card-heading > div > span {
-    color: var(--primary-color);
+    color: var(--accent-color);
     font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.1em;
@@ -1417,7 +1481,7 @@ select:focus {
     display: block;
     overflow: hidden;
     color: var(--heading-color);
-    font-size: 19px;
+    font-size: 17px;
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1434,7 +1498,7 @@ select:focus {
     gap: 1px;
     overflow: hidden;
     border: 1px solid var(--border-color);
-    border-radius: 13px;
+    border-radius: 12px;
     background: var(--border-color);
     margin-top: auto;
 }
@@ -1443,7 +1507,7 @@ select:focus {
     display: grid;
     gap: 4px;
     min-width: 0;
-    padding: 10px 11px;
+    padding: 9px 10px;
     background: var(--surface-muted);
 }
 
@@ -1457,10 +1521,11 @@ select:focus {
     min-width: 0;
     overflow: hidden;
     color: var(--heading-color);
-    font-size: 13px;
+    font-size: 12px;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
 .account-card-menu {
@@ -1471,8 +1536,8 @@ select:focus {
 
 .account-card-menu summary {
     display: grid;
-    width: 34px;
-    height: 34px;
+    width: 31px;
+    height: 31px;
     place-items: center;
     border: 1px solid var(--border-color);
     border-radius: 10px;
@@ -1551,13 +1616,19 @@ select:focus {
 }
 
 .mini-btn {
-    padding: 6px 8px;
+    padding: 5px 8px;
     border: 1px solid var(--border-color);
-    border-radius: 9px;
+    border-radius: 8px;
     color: var(--muted-text);
     background: var(--surface-muted);
     font-size: 12px;
     font-weight: 800;
+}
+
+.mini-btn:hover {
+    color: var(--primary-color);
+    border-color: color-mix(in srgb, var(--primary-color) 42%, var(--border-color));
+    background: var(--primary-soft);
 }
 
 .main-stack {
@@ -1568,9 +1639,9 @@ select:focus {
 
 .input-guide,
 .method-note {
-    padding: 8px 10px;
+    padding: 7px 9px;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 10px;
     background: var(--surface-muted);
     color: var(--muted-text);
     font-size: 12px;
@@ -1626,7 +1697,7 @@ select:focus {
 }
 
 .period-chip {
-    padding: 7px 9px;
+    padding: 6px 9px;
     border: 1px solid var(--border-color);
     border-radius: 999px;
     color: var(--muted-text);
@@ -1638,12 +1709,12 @@ select:focus {
 .period-chip.active {
     color: #ffffff;
     border-color: transparent;
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
 }
 
 .performance-chart {
     width: 100%;
-    height: 380px;
+    height: 350px;
 }
 
 .positive {
@@ -1665,6 +1736,7 @@ select:focus {
 .snapshot-table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 13px;
 }
 
 .comparison-table {
@@ -1685,7 +1757,7 @@ select:focus {
 .holding-table td,
 .snapshot-table th,
 .snapshot-table td {
-    padding: 9px 10px;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--border-color);
     text-align: left;
 }
@@ -1695,7 +1767,8 @@ select:focus {
 .snapshot-table th {
     color: var(--muted-text);
     background: var(--surface-muted);
-    font-size: 12px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
@@ -1724,6 +1797,31 @@ select:focus {
 .holding-table td:first-child strong,
 .holding-table td:first-child small {
     display: block;
+}
+
+.holding-table tbody tr:nth-child(even),
+.snapshot-table tbody tr:nth-child(even),
+.comparison-table tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--surface-muted) 58%, transparent);
+}
+
+.holding-table tbody tr:hover,
+.snapshot-table tbody tr:hover {
+    background: var(--primary-soft);
+}
+
+.asset-class-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border: 1px solid color-mix(in srgb, var(--accent-color) 28%, var(--border-color));
+    border-radius: 999px;
+    color: var(--accent-color);
+    background: color-mix(in srgb, var(--accent-color) 8%, transparent);
+    font-size: 12px;
+    font-weight: 850;
+    white-space: nowrap;
 }
 
 .holding-table td:first-child small {
@@ -1765,6 +1863,24 @@ select:focus {
 .row-actions {
     display: flex;
     gap: 6px;
+}
+
+.snapshot-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 10px;
+    border-top: 1px solid var(--border-color);
+    color: var(--muted-text);
+    background: var(--surface-muted);
+    font-size: 12px;
+}
+
+.snapshot-toggle-btn {
+    color: var(--primary-color);
+    border-color: color-mix(in srgb, var(--primary-color) 32%, var(--border-color));
+    background: var(--surface-color);
 }
 
 .hidden {
@@ -2078,8 +2194,8 @@ select:focus {
         display: none;
     }
 
-    .holding-table td:nth-child(2)::before { content: "账户"; }
-    .holding-table td:nth-child(3)::before { content: "类别"; }
+    .holding-table td:nth-child(2)::before { content: "类别"; }
+    .holding-table td:nth-child(3)::before { content: "最新价"; }
     .holding-table td:nth-child(4)::before { content: "市值"; }
     .holding-table td:nth-child(5)::before { content: "占比"; }
     .holding-table td:nth-child(6)::before { content: "成本"; }
@@ -2099,6 +2215,12 @@ select:focus {
 
     .row-actions {
         justify-content: flex-end;
+    }
+
+    .snapshot-table-footer {
+        display: grid;
+        justify-items: stretch;
+        text-align: center;
     }
 
     .performance-chart {

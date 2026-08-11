@@ -1,4 +1,4 @@
-import { state } from '../../config/state.js';
+import { PERIODS, state } from '../../config/state.js';
 import { escapeHtml, formatCurrency, formatPercent, signedClass } from '../../utils/formatter.js';
 
 export function renderOverviewCards(metrics) {
@@ -22,7 +22,9 @@ export function renderOverviewCards(metrics) {
 
 export function renderAccountComparison(metrics) {
     const wrap = document.getElementById('accountComparison');
+    const periodLabel = document.getElementById('comparisonPeriodLabel');
     if (!wrap) return;
+    if (periodLabel) periodLabel.textContent = currentPeriodLabel();
 
     if (state.accounts.length === 0) {
         wrap.innerHTML = '<div class="empty-state">暂无账户。进入“账户管理”新增账户并录入快照。</div>';
@@ -120,4 +122,8 @@ function compareMetrics(a, b) {
 function sortIcon(key) {
     if (state.comparisonSortKey !== key) return '';
     return state.comparisonSortOrder === 1 ? ' ▲' : ' ▼';
+}
+
+function currentPeriodLabel() {
+    return PERIODS.find(([key]) => key === state.selectedPeriod)?.[1] || state.selectedPeriod;
 }

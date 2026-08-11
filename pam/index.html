@@ -81,7 +81,6 @@
                 <section class="panel management-panel chart-panel focus-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <span class="panel-kicker">表现分析</span>
                             <h2>收益走势</h2>
                             <p>现金流调整后收益率，非资产规模变化。</p>
                         </div>
@@ -95,8 +94,7 @@
                 <section class="panel management-panel comparison-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <span class="panel-kicker">账户概览</span>
-                            <h2>账户对比</h2>
+                            <h2>账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2>
                             <p>点击表头排序，点击账户行高亮走势图。</p>
                         </div>
                     </div>
@@ -278,8 +276,7 @@
                 <section class="panel management-panel asset-holdings-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <span class="panel-kicker">当前账户</span>
-                            <h2>持仓明细</h2>
+                            <h2>持仓明细 <span id="holdingAccountBadge" class="title-account-badge"></span></h2>
                             <p id="holdingContext">当前账户的持仓、市值占比和浮动盈亏。</p>
                         </div>
                         <div class="asset-tool-bar">
@@ -294,7 +291,7 @@
 
                 <section class="asset-bottom-grid">
                     <section class="panel management-panel allocation-panel">
-                        <div class="panel-head"><span class="panel-kicker">资产概览</span><h2>持仓分布</h2><p>按类别查看当前账户市值占比。</p></div>
+                        <div class="panel-head"><h2>持仓分布</h2><p>按类别查看当前账户市值占比。</p></div>
                         <div class="allocation-columns">
                             <div><h3>资产类别</h3><div id="assetAllocation" class="allocation-list"></div></div>
                             <div><h3>账户分布</h3><div id="accountAllocation" class="allocation-list"></div></div>
@@ -304,13 +301,11 @@
                     <section class="panel management-panel table-panel">
                         <div class="panel-head split-head">
                             <div>
-                                <span class="panel-kicker">资产快照</span>
-                                <h2>资产记录</h2>
+                                <h2>资产记录 <span id="snapshotTableContext" class="title-account-badge"></span></h2>
                                 <p>当前账户的历史总资产快照。</p>
                             </div>
                             <button id="addSnapshotBtn" class="primary-btn management-add-btn" type="button">新增快照</button>
                         </div>
-                        <div id="snapshotTableContext" class="table-context"></div>
                         <div id="snapshotTable" class="snapshot-table-wrap"></div>
                     </section>
                 </section>
