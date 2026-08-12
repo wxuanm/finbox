@@ -1,6 +1,6 @@
 # FinBox
 
-FinBox is a lightweight financial monitoring toolkit. The current release includes a responsive mutual fund monitor and PAM, a standalone portfolio and asset management tool focused first on manually tracked account performance.
+FinBox is a lightweight financial monitoring toolkit. The current release includes a responsive mutual fund monitor and PAM, a standalone portfolio and asset management tool for manually tracked account performance and current holdings.
 
 ## Current Tools
 
@@ -25,6 +25,7 @@ Key features:
 - Mobile pull-to-refresh.
 - Light and dark themes.
 - Chinese and English UI.
+- Group period-return comparison and three-year historical NAV trend comparison.
 - Data and preferences persisted in `localStorage`.
 
 ### PAM
@@ -44,6 +45,10 @@ Key features:
 - Multi-account performance chart with period switches: 1M, 3M, 6M, YTD, 1Y, 3Y, and ALL.
 - Account metrics including latest value, net contribution, profit/loss, cumulative return, period return, max drawdown, annualized volatility, and Calmar ratio.
 - Current holdings management with account binding, manual valuation, allocation summaries, and A-share/fund quote refresh.
+- Holdings-generated account snapshots for previous trading day or current day after preview and confirmation.
+- JSON backup export/import for accounts, snapshots, holdings, and preferences.
+- Chinese and English UI.
+- Hide-amount display mode that masks money amounts without hiding latest prices, quantities, percentages, charts, form inputs, or backup data.
 - Optional demo data generated only by user action.
 - Dark mode and local-only persistence using `pam:v1:*` `localStorage` keys.
 
@@ -91,6 +96,7 @@ Notes:
 
 - The first quote release supports A-share (`CN`) and fund (`Fund`) holdings.
 - Unsupported markets remain manually priced in PAM.
+- `/api/quotes` accepts up to 40 unique `market:symbol` items and returns `failedItems` for unsupported or failed quotes.
 
 ## Project Structure
 
@@ -109,7 +115,8 @@ finbox/
 │  └─ js/
 │     ├─ app.js                 # App bootstrap, language, groups, refresh
 │     ├─ api/
-│     │  └─ fundApi.js          # Fund data script loading and row updates
+│     │  ├─ fundApi.js          # Fund data script loading and row updates
+│     │  └─ fundNavApi.js       # Historical NAV fetch and cache
 │     ├─ config/
 │     │  ├─ i18n.js             # Chinese/English strings
 │     │  └─ state.js            # Runtime state
@@ -121,6 +128,7 @@ finbox/
 │     │  └─ modal.js            # Deep analysis modal
 │     └─ utils/
 │        ├─ formatter.js        # Formatting helpers
+│        ├─ navMetrics.js       # Historical NAV metric calculations
 │        └─ storage.js          # localStorage persistence
 ├─ pam/
 │  ├─ index.html                # PAM page
@@ -130,6 +138,7 @@ finbox/
 │  └─ js/
 │     ├─ app.js                 # PAM bootstrap and orchestration
 │     ├─ config/
+│     │  ├─ i18n.js             # Chinese/English strings
 │     │  └─ state.js            # Runtime state
 │     ├─ core/
 │     │  └─ theme.js            # Theme handling
@@ -177,6 +186,7 @@ The monitor stores user data in browser `localStorage`:
 - Fund-to-group mapping.
 - Theme preference.
 - Language preference.
+- Same-day NAV trend response cache for historical comparison.
 
 PAM stores user data in browser `localStorage`:
 
@@ -184,6 +194,8 @@ PAM stores user data in browser `localStorage`:
 - `pam:v1:snapshots`.
 - `pam:v1:holdings`.
 - `pam:v1:preferences`.
+
+PAM preferences include selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, theme, and language.
 
 No backend database is required.
 

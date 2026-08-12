@@ -5,7 +5,7 @@
 - Tool: PAM
 - Path: `/pam/`
 - Spec source: `docs/specs/pam/sdd.md`
-- Release target: account performance and current holdings modules
+- Design target: current implementation baseline
 
 ## Architecture
 
@@ -25,17 +25,15 @@ pam/
    ├─ core/
    │  └─ theme.js
    ├─ modules/
-   │  └─ accountPerformance/
-   │     ├─ accountList.js
-   │     ├─ snapshotForm.js
-   │     ├─ performanceChart.js
-   │     ├─ metricsPanel.js
-   │     ├─ snapshotTable.js
-   │     ├─ metrics.js
-   │     └─ storage.js
+   │  ├─ accountPerformance/
+   │  │  ├─ accountList.js
+   │  │  ├─ snapshotForm.js
+   │  │  ├─ performanceChart.js
+   │  │  ├─ metricsPanel.js
+   │  │  ├─ snapshotTable.js
+   │  │  ├─ metrics.js
+   │  │  └─ storage.js
    │  └─ holdings/
-   │     ├─ holdingForm.js
-   │     ├─ holdingTable.js
    │     ├─ holdingsMetrics.js
    │     ├─ holdingsPanel.js
    │     ├─ quoteApi.js
@@ -59,9 +57,13 @@ pam/
   holdingFilters: { accountId: 'all', assetClass: 'all', market: 'all' },
   holdingSortKey: 'marketValue',
   holdingSortOrder: -1,
+  comparisonSortKey: 'periodReturn',
+  comparisonSortOrder: -1,
   editingHoldingId: '',
   editingSnapshotId: '',
   activeView: 'analysis',
+  assetDataAction: 'snapshot',
+  assetDataMaintenanceOpen: false,
   amountsHidden: false,
   theme: 'light',
   currentLang: 'zh'
@@ -81,7 +83,7 @@ pam:v1:preferences
 
 Stored objects include `schemaVersion: 1`. Reads must tolerate missing or malformed data and return safe defaults.
 
-`pam:v1:preferences.currentLang` stores the UI language. Supported values are `zh` and `en`; missing or invalid values fall back to `zh`.
+`pam:v1:preferences` stores selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, theme, and language. `currentLang` supports `zh` and `en`; missing or invalid values fall back to `zh`.
 
 ## Data Rules
 
@@ -113,6 +115,7 @@ Holdings:
 - `quantity`, `costPrice`, and `currentPrice` must be finite numbers greater than or equal to 0.
 - First quote refresh supports `CN` and `Fund`; unsupported markets remain manual.
 - Cash holdings use amount mode: `quantity = 1`, `costPrice = currentPrice = cash amount`.
+- Quote refresh updates current price, optional name, price source, and price update time only; cost, quantity, account binding, and notes remain user-maintained.
 
 ## Calculation Flow
 
@@ -154,6 +157,7 @@ This avoids treating sparse manual snapshots as daily market data.
 6. Render overview cards, chart, account comparison table, holdings views, and snapshot table.
 7. Keep the snapshot table account switch synchronized with the selected account.
 8. Bind global actions.
+9. Persist user preferences after view, period, privacy, sort, language, theme, and account-selection changes.
 
 UI modules render into fixed DOM containers and expose bind functions through global event handlers only where simple static HTML event binding is pragmatic.
 
@@ -180,11 +184,11 @@ The performance chart uses ECharts from CDN.
 - Snapshot input includes short inline guidance for total value, net flow, and unit-NAV return logic.
 - Account list items expose readiness status and selected-period return to reduce navigation ambiguity.
 - Account performance is compared in a sortable table rather than per-account cards, because table rows make return, drawdown, volatility, asset value, and data freshness easier to compare across accounts.
-- The header includes a lightweight hide-amount toggle. When enabled, rendered money amounts use `****`, while quantities, prices, percentages, chart returns, calculations, form inputs, and JSON backups remain unchanged.
+- The header includes a lightweight hide-amount toggle. When enabled, rendered money amounts use `****`, while quantities, latest prices, percentages, chart returns, calculations, form inputs, and JSON backups remain unchanged. Money amounts render as localized numbers without a `CN`/currency prefix.
 - The header includes a Chinese/English language toggle. Static HTML uses `data-i18n`, `data-i18n-title`, `data-i18n-placeholder`, and `data-i18n-aria-label`; dynamic render modules use `t()` from `pam/js/config/i18n.js`. The language preference is persisted separately from Fund Monitor and PAM does not import Fund Monitor i18n code.
 - Comparison table labels must distinguish period-scoped metrics from cumulative/current metrics. `区间收益`, `区间回撤`, and `区间波动` are controlled by the active period switch.
 - The top module navigation includes `账户收益` and `账户管理` alongside disabled future modules, keeping performance review separate from data maintenance while combining account snapshots and holdings under one account-scoped page.
-- The top navigation exposes module-specific context actions on the right. For `账户管理`, icon actions open snapshot and holding forms, generate snapshots, refresh quotes, and open the add-account dialog.
+- The top navigation exposes module-specific context actions on the right. For `账户管理`, actions open snapshot and holding forms, generate snapshots, refresh quotes, and open the add-account dialog. Mobile uses a context menu and floating account-action button.
 - `账户管理` uses a mobile-first single flow: account cards, current account summary, dialog-based snapshot/holding forms, holdings detail, and asset records. Account cards show name, update date, total assets, cumulative return, annualized return, and account-level actions.
 - Snapshot and holding forms are bound to the selected account. To record data for a different account, the user switches account cards before opening the form.
 - When the holding type is cash, the form accepts a cash balance and hides instrument-only fields such as code, market, quantity, and cost price.
@@ -197,7 +201,7 @@ Demo data is generated only through user action.
 - If no data exists, demo accounts are added directly.
 - If data exists, user confirmation is required through an in-app dialog instead of the browser `confirm` prompt.
 - Demo account names are prefixed with `示例`.
-- Demo accounts include 19 monthly snapshots (covering more than one year) with deterministic return variation and representative holdings for account-management views.
+- Demo accounts include deterministic monthly snapshots covering more than one year and representative holdings for account-management views.
 
 ## Data Import And Export
 
@@ -222,7 +226,7 @@ Export payload:
 Import behavior:
 
 - Accept only `app: 'pam'` and `schemaVersion: 1`.
-- Normalize accounts and snapshots before applying.
+- Normalize accounts, snapshots, holdings, and preferences before applying.
 - Drop snapshots whose `accountId` does not exist in the imported accounts.
 - Drop holdings whose `accountId` does not exist in the imported accounts.
 - Older backups without holdings import with `holdings: []`.
@@ -237,10 +241,11 @@ Import behavior:
 /api/quotes?items=CN:600519,Fund:003026
 ```
 
-- `CN` uses Eastmoney stock quote data.
+- `CN` uses Sina A-share quote data first and Eastmoney stock quote data as fallback.
 - `Fund` uses Eastmoney fund comparison data.
 - Unsupported markets are returned in `failedItems`.
 - Quote refresh updates only current price, name when available, price source, and price update time.
+- The endpoint accepts up to 40 unique `market:symbol` items and returns `Cache-Control: no-store`.
 
 ## Verification
 
@@ -249,6 +254,8 @@ Minimum verification:
 - Static file path exists at `/pam/`.
 - ES modules load without syntax errors.
 - Account and snapshot CRUD work locally.
+- Holding CRUD, quote refresh, and snapshot generation from holdings work locally.
+- JSON backup export/import round-trips accounts, snapshots, holdings, and preferences.
 - Refresh persists data.
 - Deposits and withdrawals do not create artificial performance jumps.
 - Mobile layout remains usable.

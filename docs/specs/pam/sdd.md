@@ -5,7 +5,7 @@
 - Spec namespace: `pam`
 - Spec path: `docs/specs/pam/sdd.md`
 - Related tool path: `/pam/`
-- Status: Draft, reviewed for first implementation baseline
+- Status: Current implementation baseline
 
 This document belongs only to PAM. Other FinBox tools should use their own folders under `docs/specs/<tool-name>/` to avoid naming, storage, and acceptance-criteria conflicts.
 
@@ -23,7 +23,7 @@ This document belongs only to PAM. Other FinBox tools should use their own folde
 
 PAM helps users manually track multiple investment accounts, calculate account-level performance after excluding cash flow impact, compare return trends and risk metrics, and manage current holdings under each account.
 
-The first release started with account performance. PAM now expands toward current holdings management while preserving room for allocation, transactions, attribution, and risk analysis.
+The current implementation covers account performance and account-scoped data maintenance. Account maintenance combines manual snapshots, current holdings, quote refresh, snapshot generation from holdings, local JSON backup/import, demo data, language/theme preferences, and a lightweight hide-amount display mode.
 
 ### Confirmed Decisions
 
@@ -37,7 +37,8 @@ The first release started with account performance. PAM now expands toward curre
 - Current holdings track current positions only in the first release, and holdings must be bound to accounts.
 - A-share and fund quote refresh are the first supported real-time quote targets for holdings.
 - Cash is a supported holding type and is manually maintained as CNY-equivalent amount; no currency conversion is performed.
-- PAM provides a lightweight hide-amount toggle for personal privacy. It masks displayed money amounts only and does not hide quantities, prices, percentages, calculations, imports, or backup data.
+- PAM provides a lightweight hide-amount toggle for personal privacy. It masks displayed money amounts only and does not hide quantities, latest prices, percentages, calculations, form inputs, imports, or backup data.
+- Money amounts are displayed as localized numbers without a currency prefix. Stored account and holding records still keep `currency: "CNY"` for schema clarity.
 - PAM provides a Chinese/English language toggle in the header. The selected language is saved in `pam:v1:preferences.currentLang`; supported values are `zh` and `en`, with Chinese as the safe fallback.
 
 ### In Scope For First Release
@@ -59,15 +60,17 @@ The first release started with account performance. PAM now expands toward curre
 - Support desktop and mobile layouts.
 - Manage current holdings bound to accounts.
 - Refresh supported A-share and fund prices through `/api/quotes`.
+- Generate previous-trading-day or current-day account snapshots from current holdings after preview and confirmation.
+- Export and import all PAM local data as JSON backup files.
 - Hide displayed money amounts through a global header toggle.
 
 ### Out Of Scope For First Release
 
 - Brokerage or platform integrations.
-- CSV or Excel import.
+- CSV or Excel import/export.
 - Cloud sync.
 - Login or user accounts.
-- Historical holdings.
+- Historical holdings and transaction-level position history.
 - Transaction ledger.
 - Multi-currency conversion.
 - Brokerage APIs or cloud sync APIs.
@@ -113,11 +116,10 @@ PAM
 
 ```text
 /pam/
-├─ Header: product name, description, language toggle, theme toggle
-├─ Module navigation: 账户收益, future modules disabled or hidden
+├─ Header: product name, description, demo/import/export, amount privacy, language toggle, theme toggle
 ├─ Unified module navigation: 账户收益 / 账户管理 / future modules
 ├─ 账户收益: overview cards, performance chart, sortable account comparison table
-└─ 账户管理: account cards, current account summary, context action menu, snapshot/holding dialogs, holdings table, asset records, add-account dialog
+└─ 账户管理: account cards, context action menu, snapshot/holding/generate dialogs, holdings table, asset records, add-account dialog
 ```
 
 UI direction:
@@ -125,6 +127,7 @@ UI direction:
 - Keep the default experience decision-first: account return overview, chart, and sortable comparison table.
 - Keep account snapshots and current holdings together under `账户管理`, organized by the selected account rather than by separate modules.
 - Show module-specific actions on the right side of the top navigation; when `账户管理` is active, show icon actions for snapshot entry, holding entry, snapshot generation, quote refresh, and add-account.
+- Mobile header and account-management actions collapse into menus or floating actions to keep the workspace usable on small screens.
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 - Keep holdings focused on current positions, valuation, unrealized profit/loss, and portfolio weight.
@@ -202,8 +205,9 @@ Empty state:
 
 - Users can export all PAM local data as a JSON backup file.
 - Users can import a PAM JSON backup file into the current browser.
-- Import replaces current PAM accounts, snapshots, and preferences only after user confirmation.
+- Import replaces current PAM accounts, snapshots, holdings, and preferences only after user confirmation.
 - Import validates schema version, account records, snapshot records, and account references before applying data.
+- Import normalizes holdings and drops holdings whose account references are not present in the imported account list.
 - CSV import/export is out of scope for the first backup feature and can be added later for batch snapshot entry.
 - Holdings are included in PAM JSON backups. Older backups without holdings are imported with an empty holdings list.
 - The hide-amount preference is included in preferences, but exported account, snapshot, and holding data remains unchanged.
@@ -290,7 +294,7 @@ This formula is intentionally approximate for manual snapshot tracking. It is de
 
 Stored data should include a schema version so that future holdings, transactions, or allocation modules can migrate local data without corrupting account performance records.
 
-## 4. Technical Design Draft
+## 4. Technical Design
 
 ### Directory Structure
 
@@ -303,17 +307,23 @@ pam/
 └─ js/
    ├─ app.js
    ├─ config/
+   │  ├─ i18n.js
    │  └─ state.js
    ├─ core/
    │  └─ theme.js
    ├─ modules/
-   │  └─ accountPerformance/
-   │     ├─ accountList.js
-   │     ├─ snapshotForm.js
-   │     ├─ performanceChart.js
-   │     ├─ metricsPanel.js
-   │     ├─ snapshotTable.js
-   │     ├─ metrics.js
+   │  ├─ accountPerformance/
+   │  │  ├─ accountList.js
+   │  │  ├─ snapshotForm.js
+   │  │  ├─ performanceChart.js
+   │  │  ├─ metricsPanel.js
+   │  │  ├─ snapshotTable.js
+   │  │  ├─ metrics.js
+   │  │  └─ storage.js
+   │  └─ holdings/
+   │     ├─ holdingsMetrics.js
+   │     ├─ holdingsPanel.js
+   │     ├─ quoteApi.js
    │     └─ storage.js
    └─ utils/
       └─ formatter.js
@@ -328,7 +338,7 @@ pam:v1:holdings
 pam:v1:preferences
 ```
 
-Preferences include selected account, selected period, and theme. Future modules should use the same `pam:v1:<domain>` pattern and must not use `fund-monitor-*` keys.
+Preferences include selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, theme, and language. Future modules should use the same `pam:v1:<domain>` pattern and must not use `fund-monitor-*` keys.
 
 ### Dependencies
 
@@ -337,7 +347,7 @@ Preferences include selected account, selected period, and theme. Future modules
 - Browser `localStorage`.
 - Cloudflare Pages static hosting.
 
-The first account-performance release required no backend API. Holdings quote refresh adds `/api/quotes` as a Cloudflare Pages Function for supported A-share and fund prices.
+Account performance itself requires no backend API. Holdings quote refresh and holdings-generated snapshots use `/api/quotes` as a Cloudflare Pages Function for supported A-share and fund prices.
 
 ## 5. Acceptance Criteria
 
@@ -357,7 +367,13 @@ The first account-performance release required no backend API. Holdings quote re
 - Multiple accounts can be compared in one chart.
 - Period switches update chart and metrics.
 - Dark mode persists after refresh.
+- Language selection persists after refresh.
+- The amount privacy toggle masks money amounts while leaving latest prices, quantities, percentages, charts, and form inputs visible.
 - Demo data can be generated only by user action.
+- JSON backup export includes accounts, snapshots, holdings, and preferences.
+- JSON backup import validates and normalizes data, then replaces local PAM data only after confirmation.
+- Holdings quote refresh updates supported A-share and fund positions without blocking manual unsupported holdings.
+- Snapshot generation from holdings previews date, account count, total value, overwrite warnings, and quote fallback warnings before writing snapshots.
 
 ### Data Acceptance
 
@@ -370,12 +386,12 @@ The first account-performance release required no backend API. Holdings quote re
 
 ### UI Acceptance
 
-- Desktop layout shows account management, snapshot input, chart, metrics, and table clearly.
-- Mobile layout remains usable for account switching, snapshot entry, chart viewing, and table review.
+- Desktop layout shows account performance, account management, holding entry, snapshot entry, chart, metrics, and tables clearly.
+- Mobile layout remains usable for account switching, snapshot entry, holding entry, quote refresh, chart viewing, and table review.
 - ECharts loading failure does not break the full page.
 - Sensitive-data messaging makes it clear that data is stored locally.
 
-## 6. Implementation Tasks Draft
+## 6. Implementation Tasks
 
 - Create `/pam/` static page skeleton.
 - Add independent PAM CSS variables and layout styles.
@@ -391,5 +407,9 @@ The first account-performance release required no backend API. Holdings quote re
 - Implement demo data action.
 - Implement empty, invalid, and insufficient-data states.
 - Implement mobile responsive layout.
-- Update `README.md` with PAM details and local URL.
+- Implement holdings management and `/api/quotes` integration.
+- Implement JSON backup import/export.
+- Implement snapshot generation from holdings.
+- Implement hide-amount and language preferences.
+- Update `README.md` and PAM specs with current behavior.
 - Run local static verification.

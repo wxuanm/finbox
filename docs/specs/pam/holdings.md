@@ -16,7 +16,8 @@ The current holdings capability lets users maintain current positions under each
 - First release tracks current holdings only, not historical holding snapshots.
 - Holdings must be bound to an account.
 - Price can be manually entered.
-- A-share and fund quote refresh is planned first; cash is manually maintained as a first-class holding; unsupported markets remain manual.
+- A-share and fund quote refresh is implemented first; cash is manually maintained as a first-class holding; unsupported markets remain manual.
+- Latest prices are not hidden by the amount privacy toggle. Market value, cost amount, and unrealized profit/loss are hidden when amount privacy is enabled.
 - No transaction ledger, dividend handling, fee handling, or cost-basis automation in this release.
 
 ## In Scope
@@ -32,6 +33,7 @@ The current holdings capability lets users maintain current positions under each
 - Include holdings in JSON import/export.
 - Add demo holdings.
 - Refresh supported A-share and fund quotes through `/api/quotes`.
+- Generate account snapshots from current holdings valuation after preview and confirmation.
 
 ## Out Of Scope
 
@@ -108,7 +110,7 @@ Response:
 
 ```js
 {
-  source: "eastmoney",
+  source: "mixed",
   updatedAt: "2026-08-05T10:00:00.000Z",
   quotes: [
     {
@@ -139,3 +141,4 @@ Response:
 - Holdings detail provides a clear add-holding action and identifies manual, quoted, and stale (over three days old) valuations.
 - A-share and fund quote refresh updates current price, name when available, price source, and price update time.
 - Quote refresh failure does not block manual holding maintenance.
+- Latest price remains visible when amount privacy is enabled; money amounts render as masked values.

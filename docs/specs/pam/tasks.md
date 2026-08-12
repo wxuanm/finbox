@@ -51,3 +51,20 @@
 - [x] Add `/api/quotes` for A-share and fund quotes.
 - [x] Implement quote refresh for supported holdings.
 - [x] Update README and run verification.
+
+## Phase 7: Current Baseline Synchronization
+
+- [x] Implement Chinese/English language persistence.
+- [x] Implement JSON backup import/export.
+- [x] Implement in-app confirmation dialog for destructive and overwrite actions.
+- [x] Implement holdings-generated snapshot preview and confirmation.
+- [x] Implement amount privacy without hiding latest prices.
+- [x] Render money amounts without a visible `CN`/currency prefix.
+- [x] Sync SDD, technical design, holdings spec, and task status with completed implementation.
+
+## Recommended Future Hardening
+
+- [ ] Add lightweight automated checks for account metrics, import normalization, quote parsing, and holdings-generated snapshots.
+- [ ] Add optional CSV import/export for account snapshots if batch entry becomes important.
+- [ ] Add historical holdings or transaction ledger only after defining storage migration rules.
+- [ ] Add more quote markets only with explicit currency conversion and market-data behavior.

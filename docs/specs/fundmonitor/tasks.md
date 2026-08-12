@@ -54,11 +54,17 @@
 - [x] ECharts trend rendering exists.
 - [x] Stale modal request protection exists.
 
-## Phase 6: Recommended Future Hardening
+## Phase 6: Current Baseline Synchronization
+
+- [x] Sync Fund Monitor SDD, technical design, and task status with completed implementation.
+- [x] Confirm Fund Monitor remains independent from PAM runtime state, storage keys, and modules.
+- [x] Confirm watchlist management remains usable when ECharts is unavailable.
+
+## Recommended Future Hardening
 
 - [ ] Add fund-code format validation before saving or fetching.
 - [ ] Persist group collapsed state if that behavior is desired after refresh.
 - [ ] Add a user-visible partial failure summary for real-time batch requests.
-- [ ] Add an ECharts-unavailable state inside the historical trend modal.
+- [ ] Add a dedicated ECharts-unavailable message inside the historical trend modal.
 - [ ] Add explicit storage versioning or migrations before changing persisted data shapes.
 - [ ] Add lightweight automated checks for API response normalization and NAV metric calculations.
