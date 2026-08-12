@@ -5,8 +5,6 @@ export function formatCurrency(value, masked = false) {
     if (!Number.isFinite(num)) return '-';
     if (masked) return '****';
     return new Intl.NumberFormat(currentLocale(), {
-        style: 'currency',
-        currency: 'CNY',
         maximumFractionDigits: 2
     }).format(num);
 }

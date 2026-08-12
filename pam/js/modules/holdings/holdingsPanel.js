@@ -288,7 +288,6 @@ function compareHoldings(a, b) {
 }
 
 function formatPrice(value) {
-    if (state.amountsHidden) return '****';
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
     return num.toLocaleString(currentLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 4 });

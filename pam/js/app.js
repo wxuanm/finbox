@@ -1300,7 +1300,7 @@ function formatPreviewCurrency(value) {
     if (state.amountsHidden) return '****';
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
-    return num.toLocaleString(state.currentLang === 'en' ? 'en-US' : 'zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 });
+    return num.toLocaleString(state.currentLang === 'en' ? 'en-US' : 'zh-CN', { maximumFractionDigits: 2 });
 }
 
 function escapePreviewText(value) {
