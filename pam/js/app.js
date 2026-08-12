@@ -156,7 +156,8 @@ function bindEvents() {
         onSelect: selectAccount,
         onRename: renameAccount,
         onDelete: deleteAccount,
-        onAdd: openAccountDialog
+        onAdd: openAccountDialog,
+        onReorder: reorderAccounts
     });
     bindPeriodSwitch(period => {
         state.selectedPeriod = period;
@@ -540,6 +541,19 @@ function selectAccount(accountId) {
     state.selectedAccountId = accountId;
     state.activeView = 'assetData';
     persistPreferences();
+    renderApp();
+}
+
+function reorderAccounts(draggedAccountId, targetAccountId, position) {
+    if (!draggedAccountId || draggedAccountId === targetAccountId) return;
+    const fromIndex = state.accounts.findIndex(account => account.id === draggedAccountId);
+    if (fromIndex < 0 || !state.accounts.some(account => account.id === targetAccountId)) return;
+
+    const [account] = state.accounts.splice(fromIndex, 1);
+    const targetIndexAfterRemoval = state.accounts.findIndex(item => item.id === targetAccountId);
+    const insertIndex = position === 'after' ? targetIndexAfterRemoval + 1 : targetIndexAfterRemoval;
+    state.accounts.splice(insertIndex, 0, account);
+    saveAccounts(state.accounts);
     renderApp();
 }
 

@@ -29,7 +29,7 @@ export function renderAccountList(metrics) {
         const latestSnapshot = accountSnapshots[0];
         const annualizedReturn = calculateAnnualizedReturn(metric);
         return `
-            <div class="account-item${active ? ' active' : ''}">
+            <div class="account-item${active ? ' active' : ''}" draggable="true" data-account-id="${account.id}">
                 <button class="account-main" type="button" data-action="select-account" data-account-id="${account.id}">
                     <div class="account-card-heading">
                         <span class="account-card-mark" aria-hidden="true">A</span>
@@ -68,9 +68,11 @@ function calculateAnnualizedReturn(metric) {
     return (Math.pow(latest.unitNav / first.unitNav, 365 / days) - 1) * 100;
 }
 
-export function bindAccountList({ onSelect, onRename, onDelete, onAdd }) {
+export function bindAccountList({ onSelect, onRename, onDelete, onAdd, onReorder }) {
     const panel = document.querySelector('.account-card-strip-panel');
     if (!panel) return;
+    const list = panel.querySelector('#accountList');
+    let draggedAccountId = '';
 
     panel.addEventListener('click', event => {
         const target = event.target.closest('[data-action]');
@@ -85,5 +87,61 @@ export function bindAccountList({ onSelect, onRename, onDelete, onAdd }) {
         if (target.dataset.action === 'select-account') onSelect(accountId);
         if (target.dataset.action === 'rename-account') onRename(accountId);
         if (target.dataset.action === 'delete-account') onDelete(accountId);
+    });
+
+    list?.addEventListener('dragstart', event => {
+        const item = event.target.closest('.account-item');
+        if (!item || !item.dataset.accountId) return;
+        if (event.target.closest('.account-card-menu')) {
+            event.preventDefault();
+            return;
+        }
+        draggedAccountId = item.dataset.accountId;
+        item.classList.add('is-dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', draggedAccountId);
+    });
+
+    list?.addEventListener('dragover', event => {
+        if (!draggedAccountId) return;
+        const item = event.target.closest('.account-item');
+        if (!item || item.dataset.accountId === draggedAccountId) return;
+        event.preventDefault();
+        clearDropTargets(list);
+        item.classList.add(isDropAfter(event, item) ? 'drop-after' : 'drop-before');
+        event.dataTransfer.dropEffect = 'move';
+    });
+
+    list?.addEventListener('dragleave', event => {
+        const item = event.target.closest('.account-item');
+        if (!item || item.contains(event.relatedTarget)) return;
+        item.classList.remove('drop-before', 'drop-after');
+    });
+
+    list?.addEventListener('drop', event => {
+        if (!draggedAccountId) return;
+        const item = event.target.closest('.account-item');
+        if (!item || item.dataset.accountId === draggedAccountId) return;
+        event.preventDefault();
+        const position = isDropAfter(event, item) ? 'after' : 'before';
+        clearDropTargets(list);
+        onReorder?.(draggedAccountId, item.dataset.accountId, position);
+    });
+
+    list?.addEventListener('dragend', () => {
+        draggedAccountId = '';
+        list.querySelector('.is-dragging')?.classList.remove('is-dragging');
+        clearDropTargets(list);
+    });
+}
+
+function isDropAfter(event, item) {
+    const rect = item.getBoundingClientRect();
+    return event.clientX > rect.left + rect.width / 2;
+}
+
+function clearDropTargets(list) {
+    list.querySelectorAll('.drop-before, .drop-after').forEach(item => {
+        item.classList.remove('drop-before', 'drop-after');
     });
 }

@@ -131,7 +131,7 @@ UI direction:
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 - Keep holdings focused on current positions, valuation, unrealized profit/loss, and portfolio weight.
-- Keep the `账户管理` layout mobile-first: account cards first, current account summary, dialog-based snapshot/holding forms, holdings detail, and asset records.
+- Keep the `账户管理` layout mobile-first: account cards first, current account summary, dialog-based snapshot/holding forms, holdings detail, and asset records. On web, account cards support drag reordering and persist the user-defined order.
 
 ### Account Data Model
 

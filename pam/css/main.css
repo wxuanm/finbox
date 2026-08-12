@@ -1178,6 +1178,37 @@ button:disabled {
     box-shadow: 0 12px 26px rgb(15 23 42 / 0.09);
 }
 
+.account-card-strip .account-item[draggable="true"] {
+    cursor: grab;
+}
+
+.account-card-strip .account-item.is-dragging {
+    cursor: grabbing;
+    opacity: 0.48;
+    transform: scale(0.98);
+}
+
+.account-card-strip .account-item.drop-before::before,
+.account-card-strip .account-item.drop-after::after {
+    content: "";
+    position: absolute;
+    top: 12px;
+    bottom: 12px;
+    z-index: 4;
+    width: 4px;
+    border-radius: 999px;
+    background: var(--primary-color);
+    box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.account-card-strip .account-item.drop-before::before {
+    left: -2px;
+}
+
+.account-card-strip .account-item.drop-after::after {
+    right: -2px;
+}
+
 .account-add-card {
     min-height: 156px;
     display: grid;
