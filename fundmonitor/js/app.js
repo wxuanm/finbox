@@ -34,6 +34,7 @@ function applyLanguage() {
 
     checkEmptyState(); // Refresh empty state message
     updateGroupCounts(); // Refresh item count translations in group headers
+    updateDashboardStats(); // Refresh localized dashboard summaries
 
     // Update existing rows
     const fundRows = document.querySelectorAll('#fundTable tr[id^="fund-"]');

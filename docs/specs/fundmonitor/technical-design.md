@@ -157,6 +157,7 @@ Destructive group and fund removal actions use inline confirmation rows in the t
 
 - Updates monitored count.
 - Counts positive and negative estimated change rows.
+- Calculates top rising and top falling funds from row-level estimated change data.
 - Updates latest refresh display.
 
 ### `theme.js`

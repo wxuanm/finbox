@@ -472,6 +472,10 @@ export function updateFundRow(code, fields) {
         fundManager
     ] = fields;
 
+    row.dataset.fundCode = fundCode || code;
+    row.dataset.fundName = fundName || '';
+    row.dataset.estimatedChange = estimatedChange || '';
+
     const nameCell = row.cells[0];
     nameCell.innerHTML = `
         <div class="name-cell">

@@ -7,6 +7,7 @@ export function handleFetchError(code) {
     const row = document.getElementById(`fund-${code}`);
     if (row) {
         row.classList.add('error-row');
+        delete row.dataset.estimatedChange;
         row.cells[1].innerHTML = `<span class="error-message">${i18n[state.currentLang].fetchError}</span>`;
         for (let index = 2; index < row.cells.length - 1; index += 1) {
             row.cells[index].textContent = '-';
