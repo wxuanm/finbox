@@ -33,9 +33,63 @@ export function updateGroupCounts() {
         const rows = tbody.querySelectorAll('tr[id^="fund-"]');
         const countSpan = tbody.querySelector('.group-count');
         if (countSpan) countSpan.textContent = `${rows.length} ${i18n[state.currentLang].items}`;
+        updateGroupTooltip(tbody, rows);
         syncEmptyGroupRow(tbody);
     });
     syncDefaultGroupVisibility();
+}
+
+function isDesktopTooltipEnabled() {
+    return !window.matchMedia('(max-width: 768px)').matches;
+}
+
+function formatTooltipChange(value) {
+    const numericValue = Number.parseFloat(value);
+    if (Number.isNaN(numericValue)) return '--';
+
+    const prefix = numericValue > 0 ? '+' : '';
+    return `${prefix}${numericValue.toFixed(2)}%`;
+}
+
+function buildGroupTooltip(rows) {
+    const funds = Array.from(rows).map(row => {
+        const code = row.dataset.fundCode || row.id.replace('fund-', '');
+        const name = row.dataset.fundName || code;
+        const change = row.dataset.estimatedChange;
+        const numericChange = Number.parseFloat(change);
+
+        return {
+            label: `${name} (${code})`,
+            change: formatTooltipChange(change),
+            sortValue: Number.isNaN(numericChange) ? -Infinity : numericChange
+        };
+    }).sort((a, b) => b.sortValue - a.sortValue);
+
+    if (funds.length === 0) return '';
+
+    return funds.map(fund => `${fund.change.padStart(8, ' ')}  ${fund.label}`).join('\n');
+}
+
+function updateGroupTooltip(tbody, rows) {
+    const titleArea = tbody.querySelector('.group-title-area');
+    if (!titleArea) return;
+
+    if (!tbody.classList.contains('collapsed') || !isDesktopTooltipEnabled()) {
+        titleArea.removeAttribute('title');
+        return;
+    }
+
+    const tooltip = buildGroupTooltip(rows);
+    if (tooltip) {
+        titleArea.title = tooltip;
+    } else {
+        titleArea.removeAttribute('title');
+    }
+}
+
+function refreshGroupTooltip(tbody) {
+    if (!tbody) return;
+    updateGroupTooltip(tbody, tbody.querySelectorAll('tr[id^="fund-"]'));
 }
 
 function hasDefaultFunds() {
@@ -401,6 +455,7 @@ export function toggleGroup(groupId) {
     if (tbody) {
         const isCollapsed = tbody.classList.toggle('collapsed');
         state.groupExpanded[groupId] = !isCollapsed;
+        refreshGroupTooltip(tbody);
     }
 }
 
@@ -475,6 +530,7 @@ export function updateFundRow(code, fields) {
     row.dataset.fundCode = fundCode || code;
     row.dataset.fundName = fundName || '';
     row.dataset.estimatedChange = estimatedChange || '';
+    refreshGroupTooltip(row.closest('tbody'));
 
     const nameCell = row.cells[0];
     nameCell.innerHTML = `

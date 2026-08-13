@@ -52,6 +52,7 @@ The current implementation focuses on a local-first watchlist. User-selected fun
 - Show a dashboard summary with monitored count, rising count, falling count, and latest refresh time.
 - Show fund rows with name, code, estimated NAV, estimated change, latest NAV, NAV change, previous NAV, and fund manager.
 - Sort desktop table columns.
+- Show desktop group-title tooltip with all funds' estimated changes only when a group is collapsed, without changing group expand/collapse clicks.
 - Show loading, error, global empty, and empty custom group states.
 - Support group collapse and expansion during the current runtime session.
 - Support mobile compact rows with tap-to-open full details.

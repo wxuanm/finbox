@@ -118,6 +118,7 @@ Rules:
 
 - Renders group sections, group headers, fund rows, inline action rows, empty states, and mobile detail rows.
 - Handles table sorting and group collapse.
+- Updates desktop group-title tooltips with all fund estimated changes for collapsed groups while preserving group-row click behavior.
 - Handles group analysis and historical trend entry points.
 - Opens a single-fund historical trend modal when a desktop fund row is clicked; mobile row taps keep showing inline details.
 - Updates fund row cells from Eastmoney `fundinfo` field arrays.
