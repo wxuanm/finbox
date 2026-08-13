@@ -310,8 +310,8 @@ Historical NAV notice:
 - Monitored count equals `state.fundCodes.size`.
 - Rising count equals rows where estimated change cell contains a positive value state.
 - Falling count equals rows where estimated change cell contains a negative value state.
-- The rising card shows the fund with the largest positive estimated change when one exists.
-- The falling card shows the fund with the smallest negative estimated change when one exists.
+- The rising card tooltip shows up to three funds with the largest positive estimated changes when they exist.
+- The falling card tooltip shows up to three funds with the smallest negative estimated changes when they exist.
 - Latest refresh time updates when `refreshData()` runs after restoring or refreshing the watchlist.
 
 ### Sorting Rules

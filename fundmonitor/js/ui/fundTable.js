@@ -65,26 +65,104 @@ function buildGroupTooltip(rows) {
         };
     }).sort((a, b) => b.sortValue - a.sortValue);
 
-    if (funds.length === 0) return '';
+    return funds;
+}
 
-    return funds.map(fund => `${fund.change.padStart(8, ' ')}  ${fund.label}`).join('\n');
+function ensureFloatingGroupTooltip() {
+    let tooltip = document.getElementById('groupChangeTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'groupChangeTooltip';
+        tooltip.className = 'group-change-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    return tooltip;
+}
+
+function renderFloatingGroupTooltip(tooltip, funds) {
+    tooltip.replaceChildren(...funds.map(fund => {
+        const row = document.createElement('div');
+        row.className = 'group-change-tooltip-row';
+
+        const change = document.createElement('span');
+        change.className = 'group-change-tooltip-change';
+        change.textContent = fund.change;
+
+        const name = document.createElement('span');
+        name.className = 'group-change-tooltip-name';
+        name.textContent = fund.label;
+
+        row.append(name, change);
+        return row;
+    }));
+}
+
+function positionFloatingGroupTooltip(anchor, tooltip) {
+    const rect = anchor.getBoundingClientRect();
+    const margin = 10;
+    const viewportPadding = 12;
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const belowTop = rect.bottom + margin;
+    const aboveTop = rect.top - tooltipRect.height - margin;
+    const top = belowTop + tooltipRect.height <= window.innerHeight - viewportPadding
+        ? belowTop
+        : Math.max(viewportPadding, aboveTop);
+    const left = Math.min(
+        Math.max(viewportPadding, rect.left + 28),
+        window.innerWidth - tooltipRect.width - viewportPadding
+    );
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+}
+
+function hideFloatingGroupTooltip(anchor) {
+    const tooltip = document.getElementById('groupChangeTooltip');
+    if (!tooltip || tooltip.dataset.anchorId !== anchor.dataset.tooltipId) return;
+
+    tooltip.classList.remove('show');
+    tooltip.removeAttribute('data-anchor-id');
+}
+
+function showFloatingGroupTooltip(anchor) {
+    const funds = anchor.groupTooltipFunds || [];
+    if (funds.length === 0) return;
+
+    const tooltip = ensureFloatingGroupTooltip();
+    renderFloatingGroupTooltip(tooltip, funds);
+    tooltip.dataset.anchorId = anchor.dataset.tooltipId;
+    tooltip.classList.add('show');
+    positionFloatingGroupTooltip(anchor, tooltip);
+}
+
+function attachGroupTooltipEvents(titleArea) {
+    if (titleArea.dataset.tooltipBound === 'true') return;
+
+    titleArea.dataset.tooltipBound = 'true';
+    titleArea.dataset.tooltipId = `group-tooltip-${Math.random().toString(36).slice(2)}`;
+    titleArea.addEventListener('mouseenter', event => showFloatingGroupTooltip(event.currentTarget));
+    titleArea.addEventListener('mousemove', event => {
+        const tooltip = document.getElementById('groupChangeTooltip');
+        if (tooltip?.classList.contains('show')) {
+            positionFloatingGroupTooltip(event.currentTarget, tooltip);
+        }
+    });
+    titleArea.addEventListener('mouseleave', event => hideFloatingGroupTooltip(event.currentTarget));
 }
 
 function updateGroupTooltip(tbody, rows) {
     const titleArea = tbody.querySelector('.group-title-area');
     if (!titleArea) return;
+    attachGroupTooltipEvents(titleArea);
+    titleArea.querySelector('.group-change-tooltip')?.remove();
 
     if (!tbody.classList.contains('collapsed') || !isDesktopTooltipEnabled()) {
-        titleArea.removeAttribute('title');
+        titleArea.groupTooltipFunds = [];
+        hideFloatingGroupTooltip(titleArea);
         return;
     }
 
-    const tooltip = buildGroupTooltip(rows);
-    if (tooltip) {
-        titleArea.title = tooltip;
-    } else {
-        titleArea.removeAttribute('title');
-    }
+    titleArea.groupTooltipFunds = buildGroupTooltip(rows);
 }
 
 function refreshGroupTooltip(tbody) {

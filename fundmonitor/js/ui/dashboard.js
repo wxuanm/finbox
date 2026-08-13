@@ -6,22 +6,21 @@ function formatLeaderChange(value) {
     return `${prefix}${value.toFixed(2)}%`;
 }
 
-function updateLeader(prefix, leader) {
-    const nameEl = document.getElementById(`${prefix}Name`);
-    const changeEl = document.getElementById(`${prefix}Change`);
+function formatLeaderLine(leader) {
+    return `${leader.name || leader.code} (${leader.code}) ${formatLeaderChange(leader.change)}`;
+}
 
-    if (!nameEl || !changeEl) return;
+function updateLeader(prefix, leaders) {
+    const card = document.getElementById(`${prefix}Stat`);
 
-    if (!leader) {
-        nameEl.textContent = i18n[state.currentLang].statNoLeader;
-        nameEl.title = '';
-        changeEl.textContent = '--';
+    if (!card) return;
+
+    if (leaders.length === 0) {
+        card.title = i18n[state.currentLang].statNoLeader;
         return;
     }
 
-    nameEl.textContent = leader.name || leader.code;
-    nameEl.title = leader.name || leader.code;
-    changeEl.textContent = formatLeaderChange(leader.change);
+    card.title = leaders.map(formatLeaderLine).join('\n');
 }
 
 export function updateDashboardStats() {
@@ -35,8 +34,8 @@ export function updateDashboardStats() {
 
     let positiveCount = 0;
     let negativeCount = 0;
-    let topGain = null;
-    let topDrop = null;
+    const positiveLeaders = [];
+    const negativeLeaders = [];
 
     dataRows.forEach(row => {
         const estimatedChange = Number.parseFloat(row.dataset.estimatedChange);
@@ -50,17 +49,17 @@ export function updateDashboardStats() {
 
         if (estimatedChange > 0) {
             positiveCount += 1;
-            if (!topGain || estimatedChange > topGain.change) topGain = leader;
+            positiveLeaders.push(leader);
         } else if (estimatedChange < 0) {
             negativeCount += 1;
-            if (!topDrop || estimatedChange < topDrop.change) topDrop = leader;
+            negativeLeaders.push(leader);
         }
     });
 
     positiveCountStat.textContent = String(positiveCount);
     negativeCountStat.textContent = String(negativeCount);
-    updateLeader('topGain', topGain);
-    updateLeader('topDrop', topDrop);
+    updateLeader('topGain', positiveLeaders.sort((a, b) => b.change - a.change).slice(0, 3));
+    updateLeader('topDrop', negativeLeaders.sort((a, b) => a.change - b.change).slice(0, 3));
 }
 
 export function updateLastRefreshTime() {
