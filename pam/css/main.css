@@ -2247,7 +2247,7 @@ select:focus {
 }
 
 .comparison-table {
-    min-width: 920px;
+    min-width: 1040px;
 }
 
 .snapshot-table {
@@ -2707,6 +2707,7 @@ select:focus {
     }
 
     .holding-table,
+    .comparison-table,
     .snapshot-table {
         min-width: 0;
         border-collapse: separate;
@@ -2714,6 +2715,7 @@ select:focus {
     }
 
     .holding-table thead,
+    .comparison-table thead,
     .snapshot-table thead {
         display: none;
     }
@@ -2721,6 +2723,9 @@ select:focus {
     .holding-table tbody,
     .holding-table tr,
     .holding-table td,
+    .comparison-table tbody,
+    .comparison-table tr,
+    .comparison-table td,
     .snapshot-table tbody,
     .snapshot-table tr,
     .snapshot-table td {
@@ -2729,6 +2734,7 @@ select:focus {
     }
 
     .holding-table tr,
+    .comparison-table tr,
     .snapshot-table tr {
         padding: 12px;
         border: 1px solid var(--border-color);
@@ -2737,6 +2743,7 @@ select:focus {
     }
 
     .holding-table td,
+    .comparison-table td,
     .snapshot-table td {
         display: flex;
         justify-content: space-between;
@@ -2747,6 +2754,7 @@ select:focus {
     }
 
     .holding-table td::before,
+    .comparison-table td::before,
     .snapshot-table td::before {
         flex: 0 0 auto;
         color: var(--muted-text);
@@ -2756,14 +2764,24 @@ select:focus {
     }
 
     .holding-table td:nth-child(1),
+    .comparison-table td:nth-child(1),
     .snapshot-table td:nth-child(1) {
         display: block;
         text-align: left;
     }
 
     .holding-table td:nth-child(1)::before,
+    .comparison-table td:nth-child(1)::before,
     .snapshot-table td:nth-child(1)::before {
         display: none;
+    }
+
+    .comparison-table .desktop-only {
+        display: none;
+    }
+
+    .comparison-table td[data-mobile-label]::before {
+        content: attr(data-mobile-label);
     }
 
     .holding-table td:nth-child(2)::before { content: "类别"; }

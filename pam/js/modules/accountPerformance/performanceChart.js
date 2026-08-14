@@ -3,6 +3,7 @@ import { periodLabel, t } from '../../config/i18n.js';
 import { formatPercent } from '../../utils/formatter.js';
 
 let chartInstance = null;
+let anchoringZoom = false;
 const ANNUALIZED_BENCHMARK_RATE = 0.10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -114,9 +115,10 @@ export function renderPerformanceChart(metrics) {
                 splitLine: { show: false }
             }
         ],
-        dataZoom: [{ type: 'inside' }],
+        dataZoom: [{ id: 'performance-inside-zoom', type: 'inside' }],
         series: [...series, benchmarkSeries, zeroLineSeries, ...drawdownSeries, axisMirrorSeries]
     });
+    bindRightAnchoredZoom();
 }
 
 export function resizeChart() {
@@ -125,6 +127,33 @@ export function resizeChart() {
 
 function getCssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function bindRightAnchoredZoom() {
+    chartInstance.off('datazoom');
+    chartInstance.on('datazoom', params => {
+        if (anchoringZoom) return;
+
+        const zoom = getZoomRange(params);
+        if (!zoom || !Number.isFinite(zoom.start) || !Number.isFinite(zoom.end) || zoom.end >= 99.99) return;
+
+        const span = Math.max(zoom.end - zoom.start, 0);
+        anchoringZoom = true;
+        chartInstance.dispatchAction({
+            type: 'dataZoom',
+            dataZoomId: 'performance-inside-zoom',
+            start: Math.max(100 - span, 0),
+            end: 100
+        });
+        anchoringZoom = false;
+    });
+}
+
+function getZoomRange(params) {
+    if (Number.isFinite(params?.start) && Number.isFinite(params?.end)) return params;
+    const batch = Array.isArray(params?.batch) ? params.batch[0] : null;
+    if (Number.isFinite(batch?.start) && Number.isFinite(batch?.end)) return batch;
+    return null;
 }
 
 function buildReturnSeries(points, baseUnitNav, accountName) {

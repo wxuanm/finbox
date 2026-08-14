@@ -36,20 +36,21 @@ export function renderAccountComparison(metrics) {
     const columns = [
         ['name', t('account')],
         ['periodReturn', t('periodReturn')],
-        ['cumulativeReturn', t('cumulativeReturn')],
+        ['annualizedReturn', t('annualizedReturn')],
+        ['maxDrawdown', t('maxDrawdown'), 'desktop-only'],
+        ['annualizedVolatility', t('annualizedVolatility'), 'desktop-only'],
+        ['calmarRatio', t('calmarRatio')],
         ['latestValue', t('latestAssets')],
-        ['profitLoss', t('cumulativePnl')],
-        ['maxDrawdown', t('maxDrawdown')],
-        ['annualizedVolatility', t('annualizedVolatility')],
-        ['latestDate', t('latestSnapshot')]
+        ['profitLoss', t('cumulativePnl'), 'desktop-only'],
+        ['latestDate', t('latestSnapshot'), 'desktop-only']
     ];
 
     wrap.innerHTML = `
         <table class="comparison-table">
             <thead>
                 <tr>
-                    ${columns.map(([key, label]) => `
-                        <th class="${key === 'name' ? '' : 'number-cell'}" data-comparison-sort="${key}">
+                    ${columns.map(([key, label, visibility]) => `
+                        <th class="${[key === 'name' ? '' : 'number-cell', visibility || ''].filter(Boolean).join(' ')}" data-comparison-sort="${key}">
                             <button type="button">${label}${sortIcon(key)}</button>
                         </th>
                     `).join('')}
@@ -87,7 +88,7 @@ function renderComparisonRow(metric) {
         return `
             <tr class="comparison-row invalid${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
                 <td><strong>${escapeHtml(metric.account.name)}</strong><small>${escapeHtml(metric.error || t('insufficientData'))}</small></td>
-                <td colspan="7">${t('needTwoSnapshots')}</td>
+                <td colspan="8">${t('needTwoSnapshots')}</td>
             </tr>
         `;
     }
@@ -95,15 +96,20 @@ function renderComparisonRow(metric) {
     return `
         <tr class="comparison-row${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
             <td><strong>${escapeHtml(metric.account.name)}</strong><small>${t('clickHighlight')}</small></td>
-            <td class="number-cell ${signedClass(metric.periodReturn)}">${formatPercent(metric.periodReturn)}</td>
-            <td class="number-cell ${signedClass(metric.cumulativeReturn)}">${formatPercent(metric.cumulativeReturn)}</td>
-            <td class="number-cell">${formatCurrency(metric.latestValue, state.amountsHidden)}</td>
-            <td class="number-cell ${signedClass(metric.profitLoss)}">${formatCurrency(metric.profitLoss, state.amountsHidden)}</td>
-            <td class="number-cell ${signedClass(metric.maxDrawdown)}">${formatPercent(metric.maxDrawdown)}</td>
-            <td class="number-cell">${formatPercent(metric.annualizedVolatility)}</td>
-            <td class="number-cell">${metric.latestDate || '-'}</td>
+            <td class="number-cell ${signedClass(metric.periodReturn)}" data-mobile-label="${t('periodReturn')}">${formatPercent(metric.periodReturn)}</td>
+            <td class="number-cell ${signedClass(metric.annualizedReturn)}" data-mobile-label="${t('annualizedReturn')}">${formatPercent(metric.annualizedReturn)}</td>
+            <td class="number-cell desktop-only ${signedClass(metric.maxDrawdown)}">${formatPercent(metric.maxDrawdown)}</td>
+            <td class="number-cell desktop-only">${formatPercent(metric.annualizedVolatility)}</td>
+            <td class="number-cell ${signedClass(metric.calmarRatio)}" data-mobile-label="${t('calmarRatio')}">${formatNumber(metric.calmarRatio)}</td>
+            <td class="number-cell" data-mobile-label="${t('latestAssets')}">${formatCurrency(metric.latestValue, state.amountsHidden)}</td>
+            <td class="number-cell desktop-only ${signedClass(metric.profitLoss)}">${formatCurrency(metric.profitLoss, state.amountsHidden)}</td>
+            <td class="number-cell desktop-only">${metric.latestDate || '-'}</td>
         </tr>
     `;
+}
+
+function formatNumber(value) {
+    return Number.isFinite(value) ? value.toFixed(2) : '-';
 }
 
 function compareMetrics(a, b) {
@@ -112,12 +118,17 @@ function compareMetrics(a, b) {
     if (key === 'name') return a.account.name.localeCompare(b.account.name, 'zh-CN', { numeric: true }) * direction;
     if (key === 'latestDate') return String(a.latestDate || '').localeCompare(String(b.latestDate || '')) * direction;
 
-    const aValue = a.valid ? Number(a[key]) : Number.NEGATIVE_INFINITY;
-    const bValue = b.valid ? Number(b[key]) : Number.NEGATIVE_INFINITY;
+    const aValue = getSortableValue(a, key);
+    const bValue = getSortableValue(b, key);
     if (!Number.isFinite(aValue) && !Number.isFinite(bValue)) return 0;
     if (!Number.isFinite(aValue)) return 1;
     if (!Number.isFinite(bValue)) return -1;
     return (aValue - bValue) * direction;
+}
+
+function getSortableValue(metric, key) {
+    if (!metric.valid || metric[key] === null || metric[key] === undefined) return Number.NEGATIVE_INFINITY;
+    return Number(metric[key]);
 }
 
 function sortIcon(key) {

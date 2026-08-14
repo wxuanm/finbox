@@ -1,6 +1,7 @@
 import { t } from '../../config/i18n.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MIN_ANNUALIZED_DAYS = 30;
 
 export function buildAccountMetrics(accounts, snapshots, periodKey) {
     return accounts.map(account => {
@@ -14,10 +15,11 @@ export function buildAccountMetrics(accounts, snapshots, periodKey) {
         const periodPoints = getPeriodPoints(points, periodKey);
         const anchorPoint = periodPoints[0];
         const periodReturn = anchorPoint ? (latestPoint.unitNav / anchorPoint.unitNav - 1) * 100 : null;
+        const annualizedReturn = anchorPoint ? calculateAnnualizedReturn(anchorPoint, latestPoint) : null;
         const periodDrawdown = periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null;
         const volatility = periodPoints.length > 2 ? calculateAnnualizedVolatility(periodPoints) : null;
-        const calmar = Number.isFinite(periodReturn) && Number.isFinite(periodDrawdown) && periodDrawdown < 0
-            ? periodReturn / Math.abs(periodDrawdown)
+        const calmar = Number.isFinite(annualizedReturn) && Number.isFinite(periodDrawdown) && periodDrawdown < 0
+            ? annualizedReturn / Math.abs(periodDrawdown)
             : null;
 
         return {
@@ -31,6 +33,7 @@ export function buildAccountMetrics(accounts, snapshots, periodKey) {
             profitLoss: latestPoint.totalValue - latestPoint.netContribution,
             cumulativeReturn: latestPoint.returnPct,
             periodReturn,
+            annualizedReturn,
             maxDrawdown: periodDrawdown,
             annualizedVolatility: volatility,
             calmarRatio: calmar
@@ -144,6 +147,14 @@ function calculateMaxDrawdown(points) {
         if (drawdown < maxDrawdown) maxDrawdown = drawdown;
     });
     return maxDrawdown;
+}
+
+function calculateAnnualizedReturn(anchorPoint, latestPoint) {
+    const anchorTime = parseDate(anchorPoint.date)?.getTime();
+    const latestTime = parseDate(latestPoint.date)?.getTime();
+    const days = (latestTime - anchorTime) / DAY_MS;
+    if (!Number.isFinite(days) || days < MIN_ANNUALIZED_DAYS || anchorPoint.unitNav <= 0 || latestPoint.unitNav <= 0) return null;
+    return (Math.pow(latestPoint.unitNav / anchorPoint.unitNav, 365 / days) - 1) * 100;
 }
 
 function calculateAnnualizedVolatility(points) {

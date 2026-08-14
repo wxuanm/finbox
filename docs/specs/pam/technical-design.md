@@ -145,6 +145,18 @@ annualizedVolatility = stdev(periodReturns) * sqrt(365 / averageIntervalDays)
 
 This avoids treating sparse manual snapshots as daily market data.
 
+Selected-period annualized return uses the actual day span between the active period anchor and latest snapshot:
+
+```text
+annualizedReturn = (latestUnitNav / anchorUnitNav) ^ (365 / days) - 1
+```
+
+It is not displayed when the span is shorter than 30 days. Calmar ratio uses the fund-style definition:
+
+```text
+calmarRatio = annualizedReturn / abs(maxDrawdown)
+```
+
 ## UI Composition
 
 `app.js` coordinates rendering:
@@ -186,7 +198,7 @@ The performance chart uses ECharts from CDN.
 - Account performance is compared in a sortable table rather than per-account cards, because table rows make return, drawdown, volatility, asset value, and data freshness easier to compare across accounts.
 - The header includes a lightweight hide-amount toggle. When enabled, rendered money amounts use `****`, while quantities, latest prices, percentages, chart returns, calculations, form inputs, and JSON backups remain unchanged. Money amounts render as localized numbers without a `CN`/currency prefix.
 - The header includes a Chinese/English language toggle. Static HTML uses `data-i18n`, `data-i18n-title`, `data-i18n-placeholder`, and `data-i18n-aria-label`; dynamic render modules use `t()` from `pam/js/config/i18n.js`. The language preference is persisted separately from Fund Monitor and PAM does not import Fund Monitor i18n code.
-- Comparison table labels must distinguish period-scoped metrics from cumulative/current metrics. `区间收益`, `区间回撤`, and `区间波动` are controlled by the active period switch.
+- Comparison table labels use fund-style account performance terms. `区间收益`, `年化收益`, `最大回撤`, `年化波动`, and `卡玛比率` are controlled by the active period switch.
 - The top module navigation includes `账户收益` and `账户管理` alongside disabled future modules, keeping performance review separate from data maintenance while combining account snapshots and holdings under one account-scoped page.
 - The top navigation exposes module-specific context actions on the right. For `账户管理`, actions open snapshot and holding forms, generate snapshots, refresh quotes, and open the add-account dialog. Mobile uses a context menu and floating account-action button.
 - `账户管理` uses a mobile-first single flow: account cards, current account summary, dialog-based snapshot/holding forms, holdings detail, and asset records. Account cards show name, update date, total assets, cumulative return, annualized return, and account-level actions. On web, users can drag account cards to reorder them; the persisted `accounts` array order is the display order.

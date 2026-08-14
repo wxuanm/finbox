@@ -52,8 +52,8 @@ The current implementation covers account performance and account-scoped data ma
 - Compare multiple accounts in one performance chart.
 - Support chart periods: `1M`, `3M`, `6M`, `YTD`, `1Y`, `3Y`, `ALL`.
 - The default account return period is `3M`; saved user preference takes precedence.
-- Show account metrics: latest value, net contribution, cumulative profit/loss, cumulative return, selected-period return, max drawdown, annualized volatility, Calmar ratio, and latest date.
-- In the account comparison table, period-scoped risk columns must be labeled as `区间回撤` and `区间波动` to distinguish them from all-history metrics.
+- Show account metrics: latest value, net contribution, cumulative profit/loss, cumulative return, selected-period return, selected-period annualized return, max drawdown, annualized volatility, Calmar ratio, and latest date.
+- In the account comparison table, fund-style account performance columns include `区间收益`, `年化收益`, `最大回撤`, `年化波动`, and `卡玛比率`, all controlled by the active period switch.
 - Persist all user data in browser `localStorage`.
 - Support dark mode.
 - Provide empty, insufficient-data, and invalid-data states.
@@ -264,9 +264,10 @@ This formula is intentionally approximate for manual snapshot tracking. It is de
 - Cumulative profit/loss: latest value minus net contribution.
 - Cumulative return: latest unit NAV relative to initial unit NAV.
 - Selected-period return: latest unit NAV divided by the first available unit NAV at or before the selected period start, minus 1. If no anchor point exists before the period start, use the first point inside the selected period.
+- Selected-period annualized return: selected-period return annualized by the actual number of days between the period anchor and latest snapshot. Do not display it when the span is shorter than 30 days.
 - Max drawdown: largest decline from a unit NAV peak.
 - Annualized volatility: standard deviation of snapshot-to-snapshot returns annualized by observed date intervals. The implementation should avoid pretending sparse manual snapshots are daily market data.
-- Calmar ratio: selected-period return divided by absolute max drawdown when drawdown is negative.
+- Calmar ratio: selected-period annualized return divided by absolute max drawdown when drawdown is negative.
 - Latest date: latest valid snapshot date.
 - Overview latest snapshot date: the most recent valid manually entered snapshot date across calculable accounts.
 - Overview data freshness: show how many calculable accounts share the latest snapshot date, so users can spot account data lag before comparing performance.
