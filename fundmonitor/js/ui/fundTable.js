@@ -303,144 +303,139 @@ function syncEmptyGroupRow(tbody) {
 
 export function showInlineAdd(groupId) {
     closeGroupMenus();
+    document.querySelectorAll('.group-action-row, .fund-detail-row').forEach(row => row.remove());
 
-    const table = document.getElementById('fundTable');
-    let tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
-    if (!tbody && groupId === 'default') {
-        tbody = getOrCreateGroupBody('default', true);
-    }
-    if (!tbody) return;
-    
-    // Ensure expanded
-    tbody.classList.remove('collapsed');
-    state.groupExpanded[groupId] = true;
-
-    const existingRow = tbody.querySelector('.group-action-row');
-    if (existingRow) {
-        const existingInput = existingRow.querySelector('input');
-        if (existingInput && existingInput.id === `inlineAdd-${groupId}`) {
-            existingInput.focus();
-            return;
-        }
-        existingRow.remove();
+    const tbody = document.querySelector(`#fundTable tbody[data-group="${groupId}"]`) || (groupId === 'default' ? getOrCreateGroupBody('default', true) : null);
+    if (tbody) {
+        tbody.classList.remove('collapsed');
+        state.groupExpanded[groupId] = true;
     }
 
-    document.querySelectorAll('.fund-detail-row').forEach(detailRow => detailRow.remove());
-
-    if (tbody.querySelector('.inline-add-row')) {
-        return;
-    }
-    
-    const tr = document.createElement('tr');
-    tr.className = 'inline-add-row group-action-row';
-    tr.innerHTML = `
-        <td colspan="8" class="inline-add-cell">
-            <div class="inline-add-wrap">
-                <input type="text" id="inlineAdd-${groupId}" data-i18n-placeholder="inputPlaceholder" placeholder="${i18n[state.currentLang].inputPlaceholder}" onkeydown="if(event.key==='Enter') submitInlineAdd('${groupId}')">
-                <button class="primary-btn mini-btn" onclick="submitInlineAdd('${groupId}')" data-i18n="addBtn">${i18n[state.currentLang].addBtn}</button>
-                <button class="secondary-btn mini-btn" onclick="this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
-            </div>
-        </td>
-    `;
-    
-    if (tbody.children.length > 1) {
-        tbody.insertBefore(tr, tbody.children[1]);
-    } else {
-        tbody.appendChild(tr);
-    }
-    document.getElementById(`inlineAdd-${groupId}`).focus();
+    openFundActionDialog({
+        action: 'addFund',
+        groupId,
+        title: i18n[state.currentLang].addFundBtn,
+        description: formatGroupDialogDescription(i18n[state.currentLang].addFundDialogDesc, groupId),
+        placeholder: i18n[state.currentLang].inputPlaceholder,
+        submitLabel: i18n[state.currentLang].addBtn
+    });
 }
 
 export function showInlineNewGroup() {
     closeGroupMenus();
-
-    const table = document.getElementById('fundTable');
-    if (!table) return;
-
-    const existingRow = table.querySelector('.new-group-section');
-    if (existingRow) {
-        document.getElementById('inlineNewGroup')?.focus();
-        return;
-    }
-
     document.querySelectorAll('.group-action-row, .fund-detail-row').forEach(row => row.remove());
 
-    const tbody = document.createElement('tbody');
-    tbody.className = 'new-group-section';
-    tbody.innerHTML = `
-        <tr class="inline-add-row group-action-row">
-            <td colspan="8" class="inline-add-cell">
-                <div class="inline-add-wrap">
-                    <input type="text" id="inlineNewGroup" data-i18n-placeholder="promptNewGroup" placeholder="${i18n[state.currentLang].promptNewGroup}" onkeydown="if(event.key==='Enter') submitInlineNewGroup()">
-                    <button class="primary-btn mini-btn" onclick="submitInlineNewGroup()" data-i18n="addGroupTitle">${i18n[state.currentLang].addGroupTitle}</button>
-                    <button class="secondary-btn mini-btn" onclick="this.closest('tbody').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
-                </div>
-            </td>
-        </tr>
-    `;
-
-    table.insertBefore(tbody, table.tBodies[0] || null);
-    document.getElementById('inlineNewGroup').focus();
-}
-
-function insertGroupActionRow(groupId, rowClass, contentHtml) {
-    closeGroupMenus();
-
-    const table = document.getElementById('fundTable');
-    const tbody = table.querySelector(`tbody[data-group="${groupId}"]`);
-    if (!tbody) return null;
-
-    tbody.classList.remove('collapsed');
-    state.groupExpanded[groupId] = true;
-    tbody.querySelector('.group-action-row')?.remove();
-    document.querySelectorAll('.fund-detail-row').forEach(detailRow => detailRow.remove());
-
-    const tr = document.createElement('tr');
-    tr.className = `inline-add-row group-action-row ${rowClass}`;
-    tr.innerHTML = `
-        <td colspan="8" class="inline-add-cell">
-            ${contentHtml}
-        </td>
-    `;
-
-    if (tbody.children.length > 1) {
-        tbody.insertBefore(tr, tbody.children[1]);
-    } else {
-        tbody.appendChild(tr);
-    }
-
-    return tr;
+    openFundActionDialog({
+        action: 'newGroup',
+        title: i18n[state.currentLang].addGroupTitle,
+        description: i18n[state.currentLang].addGroupDialogDesc,
+        placeholder: i18n[state.currentLang].promptNewGroup,
+        submitLabel: i18n[state.currentLang].addGroupTitle
+    });
 }
 
 export function showInlineRename(groupId) {
     if (groupId === 'default') return;
 
-    const tr = insertGroupActionRow(groupId, 'inline-rename-row', `
-        <div class="inline-add-wrap">
-            <input type="text" id="inlineRename-${groupId}" value="${groupId}" onkeydown="if(event.key==='Enter') submitInlineRename('${groupId}')">
-            <button class="primary-btn mini-btn" onclick="submitInlineRename('${groupId}')" data-i18n="renameBtn">${i18n[state.currentLang].renameBtn}</button>
-            <button class="secondary-btn mini-btn" onclick="this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
-        </div>
-    `);
-
-    if (tr) {
-        const input = document.getElementById(`inlineRename-${groupId}`);
-        input.focus();
-        input.select();
-    }
+    closeGroupMenus();
+    document.querySelectorAll('.group-action-row, .fund-detail-row').forEach(row => row.remove());
+    openFundActionDialog({
+        action: 'renameGroup',
+        groupId,
+        title: i18n[state.currentLang].renameGroupDialogTitle,
+        description: i18n[state.currentLang].renameGroupDialogDesc,
+        placeholder: i18n[state.currentLang].promptNewGroup,
+        submitLabel: i18n[state.currentLang].renameBtn,
+        value: groupId,
+        selectInput: true
+    });
 }
 
 export function showInlineDelete(groupId) {
     if (groupId === 'default') return;
 
-    insertGroupActionRow(groupId, 'inline-delete-row', `
-        <div class="inline-confirm-wrap">
-            <span class="inline-confirm-copy">${i18n[state.currentLang].confirmDeleteGroup}</span>
-            <button class="primary-btn mini-btn danger-mini-btn" onclick="confirmInlineDeleteGroup('${groupId}')" data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</button>
-            <button class="secondary-btn mini-btn" onclick="this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
-        </div>
-    `);
+    closeGroupMenus();
+    document.querySelectorAll('.group-action-row, .fund-detail-row').forEach(row => row.remove());
+    openFundConfirmDialog({
+        action: 'deleteGroup',
+        targetId: groupId,
+        title: i18n[state.currentLang].deleteGroupDialogTitle,
+        description: i18n[state.currentLang].confirmDeleteGroup,
+        confirmLabel: i18n[state.currentLang].deleteBtn
+    });
 }
+
+function formatGroupDialogDescription(template, groupId) {
+    const groupName = groupId === 'default' ? i18n[state.currentLang].defaultGroup : groupId;
+    return template.replace('{group}', groupName);
+}
+
+function openNativeDialog(dialog) {
+    if (!dialog) return;
+    if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+    }
+}
+
+function closeNativeDialog(dialog) {
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') {
+        dialog.close();
+    } else {
+        dialog.removeAttribute('open');
+    }
+}
+
+function openFundActionDialog({ action, groupId = '', title, description, placeholder, submitLabel, value = '', selectInput = false }) {
+    const dialog = document.getElementById('fundActionDialog');
+    const form = document.getElementById('fundActionForm');
+    const input = document.getElementById('fundActionInput');
+    const titleEl = document.getElementById('fundActionDialogTitle');
+    const descEl = document.getElementById('fundActionDialogDesc');
+    const submitBtn = document.getElementById('fundActionSubmitBtn');
+    if (!dialog || !form || !input || !titleEl || !descEl || !submitBtn) return;
+
+    form.reset();
+    dialog.dataset.action = action;
+    dialog.dataset.groupId = groupId;
+    titleEl.textContent = title;
+    descEl.textContent = description;
+    input.placeholder = placeholder;
+    input.value = value;
+    submitBtn.textContent = submitLabel;
+    openNativeDialog(dialog);
+    requestAnimationFrame(() => {
+        input.focus();
+        if (selectInput) input.select();
+    });
+}
+
+function openFundConfirmDialog({ action, targetId, title, description, confirmLabel }) {
+    const dialog = document.getElementById('fundConfirmDialog');
+    const titleEl = document.getElementById('fundConfirmDialogTitle');
+    const descEl = document.getElementById('fundConfirmDialogDesc');
+    const copyEl = document.getElementById('fundConfirmCopy');
+    const submitBtn = document.getElementById('fundConfirmSubmitBtn');
+    if (!dialog || !titleEl || !descEl || !copyEl || !submitBtn) return;
+
+    dialog.dataset.action = action;
+    dialog.dataset.targetId = targetId;
+    titleEl.textContent = title;
+    descEl.textContent = description;
+    copyEl.textContent = description;
+    submitBtn.textContent = confirmLabel;
+    openNativeDialog(dialog);
+}
+
+window.closeFundActionDialog = function() {
+    closeNativeDialog(document.getElementById('fundActionDialog'));
+};
+
+window.closeFundConfirmDialog = function() {
+    closeNativeDialog(document.getElementById('fundConfirmDialog'));
+};
 
 function closeGroupMenus() {
     document.querySelectorAll('.group-actions.menu-open').forEach(menu => menu.classList.remove('menu-open'));
@@ -497,34 +492,42 @@ export function showGroupTrend(groupId) {
 
 document.addEventListener('click', closeGroupMenus);
 
-window.submitInlineAdd = function(groupId) {
-    const input = document.getElementById(`inlineAdd-${groupId}`);
-    if (!input) return;
+window.submitFundActionDialog = function(event) {
+    event?.preventDefault();
+    const dialog = document.getElementById('fundActionDialog');
+    const input = document.getElementById('fundActionInput');
+    if (!dialog || !input) return;
+
+    const action = dialog.dataset.action;
+    const groupId = dialog.dataset.groupId;
     const codes = input.value;
-    if (codes.trim() !== '') {
+    const value = codes.trim();
+
+    if (action === 'addFund' && value !== '') {
         window.addFundCodes(groupId, codes);
+    } else if (action === 'newGroup' && value !== '' && window.addGroup) {
+        window.addGroup(value);
+    } else if (action === 'renameGroup' && value !== '' && value !== groupId && window.renameGroup) {
+        window.renameGroup(groupId, value);
     }
-    input.closest('tr').remove();
+
+    window.closeFundActionDialog();
 };
 
-window.submitInlineRename = function(oldId) {
-    const input = document.getElementById(`inlineRename-${oldId}`);
-    if (!input) return;
-    const newId = input.value.trim();
-    if (newId !== '' && newId !== oldId && window.renameGroup) {
-        window.renameGroup(oldId, newId);
-    }
-    input.closest('tr').remove();
-};
+window.confirmFundDialog = function(event) {
+    event?.preventDefault();
+    const dialog = document.getElementById('fundConfirmDialog');
+    if (!dialog) return;
 
-window.submitInlineNewGroup = function() {
-    const input = document.getElementById('inlineNewGroup');
-    if (!input) return;
-    const groupName = input.value.trim();
-    if (groupName !== '' && window.addGroup) {
-        window.addGroup(groupName);
+    const action = dialog.dataset.action;
+    const targetId = dialog.dataset.targetId;
+    window.closeFundConfirmDialog();
+
+    if (action === 'deleteGroup' && window.confirmInlineDeleteGroup) {
+        window.confirmInlineDeleteGroup(targetId);
+    } else if (action === 'removeFund') {
+        confirmRemoveFund(targetId);
     }
-    input.closest('tbody').remove();
 };
 
 export function toggleGroup(groupId) {
@@ -679,28 +682,14 @@ export function addRow(code) {
 }
 
 export function removeFund(code) {
-    const row = document.getElementById(`fund-${code}`);
-    if (row?.nextElementSibling?.classList.contains('fund-remove-confirm-row')) {
-        row.nextElementSibling.remove();
-        return;
-    }
-
-    document.querySelectorAll('.fund-remove-confirm-row, .fund-detail-row').forEach(confirmRow => confirmRow.remove());
-
-    if (row) {
-        const confirmRow = document.createElement('tr');
-        confirmRow.className = 'fund-remove-confirm-row';
-        confirmRow.innerHTML = `
-            <td colspan="8" class="inline-add-cell">
-                <div class="inline-confirm-wrap">
-                    <span class="inline-confirm-copy">${i18n[state.currentLang].confirmRemoveFund}</span>
-                    <button class="primary-btn mini-btn danger-mini-btn" onclick="event.stopPropagation(); confirmRemoveFund('${code}')" data-i18n="deleteBtn">${i18n[state.currentLang].deleteBtn}</button>
-                    <button class="secondary-btn mini-btn" onclick="event.stopPropagation(); this.closest('tr').remove()" data-i18n="cancelBtn">${i18n[state.currentLang].cancelBtn}</button>
-                </div>
-            </td>
-        `;
-        row.after(confirmRow);
-    }
+    document.querySelectorAll('.fund-detail-row').forEach(detailRow => detailRow.remove());
+    openFundConfirmDialog({
+        action: 'removeFund',
+        targetId: code,
+        title: i18n[state.currentLang].removeFundDialogTitle,
+        description: i18n[state.currentLang].confirmRemoveFund,
+        confirmLabel: i18n[state.currentLang].deleteBtn
+    });
 }
 
 export function confirmRemoveFund(code) {

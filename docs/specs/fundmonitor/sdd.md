@@ -123,13 +123,13 @@ Fund Monitor
 ├─ Header: title, description, actions
 ├─ Summary cards: total, rising, falling, latest refresh
 ├─ Fund table: grouped sections and fund rows
-└─ Modal: group return or historical trend analysis
+└─ Modals: add/edit/confirm actions plus group return or historical trend analysis
 ```
 
 UI direction:
 
 - Keep the main screen optimized for fast monitoring and triage.
-- Keep group actions compact and inline to avoid leaving the table context.
+- Keep group actions compact in the table header while opening add/edit/confirm tasks in PAM-style dialogs.
 - Use clear positive, negative, neutral, loading, and error visual states.
 - Preserve desktop table density while using mobile cards/details for touch readability.
 

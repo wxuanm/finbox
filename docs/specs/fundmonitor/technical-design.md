@@ -116,15 +116,15 @@ Rules:
 
 ### `fundTable.js`
 
-- Renders group sections, group headers, fund rows, inline action rows, empty states, and mobile detail rows.
+- Renders group sections, group headers, fund rows, empty states, and mobile detail rows.
 - Handles table sorting and group collapse.
 - Updates desktop group-title tooltips with all fund estimated changes for collapsed groups while preserving group-row click behavior.
 - Handles group analysis and historical trend entry points.
 - Opens a single-fund historical trend modal when a desktop fund row is clicked; mobile row taps keep showing inline details.
 - Updates fund row cells from Eastmoney `fundinfo` field arrays.
-- Removes funds from state and storage after inline page confirmation rather than browser `confirm` prompts.
+- Opens PAM-style dialogs for group creation, fund addition, group rename/delete, and fund removal confirmation.
 
-Destructive group and fund removal actions use inline confirmation rows in the table instead of browser `confirm` prompts.
+Destructive group and fund removal actions use native `dialog` confirmation panels instead of browser `confirm` prompts.
 
 ### `modal.js`
 
@@ -257,7 +257,7 @@ Historical NAV:
 
 Main page:
 
-1. `index.html` provides fixed containers and inline event hooks.
+1. `index.html` provides fixed containers, action dialogs, and inline event hooks.
 2. `app.js` loads preferences and saved watchlist data.
 3. `fundTable.js` creates group sections and fund rows.
 4. `fundApi.js` updates rows asynchronously after `/api/fundgz` returns.

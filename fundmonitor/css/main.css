@@ -1119,6 +1119,150 @@ tbody.collapsed tr:not(.group-header) {
     background: var(--positive-color) !important;
 }
 
+.asset-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-height: min(840px, calc(100vh - 32px));
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 22px;
+    color: var(--text-color);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
+        linear-gradient(180deg, var(--surface-elevated), var(--table-row-hover));
+    box-shadow: var(--shadow-lg);
+}
+
+.asset-dialog.narrow-dialog {
+    width: min(520px, calc(100vw - 32px));
+}
+
+.asset-dialog::backdrop {
+    background:
+        radial-gradient(circle at 50% 12%, rgba(79, 70, 229, 0.24), transparent 34rem),
+        radial-gradient(circle at 84% 18%, rgba(6, 182, 212, 0.16), transparent 26rem),
+        rgba(4, 10, 20, 0.62);
+    backdrop-filter: blur(10px);
+}
+
+.asset-dialog-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-height: inherit;
+}
+
+.asset-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 13px;
+    border-bottom: 1px solid var(--border-color);
+    background:
+        radial-gradient(circle at 10% 0%, var(--primary-soft), transparent 34%),
+        linear-gradient(90deg, var(--gold-soft), transparent 62%),
+        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 28%),
+        linear-gradient(135deg, var(--surface-glass), var(--table-header-bg));
+}
+
+.asset-dialog-heading {
+    display: grid;
+    gap: 5px;
+}
+
+.dialog-eyebrow {
+    color: var(--primary-color);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.asset-dialog-header h2 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 20px;
+    letter-spacing: -0.02em;
+}
+
+.asset-dialog-header p {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.asset-dialog-close {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--muted-text);
+    background: var(--surface-elevated);
+    cursor: pointer;
+}
+
+.asset-dialog-close:hover {
+    color: var(--text-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.asset-dialog-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 16px 18px 18px;
+    background:
+        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 20rem),
+        transparent;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dialog-form {
+    display: grid;
+    gap: 14px;
+}
+
+.dialog-form input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    outline: none;
+    color: var(--text-color);
+    background: var(--input-bg);
+}
+
+.dialog-form input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.confirm-dialog-copy {
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    color: var(--secondary-color);
+    background: var(--surface-elevated);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.confirm-dialog-actions {
+    justify-content: flex-end;
+}
+
 .empty-state-tbody td {
     padding: 84px 24px;
     color: var(--muted-text);
@@ -2130,14 +2274,13 @@ tbody.collapsed tr:not(.group-header) {
 
     #fundTable tbody tr[id^="fund-"] td:nth-child(1) { grid-area: name; align-items: flex-start; }
     #fundTable tbody tr[id^="fund-"] td:nth-child(3) { grid-area: change; justify-content: flex-end; align-items: flex-start; }
-    #fundTable tbody tr[id^="fund-"] td:nth-child(9) { grid-area: action; justify-content: flex-end; }
+    #fundTable tbody tr[id^="fund-"] td:nth-child(8) { grid-area: action; justify-content: flex-end; }
 
     #fundTable tbody tr[id^="fund-"] td:nth-child(2),
     #fundTable tbody tr[id^="fund-"] td:nth-child(4),
     #fundTable tbody tr[id^="fund-"] td:nth-child(5),
     #fundTable tbody tr[id^="fund-"] td:nth-child(6),
-    #fundTable tbody tr[id^="fund-"] td:nth-child(7),
-    #fundTable tbody tr[id^="fund-"] td:nth-child(8) {
+    #fundTable tbody tr[id^="fund-"] td:nth-child(7) {
         display: none;
     }
 
@@ -2200,6 +2343,23 @@ tbody.collapsed tr:not(.group-header) {
     .inline-confirm-wrap {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .asset-dialog {
+        width: min(calc(100vw - 24px), 520px);
+        max-height: calc(100vh - 24px);
+    }
+
+    .asset-dialog-header {
+        padding: 15px 16px 12px;
+    }
+
+    .asset-dialog-header h2 {
+        font-size: 18px;
+    }
+
+    .asset-dialog-body {
+        padding: 16px;
     }
 
     .analysis-compare-summary,
@@ -2267,6 +2427,23 @@ tbody.collapsed tr:not(.group-header) {
 
     .modal-body {
         padding: 18px;
+    }
+
+    .asset-dialog {
+        width: 100vw;
+        max-width: none;
+        max-height: 100vh;
+        border-right: 0;
+        border-left: 0;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .mini-btn {
+        width: 100%;
     }
 
     .analysis-header {
