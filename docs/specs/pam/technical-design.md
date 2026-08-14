@@ -171,7 +171,7 @@ The performance chart uses ECharts from CDN.
 - Y axis: active-period return percentage, normalized from each account's period anchor point.
 - Series: one line per valid account.
 - Lines use straight segments between manually entered snapshots instead of smoothed curves, avoiding implied unobserved performance between data points.
-- The chart includes a `0%` reference line and mirrors the return axis on the right for easier scanning.
+- The chart includes a `0%` reference line, a compounded `10%` annualized benchmark line from the active period anchor date, and mirrors the return axis on the right for easier scanning.
 - Legend labels include each account's active-period return.
 - Active account highlight dims other series and shows a subtle drawdown area between the selected line and its prior peak; unselected accounts do not show drawdown shading.
 - Period chips update chart and metrics together.

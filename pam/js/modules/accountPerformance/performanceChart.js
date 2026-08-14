@@ -3,6 +3,8 @@ import { periodLabel, t } from '../../config/i18n.js';
 import { formatPercent } from '../../utils/formatter.js';
 
 let chartInstance = null;
+const ANNUALIZED_BENCHMARK_RATE = 0.10;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
@@ -66,14 +68,15 @@ export function renderPerformanceChart(metrics) {
             data
         };
     });
+    const benchmarkSeries = buildBenchmarkSeries(validMetrics);
     const selectedMetric = validMetrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
     const drawdownSeries = selectedMetric ? buildDrawdownSeries(selectedMetric) : [];
-    const zeroLineSeries = buildZeroLineSeries(series[0]?.data || []);
+    const zeroLineSeries = buildZeroLineSeries(series[0]?.data || benchmarkSeries.data || []);
     const axisMirrorSeries = {
         name: '__axis_mirror__',
         type: 'line',
         yAxisIndex: 1,
-        data: series.flatMap(item => (item.data || []).map(point => point.value)),
+        data: [...series, benchmarkSeries].flatMap(item => (item.data || []).map(point => point.value)),
         showSymbol: false,
         silent: true,
         tooltip: { show: false },
@@ -91,7 +94,7 @@ export function renderPerformanceChart(metrics) {
         legend: {
             type: 'scroll',
             top: 0,
-            data: series.map(item => item.name),
+            data: [...series, benchmarkSeries].map(item => item.name),
             textStyle: { color: getCssVar('--text-color') }
         },
         grid: { top: 46, right: 54, bottom: 34, left: 54 },
@@ -112,7 +115,7 @@ export function renderPerformanceChart(metrics) {
             }
         ],
         dataZoom: [{ type: 'inside' }],
-        series: [...series, zeroLineSeries, ...drawdownSeries, axisMirrorSeries]
+        series: [...series, benchmarkSeries, zeroLineSeries, ...drawdownSeries, axisMirrorSeries]
     });
 }
 
@@ -130,6 +133,38 @@ function buildReturnSeries(points, baseUnitNav, accountName) {
         value: [point.date, (point.unitNav / baseUnitNav - 1) * 100],
         accountName
     }));
+}
+
+function buildBenchmarkSeries(metrics) {
+    const dates = [...new Set(metrics.flatMap(metric => metric.periodPoints.map(point => point.date)))].sort();
+    const startDate = dates[0];
+    const startTime = parseDate(startDate)?.getTime();
+    const data = Number.isFinite(startTime)
+        ? dates.map(date => {
+            const time = parseDate(date)?.getTime();
+            const days = Number.isFinite(time) ? Math.max((time - startTime) / DAY_MS, 0) : 0;
+            return {
+                value: [date, ((1 + ANNUALIZED_BENCHMARK_RATE) ** (days / 365) - 1) * 100],
+                accountName: t('annualizedBenchmark10')
+            };
+        })
+        : [];
+
+    return {
+        name: t('annualizedBenchmark10'),
+        type: 'line',
+        showSymbol: false,
+        smooth: false,
+        silent: false,
+        emphasis: { focus: 'series' },
+        lineStyle: {
+            color: getCssVar('--text-muted') || '#64748b',
+            type: 'dashed',
+            width: 1.6,
+            opacity: 0.9
+        },
+        data
+    };
 }
 
 function buildZeroLine() {
@@ -227,4 +262,9 @@ function formatChartTooltip(params) {
             return `${item.marker || ''}${item.data?.accountName || item.seriesName}: ${formatPercent(Number(value))}`;
         })
     ].join('<br/>');
+}
+
+function parseDate(date) {
+    const parsed = new Date(`${date}T00:00:00`);
+    return Number.isFinite(parsed.getTime()) ? parsed : null;
 }
