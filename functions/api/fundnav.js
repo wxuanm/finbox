@@ -33,7 +33,7 @@ export async function onRequest(context) {
     funds,
     failedCodes
   }, funds.length > 0 ? 200 : 502, {
-    'Cache-Control': 'public, max-age=1800, s-maxage=21600, stale-while-revalidate=86400'
+    'Cache-Control': 'no-store, max-age=0'
   });
 }
 

@@ -84,7 +84,7 @@ Rules:
 - `fund-monitor-fund-groups` stores a code-to-group object.
 - `fund-monitor-theme` stores `light` or `dark`.
 - `fund-monitor-lang` stores `zh` or `en`.
-- `fund-nav-3y:<sorted-codes>` stores same-day historical NAV response cache.
+- `fund-nav-3y:<sorted-codes>` stores same-day historical NAV response cache and rejects entries whose response `updatedAt` is not from the current local date.
 - Storage reads tolerate missing, malformed, or unavailable localStorage and return safe defaults.
 - NAV cache cleanup also removes legacy `fund-nav-1y:*` keys.
 
@@ -144,7 +144,7 @@ Destructive group and fund removal actions use inline confirmation rows in the t
 
 - Fetches `/api/fundnav` JSON.
 - Normalizes code lists for cache keys.
-- Stores same-day NAV response cache in `localStorage`.
+- Stores same-day NAV response cache in `localStorage` and rejects cache entries with stale response `updatedAt` values.
 - Clears current and legacy NAV cache keys when the watchlist or grouping changes.
 
 ### `navMetrics.js`
@@ -213,7 +213,7 @@ Behavior:
 - Fetches each code concurrently with `Promise.allSettled`.
 - Returns successful funds and failed code list.
 - Returns HTTP 200 when at least one fund succeeds, otherwise HTTP 502.
-- Adds cache headers for browser and edge caching.
+- Uses `Cache-Control: no-store` because historical NAV disclosure can update after an earlier same-day request, and per-URL HTTP caching can make single-fund and group entry points diverge.
 
 Normalized response shape:
 

@@ -428,7 +428,7 @@ Legacy `fund-nav-1y:*` keys may be removed during NAV cache cleanup.
 - `/api/fundnav` accepts up to 10 six-digit codes.
 - `/api/fundnav` returns JSON with `funds` and `failedCodes`.
 - NAV metrics ignore invalid or non-positive NAV points.
-- NAV trend cache is scoped by sorted unique fund code list and current date.
+- NAV trend cache is scoped by sorted unique fund code list and current date, and stale response timestamps are ignored.
 
 ### UI Acceptance
 

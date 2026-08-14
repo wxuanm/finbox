@@ -51,7 +51,7 @@ function readCache(cacheKey) {
         if (!raw) return null;
 
         const cached = JSON.parse(raw);
-        if (!cached || cached.cachedDate !== getTodayKey()) {
+        if (!cached || cached.cachedDate !== getTodayKey() || !isSameLocalDate(cached.data?.updatedAt)) {
             localStorage.removeItem(cacheKey);
             return null;
         }
@@ -72,6 +72,15 @@ function writeCache(cacheKey, data) {
 
 function getTodayKey() {
     const date = new Date();
+    return getLocalDateKey(date);
+}
+
+function isSameLocalDate(value) {
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) && getLocalDateKey(date) === getTodayKey();
+}
+
+function getLocalDateKey(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
