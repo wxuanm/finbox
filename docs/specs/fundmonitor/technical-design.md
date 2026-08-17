@@ -297,7 +297,7 @@ The historical trend chart uses ECharts from CDN.
 - Y axes: return percentage on left and mirrored invisible right axis.
 - Series: one line per valid fund.
 - Lines use straight segments rather than smoothing, matching common financial time-series chart conventions and avoiding implied interpolation between disclosed NAV points.
-- Chart periods: `YTD`, `1M`, `3M`, `6M`, `1Y`, `3Y`.
+- Chart periods: `1M`, `3M`, `6M`, `YTD`, `1Y`, `3Y`.
 - Selected fund metric card highlights its chart series and dims others.
 - Lowest point markers are shown when available.
 - Latest and highest return point markers are shown only for single-fund charts, the selected fund, or the legend-hovered fund in multi-fund charts; if the highest return point equals the latest point, only one value marker is shown.

@@ -769,10 +769,10 @@ export function navigateToNavTrend(codes, groupName = '') {
             </div>
             <div class="nav-chart-range-bar" aria-label="${dict.navChartRange}">
                 ${[
-                    ['periodYtd', 'ytd'],
                     ['period1m', 'm1'],
                     ['period3m', 'm3'],
                     ['period6m', 'm6'],
+                    ['periodYtd', 'ytd'],
                     ['period1y', 'y1'],
                     ['period3y', 'y3']
                 ].map(([label, key]) => `<button class="nav-chart-range-chip${key === defaultNavChartPeriod ? ' active' : ''}" type="button" data-nav-chart-period="${key}">${dict[label]}</button>`).join('')}
