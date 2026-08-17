@@ -256,7 +256,7 @@ Import behavior:
 ```
 
 - `CN` uses Sina A-share quote data first and Eastmoney stock quote data as fallback.
-- `Fund` uses Eastmoney fund comparison data.
+- `Fund` uses Eastmoney fund comparison data and normalizes the refresh price to the latest disclosed unit NAV, not the intraday estimated NAV.
 - Unsupported markets are returned in `failedItems`.
 - Quote refresh updates only current price, name when available, price source, and price update time.
 - The endpoint accepts up to 40 unique `market:symbol` items and returns `Cache-Control: no-store`.

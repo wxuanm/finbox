@@ -139,6 +139,6 @@ Response:
 - Cash holdings use amount mode: quantity is stored as 1, and cost/current price both represent the cash amount.
 - Holdings table supports filtering and sorting.
 - Holdings detail provides a clear add-holding action and identifies manual, quoted, and stale (over three days old) valuations.
-- A-share and fund quote refresh updates current price, name when available, price source, and price update time.
+- A-share quote refresh updates current price from the latest price. Fund quote refresh updates current price from the latest disclosed unit NAV, not the intraday estimated NAV. Refresh also updates name when available, price source, and price update time.
 - Quote refresh failure does not block manual holding maintenance.
 - Latest price remains visible when amount privacy is enabled; money amounts render as masked values.

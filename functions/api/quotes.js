@@ -173,7 +173,7 @@ async function fetchFundQuotes(items) {
       const fields = quoteMap.get(item.symbol);
       const estimatedNav = toNumber(fields?.[4]);
       const unitNav = toNumber(fields?.[6]);
-      const refreshPrice = estimatedNav ?? unitNav;
+      const refreshPrice = unitNav;
       const snapshotUnitNav = unitNav;
       const price = refreshPrice;
       if (!fields || price === null) {
