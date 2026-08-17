@@ -152,7 +152,7 @@ Destructive group and fund removal actions use native `dialog` confirmation pane
 - Normalizes unit NAV and accumulated NAV points.
 - Builds normalized return series.
 - Calculates period returns, max drawdown, annualized volatility, Calmar ratio, and up-day ratio.
-- Builds period-specific chart series for `1M`, `3M`, `6M`, `1Y`, and `3Y`.
+- Builds period-specific chart series for `YTD`, `1M`, `3M`, `6M`, `1Y`, and `3Y`.
 
 ### `dashboard.js`
 
@@ -297,7 +297,7 @@ The historical trend chart uses ECharts from CDN.
 - Y axes: return percentage on left and mirrored invisible right axis.
 - Series: one line per valid fund.
 - Lines use straight segments rather than smoothing, matching common financial time-series chart conventions and avoiding implied interpolation between disclosed NAV points.
-- Chart periods: `1M`, `3M`, `6M`, `1Y`, `3Y`.
+- Chart periods: `YTD`, `1M`, `3M`, `6M`, `1Y`, `3Y`.
 - Selected fund metric card highlights its chart series and dims others.
 - Lowest point markers are shown when available.
 - Latest and highest return point markers are shown only for single-fund charts, the selected fund, or the legend-hovered fund in multi-fund charts; if the highest return point equals the latest point, only one value marker is shown.

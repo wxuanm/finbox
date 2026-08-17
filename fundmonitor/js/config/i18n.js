@@ -81,7 +81,7 @@ export const i18n = {
         anaLongTerm: "中长期收益率",
         anaAnnual: "历史年度收益率",
         anaFI: "定投收益率",
-        periodYtd: "今年以来",
+        periodYtd: "今年",
         period1w: "近1周",
         period1m: "近1月",
         period3m: "近3月",

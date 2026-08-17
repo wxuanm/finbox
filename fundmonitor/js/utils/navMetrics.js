@@ -1,4 +1,5 @@
 const RETURN_PERIODS = [
+    ['ytd', 'ytd'],
     ['w1', 7],
     ['m1', 30],
     ['m3', 90],
@@ -7,6 +8,7 @@ const RETURN_PERIODS = [
     ['y3', 365 * 3]
 ];
 const CHART_PERIODS = [
+    ['ytd', 'ytd'],
     ['m1', 30],
     ['m3', 90],
     ['m6', 180],
@@ -72,7 +74,9 @@ function calculatePeriodMetrics(points, lastPoint) {
     if (latestTime === null) return {};
 
     return Object.fromEntries(RETURN_PERIODS.map(([key, days]) => {
-        const periodPoints = getPeriodPoints(points, latestTime - days * DAY_MS);
+        const periodPoints = days === 'ytd'
+            ? getYtdPoints(points, lastPoint.date)
+            : getPeriodPoints(points, latestTime - days * DAY_MS);
         const startPoint = periodPoints[0];
         const returnValue = startPoint ? (lastPoint.value / startPoint.value - 1) * 100 : null;
         const maxDrawdown = periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null;
@@ -114,7 +118,9 @@ function calculateChartSeries(points, lastPoint) {
     if (latestTime === null) return {};
 
     return Object.fromEntries(CHART_PERIODS.map(([key, days]) => {
-        const periodPoints = getPeriodPoints(points, latestTime - days * DAY_MS);
+        const periodPoints = days === 'ytd'
+            ? getYtdPoints(points, lastPoint.date)
+            : getPeriodPoints(points, latestTime - days * DAY_MS);
         const firstPoint = periodPoints[0];
         const series = firstPoint ? periodPoints.map(point => [point.date, (point.value / firstPoint.value - 1) * 100]) : [];
         return [key, series];
@@ -138,6 +144,14 @@ function getPeriodPoints(points, targetTime) {
 
     if (periodPoints.length > 0) return periodPoints;
     return fallback ? [fallback] : [];
+}
+
+function getYtdPoints(points, latestDate) {
+    const latestTime = parseDate(latestDate);
+    if (latestTime === null) return [];
+
+    const latest = new Date(latestTime);
+    return getPeriodPoints(points, new Date(latest.getFullYear(), 0, 1).getTime());
 }
 
 function parseDate(date) {

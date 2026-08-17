@@ -248,6 +248,7 @@ function formatNavFundName(metric) {
 function renderNavSummary(metrics, periodKey = defaultNavChartPeriod) {
     const dict = i18n[state.currentLang];
     const periodLabels = {
+        ytd: dict.periodYtd,
         m1: dict.period1m,
         m3: dict.period3m,
         m6: dict.period6m,
@@ -768,6 +769,7 @@ export function navigateToNavTrend(codes, groupName = '') {
             </div>
             <div class="nav-chart-range-bar" aria-label="${dict.navChartRange}">
                 ${[
+                    ['periodYtd', 'ytd'],
                     ['period1m', 'm1'],
                     ['period3m', 'm3'],
                     ['period6m', 'm6'],
