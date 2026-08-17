@@ -1745,10 +1745,11 @@ button:disabled {
     border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 22px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 36%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 36%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 34%),
+        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 34%),
+        radial-gradient(circle at 0% 100%, var(--primary-soft), transparent 30%),
         var(--surface-elevated);
-    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
 .management-panel .holding-table th,
@@ -1765,9 +1766,26 @@ button:disabled {
 
 .valuation-status {
     display: inline-block;
+    min-width: 66px;
+    padding: 5px 7px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    border-radius: 11px;
     color: var(--muted-text);
+    background: color-mix(in srgb, var(--surface-muted) 80%, transparent);
     font-size: 12px;
     white-space: nowrap;
+}
+
+.status-pair {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+}
+
+.status-pair small {
+    color: inherit;
+    font-size: 12px;
 }
 
 .valuation-status.stale {
@@ -2114,6 +2132,20 @@ select:focus {
     background: var(--primary-soft);
 }
 
+.mini-btn.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 10px;
+}
+
+.mini-btn.icon-btn svg {
+    pointer-events: none;
+}
+
 .main-stack {
     display: grid;
     gap: 14px;
@@ -2255,7 +2287,7 @@ select:focus {
 }
 
 .holding-table {
-    min-width: 1080px;
+    min-width: 900px;
 }
 
 .comparison-table th,
@@ -2264,7 +2296,7 @@ select:focus {
 .holding-table td,
 .snapshot-table th,
 .snapshot-table td {
-    padding: 8px 10px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border-color);
     text-align: left;
     vertical-align: middle;
@@ -2284,6 +2316,35 @@ select:focus {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     backdrop-filter: blur(14px);
+}
+
+.holding-table th:first-child {
+    border-top-left-radius: 14px;
+}
+
+.holding-table th:last-child {
+    border-top-right-radius: 14px;
+}
+
+.holding-table th:last-child,
+.holding-table td:last-child,
+.snapshot-table th:last-child,
+.snapshot-table td:last-child {
+    text-align: right;
+}
+
+.holding-table th:nth-child(n+2),
+.holding-table td:nth-child(n+2),
+.snapshot-table th:nth-child(2),
+.snapshot-table td:nth-child(2),
+.snapshot-table th:nth-child(3),
+.snapshot-table td:nth-child(3) {
+    text-align: right;
+}
+
+.snapshot-table th:nth-child(4),
+.snapshot-table td:nth-child(4) {
+    text-align: left;
 }
 
 .comparison-table th button {
@@ -2313,15 +2374,24 @@ select:focus {
     display: block;
 }
 
+.holding-table td:first-child strong {
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+}
+
 .holding-table tbody tr:nth-child(even),
 .snapshot-table tbody tr:nth-child(even),
 .comparison-table tbody tr:nth-child(even) {
-    background: color-mix(in srgb, var(--surface-elevated) 72%, transparent);
+    background: color-mix(in srgb, var(--surface-elevated) 84%, transparent);
 }
 
 .holding-table tbody tr:hover,
 .snapshot-table tbody tr:hover {
-    background: var(--primary-soft);
+    background:
+        linear-gradient(90deg, var(--primary-soft), transparent 56%),
+        color-mix(in srgb, var(--surface-elevated) 88%, transparent);
     box-shadow: inset 3px 0 0 var(--accent-color);
 }
 
@@ -2340,9 +2410,10 @@ select:focus {
 }
 
 .holding-table td:first-child small {
-    margin-top: 3px;
+    margin-top: 5px;
     color: var(--muted-text);
     font-size: 12px;
+    font-weight: 750;
 }
 
 .comparison-row {
@@ -2375,9 +2446,34 @@ select:focus {
     font-variant-numeric: tabular-nums;
 }
 
+.price-pair {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.price-pair > span {
+    color: var(--heading-color);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.price-pair small {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 760;
+}
+
+.pnl-pair small {
+    color: inherit;
+}
+
 .row-actions {
     display: flex;
     gap: 6px;
+    justify-content: flex-end;
 }
 
 .snapshot-table-footer {
@@ -2736,10 +2832,13 @@ select:focus {
     .holding-table tr,
     .comparison-table tr,
     .snapshot-table tr {
-        padding: 12px;
+        padding: 13px;
         border: 1px solid var(--border-color);
-        border-radius: 14px;
-        background: var(--surface-color);
+        border-radius: 18px;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 42%),
+            var(--surface-color);
+        box-shadow: var(--shadow-sm);
     }
 
     .holding-table td,
@@ -2747,8 +2846,9 @@ select:focus {
     .snapshot-table td {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         gap: 12px;
-        padding: 7px 0;
+        padding: 8px 0;
         border-bottom: 0;
         text-align: right;
     }
@@ -2767,6 +2867,8 @@ select:focus {
     .comparison-table td:nth-child(1),
     .snapshot-table td:nth-child(1) {
         display: block;
+        padding-bottom: 11px;
+        border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
         text-align: left;
     }
 
@@ -2784,15 +2886,12 @@ select:focus {
         content: attr(data-mobile-label);
     }
 
-    .holding-table td:nth-child(2)::before { content: "类别"; }
-    .holding-table td:nth-child(3)::before { content: "最新价"; }
-    .holding-table td:nth-child(4)::before { content: "市值"; }
-    .holding-table td:nth-child(5)::before { content: "占比"; }
-    .holding-table td:nth-child(6)::before { content: "成本"; }
-    .holding-table td:nth-child(7)::before { content: "浮盈亏"; }
-    .holding-table td:nth-child(8)::before { content: "浮盈率"; }
-    .holding-table td:nth-child(9)::before { content: "估值状态"; }
-    .holding-table td:nth-child(10)::before { content: "操作"; }
+    .holding-table td:nth-child(2)::before { content: "市值"; }
+    .holding-table td:nth-child(3)::before { content: "成本/现价"; }
+    .holding-table td:nth-child(4)::before { content: "累计盈亏"; }
+    .holding-table td:nth-child(5)::before { content: "仓位"; }
+    .holding-table td:nth-child(6)::before { content: "估值状态"; }
+    .holding-table td:nth-child(7)::before { content: "操作"; }
 
     .snapshot-table td:nth-child(2)::before { content: "总资产"; }
     .snapshot-table td:nth-child(3)::before { content: "净流入"; }
@@ -2805,6 +2904,11 @@ select:focus {
 
     .row-actions {
         justify-content: flex-end;
+    }
+
+    .valuation-status,
+    .price-pair {
+        align-items: flex-end;
     }
 
     .snapshot-table-footer {

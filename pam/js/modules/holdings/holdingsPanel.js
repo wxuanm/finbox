@@ -138,13 +138,10 @@ function renderHoldingTable(rows) {
 
     const columns = [
         ['name', t('name')],
-        ['assetClass', t('assetClass')],
-        ['currentPrice', t('latestPrice')],
         ['marketValue', t('marketValue')],
+        ['currentPrice', t('latestPrice')],
+        ['unrealizedPnl', t('cumulativePnl')],
         ['weight', t('weight')],
-        ['costAmount', t('cost')],
-        ['unrealizedPnl', t('unrealizedPnl')],
-        ['unrealizedPnlPct', t('unrealizedPnlPct')],
         ['priceUpdatedAt', t('priceTime')]
     ];
     const sortedRows = [...rows].sort(compareHoldings);
@@ -157,20 +154,23 @@ function renderHoldingTable(rows) {
 }
 
 function renderHoldingRow(row) {
+    const priceStatus = getPriceStatusParts(row);
     return `
         <tr>
-            <td><strong>${escapeHtml(row.name)}</strong><small>${escapeHtml(row.symbol || '-')} · ${getMarketLabel(row.market)}</small></td>
-            <td><span class="asset-class-pill">${getAssetClassLabel(row.assetClass)}</span></td>
-            <td class="number-cell">${formatPrice(row.currentPrice)}</td>
+            <td><strong>${escapeHtml(row.name)}</strong><small>${formatHoldingMeta(row)}</small></td>
             <td class="number-cell">${formatCurrency(row.marketValue, state.amountsHidden)}</td>
+            <td class="number-cell"><span class="price-pair"><span>${formatPrice(row.costPrice)}</span><small>${formatPrice(row.currentPrice)}</small></span></td>
+            <td class="number-cell ${signedClass(row.unrealizedPnl)}"><span class="price-pair pnl-pair"><span>${formatCurrency(row.unrealizedPnl, state.amountsHidden)}</span><small>${formatPercent(row.unrealizedPnlPct)}</small></span></td>
             <td class="number-cell">${formatPercent(row.weight, 1)}</td>
-            <td class="number-cell">${formatCurrency(row.costAmount, state.amountsHidden)}</td>
-            <td class="number-cell ${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)}</td>
-            <td class="number-cell ${signedClass(row.unrealizedPnlPct)}">${formatPercent(row.unrealizedPnlPct)}</td>
-            <td class="number-cell"><span class="valuation-status${isStalePrice(row) ? ' stale' : ''}">${formatPriceStatus(row)}</span></td>
-            <td><div class="row-actions"><button class="mini-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}">${t('edit')}</button><button class="mini-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}">${t('delete')}</button></div></td>
+            <td class="number-cell"><span class="valuation-status status-pair${isStalePrice(row) ? ' stale' : ''}"><span>${priceStatus.label}</span><small>${priceStatus.date}</small></span></td>
+            <td><div class="row-actions"><button class="mini-btn icon-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button><button class="mini-btn icon-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button></div></td>
         </tr>
     `;
+}
+
+function formatHoldingMeta(row) {
+    const labels = [getAssetClassLabel(row.assetClass), row.symbol || '-', getMarketLabel(row.market)];
+    return labels.filter((label, index) => label && labels.indexOf(label) === index).map(escapeHtml).join(' · ');
 }
 
 export function readHoldingForm() {
@@ -258,11 +258,11 @@ function syncCashAmountFields() {
     costInput.value = currentInput.value || '0';
 }
 
-function formatPriceStatus(row) {
+function getPriceStatusParts(row) {
     const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
-    if (!date) return t('notRecorded');
-    if (row.priceSource !== 'quote') return `${t('manual')} · ${date}`;
-    return isStalePrice(row) ? `${t('stale')} · ${date}` : `${t('quote')} · ${date}`;
+    if (!date) return { label: t('notRecorded'), date: '-' };
+    if (row.priceSource !== 'quote') return { label: t('manual'), date };
+    return { label: isStalePrice(row) ? t('stale') : t('quote'), date };
 }
 
 function isStalePrice(row) {
@@ -291,6 +291,14 @@ function formatPrice(value) {
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
     return num.toLocaleString(currentLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+}
+
+function editIcon() {
+    return '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4.8L19.1 9.7a2.3 2.3 0 0 0 0-3.2l-1.6-1.6a2.3 2.3 0 0 0-3.2 0L4 15.2V20Z" stroke-linejoin="round"/><path d="m13.5 5.7 4.8 4.8" stroke-linecap="round"/></svg>';
+}
+
+function deleteIcon() {
+    return '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14" stroke-linecap="round"/><path d="M10 11v6M14 11v6" stroke-linecap="round"/><path d="M8 7l.6 12.1A2 2 0 0 0 10.6 21h2.8a2 2 0 0 0 2-1.9L16 7" stroke-linejoin="round"/><path d="M9.5 7V5.6A1.6 1.6 0 0 1 11.1 4h1.8a1.6 1.6 0 0 1 1.6 1.6V7" stroke-linejoin="round"/></svg>';
 }
 
 function sortIcon(key) {

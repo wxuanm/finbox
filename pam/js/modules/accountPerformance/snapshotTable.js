@@ -54,8 +54,8 @@ export function renderSnapshotTable() {
                         <td>${escapeHtml(row.note || '-')}</td>
                         <td>
                             <div class="row-actions">
-                                <button class="mini-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}">${t('edit')}</button>
-                                <button class="mini-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}">${t('delete')}</button>
+                                <button class="mini-btn icon-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button>
+                                <button class="mini-btn icon-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button>
                             </div>
                         </td>
                     </tr>
@@ -90,4 +90,12 @@ export function bindSnapshotTable({ onEdit, onDelete }) {
 }
 
 export function bindSnapshotTableAccountSwitch() {
+}
+
+function editIcon() {
+    return '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4.8L19.1 9.7a2.3 2.3 0 0 0 0-3.2l-1.6-1.6a2.3 2.3 0 0 0-3.2 0L4 15.2V20Z" stroke-linejoin="round"/><path d="m13.5 5.7 4.8 4.8" stroke-linecap="round"/></svg>';
+}
+
+function deleteIcon() {
+    return '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14" stroke-linecap="round"/><path d="M10 11v6M14 11v6" stroke-linecap="round"/><path d="M8 7l.6 12.1A2 2 0 0 0 10.6 21h2.8a2 2 0 0 0 2-1.9L16 7" stroke-linejoin="round"/><path d="M9.5 7V5.6A1.6 1.6 0 0 1 11.1 4h1.8a1.6 1.6 0 0 1 1.6 1.6V7" stroke-linejoin="round"/></svg>';
 }

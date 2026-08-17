@@ -27,7 +27,7 @@ The current holdings capability lets users maintain current positions under each
 - Filter holdings by the selected account plus asset class and market.
 - Holding market options are constrained by asset class: stocks use A-share/other, funds use fund/other, bonds and other assets use other, and cash is fixed to cash.
 - Sort holdings table.
-- Calculate market value, cost amount, unrealized profit/loss, profit/loss percentage, and portfolio weight.
+- Calculate market value, cost amount, cumulative profit/loss, cumulative profit/loss percentage, and portfolio weight.
 - Keep account cards as the only asset and return overview. Holdings detail instead shows a lightweight count and valuation-quality status for the active filter.
 - Persist holdings in localStorage.
 - Include holdings in JSON import/export.
@@ -97,6 +97,8 @@ unrealizedPnl = marketValue - costAmount
 unrealizedPnlPct = costAmount > 0 ? unrealizedPnl / costAmount * 100 : null
 weight = totalMarketValue > 0 ? marketValue / totalMarketValue * 100 : null
 ```
+
+The holdings detail table keeps de-duplicated asset class, symbol, and market context under the name, with no separate asset-class column. The visible columns are name, market value, `成本/现价`, `累计盈亏`, weight, price time, and actions. The `成本/现价` column displays cost price and current price together; sorting that column continues to use `currentPrice`. The `累计盈亏` column displays cumulative profit/loss and cumulative profit/loss percentage together. Price time displays status and date on separate lines.
 
 ## Quote API
 
