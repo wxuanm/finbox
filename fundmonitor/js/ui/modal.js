@@ -11,6 +11,8 @@ let mobileCompareSortOrder = 1;
 const defaultMobileSortKey = 'y1';
 let modalRequestSeq = 0;
 const defaultNavChartPeriod = 'y3';
+const navBenchmarkAnnualReturn = 0.1;
+const dayMs = 24 * 60 * 60 * 1000;
 let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
@@ -322,6 +324,15 @@ function getLowestSeriesPoint(seriesData) {
     }, null);
 }
 
+function getHighestSeriesPoint(seriesData) {
+    return (seriesData || []).reduce((highest, point) => {
+        const value = Number(point?.[1]);
+        if (!Number.isFinite(value)) return highest;
+        if (!highest || value > highest[1]) return [point[0], value];
+        return highest;
+    }, null);
+}
+
 function getLastSeriesPoint(seriesData) {
     for (let index = (seriesData || []).length - 1; index >= 0; index -= 1) {
         const point = seriesData[index];
@@ -330,6 +341,97 @@ function getLastSeriesPoint(seriesData) {
     }
 
     return null;
+}
+
+function buildAnnualBenchmarkSeries(chartSeries) {
+    const dates = [...new Set(chartSeries.flatMap(series => (series.data || []).map(point => point?.[0]).filter(Boolean)))].sort();
+    if (dates.length < 2) return [];
+
+    const startTime = parseChartDate(dates[0]);
+    if (startTime === null) return [];
+
+    return dates.map(date => {
+        const pointTime = parseChartDate(date);
+        if (pointTime === null) return null;
+
+        const elapsedDays = Math.max(0, (pointTime - startTime) / dayMs);
+        const returnValue = ((1 + navBenchmarkAnnualReturn) ** (elapsedDays / 365) - 1) * 100;
+        return [date, returnValue];
+    }).filter(Boolean);
+}
+
+function parseChartDate(date) {
+    const time = new Date(`${date}T00:00:00`).getTime();
+    return Number.isFinite(time) ? time : null;
+}
+
+function buildNavChartSeries(metrics, periodKey, markerFundCode = selectedNavFundCode) {
+    return metrics.map(metric => {
+        const seriesData = metric.chartSeries?.[periodKey] || metric.series;
+        const isSelected = selectedNavFundCode === metric.code;
+        const showReturnMarkers = metrics.length === 1 || markerFundCode === metric.code;
+        const showSeriesMarkers = !selectedNavFundCode || isSelected || markerFundCode === metric.code;
+        const lowPoint = getLowestSeriesPoint(seriesData);
+        const highPoint = showReturnMarkers ? getHighestSeriesPoint(seriesData) : null;
+        const lastPoint = showReturnMarkers ? getLastSeriesPoint(seriesData) : null;
+        const markPointData = [];
+
+        if (lowPoint) {
+            markPointData.push({
+                name: '',
+                coord: lowPoint,
+                value: lowPoint[1],
+                label: { position: 'bottom' }
+            });
+        }
+
+        if (highPoint && (!lastPoint || highPoint[0] !== lastPoint[0] || highPoint[1] !== lastPoint[1])) {
+            markPointData.push({
+                name: 'High',
+                coord: highPoint,
+                value: highPoint[1],
+                label: { position: 'top' }
+            });
+        }
+
+        if (lastPoint) {
+            markPointData.push({
+                name: 'Latest',
+                coord: lastPoint,
+                value: lastPoint[1],
+                label: { position: 'top' }
+            });
+        }
+
+        return {
+            name: formatNavFundName(metric),
+            type: 'line',
+            showSymbol: false,
+            smooth: false,
+            emphasis: { focus: 'series' },
+            lineStyle: {
+                width: isSelected ? 3 : 1.5,
+                opacity: !selectedNavFundCode || isSelected ? 1 : 0.18
+            },
+            z: isSelected ? 10 : 1,
+            data: seriesData,
+            markPoint: markPointData.length > 0 ? {
+                symbol: 'circle',
+                symbolSize: isSelected ? 10 : 8,
+                itemStyle: {
+                    opacity: showSeriesMarkers ? 1 : 0
+                },
+                label: {
+                    formatter: params => `${Number(params.value).toFixed(2)}%`,
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#0f172a',
+                    fontSize: 10,
+                    fontWeight: 800,
+                    opacity: showSeriesMarkers ? 1 : 0
+                },
+                data: markPointData
+            } : undefined
+        };
+    });
 }
 
 function getActiveNavChartPeriod() {
@@ -365,69 +467,35 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     const chartEl = document.getElementById('oneYearNavChart');
     if (!chartEl || typeof window.echarts === 'undefined') return;
 
+    const dict = i18n[state.currentLang];
     const existingChart = window.echarts.getInstanceByDom(chartEl);
     if (existingChart) existingChart.dispose();
 
     const chart = window.echarts.init(chartEl);
-    const chartSeries = metrics.map(metric => {
-        const seriesData = metric.chartSeries?.[periodKey] || metric.series;
-        const isSelected = selectedNavFundCode === metric.code;
-        const lowPoint = getLowestSeriesPoint(seriesData);
-        const lastPoint = isSelected ? getLastSeriesPoint(seriesData) : null;
-        const markPointData = [];
-
-        if (lowPoint) {
-            markPointData.push({
-                name: 'Low',
-                coord: lowPoint,
-                value: lowPoint[1],
-                label: { position: 'bottom' }
-            });
-        }
-
-        if (lastPoint) {
-            markPointData.push({
-                name: 'Latest',
-                coord: lastPoint,
-                value: lastPoint[1],
-                label: { position: 'top' }
-            });
-        }
-
-        return {
-            name: formatNavFundName(metric),
-            type: 'line',
-            showSymbol: false,
-            smooth: false,
-            emphasis: { focus: 'series' },
-            lineStyle: {
-                width: isSelected ? 3 : 1.5,
-                opacity: !selectedNavFundCode || isSelected ? 1 : 0.18
-            },
-            z: isSelected ? 10 : 1,
-            data: seriesData,
-            markPoint: markPointData.length > 0 ? {
-                symbol: 'circle',
-                symbolSize: isSelected ? 10 : 8,
-                itemStyle: {
-                    opacity: !selectedNavFundCode || isSelected ? 1 : 0
-                },
-                label: {
-                    formatter: params => `${Number(params.value).toFixed(2)}%`,
-                    color: getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#0f172a',
-                    fontSize: 10,
-                    fontWeight: 800,
-                    opacity: !selectedNavFundCode || isSelected ? 1 : 0
-                },
-                data: markPointData
-            } : undefined
-        };
-    });
+    const chartSeries = buildNavChartSeries(metrics, periodKey);
+    const benchmarkName = dict.navBenchmarkAnnual10;
+    const benchmarkData = buildAnnualBenchmarkSeries(chartSeries);
+    const benchmarkSeries = benchmarkData.length > 0 ? {
+        name: benchmarkName,
+        type: 'line',
+        showSymbol: false,
+        smooth: false,
+        data: benchmarkData,
+        lineStyle: {
+            width: 1.8,
+            type: 'dashed',
+            color: '#94a3b8',
+            opacity: 0.95
+        },
+        itemStyle: { color: '#94a3b8' },
+        emphasis: { disabled: true },
+        z: 0
+    } : null;
     const axisMirrorSeries = {
         name: '__axis_mirror__',
         type: 'line',
         yAxisIndex: 1,
-        data: chartSeries.flatMap(series => series.data || []),
+        data: [...chartSeries.flatMap(series => series.data || []), ...(benchmarkData || [])],
         showSymbol: false,
         silent: true,
         tooltip: { show: false },
@@ -440,7 +508,24 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         color: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'],
         tooltip: {
             trigger: 'axis',
-            valueFormatter: value => `${Number(value).toFixed(2)}%`
+            formatter: params => {
+                const items = (Array.isArray(params) ? params : [params])
+                    .filter(item => item.seriesName !== benchmarkName && item.seriesName !== '__axis_mirror__');
+                if (items.length === 0) return '';
+
+                const title = items[0].axisValueLabel || items[0].axisValue || '';
+                const rows = items.map(item => {
+                    const value = Number(Array.isArray(item.value) ? item.value[1] : item.value);
+                    return `
+                        <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;min-width:220px;">
+                            <span>${item.marker}</span>
+                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.seriesName}</span>
+                            <span style="font-variant-numeric:tabular-nums;text-align:right;">${Number.isFinite(value) ? value.toFixed(2) : '-'}%</span>
+                        </div>
+                    `;
+                }).join('');
+                return `<div style="font-weight:700;margin-bottom:6px;">${title}</div>${rows}`;
+            }
         },
         legend: {
             type: 'scroll',
@@ -466,7 +551,40 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             }
         ],
         dataZoom: [{ type: 'inside' }],
-        series: [...chartSeries, axisMirrorSeries]
+        series: [...chartSeries, ...(benchmarkSeries ? [benchmarkSeries] : []), axisMirrorSeries]
+    });
+
+    const updateMarkerFocus = markerFundCode => {
+        chart.setOption({
+            series: [
+                ...buildNavChartSeries(metrics, periodKey, markerFundCode),
+                ...(benchmarkSeries ? [benchmarkSeries] : []),
+                axisMirrorSeries
+            ]
+        }, false);
+    };
+
+    chart.on('mouseover', params => {
+        if (params.componentType !== 'legend') return;
+        const metric = metrics.find(item => formatNavFundName(item) === params.name);
+        if (!metric) return;
+        updateMarkerFocus(metric.code);
+    });
+
+    chart.on('mouseout', params => {
+        if (params.componentType !== 'legend') return;
+        updateMarkerFocus(selectedNavFundCode);
+    });
+
+    chart.on('highlight', params => {
+        const seriesName = params.batch?.[0]?.seriesName || params.seriesName;
+        const metric = metrics.find(item => formatNavFundName(item) === seriesName);
+        if (!metric) return;
+        updateMarkerFocus(metric.code);
+    });
+
+    chart.on('downplay', () => {
+        updateMarkerFocus(selectedNavFundCode);
     });
 
     chart.on('dataZoom', () => {

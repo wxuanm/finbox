@@ -300,7 +300,8 @@ The historical trend chart uses ECharts from CDN.
 - Chart periods: `1M`, `3M`, `6M`, `1Y`, `3Y`.
 - Selected fund metric card highlights its chart series and dims others.
 - Lowest point markers are shown when available.
-- Latest point marker is shown for selected fund.
+- Latest and highest return point markers are shown only for single-fund charts, the selected fund, or the legend-hovered fund in multi-fund charts; if the highest return point equals the latest point, only one value marker is shown.
+- An annualized 10% benchmark is rendered as a dashed independent series for both single-fund and multi-fund charts, using compound growth from the first chart date.
 - Inside data zoom is enabled, and zoom end is kept anchored at 100.
 
 ## Responsive Behavior

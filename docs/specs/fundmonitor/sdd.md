@@ -291,6 +291,8 @@ Historical NAV notice:
 - Unit NAV and accumulated NAV points are merged by date.
 - Accumulated NAV is preferred over unit NAV for normalized return calculations when available.
 - Historical trend charts use straight line segments rather than smoothed curves to avoid implying unavailable prices between disclosed NAV points.
+- Historical trend charts label latest and highest return values only when one fund is shown, when a fund is selected, or while a fund legend item is hovered in a multi-fund chart; when the highest point is also the latest point, only one value is shown.
+- Historical trend charts always show an annualized 10% benchmark curve, calculated from the chart range start as compound growth over elapsed calendar days.
 - Partial failures return successful funds plus `failedCodes`.
 
 ### NAV Metric Rules
