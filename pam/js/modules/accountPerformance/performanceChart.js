@@ -6,6 +6,7 @@ let chartInstance = null;
 let anchoringZoom = false;
 const ANNUALIZED_BENCHMARK_RATE = 0.10;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const INTERNAL_SERIES_PREFIX = '__';
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
@@ -52,23 +53,7 @@ export function renderPerformanceChart(metrics) {
     if (chartInstance) chartInstance.dispose();
     chartInstance = window.echarts.init(chartEl);
 
-    const series = validMetrics.map(metric => {
-        const selected = state.selectedHighlightAccountId === metric.account.id;
-        const baseUnitNav = metric.periodPoints[0]?.unitNav;
-        const data = buildReturnSeries(metric.periodPoints, baseUnitNav, metric.account.name);
-        return {
-            name: `${metric.account.name} ${formatPercent(metric.periodReturn)}`,
-            type: 'line',
-            showSymbol: false,
-            smooth: false,
-            emphasis: { focus: 'series' },
-            lineStyle: {
-                width: selected ? 3 : 1.8,
-                opacity: !state.selectedHighlightAccountId || selected ? 1 : 0.22
-            },
-            data
-        };
-    });
+    const series = buildAccountChartSeries(validMetrics);
     const benchmarkSeries = buildBenchmarkSeries(validMetrics);
     const selectedMetric = validMetrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
     const drawdownSeries = selectedMetric ? buildDrawdownSeries(selectedMetric) : [];
@@ -95,7 +80,7 @@ export function renderPerformanceChart(metrics) {
         legend: {
             type: 'scroll',
             top: 0,
-            data: [...series, benchmarkSeries].map(item => item.name),
+            data: series.map(item => item.name),
             textStyle: { color: getCssVar('--text-color') }
         },
         grid: { top: 46, right: 54, bottom: 34, left: 54 },
@@ -118,6 +103,7 @@ export function renderPerformanceChart(metrics) {
         dataZoom: [{ id: 'performance-inside-zoom', type: 'inside' }],
         series: [...series, benchmarkSeries, zeroLineSeries, ...drawdownSeries, axisMirrorSeries]
     });
+    bindLegendMarkerFocus(validMetrics, benchmarkSeries, zeroLineSeries, drawdownSeries, axisMirrorSeries);
     bindRightAnchoredZoom();
 }
 
@@ -164,6 +150,83 @@ function buildReturnSeries(points, baseUnitNav, accountName) {
     }));
 }
 
+function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighlightAccountId, focusAccountId = state.selectedHighlightAccountId) {
+    return metrics.map(metric => {
+        const focused = focusAccountId === metric.account.id;
+        const showReturnMarkers = metrics.length === 1 || markerAccountId === metric.account.id;
+        const baseUnitNav = metric.periodPoints[0]?.unitNav;
+        const data = buildReturnSeries(metric.periodPoints, baseUnitNav, metric.account.name);
+        const highPoint = showReturnMarkers ? getHighestSeriesPoint(data) : null;
+        const lastPoint = showReturnMarkers ? getLastSeriesPoint(data) : null;
+        const markPointData = [];
+
+        if (highPoint && (!lastPoint || highPoint[0] !== lastPoint[0] || highPoint[1] !== lastPoint[1])) {
+            markPointData.push({
+                name: 'High',
+                coord: highPoint,
+                value: highPoint[1],
+                label: { position: 'top' }
+            });
+        }
+
+        if (lastPoint) {
+            markPointData.push({
+                name: 'Latest',
+                coord: lastPoint,
+                value: lastPoint[1],
+                label: { position: 'top' }
+            });
+        }
+
+        return {
+            name: `${metric.account.name} ${formatPercent(metric.periodReturn)}`,
+            type: 'line',
+            showSymbol: false,
+            smooth: false,
+            emphasis: { focus: 'none' },
+            lineStyle: {
+                width: focused ? 3 : 1.8,
+                opacity: !focusAccountId || focused ? 1 : 0.18
+            },
+            data,
+            markPoint: markPointData.length > 0 ? {
+                symbol: 'circle',
+                symbolSize: focused ? 10 : 8,
+                itemStyle: {
+                    opacity: showReturnMarkers ? 1 : 0
+                },
+                label: {
+                    formatter: params => `${Number(params.value).toFixed(2)}%`,
+                    color: getCssVar('--text-color') || '#0f172a',
+                    fontSize: 10,
+                    fontWeight: 800,
+                    opacity: showReturnMarkers ? 1 : 0
+                },
+                data: markPointData
+            } : undefined
+        };
+    });
+}
+
+function getHighestSeriesPoint(data) {
+    return (data || []).reduce((highest, point) => {
+        const value = Number(point?.value?.[1]);
+        if (!Number.isFinite(value)) return highest;
+        if (!highest || value > highest[1]) return [point.value[0], value];
+        return highest;
+    }, null);
+}
+
+function getLastSeriesPoint(data) {
+    for (let index = (data || []).length - 1; index >= 0; index -= 1) {
+        const point = data[index];
+        const value = Number(point?.value?.[1]);
+        if (Number.isFinite(value)) return [point.value[0], value];
+    }
+
+    return null;
+}
+
 function buildBenchmarkSeries(metrics) {
     const dates = [...new Set(metrics.flatMap(metric => metric.periodPoints.map(point => point.date)))].sort();
     const startDate = dates[0];
@@ -184,8 +247,7 @@ function buildBenchmarkSeries(metrics) {
         type: 'line',
         showSymbol: false,
         smooth: false,
-        silent: false,
-        emphasis: { focus: 'series' },
+        emphasis: { disabled: true },
         lineStyle: {
             color: getCssVar('--text-muted') || '#64748b',
             type: 'dashed',
@@ -194,6 +256,47 @@ function buildBenchmarkSeries(metrics) {
         },
         data
     };
+}
+
+function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, drawdownSeries, axisMirrorSeries) {
+    const updateMarkerFocus = (markerAccountId, focusAccountId = markerAccountId) => {
+        chartInstance.setOption({
+            series: [
+                ...buildAccountChartSeries(metrics, markerAccountId, focusAccountId),
+                benchmarkSeries,
+                zeroLineSeries,
+                ...drawdownSeries,
+                axisMirrorSeries
+            ]
+        }, false);
+    };
+
+    chartInstance.on('mouseover', params => {
+        if (params.componentType !== 'legend') return;
+        const metric = findMetricBySeriesName(metrics, params.name);
+        if (!metric) return;
+        updateMarkerFocus(metric.account.id, metric.account.id);
+    });
+
+    chartInstance.on('mouseout', params => {
+        if (params.componentType !== 'legend') return;
+        updateMarkerFocus(state.selectedHighlightAccountId, state.selectedHighlightAccountId);
+    });
+
+    chartInstance.on('highlight', params => {
+        const seriesName = params.batch?.[0]?.seriesName || params.seriesName;
+        const metric = findMetricBySeriesName(metrics, seriesName);
+        if (!metric) return;
+        updateMarkerFocus(metric.account.id, metric.account.id);
+    });
+
+    chartInstance.on('downplay', () => {
+        updateMarkerFocus(state.selectedHighlightAccountId, state.selectedHighlightAccountId);
+    });
+}
+
+function findMetricBySeriesName(metrics, seriesName) {
+    return metrics.find(metric => `${metric.account.name} ${formatPercent(metric.periodReturn)}` === seriesName);
 }
 
 function buildZeroLine() {
@@ -280,17 +383,23 @@ function buildDrawdownSeries(metric) {
 
 function formatChartTooltip(params) {
     const items = (Array.isArray(params) ? params : [params])
-        .filter(item => !String(item.seriesName || '').startsWith('__'));
+        .filter(item => !String(item.seriesName || '').startsWith(INTERNAL_SERIES_PREFIX))
+        .filter(item => item.seriesName !== t('annualizedBenchmark10'));
     if (items.length === 0) return '';
 
     const title = items[0].axisValueLabel || items[0].value?.[0] || '';
-    return [
-        title,
-        ...items.map(item => {
-            const value = Array.isArray(item.value) ? item.value[1] : item.value;
-            return `${item.marker || ''}${item.data?.accountName || item.seriesName}: ${formatPercent(Number(value))}`;
-        })
-    ].join('<br/>');
+    const rows = items.map(item => {
+        const value = Array.isArray(item.value) ? item.value[1] : item.value;
+        return `
+            <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;min-width:220px;">
+                <span>${item.marker || ''}</span>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.data?.accountName || item.seriesName}</span>
+                <span style="font-variant-numeric:tabular-nums;text-align:right;">${formatPercent(Number(value))}</span>
+            </div>
+        `;
+    }).join('');
+
+    return `<div style="font-weight:700;margin-bottom:6px;">${title}</div>${rows}`;
 }
 
 function parseDate(date) {

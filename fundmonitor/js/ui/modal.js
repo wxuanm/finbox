@@ -365,12 +365,11 @@ function parseChartDate(date) {
     return Number.isFinite(time) ? time : null;
 }
 
-function buildNavChartSeries(metrics, periodKey, markerFundCode = selectedNavFundCode) {
+function buildNavChartSeries(metrics, periodKey, markerFundCode = selectedNavFundCode, focusFundCode = selectedNavFundCode) {
     return metrics.map(metric => {
         const seriesData = metric.chartSeries?.[periodKey] || metric.series;
-        const isSelected = selectedNavFundCode === metric.code;
+        const focused = focusFundCode === metric.code;
         const showReturnMarkers = metrics.length === 1 || markerFundCode === metric.code;
-        const showSeriesMarkers = !selectedNavFundCode || isSelected || markerFundCode === metric.code;
         const lowPoint = getLowestSeriesPoint(seriesData);
         const highPoint = showReturnMarkers ? getHighestSeriesPoint(seriesData) : null;
         const lastPoint = showReturnMarkers ? getLastSeriesPoint(seriesData) : null;
@@ -408,25 +407,25 @@ function buildNavChartSeries(metrics, periodKey, markerFundCode = selectedNavFun
             type: 'line',
             showSymbol: false,
             smooth: false,
-            emphasis: { focus: 'series' },
+            emphasis: { focus: 'none' },
             lineStyle: {
-                width: isSelected ? 3 : 1.5,
-                opacity: !selectedNavFundCode || isSelected ? 1 : 0.18
+                width: focused ? 3 : 1.5,
+                opacity: !focusFundCode || focused ? 1 : 0.18
             },
-            z: isSelected ? 10 : 1,
+            z: focused ? 10 : 1,
             data: seriesData,
             markPoint: markPointData.length > 0 ? {
                 symbol: 'circle',
-                symbolSize: isSelected ? 10 : 8,
+                symbolSize: focused ? 10 : 8,
                 itemStyle: {
-                    opacity: showSeriesMarkers ? 1 : 0
+                    opacity: showReturnMarkers ? 1 : 0
                 },
                 label: {
                     formatter: params => `${Number(params.value).toFixed(2)}%`,
                     color: getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim() || '#0f172a',
                     fontSize: 10,
                     fontWeight: 800,
-                    opacity: showSeriesMarkers ? 1 : 0
+                    opacity: showReturnMarkers ? 1 : 0
                 },
                 data: markPointData
             } : undefined
@@ -554,10 +553,10 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         series: [...chartSeries, ...(benchmarkSeries ? [benchmarkSeries] : []), axisMirrorSeries]
     });
 
-    const updateMarkerFocus = markerFundCode => {
+    const updateMarkerFocus = (markerFundCode, focusFundCode = markerFundCode) => {
         chart.setOption({
             series: [
-                ...buildNavChartSeries(metrics, periodKey, markerFundCode),
+                ...buildNavChartSeries(metrics, periodKey, markerFundCode, focusFundCode),
                 ...(benchmarkSeries ? [benchmarkSeries] : []),
                 axisMirrorSeries
             ]
@@ -568,23 +567,23 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         if (params.componentType !== 'legend') return;
         const metric = metrics.find(item => formatNavFundName(item) === params.name);
         if (!metric) return;
-        updateMarkerFocus(metric.code);
+        updateMarkerFocus(metric.code, metric.code);
     });
 
     chart.on('mouseout', params => {
         if (params.componentType !== 'legend') return;
-        updateMarkerFocus(selectedNavFundCode);
+        updateMarkerFocus(selectedNavFundCode, selectedNavFundCode);
     });
 
     chart.on('highlight', params => {
         const seriesName = params.batch?.[0]?.seriesName || params.seriesName;
         const metric = metrics.find(item => formatNavFundName(item) === seriesName);
         if (!metric) return;
-        updateMarkerFocus(metric.code);
+        updateMarkerFocus(metric.code, metric.code);
     });
 
     chart.on('downplay', () => {
-        updateMarkerFocus(selectedNavFundCode);
+        updateMarkerFocus(selectedNavFundCode, selectedNavFundCode);
     });
 
     chart.on('dataZoom', () => {
