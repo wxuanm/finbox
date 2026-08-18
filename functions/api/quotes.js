@@ -149,6 +149,25 @@ async function fetchSinaAshareQuote(item) {
 async function fetchFundQuotes(items) {
   if (items.length === 0) return { quotes: [], failedItems: [] };
 
+  const chunks = [];
+  for (let index = 0; index < items.length; index += 10) {
+    chunks.push(items.slice(index, index + 10));
+  }
+
+  const results = await Promise.allSettled(chunks.map(fetchFundQuoteChunk));
+  return results.reduce((summary, result, index) => {
+    if (result.status === 'fulfilled') {
+      summary.quotes.push(...result.value.quotes);
+      summary.failedItems.push(...result.value.failedItems);
+      return summary;
+    }
+
+    summary.failedItems.push(...chunks[index].map(formatItemKey));
+    return summary;
+  }, { quotes: [], failedItems: [] });
+}
+
+async function fetchFundQuoteChunk(items) {
   const targetUrl = `https://fund.eastmoney.com/Data/FundCompare_Interface.aspx?t=0&bzdm=${encodeURIComponent(items.map(item => item.symbol).join(','))}&rt=${Date.now()}`;
   const response = await fetch(targetUrl, {
     headers: {
