@@ -1689,6 +1689,12 @@ button:disabled {
     display: none;
 }
 
+.asset-holdings-panel .asset-tool-bar {
+    flex: 0 0 auto;
+    grid-template-columns: repeat(2, minmax(112px, 128px));
+    width: auto;
+}
+
 .management-panel .asset-tool-bar select {
     padding: 7px 9px;
     background: var(--surface-color);
@@ -1765,13 +1771,13 @@ button:disabled {
 }
 
 .valuation-status {
-    display: inline-block;
-    min-width: 66px;
-    padding: 5px 7px;
-    border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-    border-radius: 11px;
+    display: inline-flex;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
     color: var(--muted-text);
-    background: color-mix(in srgb, var(--surface-muted) 80%, transparent);
+    background: transparent;
     font-size: 12px;
     white-space: nowrap;
 }
@@ -2134,10 +2140,14 @@ select:focus {
 
 .mini-btn.icon-btn {
     display: inline-flex;
+    flex: 0 0 36px;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    aspect-ratio: 1;
     padding: 0;
     border-radius: 10px;
 }
@@ -2345,11 +2355,13 @@ select:focus {
 }
 
 .snapshot-table {
-    min-width: 740px;
+    min-width: 0;
+    table-layout: fixed;
 }
 
 .holding-table {
-    min-width: 900px;
+    min-width: 0;
+    table-layout: fixed;
 }
 
 .comparison-table th,
@@ -2382,6 +2394,53 @@ select:focus {
 
 .holding-table th:first-child {
     border-top-left-radius: 14px;
+}
+
+.holding-table th:nth-child(2),
+.holding-table td:nth-child(2) {
+    width: 14%;
+}
+
+.holding-table th:nth-child(3),
+.holding-table td:nth-child(3) {
+    width: 13%;
+}
+
+.holding-table th:nth-child(4),
+.holding-table td:nth-child(4) {
+    width: 14%;
+}
+
+.holding-table th:nth-child(5),
+.holding-table td:nth-child(5) {
+    width: 9%;
+}
+
+.holding-table th:nth-child(6),
+.holding-table td:nth-child(6) {
+    width: 13%;
+}
+
+.holding-table th:last-child,
+.holding-table td:last-child,
+.snapshot-table th:last-child,
+.snapshot-table td:last-child {
+    width: 94px;
+}
+
+.snapshot-table th:nth-child(2),
+.snapshot-table td:nth-child(2) {
+    width: 18%;
+}
+
+.snapshot-table th:nth-child(3),
+.snapshot-table td:nth-child(3) {
+    width: 16%;
+}
+
+.snapshot-table th:nth-child(4),
+.snapshot-table td:nth-child(4) {
+    width: 30%;
 }
 
 .holding-table th:last-child {
@@ -2434,6 +2493,16 @@ select:focus {
 .holding-table td:first-child strong,
 .holding-table td:first-child small {
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.snapshot-table th:first-child,
+.snapshot-table td:first-child,
+.holding-table th:first-child,
+.holding-table td:first-child {
+    overflow: hidden;
 }
 
 .holding-table td:first-child strong {
@@ -2640,7 +2709,9 @@ select:focus {
     }
 
     .asset-holdings-panel .asset-tool-bar {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-self: flex-start;
+        grid-template-columns: repeat(2, minmax(112px, 128px));
+        width: auto;
     }
 
     .form-context-grid,

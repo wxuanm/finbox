@@ -1300,8 +1300,7 @@ function confirmSnapshotGeneration() {
     persistAll();
     renderApp();
     closeSnapshotGenerateDialog();
-    showFormMessage(t('generatedSnapshots', { count: rows.length }));
-    showHoldingMessage(t('generatedSnapshots', { count: rows.length }));
+    showAppMessage(t('generatedSnapshots', { count: rows.length }));
 }
 
 function getSelectedSnapshotDateOption() {
