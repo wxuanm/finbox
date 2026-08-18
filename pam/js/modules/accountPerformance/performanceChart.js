@@ -179,7 +179,7 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
         }
 
         return {
-            name: `${metric.account.name} ${formatPercent(metric.periodReturn)}`,
+            name: metric.account.name,
             type: 'line',
             showSymbol: false,
             smooth: false,
@@ -296,7 +296,7 @@ function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, drawdow
 }
 
 function findMetricBySeriesName(metrics, seriesName) {
-    return metrics.find(metric => `${metric.account.name} ${formatPercent(metric.periodReturn)}` === seriesName);
+    return metrics.find(metric => metric.account.name === seriesName);
 }
 
 function buildZeroLine() {

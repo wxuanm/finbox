@@ -141,7 +141,6 @@
                         </div>
                         <div id="periodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
                     </div>
-                    <div class="method-note" data-i18n="methodNote">口径：入金增加份额，出金减少份额；曲线变化代表投资表现。</div>
                     <div id="chartMessage" class="chart-message"></div>
                     <div id="performanceChart" class="performance-chart"></div>
                 </section>
@@ -376,7 +375,8 @@
                 <dialog id="accountDialog" class="asset-dialog narrow-dialog" aria-labelledby="accountDialogTitle">
                     <div class="asset-dialog-shell">
                         <div class="asset-dialog-header">
-                            <div>
+                            <div class="asset-dialog-heading">
+                                <span class="dialog-eyebrow" data-i18n="accountEyebrow">Account Setup</span>
                                 <h2 id="accountDialogTitle" data-i18n="accountDialogTitle">新增账户</h2>
                                 <p data-i18n="accountDialogDesc">创建一个投资账户后，可继续录入快照和持仓。</p>
                             </div>

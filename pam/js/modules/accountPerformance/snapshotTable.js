@@ -67,7 +67,6 @@ export function renderSnapshotTable() {
                 <button class="mini-btn snapshot-toggle-btn" type="button" data-action="toggle-snapshots">
                     ${showAllSnapshots ? t('collapse') : t('viewAllCount', { count: rows.length })}
                 </button>
-                ${showAllSnapshots ? '' : `<span>${t('snapshotHiddenSummary', { visible: visibleRows.length, hidden: hiddenCount })}</span>`}
             </div>
         ` : ''}
     `;
