@@ -157,7 +157,7 @@ function renderHoldingRow(row) {
     const priceStatus = getPriceStatusParts(row);
     return `
         <tr>
-            <td><strong>${escapeHtml(row.name)}</strong><small>${formatHoldingMeta(row)}</small></td>
+            <td><strong>${escapeHtml(row.name)}</strong><small>${formatHoldingMeta(row)}</small>${renderHoldingMobileCard(row, priceStatus)}</td>
             <td class="number-cell">${formatCurrency(row.marketValue, state.amountsHidden)}</td>
             <td class="number-cell"><span class="price-pair"><span>${formatPrice(row.costPrice)}</span><small>${formatPrice(row.currentPrice)}</small></span></td>
             <td class="number-cell ${signedClass(row.unrealizedPnl)}"><span class="price-pair pnl-pair"><span>${formatCurrency(row.unrealizedPnl, state.amountsHidden)}</span><small>${formatPercent(row.unrealizedPnlPct)}</small></span></td>
@@ -165,6 +165,45 @@ function renderHoldingRow(row) {
             <td class="number-cell"><span class="valuation-status status-pair${isStalePrice(row) ? ' stale' : ''}"><span>${priceStatus.label}</span><small>${priceStatus.date}</small></span></td>
             <td><div class="row-actions"><button class="mini-btn icon-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button><button class="mini-btn icon-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button></div></td>
         </tr>
+    `;
+}
+
+function renderHoldingMobileCard(row, priceStatus) {
+    return `
+        <div class="holding-mobile-card">
+            <div class="holding-mobile-card-head">
+                <div>
+                    <strong>${escapeHtml(row.name)}</strong>
+                    <small>${formatHoldingMeta(row)}</small>
+                </div>
+            </div>
+            <div class="holding-mobile-details">
+                <div>
+                    <span>${t('marketValue')}</span>
+                    <strong>${formatCurrency(row.marketValue, state.amountsHidden)}</strong>
+                </div>
+                <div>
+                    <span>${t('cumulativePnl')}</span>
+                    <strong class="${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)} / ${formatPercent(row.unrealizedPnlPct)}</strong>
+                </div>
+                <div>
+                    <span>${t('weight')}</span>
+                    <strong>${formatPercent(row.weight, 1)}</strong>
+                </div>
+                <div>
+                    <span>${t('latestPrice')}</span>
+                    <strong>${formatPrice(row.costPrice)} / ${formatPrice(row.currentPrice)}</strong>
+                </div>
+                <div>
+                    <span>${t('priceTime')}</span>
+                    <strong class="valuation-status${isStalePrice(row) ? ' stale' : ''}">${priceStatus.label} · ${priceStatus.date}</strong>
+                </div>
+            </div>
+            <div class="holding-mobile-actions">
+                <button class="mini-btn icon-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button>
+                <button class="mini-btn icon-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button>
+            </div>
+        </div>
     `;
 }
 

@@ -48,7 +48,7 @@ export function renderSnapshotTable() {
             <tbody>
                 ${visibleRows.map(row => `
                     <tr>
-                        <td>${row.date}</td>
+                        <td><span class="snapshot-date-text">${row.date}</span>${renderSnapshotMobileCard(row)}</td>
                         <td class="number-cell">${formatCurrency(row.totalValue, state.amountsHidden)}</td>
                         <td class="number-cell">${formatCurrency(row.netFlow, state.amountsHidden)}</td>
                         <td>${escapeHtml(row.note || '-')}</td>
@@ -70,6 +70,37 @@ export function renderSnapshotTable() {
                 ${showAllSnapshots ? '' : `<span>${t('snapshotHiddenSummary', { visible: visibleRows.length, hidden: hiddenCount })}</span>`}
             </div>
         ` : ''}
+    `;
+}
+
+function renderSnapshotMobileCard(row) {
+    return `
+        <div class="snapshot-mobile-card">
+            <div class="snapshot-mobile-card-head">
+                <div>
+                    <span>${t('date')}</span>
+                    <strong>${row.date}</strong>
+                </div>
+            </div>
+            <div class="snapshot-mobile-details">
+                <div>
+                    <span>${t('totalAssets')}</span>
+                    <strong>${formatCurrency(row.totalValue, state.amountsHidden)}</strong>
+                </div>
+                <div>
+                    <span>${t('netFlow')}</span>
+                    <strong>${formatCurrency(row.netFlow, state.amountsHidden)}</strong>
+                </div>
+                <div>
+                    <span>${t('note')}</span>
+                    <strong>${escapeHtml(row.note || '-')}</strong>
+                </div>
+            </div>
+            <div class="snapshot-mobile-actions">
+                <button class="mini-btn icon-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button>
+                <button class="mini-btn icon-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button>
+            </div>
+        </div>
     `;
 }
 
