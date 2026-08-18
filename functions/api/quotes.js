@@ -222,7 +222,7 @@ async function fetchFundQuoteChunk(items) {
 
 function getAshareExchangePrefix(symbol) {
   if (['000016', '000300', '000688', '000852', '000905'].includes(symbol)) return '1';
-  return /^6/.test(symbol) ? '1' : '0';
+  return /^[56]/.test(symbol) ? '1' : '0';
 }
 
 function getSinaAshareSymbol(symbol) {

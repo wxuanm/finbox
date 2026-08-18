@@ -1,6 +1,6 @@
 import { PERIODS, state } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
-import { escapeHtml, formatCurrency, formatPercent, signedClass } from '../../utils/formatter.js';
+import { escapeHtml, formatCurrency, formatPercent, formatRatio, signedClass } from '../../utils/formatter.js';
 
 export function renderOverviewCards(metrics) {
     const wrap = document.getElementById('overviewCards');
@@ -100,16 +100,12 @@ function renderComparisonRow(metric) {
             <td class="number-cell ${signedClass(metric.annualizedReturn)}" data-mobile-label="${t('annualizedReturn')}">${formatPercent(metric.annualizedReturn)}</td>
             <td class="number-cell desktop-only ${signedClass(metric.maxDrawdown)}">${formatPercent(metric.maxDrawdown)}</td>
             <td class="number-cell desktop-only">${formatPercent(metric.annualizedVolatility)}</td>
-            <td class="number-cell ${signedClass(metric.calmarRatio)}" data-mobile-label="${t('calmarRatio')}">${formatNumber(metric.calmarRatio)}</td>
+            <td class="number-cell ${signedClass(metric.calmarRatio)}" data-mobile-label="${t('calmarRatio')}">${formatRatio(metric.calmarRatio)}</td>
             <td class="number-cell" data-mobile-label="${t('latestAssets')}">${formatCurrency(metric.latestValue, state.amountsHidden)}</td>
             <td class="number-cell desktop-only ${signedClass(metric.profitLoss)}">${formatCurrency(metric.profitLoss, state.amountsHidden)}</td>
             <td class="number-cell desktop-only">${metric.latestDate || '-'}</td>
         </tr>
     `;
-}
-
-function formatNumber(value) {
-    return Number.isFinite(value) ? value.toFixed(2) : '-';
 }
 
 function compareMetrics(a, b) {

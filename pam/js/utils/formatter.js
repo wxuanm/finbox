@@ -5,6 +5,7 @@ export function formatCurrency(value, masked = false) {
     if (!Number.isFinite(num)) return '-';
     if (masked) return '****';
     return new Intl.NumberFormat(currentLocale(), {
+        minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(num);
 }
@@ -18,10 +19,44 @@ export function formatNumber(value, digits = 2) {
     });
 }
 
-export function formatPercent(value, digits = 2) {
+export function formatPercent(value, digits = 2, options = {}) {
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
-    return `${num >= 0 ? '+' : ''}${num.toFixed(digits)}%`;
+    const formatted = new Intl.NumberFormat(currentLocale(), {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+    }).format(num);
+    return `${options.sign === false || num < 0 ? '' : '+'}${formatted}%`;
+}
+
+export function formatWeight(value) {
+    return formatPercent(value, 2, { sign: false });
+}
+
+export function formatPrice(value, assetClass = '') {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    const digits = {
+        fund: 4,
+        stock: 3
+    }[assetClass] || 2;
+    return new Intl.NumberFormat(currentLocale(), {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+    }).format(num);
+}
+
+export function formatRatio(value) {
+    return formatNumber(value, 2);
+}
+
+export function formatChartAxisPercent(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    return `${new Intl.NumberFormat(currentLocale(), {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1
+    }).format(num)}%`;
 }
 
 export function signedClass(value) {

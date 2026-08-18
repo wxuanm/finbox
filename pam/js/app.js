@@ -12,7 +12,7 @@ import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
 import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
 import { bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
 import { fetchQuotes } from './modules/holdings/quoteApi.js';
-import { todayKey } from './utils/formatter.js';
+import { escapeHtml, formatCurrency, todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
 let snapshotGenerationInProgress = false;
@@ -1351,19 +1351,11 @@ function renderSnapshotGeneratePreview(generation = null) {
 }
 
 function formatPreviewCurrency(value) {
-    if (state.amountsHidden) return '****';
-    const num = Number(value);
-    if (!Number.isFinite(num)) return '-';
-    return num.toLocaleString(state.currentLang === 'en' ? 'en-US' : 'zh-CN', { maximumFractionDigits: 2 });
+    return formatCurrency(value, state.amountsHidden);
 }
 
 function escapePreviewText(value) {
-    return String(value ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+    return escapeHtml(value);
 }
 
 async function buildSnapshotValuation(dateOption) {

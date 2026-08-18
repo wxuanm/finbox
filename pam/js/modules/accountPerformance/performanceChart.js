@@ -1,6 +1,6 @@
 import { state, PERIODS } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
-import { formatPercent } from '../../utils/formatter.js';
+import { formatChartAxisPercent, formatPercent } from '../../utils/formatter.js';
 
 let chartInstance = null;
 let anchoringZoom = false;
@@ -88,13 +88,13 @@ export function renderPerformanceChart(metrics) {
         yAxis: [
             {
                 type: 'value',
-                axisLabel: { formatter: '{value}%' },
+                axisLabel: { formatter: value => formatChartAxisPercent(value) },
                 splitLine: { lineStyle: { color: getCssVar('--border-color') } }
             },
             {
                 type: 'value',
                 position: 'right',
-                axisLabel: { formatter: '{value}%' },
+                axisLabel: { formatter: value => formatChartAxisPercent(value) },
                 axisTick: { show: false },
                 axisLine: { show: false },
                 splitLine: { show: false }
@@ -196,7 +196,7 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
                     opacity: showReturnMarkers ? 1 : 0
                 },
                 label: {
-                    formatter: params => `${Number(params.value).toFixed(2)}%`,
+                    formatter: params => formatPercent(Number(params.value), 2),
                     color: getCssVar('--text-color') || '#0f172a',
                     fontSize: 10,
                     fontWeight: 800,

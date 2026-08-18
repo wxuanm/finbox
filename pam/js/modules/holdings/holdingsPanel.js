@@ -1,6 +1,6 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
-import { currentLocale, escapeHtml, formatCurrency, formatPercent, signedClass, todayKey } from '../../utils/formatter.js';
+import { currentLocale, escapeHtml, formatCurrency, formatPercent, formatPrice, formatWeight, signedClass, todayKey } from '../../utils/formatter.js';
 import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel } from './holdingsMetrics.js';
 
 export function renderHoldingsPanel(metrics) {
@@ -159,9 +159,9 @@ function renderHoldingRow(row) {
         <tr>
             <td><strong>${escapeHtml(row.name)}</strong><small>${formatHoldingMeta(row)}</small>${renderHoldingMobileCard(row, priceStatus)}</td>
             <td class="number-cell">${formatCurrency(row.marketValue, state.amountsHidden)}</td>
-            <td class="number-cell"><span class="price-pair"><span>${formatPrice(row.costPrice)}</span><small>${formatPrice(row.currentPrice)}</small></span></td>
+            <td class="number-cell"><span class="price-pair"><span>${formatPrice(row.costPrice, row.assetClass)}</span><small>${formatPrice(row.currentPrice, row.assetClass)}</small></span></td>
             <td class="number-cell ${signedClass(row.unrealizedPnl)}"><span class="price-pair pnl-pair"><span>${formatCurrency(row.unrealizedPnl, state.amountsHidden)}</span><small>${formatPercent(row.unrealizedPnlPct)}</small></span></td>
-            <td class="number-cell">${formatPercent(row.weight, 1)}</td>
+            <td class="number-cell">${formatWeight(row.weight)}</td>
             <td class="number-cell"><span class="valuation-status status-pair${isStalePrice(row) ? ' stale' : ''}"><span>${priceStatus.label}</span><small>${priceStatus.date}</small></span></td>
             <td><div class="row-actions"><button class="mini-btn icon-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button><button class="mini-btn icon-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button></div></td>
         </tr>
@@ -188,11 +188,11 @@ function renderHoldingMobileCard(row, priceStatus) {
                 </div>
                 <div>
                     <span>${t('weight')}</span>
-                    <strong>${formatPercent(row.weight, 1)}</strong>
+                    <strong>${formatWeight(row.weight)}</strong>
                 </div>
                 <div>
                     <span>${t('latestPrice')}</span>
-                    <strong>${formatPrice(row.costPrice)} / ${formatPrice(row.currentPrice)}</strong>
+                    <strong>${formatPrice(row.costPrice, row.assetClass)} / ${formatPrice(row.currentPrice, row.assetClass)}</strong>
                 </div>
                 <div>
                     <span>${t('priceTime')}</span>
@@ -324,12 +324,6 @@ function compareHoldings(a, b) {
     if (!Number.isFinite(aValue)) return 1;
     if (!Number.isFinite(bValue)) return -1;
     return (aValue - bValue) * direction;
-}
-
-function formatPrice(value) {
-    const num = Number(value);
-    if (!Number.isFinite(num)) return '-';
-    return num.toLocaleString(currentLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 }
 
 function editIcon() {
