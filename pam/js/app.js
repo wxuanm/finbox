@@ -18,6 +18,7 @@ let quoteRefreshInProgress = false;
 let snapshotGenerationInProgress = false;
 let pendingSnapshotGeneration = null;
 let pendingConfirmAction = null;
+let appMessageTimer = null;
 
 const SNAPSHOT_DATE_REFERENCE_FUNDS = [
     { market: 'Fund', symbol: '110001', name: '易方达平稳增长混合' },
@@ -142,6 +143,7 @@ function bindEvents() {
         event.preventDefault();
         closeConfirmDialog();
     });
+    document.getElementById('appMessageCloseBtn')?.addEventListener('click', closeAppMessage);
     document.querySelectorAll('[data-context-command]').forEach(button => {
         button.addEventListener('click', () => runContextCommand(button.dataset.contextCommand));
     });
@@ -842,7 +844,7 @@ function importData(event) {
             const parsed = JSON.parse(String(reader.result || ''));
             const data = parseImportPayload(parsed);
             if (!data) {
-                alert(t('importInvalid'));
+                showAppMessage(t('importInvalid'), true);
                 return;
             }
 
@@ -860,13 +862,13 @@ function importData(event) {
                 onConfirm: () => applyImportedData(data)
             });
         } catch (error) {
-            alert(t('importParseFailed'));
+            showAppMessage(t('importParseFailed'), true);
         } finally {
             input.value = '';
         }
     };
     reader.onerror = () => {
-        alert(t('importReadFailed'));
+        showAppMessage(t('importReadFailed'), true);
         input.value = '';
     };
     reader.readAsText(file, 'utf-8');
@@ -893,7 +895,7 @@ function applyImportedData(data) {
     applyTheme(state.theme);
     persistAll();
     renderApp();
-    alert(t('importDone', { accounts: state.accounts.length, snapshots: state.snapshots.length, holdings: state.holdings.length }));
+    showAppMessage(t('importDone', { accounts: state.accounts.length, snapshots: state.snapshots.length, holdings: state.holdings.length }));
 }
 
 function parseImportPayload(payload) {
@@ -1062,20 +1064,24 @@ async function refreshHoldingQuotes() {
     state.assetDataAction = 'holding';
     const supported = state.holdings.filter(holding => ['CN', 'Fund'].includes(holding.market) && holding.symbol);
     if (supported.length === 0) {
-        showHoldingMessage(t('noRefreshableHoldings'), true);
+        showAppMessage(t('noRefreshableHoldings'), true);
         return;
     }
 
     try {
         quoteRefreshInProgress = true;
         setQuoteRefreshState(true);
-        showHoldingMessage(t('refreshingQuotes', { count: supported.length }));
         const data = await fetchQuotes(supported);
         const quoteMap = new Map((data.quotes || []).map(quote => [`${quote.market}:${quote.symbol}`, quote]));
+        const failedKeys = new Set(data.failedItems || []);
         let updatedCount = 0;
         state.holdings = state.holdings.map(holding => {
-            const quote = quoteMap.get(`${holding.market}:${holding.symbol}`);
-            if (!quote || !Number.isFinite(Number(quote.price))) return holding;
+            const key = `${holding.market}:${holding.symbol}`;
+            const quote = quoteMap.get(key);
+            if (!quote || !Number.isFinite(Number(quote.price))) {
+                if (supported.some(item => item.id === holding.id)) failedKeys.add(key);
+                return holding;
+            }
             updatedCount += 1;
             return {
                 ...holding,
@@ -1088,13 +1094,48 @@ async function refreshHoldingQuotes() {
         });
         persistAll();
         renderApp();
-        showHoldingMessage(t('quotesRefreshed', { updated: updatedCount, failed: (data.failedItems || []).length }), (data.failedItems || []).length > 0);
+        const failedHoldings = supported.filter(holding => failedKeys.has(`${holding.market}:${holding.symbol}`));
+        const message = formatQuoteRefreshMessage(updatedCount, failedHoldings);
+        showAppMessage(message, failedHoldings.length > 0, failedHoldings.length > 0 ? t('quotesRefreshPartialTitle') : t('quotesRefreshSuccessTitle'));
     } catch (error) {
-        showHoldingMessage(t('quotesRefreshFailed'), true);
+        showAppMessage(t('quotesRefreshFailed'), true, t('quotesRefreshFailedTitle'));
     } finally {
         quoteRefreshInProgress = false;
         setQuoteRefreshState(false);
     }
+}
+
+function formatQuoteRefreshMessage(updatedCount, failedHoldings) {
+    const failedNames = failedHoldings.map(formatHoldingIdentifier);
+    const detail = failedNames.length > 0
+        ? t('quotesFailedDetail', { items: failedNames.join('、') })
+        : '';
+    return `${t('quotesRefreshed', { updated: updatedCount, failed: failedNames.length })}${detail ? ` ${detail}` : ''}`;
+}
+
+function formatHoldingIdentifier(holding) {
+    const symbol = holding.symbol ? ` ${holding.symbol}` : '';
+    return `${holding.name || holding.symbol || '-'}${symbol}`;
+}
+
+function showAppMessage(message, isError = false, title = '') {
+    const wrap = document.getElementById('appMessage');
+    const titleEl = document.getElementById('appMessageTitle');
+    const textEl = document.getElementById('appMessageText');
+    if (!wrap || !titleEl || !textEl) return;
+    titleEl.textContent = title || (isError ? t('messageErrorTitle') : t('messageTitle'));
+    textEl.textContent = message || '';
+    wrap.hidden = false;
+    wrap.classList.toggle('error', Boolean(isError));
+    clearTimeout(appMessageTimer);
+    appMessageTimer = setTimeout(closeAppMessage, isError ? 14000 : 9000);
+}
+
+function closeAppMessage() {
+    const wrap = document.getElementById('appMessage');
+    if (wrap) wrap.hidden = true;
+    clearTimeout(appMessageTimer);
+    appMessageTimer = null;
 }
 
 function setQuoteRefreshState(isRefreshing) {

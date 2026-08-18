@@ -396,6 +396,18 @@
         </main>
     </div>
 
+    <div id="appMessage" class="app-message" role="status" aria-live="polite" hidden>
+        <div class="app-message-card">
+            <div>
+                <strong id="appMessageTitle">提示</strong>
+                <p id="appMessageText"></p>
+            </div>
+            <button id="appMessageCloseBtn" class="app-message-close" type="button" data-i18n-title="close" title="关闭" aria-label="关闭">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
