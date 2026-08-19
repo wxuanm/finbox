@@ -100,7 +100,7 @@ export function renderPerformanceChart(metrics) {
                 splitLine: { show: false }
             }
         ],
-        dataZoom: [{ id: 'performance-inside-zoom', type: 'inside' }],
+        dataZoom: [{ id: 'performance-inside-zoom', type: 'inside', xAxisIndex: 0, filterMode: 'none' }],
         series: [...series, benchmarkSeries, zeroLineSeries, ...drawdownSeries, axisMirrorSeries]
     });
     bindLegendMarkerFocus(validMetrics, benchmarkSeries, zeroLineSeries, drawdownSeries, axisMirrorSeries);
