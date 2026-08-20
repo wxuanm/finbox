@@ -1,2 +1,5 @@
 .wrangler/
 /bak
+vsix/node_modules/
+vsix/dist/
+vsix/*.vsix

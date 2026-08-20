@@ -1,0 +1,148 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+}
+
+button {
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 4px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.trend-shell {
+  padding: 24px;
+}
+
+.trend-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.eyebrow {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 4px 0 0;
+  font-size: 24px;
+}
+
+.status {
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 16px;
+}
+
+.summary-grid,
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card,
+.chart-panel {
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 10px;
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+}
+
+.card {
+  padding: 14px;
+}
+
+.card-title {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.card-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.card-sub {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.chart-panel {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.chart {
+  min-height: 360px;
+}
+
+.chart svg {
+  width: 100%;
+  height: 360px;
+  overflow: visible;
+}
+
+.axis,
+.grid-line {
+  stroke: var(--vscode-panel-border);
+  stroke-width: 1;
+}
+
+.chart-label {
+  fill: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.line-0 { stroke: #3b82f6; }
+.line-1 { stroke: #ef4444; }
+.line-2 { stroke: #22c55e; }
+.line-3 { stroke: #f59e0b; }
+.line-4 { stroke: #a855f7; }
+.line-5 { stroke: #06b6d4; }
+.line-6 { stroke: #f97316; }
+.line-7 { stroke: #84cc16; }
+.line-8 { stroke: #ec4899; }
+.line-9 { stroke: #64748b; }
+
+.positive { color: #ef4444; }
+.negative { color: #22c55e; }
+.neutral { color: var(--vscode-descriptionForeground); }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 12px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+}
+
+.legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: currentColor;
+}

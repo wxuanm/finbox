@@ -1,0 +1,169 @@
+{
+  "name": "finbox",
+  "displayName": "FinBox Fund Monitor",
+  "description": "Monitor mutual fund estimates and historical trends inside VSCode.",
+  "version": "0.0.1",
+  "publisher": "finx",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wxuanm/finbox.git",
+    "directory": "vsix"
+  },
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:finboxFundMonitor.fund",
+    "onView:finboxFundMonitor.stock",
+    "onView:finboxFundMonitor.settings",
+    "onCommand:finboxFundMonitor.open",
+    "onCommand:finboxFundMonitor.refresh",
+    "onCommand:finboxFundMonitor.addFund",
+    "onCommand:finboxFundMonitor.addFundToGroup",
+    "onCommand:finboxFundMonitor.createGroup",
+    "onCommand:finboxFundMonitor.renameGroup",
+    "onCommand:finboxFundMonitor.deleteGroup",
+    "onCommand:finboxFundMonitor.removeFund",
+    "onCommand:finboxFundMonitor.openFundTrend",
+    "onCommand:finboxFundMonitor.openGroupTrend"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "finbox",
+          "title": "FINBOX",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "finbox": [
+        {
+          "id": "finboxFundMonitor.fund",
+          "name": "FUND"
+        },
+        {
+          "id": "finboxFundMonitor.stock",
+          "name": "STOCK"
+        },
+        {
+          "id": "finboxFundMonitor.settings",
+          "name": "SETTINGS"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "finboxFundMonitor.refresh",
+          "when": "view == finboxFundMonitor.fund",
+          "group": "navigation@1"
+        },
+        {
+          "command": "finboxFundMonitor.createGroup",
+          "when": "view == finboxFundMonitor.fund",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "finboxFundMonitor.openFundTrend",
+          "when": "view == finboxFundMonitor.fund && viewItem == fund",
+          "group": "1_fund@1"
+        },
+        {
+          "command": "finboxFundMonitor.removeFund",
+          "when": "view == finboxFundMonitor.fund && viewItem == fund",
+          "group": "1_fund@2"
+        },
+        {
+          "command": "finboxFundMonitor.addFundToGroup",
+          "when": "view == finboxFundMonitor.fund && viewItem == group",
+          "group": "inline@1"
+        },
+        {
+          "command": "finboxFundMonitor.addFundToGroup",
+          "when": "view == finboxFundMonitor.fund && viewItem == groupCustom",
+          "group": "inline@1"
+        },
+        {
+          "command": "finboxFundMonitor.renameGroup",
+          "when": "view == finboxFundMonitor.fund && viewItem == groupCustom",
+          "group": "navigation@1"
+        },
+        {
+          "command": "finboxFundMonitor.deleteGroup",
+          "when": "view == finboxFundMonitor.fund && viewItem == groupCustom",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "finboxFundMonitor.open",
+        "title": "打开基金监控",
+        "icon": "$(graph-line)"
+      },
+      {
+        "command": "finboxFundMonitor.refresh",
+        "title": "刷新基金估值",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "finboxFundMonitor.addFund",
+        "title": "添加基金",
+        "icon": "$(add)"
+      },
+      {
+        "command": "finboxFundMonitor.addFundToGroup",
+        "title": "添加基金",
+        "icon": "$(add)"
+      },
+      {
+        "command": "finboxFundMonitor.createGroup",
+        "title": "新建分组",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "finboxFundMonitor.renameGroup",
+        "title": "修改名称",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "finboxFundMonitor.deleteGroup",
+        "title": "删除分组",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "finboxFundMonitor.removeFund",
+        "title": "移除基金",
+        "icon": "$(close)"
+      },
+      {
+        "command": "finboxFundMonitor.openFundTrend",
+        "title": "基金走势",
+        "icon": "$(graph-line)"
+      },
+      {
+        "command": "finboxFundMonitor.openGroupTrend",
+        "title": "打开分组趋势",
+        "icon": "$(pulse)"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.92.0",
+    "typescript": "^5.5.4"
+  }
+}

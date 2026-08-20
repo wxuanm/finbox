@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run FinBox VSIX",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/vsix"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/vsix/dist/**/*.js"
+      ],
+      "preLaunchTask": "npm: compile - vsix"
+    }
+  ]
+}
