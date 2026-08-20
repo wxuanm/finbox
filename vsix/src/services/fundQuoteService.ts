@@ -11,22 +11,21 @@ export class FundQuoteService {
     if (codes.length === 0) return { quotes: [], failedCodes: [], updatedAt };
 
     const chunks = chunkCodes(codes, MAX_CODES_PER_REQUEST);
-    const results = await Promise.allSettled(chunks.map(chunk => this.fetchQuoteChunk(chunk, updatedAt)));
     const quotes: FundQuote[] = [];
     const failedCodes = new Set<string>();
 
-    results.forEach((result, index) => {
-      const chunk = chunks[index];
-      if (result.status === 'fulfilled') {
-        quotes.push(...result.value);
-        const returnedCodes = new Set(result.value.map(quote => quote.code));
+    for (const chunk of chunks) {
+      try {
+        const chunkQuotes = await this.fetchQuoteChunk(chunk, updatedAt);
+        quotes.push(...chunkQuotes);
+        const returnedCodes = new Set(chunkQuotes.map(quote => quote.code));
         chunk.forEach(code => {
           if (!returnedCodes.has(code)) failedCodes.add(code);
         });
-      } else {
+      } catch (error) {
         chunk.forEach(code => failedCodes.add(code));
       }
-    });
+    }
 
     return { quotes, failedCodes: [...failedCodes], updatedAt };
   }
