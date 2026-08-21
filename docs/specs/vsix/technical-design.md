@@ -126,6 +126,7 @@ finbox.fundMonitor.state
 - Fetches A-share quotes directly from the extension host.
 - Follows `functions/api/quotes.js` source priority: Sina first, Eastmoney fallback.
 - Normalizes each quote to symbol, stock name, latest price, previous close, open, high, low, price change, percentage change, volume, amount, quote time, and source.
+- Uses canonical `sh`/`sz` prefixed symbols for storage, quote cache keys, requests, and row identity so same numeric codes on different exchanges do not collide.
 - Returns partial failures so the stock sidebar can keep successful rows visible.
 
 Initial shape:
@@ -395,7 +396,7 @@ npx @vscode/vsce package
 - Empty startup: the TreeView shows `FUND`, `STOCK`, and `SETTINGS` root nodes; `FUND` shows an empty state when no funds are saved.
 - Add funds: entering `003026,110022,161725` adds valid codes and triggers quote refresh.
 - Refresh: real-time estimate data updates without executing remote scripts in the extension UI.
-- Add A-share stocks: entering `600519,000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, and stock name after refresh.
+- Add A-share stocks: entering `sh000001,sz000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, stock name, and prefixed symbol after refresh.
 - Stock ordering: stock rows preserve add order by default; context menu actions can move a stock up or down.
 - Persistence: `Developer: Reload Window` preserves funds and groups through `globalState`.
 - Single trend: clicking a fund tree item opens an editor webview with historical NAV trend data.

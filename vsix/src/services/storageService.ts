@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { PersistedFundMonitorState } from '../types';
+import { normalizeStockSymbols } from '../utils/fundCodes';
 
 const STORAGE_KEY = 'finbox.fundMonitor.state';
 
@@ -55,9 +56,7 @@ function normalizePersistedState(raw: unknown): PersistedFundMonitorState {
   }
 
   const stockSymbols = Array.isArray(value.stockSymbols)
-    ? [...new Set(value.stockSymbols
-        .map(symbol => String(symbol || '').trim())
-        .filter(symbol => /^\d{6}$/.test(symbol)))]
+    ? normalizeStockSymbols(value.stockSymbols)
     : [];
 
   return {

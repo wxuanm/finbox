@@ -105,7 +105,7 @@
 - [ ] Open FinBox sidebar from Activity Bar.
 - [ ] Add a valid six-digit fund code.
 - [ ] Refresh real-time quotes.
-- [ ] Add a valid six-digit A-share symbol and refresh stock quotes.
+- [ ] Add valid A-share symbols, including duplicate numeric codes with `sh`/`sz` prefixes, and refresh stock quotes.
 - [ ] Remove a fund and confirm persistence.
 - [ ] Create and delete a custom group, confirming deleted group funds move to `default`.
 - [ ] Reload VSCode window and confirm watchlist restores.

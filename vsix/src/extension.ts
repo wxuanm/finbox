@@ -99,14 +99,14 @@ export function activate(context: vscode.ExtensionContext): void {
   async function promptAddStock(): Promise<void> {
     const symbols = await vscode.window.showInputBox({
       title: '添加股票',
-      prompt: '输入六位股票代码，多个代码可用逗号或空格分隔',
-      placeHolder: '例如 600519, 000001'
+      prompt: '输入带 sh/sz 前缀的股票代码，多个代码可用逗号或空格分隔',
+      placeHolder: '例如 sh000001, sz000001'
     });
     if (!symbols) return;
 
     const addedSymbols = await store.addStocks(symbols);
     if (addedSymbols.length === 0) {
-      vscode.window.showWarningMessage('未识别到有效的六位股票代码。');
+      vscode.window.showWarningMessage('未识别到有效的股票代码。');
       return;
     }
     await refreshStockQuotes();

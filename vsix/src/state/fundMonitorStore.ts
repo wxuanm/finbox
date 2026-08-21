@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FundGroup, FundQuote, PersistedFundMonitorState, SidebarState, StockQuote, StockSidebarState } from '../types';
-import { normalizeFundCodes } from '../utils/fundCodes';
+import { normalizeFundCodes, normalizeStockSymbols } from '../utils/fundCodes';
 import { StorageService } from '../services/storageService';
 
 export class FundMonitorStore {
@@ -128,7 +128,7 @@ export class FundMonitorStore {
   }
 
   async addStocks(symbolsInput: string): Promise<string[]> {
-    const symbols = normalizeFundCodes(symbolsInput);
+    const symbols = normalizeStockSymbols(symbolsInput);
     let changed = false;
 
     symbols.forEach(symbol => {

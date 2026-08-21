@@ -1,11 +1,11 @@
 import { StockQuote, StockQuoteResult } from '../types';
-import { normalizeFundCodes } from '../utils/fundCodes';
+import { normalizeStockSymbols } from '../utils/fundCodes';
 
 const REQUEST_TIMEOUT_MS = 12000;
 
 export class StockQuoteService {
   async fetchQuotes(inputSymbols: string[]): Promise<StockQuoteResult> {
-    const symbols = normalizeFundCodes(inputSymbols);
+    const symbols = normalizeStockSymbols(inputSymbols);
     const updatedAt = new Date().toISOString();
     const results = await Promise.allSettled(symbols.map(symbol => this.fetchAshareQuote(symbol)));
     const quotes: StockQuote[] = [];
@@ -29,7 +29,7 @@ export class StockQuoteService {
   }
 
   private async fetchSinaAshareQuote(symbol: string): Promise<StockQuote | null> {
-    const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(getSinaAshareSymbol(symbol))}`;
+    const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(symbol)}`;
     const response = await fetchWithTimeout(targetUrl, {
       headers: {
         Referer: 'https://finance.sina.com.cn/',
@@ -68,7 +68,7 @@ export class StockQuoteService {
   }
 
   private async fetchEastmoneyAshareQuote(symbol: string): Promise<StockQuote | null> {
-    const secid = `${getAshareExchangePrefix(symbol)}.${symbol}`;
+    const secid = `${getAshareExchangePrefix(symbol)}.${getAshareCode(symbol)}`;
     const targetUrl = `https://push2.eastmoney.com/api/qt/stock/get?fltt=2&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f86,f169,f170&secid=${encodeURIComponent(secid)}`;
     const response = await fetchWithTimeout(targetUrl, {
       headers: {
@@ -117,12 +117,11 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 }
 
 function getAshareExchangePrefix(symbol: string): string {
-  if (['000016', '000300', '000688', '000852', '000905'].includes(symbol)) return '1';
-  return /^[56]/.test(symbol) ? '1' : '0';
+  return symbol.startsWith('sh') ? '1' : '0';
 }
 
-function getSinaAshareSymbol(symbol: string): string {
-  return getAshareExchangePrefix(symbol) === '1' ? `sh${symbol}` : `sz${symbol}`;
+function getAshareCode(symbol: string): string {
+  return symbol.replace(/^(sh|sz)/, '');
 }
 
 async function decodeResponseText(response: Response): Promise<string> {
