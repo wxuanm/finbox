@@ -2,7 +2,7 @@
   "name": "finbox",
   "displayName": "FinBox Fund Monitor",
   "description": "Monitor mutual fund estimates and historical trends inside VSCode.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "finx",
   "license": "MIT",
   "repository": {

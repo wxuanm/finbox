@@ -22,13 +22,15 @@ npm run compile
 npx @vscode/vsce package
 ```
 
-打包完成后会在 `vsix/` 目录生成类似 `finbox-0.0.1.vsix` 的文件。安装该 VSIX：
+打包完成后会在 `vsix/` 目录生成类似 `finbox-0.0.2.vsix` 的文件。安装该 VSIX：
 
 ```powershell
-code --install-extension .\finbox-0.0.1.vsix
+code --install-extension .\finbox-0.0.2.vsix
 ```
 
 也可以在 VSCode 扩展面板右上角选择 `... -> Install from VSIX...`，然后选择生成的 `.vsix` 文件。
+
+发布或交付新的 VSIX 前，必须先递增 `package.json` 和 `package-lock.json` 中的 `version`。VSIX 文件名由 `package.json` 的 `name` 和 `version` 生成，格式为 `<name>-<version>.vsix`；版本号不变时，VSCode 可能不会把同名同版本包识别为更新。
 
 ## Debugging
 
