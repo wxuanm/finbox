@@ -2,8 +2,9 @@
   "name": "finbox",
   "displayName": "FinBox Fund Monitor",
   "description": "Monitor mutual fund estimates and historical trends inside VSCode.",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "publisher": "finx",
+  "icon": "media/extension-icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -23,12 +24,17 @@
     "onView:finboxFundMonitor.settings",
     "onCommand:finboxFundMonitor.open",
     "onCommand:finboxFundMonitor.refresh",
+    "onCommand:finboxFundMonitor.refreshStocks",
     "onCommand:finboxFundMonitor.addFund",
+    "onCommand:finboxFundMonitor.addStock",
     "onCommand:finboxFundMonitor.addFundToGroup",
     "onCommand:finboxFundMonitor.createGroup",
     "onCommand:finboxFundMonitor.renameGroup",
     "onCommand:finboxFundMonitor.deleteGroup",
     "onCommand:finboxFundMonitor.removeFund",
+    "onCommand:finboxFundMonitor.removeStock",
+    "onCommand:finboxFundMonitor.moveStockUp",
+    "onCommand:finboxFundMonitor.moveStockDown",
     "onCommand:finboxFundMonitor.openFundTrend",
     "onCommand:finboxFundMonitor.openGroupTrend"
   ],
@@ -74,6 +80,16 @@
           "command": "finboxFundMonitor.createGroup",
           "when": "view == finboxFundMonitor.fund",
           "group": "navigation@2"
+        },
+        {
+          "command": "finboxFundMonitor.refreshStocks",
+          "when": "view == finboxFundMonitor.stock",
+          "group": "navigation@1"
+        },
+        {
+          "command": "finboxFundMonitor.addStock",
+          "when": "view == finboxFundMonitor.stock",
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [
@@ -106,6 +122,26 @@
           "command": "finboxFundMonitor.deleteGroup",
           "when": "view == finboxFundMonitor.fund && viewItem == groupCustom",
           "group": "navigation@2"
+        },
+        {
+          "command": "finboxFundMonitor.addStock",
+          "when": "view == finboxFundMonitor.stock && viewItem == stockGroup",
+          "group": "inline@1"
+        },
+        {
+          "command": "finboxFundMonitor.removeStock",
+          "when": "view == finboxFundMonitor.stock && viewItem == stock",
+          "group": "1_stock@1"
+        },
+        {
+          "command": "finboxFundMonitor.moveStockUp",
+          "when": "view == finboxFundMonitor.stock && viewItem == stock",
+          "group": "1_stock@2"
+        },
+        {
+          "command": "finboxFundMonitor.moveStockDown",
+          "when": "view == finboxFundMonitor.stock && viewItem == stock",
+          "group": "1_stock@3"
         }
       ]
     },
@@ -121,8 +157,18 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "finboxFundMonitor.refreshStocks",
+        "title": "刷新股票行情",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "finboxFundMonitor.addFund",
         "title": "添加基金",
+        "icon": "$(add)"
+      },
+      {
+        "command": "finboxFundMonitor.addStock",
+        "title": "添加 A Stock",
         "icon": "$(add)"
       },
       {
@@ -149,6 +195,21 @@
         "command": "finboxFundMonitor.removeFund",
         "title": "移除基金",
         "icon": "$(close)"
+      },
+      {
+        "command": "finboxFundMonitor.removeStock",
+        "title": "移除股票",
+        "icon": "$(close)"
+      },
+      {
+        "command": "finboxFundMonitor.moveStockUp",
+        "title": "上移股票",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "finboxFundMonitor.moveStockDown",
+        "title": "下移股票",
+        "icon": "$(arrow-down)"
       },
       {
         "command": "finboxFundMonitor.openFundTrend",

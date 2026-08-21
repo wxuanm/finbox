@@ -1,25 +1,30 @@
 import * as vscode from 'vscode';
 import { FundQuoteService } from './services/fundQuoteService';
 import { FundNavService } from './services/fundNavService';
+import { StockQuoteService } from './services/stockQuoteService';
 import { StorageService } from './services/storageService';
 import { FundMonitorStore } from './state/fundMonitorStore';
 import { TrendPanel } from './webviews/trendPanel';
 import { FundGroupItem, FundItem, FundMonitorTreeProvider } from './views/fundMonitorTreeProvider';
 import { StaticTreeProvider } from './views/staticTreeProvider';
+import { StockItem, StockMonitorTreeProvider } from './views/stockMonitorTreeProvider';
 
 export function activate(context: vscode.ExtensionContext): void {
   const storage = new StorageService(context);
   const store = new FundMonitorStore(storage);
   const quoteService = new FundQuoteService();
+  const stockQuoteService = new StockQuoteService();
   const navService = new FundNavService();
   const trendPanel = new TrendPanel(context.extensionUri, store, navService);
   const treeProvider = new FundMonitorTreeProvider(store, context.extensionUri);
+  const stockTreeProvider = new StockMonitorTreeProvider(store, context.extensionUri);
   const fundTreeView = vscode.window.createTreeView('finboxFundMonitor.fund', {
     treeDataProvider: treeProvider,
     showCollapseAll: false
   });
   const stockTreeView = vscode.window.createTreeView('finboxFundMonitor.stock', {
-    treeDataProvider: new StaticTreeProvider('股票监控待扩展', 'symbol-method')
+    treeDataProvider: stockTreeProvider,
+    showCollapseAll: false
   });
   const settingsTreeView = vscode.window.createTreeView('finboxFundMonitor.settings', {
     treeDataProvider: new StaticTreeProvider('设置项待扩展', 'settings-gear')
@@ -40,6 +45,25 @@ export function activate(context: vscode.ExtensionContext): void {
       store.setQuotes(result.quotes, result.failedCodes, result.updatedAt);
       if (result.failedCodes.length > 0) {
         vscode.window.showWarningMessage(`部分基金估值刷新失败: ${result.failedCodes.join(', ')}`);
+      }
+    });
+  }
+
+  async function refreshStockQuotes(): Promise<void> {
+    const symbols = store.getStockSymbols();
+    if (symbols.length === 0) {
+      stockTreeProvider.refresh();
+      return;
+    }
+
+    await vscode.window.withProgress({
+      location: { viewId: 'finboxFundMonitor.stock' },
+      title: '刷新股票行情...'
+    }, async () => {
+      const result = await stockQuoteService.fetchQuotes(symbols);
+      store.setStockQuotes(result.quotes, result.failedSymbols, result.updatedAt);
+      if (result.failedSymbols.length > 0) {
+        vscode.window.showWarningMessage(`部分股票行情刷新失败: ${result.failedSymbols.join(', ')}`);
       }
     });
   }
@@ -72,6 +96,22 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!groupId) vscode.window.showWarningMessage('分组名称无效或已存在。');
   }
 
+  async function promptAddStock(): Promise<void> {
+    const symbols = await vscode.window.showInputBox({
+      title: '添加 A Stock',
+      prompt: '输入六位股票代码，多个代码可用逗号或空格分隔',
+      placeHolder: '例如 600519, 000001'
+    });
+    if (!symbols) return;
+
+    const addedSymbols = await store.addStocks(symbols);
+    if (addedSymbols.length === 0) {
+      vscode.window.showWarningMessage('未识别到有效的六位股票代码。');
+      return;
+    }
+    await refreshStockQuotes();
+  }
+
   async function promptRenameGroup(item?: FundGroupItem): Promise<void> {
     if (!(item instanceof FundGroupItem) || item.group.id === 'default') return;
     const name = await vscode.window.showInputBox({
@@ -86,12 +126,15 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     store,
     treeProvider,
+    stockTreeProvider,
     fundTreeView,
     stockTreeView,
     settingsTreeView,
     vscode.commands.registerCommand('finboxFundMonitor.open', () => vscode.commands.executeCommand('workbench.view.extension.finbox')),
     vscode.commands.registerCommand('finboxFundMonitor.refresh', () => refreshQuotes()),
+    vscode.commands.registerCommand('finboxFundMonitor.refreshStocks', () => refreshStockQuotes()),
     vscode.commands.registerCommand('finboxFundMonitor.addFund', () => promptAddFund('default')),
+    vscode.commands.registerCommand('finboxFundMonitor.addStock', () => promptAddStock()),
     vscode.commands.registerCommand('finboxFundMonitor.addFundToGroup', (item?: FundGroupItem) => promptAddFund(item instanceof FundGroupItem ? item.group.id : 'default')),
     vscode.commands.registerCommand('finboxFundMonitor.createGroup', () => promptCreateGroup()),
     vscode.commands.registerCommand('finboxFundMonitor.renameGroup', (item?: FundGroupItem) => promptRenameGroup(item)),
@@ -104,6 +147,17 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!(item instanceof FundItem)) return;
       const confirm = await vscode.window.showWarningMessage(`移除基金 ${item.code}？`, { modal: true }, '移除');
       if (confirm === '移除') await store.removeFund(item.code);
+    }),
+    vscode.commands.registerCommand('finboxFundMonitor.removeStock', async (item?: StockItem) => {
+      if (!(item instanceof StockItem)) return;
+      const confirm = await vscode.window.showWarningMessage(`移除股票 ${item.symbol}？`, { modal: true }, '移除');
+      if (confirm === '移除') await store.removeStock(item.symbol);
+    }),
+    vscode.commands.registerCommand('finboxFundMonitor.moveStockUp', async (item?: StockItem) => {
+      if (item instanceof StockItem) await store.moveStock(item.symbol, 'up');
+    }),
+    vscode.commands.registerCommand('finboxFundMonitor.moveStockDown', async (item?: StockItem) => {
+      if (item instanceof StockItem) await store.moveStock(item.symbol, 'down');
     }),
     vscode.commands.registerCommand('finboxFundMonitor.openFundTrend', (input?: string | FundItem) => {
       if (input instanceof FundItem) return trendPanel.openFund(input.code);

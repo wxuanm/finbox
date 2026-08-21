@@ -1,173 +1,108 @@
-# FinBox Fund Monitor VSIX
+# FinBox
 
-VSCode extension MVP for Fund Monitor.
+FinBox brings lightweight fund and A-share stock monitoring into VS Code. It is designed for quick market checks from the Activity Bar without opening a browser dashboard.
 
-## Development
+## Features
 
-```powershell
-npm install
-npm run compile
-```
+- Monitor mutual funds in grouped watchlists.
+- Refresh real-time fund estimates from Eastmoney.
+- Open single-fund and group historical NAV trend views in editor panels.
+- Monitor A-share stocks under the `A Stock` group.
+- Refresh A-share quotes using Sina first and Eastmoney as fallback.
+- Keep stock rows in your add order, with context menu actions to move stocks up or down.
+- Persist funds, fund groups, stock symbols, and preferences with VS Code global storage.
 
-Open the repository in VSCode and run the `Run FinBox VSIX` launch configuration.
+## Fund Monitor
 
-## Package And Install From Source
+The `FUND` view shows grouped fund rows with:
 
-从项目源码打包并安装 VSIX：
+- Estimated percentage change
+- Estimated NAV
+- Fund name
+- Refresh failure state when quote data is unavailable
 
-```powershell
-cd vsix
-npm install
-npm run compile
-npx @vscode/vsce package
-```
+Available fund actions include:
 
-打包完成后会在 `vsix/` 目录生成类似 `finbox-0.0.2.vsix` 的文件。安装该 VSIX：
+- Add funds by six-digit code
+- Refresh fund estimates
+- Create, rename, and delete custom groups
+- Add funds directly to a group
+- Remove funds
+- Open single-fund trend views
+- Open group trend comparison views
 
-```powershell
-code --install-extension .\finbox-0.0.2.vsix
-```
+Deleting a custom fund group moves contained funds back to the default group.
 
-也可以在 VSCode 扩展面板右上角选择 `... -> Install from VSIX...`，然后选择生成的 `.vsix` 文件。
+## Stock Monitor
 
-发布或交付新的 VSIX 前，必须先递增 `package.json` 和 `package-lock.json` 中的 `version`。VSIX 文件名由 `package.json` 的 `name` 和 `version` 生成，格式为 `<name>-<version>.vsix`；版本号不变时，VSCode 可能不会把同名同版本包识别为更新。
+The `STOCK` view contains an `A Stock` group for A-share symbols.
 
-## Debugging
+Each stock row shows:
 
-1. Open the repository root folder in VSCode, not the `vsix/` folder alone.
-2. Install dependencies and compile from the VSIX subproject:
+- Percentage change
+- Latest price
+- Stock name
 
-```powershell
-cd vsix
-npm install
-npm run compile
-```
+Stock rows keep the order in which you added them. Use a stock item's context menu to move it up or down.
 
-3. Open the VSCode Run and Debug view.
-4. Select `Run FinBox VSIX`.
-5. Press `F5` to launch Extension Development Host.
-6. In the new VSCode window, open the `FinBox` Activity Bar entry.
-7. Open the native `FINBOX` tree view.
-
-The debug configuration uses:
-
-```json
-"--extensionDevelopmentPath=${workspaceFolder}/vsix"
-```
-
-## Manual Verification
-
-### Sidebar Startup
-
-Open `FinBox -> FINBOX` in Extension Development Host.
-
-Expected result:
-
-- The native TreeView loads under the FinBox Activity Bar entry.
-- The view title shows `FINBOX`.
-- Root sections are `FUND`, `STOCK`, and `SETTINGS`.
-- Empty state is visible when no funds are saved.
-- Fund actions are hidden under the `FUND` node context/inline menu instead of the view title bar.
-
-### Add Funds
-
-Use the `FUND` node menu action or run `FinBox: Add Fund`, then enter:
+The stock tooltip shows:
 
 ```text
-003026,110022,161725
+Stock Name (Symbol)
+涨幅: +1.23%    涨跌: +0.45
+最高: 12.34     最低: 11.98
+今开: 12.00     昨收: 11.89
+成交量: 123.45万    成交额: 1.23亿
 ```
 
-Expected result:
+Available stock actions include:
 
-- Valid six-digit codes are added to the default group.
-- Funds appear under `FUND -> <fund group>`.
-- The tree refreshes automatically.
-- Fund name appears as the tree item label.
-- Estimated change and estimated NAV appear in the tree item description when Eastmoney data is available.
-- Positive values use an up icon, negative values use a down icon, and failures use an error icon.
+- Add A-share symbols by six-digit code
+- Refresh stock quotes
+- Remove stocks
+- Move stocks up or down
 
-### Refresh Quotes
+## Usage
 
-Use the `FUND` node refresh action or run `FinBox: Refresh Fund Monitor`.
+Open the `FinBox` Activity Bar entry, then use the `FUND`, `STOCK`, and `SETTINGS` views.
 
-Expected result:
-
-- VSCode shows progress in the Fund Monitor view.
-- Latest refresh time updates after completion.
-- Failed codes show a recoverable failed state.
-- Partial failures show a VSCode warning without clearing successful fund rows.
-
-### Persistence
-
-Run `Developer: Reload Window` in Extension Development Host.
-
-Expected result:
-
-- Saved funds and groups are restored from VSCode `globalState`.
-- Quote values can be refreshed again after reload.
-
-### Single-Fund Trend
-
-Click a fund item in the tree.
-
-Expected result:
-
-- An editor webview opens for that fund.
-- The trend page shows title, data source timestamp, summary cards, SVG trend chart, and metric cards.
-- The page has a `刷新` button that reloads historical NAV data.
-
-### Group Trend
-
-Click a group item or use its context menu `Open Group Trend` action.
-
-Expected result:
-
-- An editor webview opens for the group.
-- Groups with one or more valid funds show a multi-line trend comparison.
-- Empty groups show a readable empty state.
-
-### Remove Funds
-
-Use a fund item's context menu `Remove Fund` action.
-
-Expected result:
-
-- The fund disappears from the sidebar.
-- Reloading the window does not restore the removed fund.
-
-### Groups
-
-Use the `FUND` node create group action or run `FinBox: Create Group`, then enter a group name.
-
-Expected result:
-
-- The new group appears in the tree.
-- Deleting a custom group from its context menu removes the group and moves contained funds back to `default`.
-
-### Invalid Input And Network Errors
-
-Try adding invalid input:
+Examples:
 
 ```text
-abc,123,000000
+Fund codes: 003026, 110022, 161725
+Stock symbols: 600519, 000001
 ```
 
-Expected result:
+Use view title buttons or item context menus for add, refresh, remove, trend, and ordering actions.
 
-- Non-six-digit values are ignored.
-- Invalid six-digit codes may be saved but should show failed refresh state if Eastmoney returns no valid data.
-- Network failures show recoverable VSCode warnings or errors.
+## Data Sources
 
-## Logs
+- Fund real-time estimates: Eastmoney fund comparison data.
+- Fund historical NAV trends: Eastmoney fund historical script data.
+- A-share stock quotes: Sina quote data first, Eastmoney single-stock quote data as fallback.
 
-For trend webview issues, run `Developer: Toggle Developer Tools` in Extension Development Host and inspect the Console.
+All quote requests are made from the VS Code extension host. The extension does not require FinBox Cloudflare Pages Functions at runtime.
 
-For extension host issues, open `View -> Output` and select `Log (Extension Host)`.
+## Persistence
 
-## Common Issues
+FinBox stores watchlists and preferences through VS Code extension `globalState`.
 
-- If `FinBox` is not visible, confirm VSCode was opened at the repository root and launched with `Run FinBox VSIX`.
-- If compilation fails before launch, run `npm install` and `npm run compile` in `vsix/`.
-- If the tree view is empty unexpectedly, inspect `Log (Extension Host)` and run `FinBox: Refresh Fund Monitor`.
-- If quote refresh fails, retry with common fund codes such as `003026` or `110022` and check network access to Eastmoney.
-- If the trend page opens without a chart, confirm the fund has historical NAV data and check `Log (Extension Host)` for request errors.
+Persisted data includes:
+
+- Fund groups
+- Fund-to-group mapping
+- A-share stock symbols and their order
+- Extension preferences
+
+Quote values are refreshed from data sources and are not treated as the canonical persisted watchlist.
+
+## Limitations
+
+- Fund and stock input currently accepts six-digit codes.
+- Historical trend comparison is limited to up to 10 fund codes.
+- Quote refresh depends on network access to Sina and Eastmoney.
+- `SETTINGS` is reserved for future extension settings.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.

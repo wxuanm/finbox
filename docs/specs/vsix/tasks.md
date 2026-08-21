@@ -79,6 +79,16 @@
 - [x] Add command palette titles and categories.
 - [x] Add context menu entries if using native tree or supported sidebar actions.
 
+## Phase 8.5: A-Share Stock Monitor
+
+- [x] Add an `A Stock` group under the `STOCK` view.
+- [x] Add A-share symbol persistence through VSCode `globalState`.
+- [x] Fetch latest A-share quotes using Sina first and Eastmoney fallback.
+- [x] Show stock percentage change, latest price, and stock name.
+- [x] Show stock tooltip metrics for percentage change, price change, high, low, open, previous close, volume, and amount.
+- [x] Add stock add, refresh, and remove commands.
+- [x] Preserve stock add order and add move up/down actions.
+
 ## Phase 9: Security And Packaging
 
 - [x] Apply strict webview Content Security Policy.
@@ -95,6 +105,7 @@
 - [ ] Open FinBox sidebar from Activity Bar.
 - [ ] Add a valid six-digit fund code.
 - [ ] Refresh real-time quotes.
+- [ ] Add a valid six-digit A-share symbol and refresh stock quotes.
 - [ ] Remove a fund and confirm persistence.
 - [ ] Create and delete a custom group, confirming deleted group funds move to `default`.
 - [ ] Reload VSCode window and confirm watchlist restores.

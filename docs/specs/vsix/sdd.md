@@ -105,7 +105,9 @@ FinBox VSIX
 │  │  │  └─ Fund estimate rows
 │  │  └─ Empty and error states
 │  ├─ STOCK
-│  │  └─ Placeholder for future stock monitoring
+│  │  ├─ A Stock group
+│  │  ├─ Latest stock quote rows
+│  │  └─ Empty and error states
 │  └─ SETTINGS
 │     └─ Placeholder for future extension settings
 ├─ Editor Webview: Fund Trend
@@ -138,6 +140,18 @@ Each group should show:
 - Fund count
 - Optional group-level positive and negative counts
 - Action to open group trend comparison
+
+The `STOCK` view initially supports an `A Stock` group. Each stock row should show:
+
+- Estimated percentage change
+- Latest price
+- Stock name
+
+Stock rows keep the user's add order by default. Users can adjust the order through stock item context menu actions for moving a symbol up or down.
+
+Each stock tooltip should show stock identity on the first line, then two-column metric rows for percentage change, price change, high, low, open, previous close, volume, and amount. Source and update time stay hidden from the tooltip.
+
+A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: Sina quote data first, then Eastmoney single-stock quote data as fallback.
 
 The sidebar should avoid heavyweight dashboard cards, large hero copy, mobile controls, and full-width tables from the browser page.
 

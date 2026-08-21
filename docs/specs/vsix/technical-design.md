@@ -22,11 +22,13 @@ vsix/
 │  ├─ services/
 │  │  ├─ fundQuoteService.ts
 │  │  ├─ fundNavService.ts
+│  │  ├─ stockQuoteService.ts
 │  │  └─ storageService.ts
 │  ├─ state/
 │  │  └─ fundMonitorStore.ts
 │  ├─ views/
-│  │  └─ fundMonitorTreeProvider.ts
+│  │  ├─ fundMonitorTreeProvider.ts
+│  │  └─ stockMonitorTreeProvider.ts
 │  └─ webviews/
 │     └─ trendPanel.ts
 └─ media/
@@ -111,12 +113,20 @@ Expected `package.json` contributions:
 - Stores one versioned object under a stable key.
 - Validates loaded data and applies safe defaults.
 - Keeps migration logic isolated from UI code.
+- Persists fund groups, fund-to-group mapping, and the A-share watchlist.
 
 Suggested key:
 
 ```text
 finbox.fundMonitor.state
 ```
+
+### `stockQuoteService.ts`
+
+- Fetches A-share quotes directly from the extension host.
+- Follows `functions/api/quotes.js` source priority: Sina first, Eastmoney fallback.
+- Normalizes each quote to symbol, stock name, latest price, previous close, open, high, low, price change, percentage change, volume, amount, quote time, and source.
+- Returns partial failures so the stock sidebar can keep successful rows visible.
 
 Initial shape:
 
@@ -318,6 +328,20 @@ Then verify manually with Extension Development Host:
 
 If automated scripts are introduced in `vsix/package.json`, document and run them before marking implementation tasks complete.
 
+## Development And Packaging
+
+### Development Commands
+
+Run extension project commands from the isolated VSIX subproject:
+
+```powershell
+cd vsix
+npm install
+npm run compile
+```
+
+The root project intentionally does not become an npm workspace for the extension.
+
 ### Debug Launch
 
 Open the repository root in VSCode and select the `Run FinBox VSIX` debug configuration. The configuration points VSCode at the isolated extension subproject:
@@ -328,11 +352,51 @@ Open the repository root in VSCode and select the `Run FinBox VSIX` debug config
 
 The Extension Development Host should show a `FinBox` Activity Bar entry and a native `FINBOX` TreeView.
 
+### Package From Source
+
+Build and package the extension from the VSIX subproject:
+
+```powershell
+cd vsix
+npm install
+npm run compile
+npx @vscode/vsce package
+```
+
+The generated VSIX file is written under `vsix/` and named from `package.json` as `<name>-<version>.vsix`, for example `finbox-0.0.4.vsix`.
+
+Install a generated VSIX with:
+
+```powershell
+code --install-extension .\finbox-0.0.4.vsix
+```
+
+Alternatively, use `Extensions -> ... -> Install from VSIX...` in VS Code.
+
+### Version And Changelog Policy
+
+- Do not bump the VSIX version for every source change.
+- Bump `vsix/package.json` and `vsix/package-lock.json` only when preparing an installable or deliverable VSIX.
+- Update `vsix/CHANGELOG.md` in the same change as the version bump.
+- Keep `vsix/README.md` user-facing because VS Code displays it as the extension details page.
+- Keep generated VSIX packages, `vsix/dist/`, and `vsix/node_modules/` out of source control.
+
+Recommended release flow:
+
+```powershell
+cd vsix
+npm version patch --no-git-tag-version
+npm run compile
+npx @vscode/vsce package
+```
+
 ### Functional Checks
 
 - Empty startup: the TreeView shows `FUND`, `STOCK`, and `SETTINGS` root nodes; `FUND` shows an empty state when no funds are saved.
 - Add funds: entering `003026,110022,161725` adds valid codes and triggers quote refresh.
 - Refresh: real-time estimate data updates without executing remote scripts in the extension UI.
+- Add A-share stocks: entering `600519,000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, and stock name after refresh.
+- Stock ordering: stock rows preserve add order by default; context menu actions can move a stock up or down.
 - Persistence: `Developer: Reload Window` preserves funds and groups through `globalState`.
 - Single trend: clicking a fund tree item opens an editor webview with historical NAV trend data.
 - Group trend: clicking a group tree item opens a group comparison editor webview.

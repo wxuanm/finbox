@@ -12,6 +12,7 @@ export interface PersistedFundMonitorState {
   schemaVersion: 1;
   groups: FundGroup[];
   fundGroups: Record<string, string>;
+  stockSymbols: string[];
   preferences: FundMonitorPreferences;
 }
 
@@ -34,6 +35,31 @@ export interface FundQuote {
 export interface FundQuoteResult {
   quotes: FundQuote[];
   failedCodes: string[];
+  updatedAt: string;
+}
+
+export interface StockQuote {
+  market: 'CN';
+  symbol: string;
+  name: string;
+  price: number;
+  latestPrice: number | null;
+  previousClose: number | null;
+  openPrice: number | null;
+  highPrice: number | null;
+  lowPrice: number | null;
+  changeAmount: number | null;
+  changePct: number | null;
+  volume: number | null;
+  amount: number | null;
+  currency: 'CNY';
+  quoteTime: string;
+  source: 'sina' | 'eastmoney';
+}
+
+export interface StockQuoteResult {
+  quotes: StockQuote[];
+  failedSymbols: string[];
   updatedAt: string;
 }
 
@@ -68,6 +94,13 @@ export interface SidebarState {
   fundGroups: Record<string, string>;
   quotes: Record<string, FundQuote>;
   failedCodes: string[];
+  updatedAt: string;
+}
+
+export interface StockSidebarState {
+  stockSymbols: string[];
+  quotes: Record<string, StockQuote>;
+  failedSymbols: string[];
   updatedAt: string;
 }
 

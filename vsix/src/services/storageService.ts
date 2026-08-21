@@ -17,12 +17,13 @@ export class StorageService {
 }
 
 function normalizePersistedState(raw: unknown): PersistedFundMonitorState {
-  const fallback: PersistedFundMonitorState = {
-    schemaVersion: 1,
-    groups: [{ id: 'default', name: '默认分组' }],
-    fundGroups: {},
-    preferences: { themeMode: 'vscode' }
-  };
+    const fallback: PersistedFundMonitorState = {
+      schemaVersion: 1,
+      groups: [{ id: 'default', name: '默认分组' }],
+      fundGroups: {},
+      stockSymbols: [],
+      preferences: { themeMode: 'vscode' }
+    };
 
   if (!raw || typeof raw !== 'object') return fallback;
 
@@ -53,10 +54,17 @@ function normalizePersistedState(raw: unknown): PersistedFundMonitorState {
     });
   }
 
+  const stockSymbols = Array.isArray(value.stockSymbols)
+    ? [...new Set(value.stockSymbols
+        .map(symbol => String(symbol || '').trim())
+        .filter(symbol => /^\d{6}$/.test(symbol)))]
+    : [];
+
   return {
     schemaVersion: 1,
     groups: orderedGroups,
     fundGroups,
+    stockSymbols,
     preferences: {
       themeMode: value.preferences?.themeMode || 'vscode',
       refreshIntervalMinutes: value.preferences?.refreshIntervalMinutes

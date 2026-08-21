@@ -11,6 +11,7 @@
 - `fundmonitor/` and `pam/` are separate standalone browser tools. Do not import code between them unless explicitly requested.
 - Fund Monitor entrypoints: `fundmonitor/index.html`, `fundmonitor/css/main.css`, `fundmonitor/css/variables.css`, `fundmonitor/js/app.js`.
 - PAM entrypoints: `pam/index.html`, `pam/css/main.css`, `pam/css/variables.css`, `pam/js/app.js`.
+- VSIX entrypoints: `vsix/package.json`, `vsix/src/extension.ts`, `vsix/src/views/`, `vsix/src/services/`, `vsix/src/state/`, and `vsix/media/`.
 - Cloudflare Pages Functions live under `functions/api/`: `fundgz.js`, `fundnav.js`, and `quotes.js`.
 
 ## SDD Workflow
@@ -38,6 +39,17 @@
 - Holdings quote refresh only supports `CN` and `Fund` markets through `/api/quotes`; cash and unsupported markets remain manually priced.
 - PAM imports ECharts from CDN in `pam/index.html`; handle ECharts absence without blocking account/holding management.
 
+## VSIX Notes
+
+- VSIX source is isolated under `vsix/`; do not require a root `package.json` for extension work.
+- Run VSIX commands from `vsix/`: `npm install`, `npm run compile`, and `npx @vscode/vsce package`.
+- Debug from the repository root with the `Run FinBox VSIX` launch configuration; it uses `--extensionDevelopmentPath=${workspaceFolder}/vsix`.
+- `vsix/README.md` is packaged into the VS Code extension details page, so keep it user-facing rather than development-focused.
+- Keep VSIX development, debugging, packaging, and release process details in `AGENTS.md` and `docs/specs/vsix/technical-design.md`.
+- Version numbers are not bumped for every source change. Bump `vsix/package.json` and `vsix/package-lock.json` only when preparing an installable/deliverable VSIX, and update `vsix/CHANGELOG.md` in the same change.
+- VSIX file names are generated from `<name>-<version>.vsix`; current package name is `finbox`.
+- Generated files and local dependencies stay out of git: `vsix/dist/`, `vsix/node_modules/`, and `vsix/*.vsix`.
+
 ## API Notes
 
 - `/api/fundgz` proxies Eastmoney fund comparison scripts. For `t=0` and more than 10 codes, it chunks requests by 10 and merges `fundinfo`; `t=1` stays a single request path.
@@ -47,6 +59,7 @@
 ## Verification
 
 - There are no automated test/lint/typecheck scripts to run from this repo.
+- For VSIX changes, run `npm run compile` from `vsix/`; when packaging behavior, also run `npx @vscode/vsce package`.
 - For changes touching `/api/*`, use `npx wrangler pages dev .` and verify through the local `/api/...` paths rather than opening HTML files directly.
 - For UI changes, manually check both desktop and mobile layouts for the touched tool; both apps rely on responsive CSS rather than a build step.
 
