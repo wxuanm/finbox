@@ -9,6 +9,8 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 - Shortened command titles for opening, fund refresh, stock refresh, and stock add actions.
 - Added inline group trend actions to fund group rows.
 - Removed the redundant stock-group add action and moved stock removal below ordering actions.
+- Require `sh`/`sz` prefixes for stock symbols so duplicate numeric codes on different exchanges remain distinct.
+- Keep stock codes out of normal quoted stock rows while retaining prefixed symbols in tooltips, waiting, and failure states.
 - Improved stock waiting and failure labels by showing `symbol[status]` in the name column.
 - Updated the Activity Bar icon and rotated the marketplace icon.
 

@@ -146,11 +146,10 @@ The `STOCK` view initially supports an `A Stock` group. Each stock row should sh
 - Estimated percentage change
 - Latest price
 - Stock name
-- Exchange-prefixed stock symbol, so duplicate numeric codes such as `sh000001` and `sz000001` remain distinguishable
 
 Stock input requires `sh`/`sz` prefixed symbols. Stock rows keep the user's add order by default. Users can adjust the order through stock item context menu actions for moving a symbol up or down.
 
-Each stock tooltip should show stock identity on the first line, then two-column metric rows for percentage change, price change, high, low, open, previous close, volume, and amount. Source and update time stay hidden from the tooltip.
+Each stock tooltip should show stock identity, including the exchange-prefixed symbol, on the first line, then two-column metric rows for percentage change, price change, high, low, open, previous close, volume, and amount. Source and update time stay hidden from the tooltip.
 
 A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: Sina quote data first, then Eastmoney single-stock quote data as fallback.
 

@@ -396,7 +396,7 @@ npx @vscode/vsce package
 - Empty startup: the TreeView shows `FUND`, `STOCK`, and `SETTINGS` root nodes; `FUND` shows an empty state when no funds are saved.
 - Add funds: entering `003026,110022,161725` adds valid codes and triggers quote refresh.
 - Refresh: real-time estimate data updates without executing remote scripts in the extension UI.
-- Add A-share stocks: entering `sh000001,sz000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, stock name, and prefixed symbol after refresh.
+- Add A-share stocks: entering `sh000001,sz000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, and stock name after refresh; prefixed symbols remain visible in tooltips and non-quote states.
 - Stock ordering: stock rows preserve add order by default; context menu actions can move a stock up or down.
 - Persistence: `Developer: Reload Window` preserves funds and groups through `globalState`.
 - Single trend: clicking a fund tree item opens an editor webview with historical NAV trend data.
