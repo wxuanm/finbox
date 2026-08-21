@@ -1,8 +1,8 @@
 {
   "name": "finbox",
-  "displayName": "FinBox Fund Monitor",
-  "description": "Monitor mutual fund estimates and historical trends inside VSCode.",
-  "version": "0.0.4",
+  "displayName": "FinBox",
+  "description": "Monitor mutual fund estimates, fund trends, and A-share stock quotes inside VS Code.",
+  "version": "0.0.5",
   "publisher": "finx",
   "icon": "media/extension-icon.png",
   "license": "MIT",
@@ -19,24 +19,24 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:finboxFundMonitor.fund",
-    "onView:finboxFundMonitor.stock",
-    "onView:finboxFundMonitor.settings",
-    "onCommand:finboxFundMonitor.open",
-    "onCommand:finboxFundMonitor.refresh",
-    "onCommand:finboxFundMonitor.refreshStocks",
-    "onCommand:finboxFundMonitor.addFund",
-    "onCommand:finboxFundMonitor.addStock",
-    "onCommand:finboxFundMonitor.addFundToGroup",
-    "onCommand:finboxFundMonitor.createGroup",
-    "onCommand:finboxFundMonitor.renameGroup",
-    "onCommand:finboxFundMonitor.deleteGroup",
-    "onCommand:finboxFundMonitor.removeFund",
-    "onCommand:finboxFundMonitor.removeStock",
-    "onCommand:finboxFundMonitor.moveStockUp",
-    "onCommand:finboxFundMonitor.moveStockDown",
-    "onCommand:finboxFundMonitor.openFundTrend",
-    "onCommand:finboxFundMonitor.openGroupTrend"
+    "onView:finbox.fund",
+    "onView:finbox.stock",
+    "onView:finbox.settings",
+    "onCommand:finbox.open",
+    "onCommand:finbox.fund.refresh",
+    "onCommand:finbox.stock.refresh",
+    "onCommand:finbox.fund.add",
+    "onCommand:finbox.stock.add",
+    "onCommand:finbox.fund.addToGroup",
+    "onCommand:finbox.fund.createGroup",
+    "onCommand:finbox.fund.renameGroup",
+    "onCommand:finbox.fund.deleteGroup",
+    "onCommand:finbox.fund.remove",
+    "onCommand:finbox.stock.remove",
+    "onCommand:finbox.stock.moveUp",
+    "onCommand:finbox.stock.moveDown",
+    "onCommand:finbox.fund.openTrend",
+    "onCommand:finbox.fund.openGroupTrend"
   ],
   "main": "./dist/extension.js",
   "scripts": {
@@ -56,15 +56,15 @@
     "views": {
       "finbox": [
         {
-          "id": "finboxFundMonitor.fund",
+          "id": "finbox.fund",
           "name": "FUND"
         },
         {
-          "id": "finboxFundMonitor.stock",
+          "id": "finbox.stock",
           "name": "STOCK"
         },
         {
-          "id": "finboxFundMonitor.settings",
+          "id": "finbox.settings",
           "name": "SETTINGS"
         }
       ]
@@ -72,153 +72,158 @@
     "menus": {
       "view/title": [
         {
-          "command": "finboxFundMonitor.refresh",
-          "when": "view == finboxFundMonitor.fund",
+          "command": "finbox.fund.refresh",
+          "when": "view == finbox.fund",
           "group": "navigation@1"
         },
         {
-          "command": "finboxFundMonitor.createGroup",
-          "when": "view == finboxFundMonitor.fund",
+          "command": "finbox.fund.createGroup",
+          "when": "view == finbox.fund",
           "group": "navigation@2"
         },
         {
-          "command": "finboxFundMonitor.refreshStocks",
-          "when": "view == finboxFundMonitor.stock",
+          "command": "finbox.stock.refresh",
+          "when": "view == finbox.stock",
           "group": "navigation@1"
         },
         {
-          "command": "finboxFundMonitor.addStock",
-          "when": "view == finboxFundMonitor.stock",
+          "command": "finbox.stock.add",
+          "when": "view == finbox.stock",
           "group": "navigation@2"
         }
       ],
       "view/item/context": [
         {
-          "command": "finboxFundMonitor.openFundTrend",
-          "when": "view == finboxFundMonitor.fund && viewItem == fund",
+          "command": "finbox.fund.openTrend",
+          "when": "view == finbox.fund && viewItem == fund",
           "group": "1_fund@1"
         },
         {
-          "command": "finboxFundMonitor.removeFund",
-          "when": "view == finboxFundMonitor.fund && viewItem == fund",
+          "command": "finbox.fund.remove",
+          "when": "view == finbox.fund && viewItem == fund",
           "group": "1_fund@2"
         },
         {
-          "command": "finboxFundMonitor.addFundToGroup",
-          "when": "view == finboxFundMonitor.fund && viewItem == group",
+          "command": "finbox.fund.addToGroup",
+          "when": "view == finbox.fund && viewItem == group",
           "group": "inline@1"
         },
         {
-          "command": "finboxFundMonitor.addFundToGroup",
-          "when": "view == finboxFundMonitor.fund && viewItem == groupCustom",
+          "command": "finbox.fund.openGroupTrend",
+          "when": "view == finbox.fund && viewItem == group",
+          "group": "inline@2"
+        },
+        {
+          "command": "finbox.fund.addToGroup",
+          "when": "view == finbox.fund && viewItem == groupCustom",
           "group": "inline@1"
         },
         {
-          "command": "finboxFundMonitor.renameGroup",
-          "when": "view == finboxFundMonitor.fund && viewItem == groupCustom",
+          "command": "finbox.fund.openGroupTrend",
+          "when": "view == finbox.fund && viewItem == groupCustom",
+          "group": "inline@2"
+        },
+        {
+          "command": "finbox.fund.renameGroup",
+          "when": "view == finbox.fund && viewItem == groupCustom",
           "group": "navigation@1"
         },
         {
-          "command": "finboxFundMonitor.deleteGroup",
-          "when": "view == finboxFundMonitor.fund && viewItem == groupCustom",
+          "command": "finbox.fund.deleteGroup",
+          "when": "view == finbox.fund && viewItem == groupCustom",
           "group": "navigation@2"
         },
         {
-          "command": "finboxFundMonitor.addStock",
-          "when": "view == finboxFundMonitor.stock && viewItem == stockGroup",
-          "group": "inline@1"
+          "command": "finbox.stock.remove",
+          "when": "view == finbox.stock && viewItem == stock",
+          "group": "9_stock@1"
         },
         {
-          "command": "finboxFundMonitor.removeStock",
-          "when": "view == finboxFundMonitor.stock && viewItem == stock",
+          "command": "finbox.stock.moveUp",
+          "when": "view == finbox.stock && viewItem == stock",
           "group": "1_stock@1"
         },
         {
-          "command": "finboxFundMonitor.moveStockUp",
-          "when": "view == finboxFundMonitor.stock && viewItem == stock",
+          "command": "finbox.stock.moveDown",
+          "when": "view == finbox.stock && viewItem == stock",
           "group": "1_stock@2"
-        },
-        {
-          "command": "finboxFundMonitor.moveStockDown",
-          "when": "view == finboxFundMonitor.stock && viewItem == stock",
-          "group": "1_stock@3"
         }
       ]
     },
     "commands": [
       {
-        "command": "finboxFundMonitor.open",
-        "title": "打开基金监控",
+        "command": "finbox.open",
+        "title": "打开监控",
         "icon": "$(graph-line)"
       },
       {
-        "command": "finboxFundMonitor.refresh",
-        "title": "刷新基金估值",
+        "command": "finbox.fund.refresh",
+        "title": "刷新基金",
         "icon": "$(refresh)"
       },
       {
-        "command": "finboxFundMonitor.refreshStocks",
-        "title": "刷新股票行情",
+        "command": "finbox.stock.refresh",
+        "title": "刷新股票",
         "icon": "$(refresh)"
       },
       {
-        "command": "finboxFundMonitor.addFund",
+        "command": "finbox.fund.add",
         "title": "添加基金",
         "icon": "$(add)"
       },
       {
-        "command": "finboxFundMonitor.addStock",
-        "title": "添加 A Stock",
+        "command": "finbox.stock.add",
+        "title": "添加股票",
         "icon": "$(add)"
       },
       {
-        "command": "finboxFundMonitor.addFundToGroup",
+        "command": "finbox.fund.addToGroup",
         "title": "添加基金",
         "icon": "$(add)"
       },
       {
-        "command": "finboxFundMonitor.createGroup",
+        "command": "finbox.fund.createGroup",
         "title": "新建分组",
         "icon": "$(new-folder)"
       },
       {
-        "command": "finboxFundMonitor.renameGroup",
+        "command": "finbox.fund.renameGroup",
         "title": "修改名称",
         "icon": "$(edit)"
       },
       {
-        "command": "finboxFundMonitor.deleteGroup",
+        "command": "finbox.fund.deleteGroup",
         "title": "删除分组",
         "icon": "$(trash)"
       },
       {
-        "command": "finboxFundMonitor.removeFund",
+        "command": "finbox.fund.remove",
         "title": "移除基金",
         "icon": "$(close)"
       },
       {
-        "command": "finboxFundMonitor.removeStock",
+        "command": "finbox.stock.remove",
         "title": "移除股票",
         "icon": "$(close)"
       },
       {
-        "command": "finboxFundMonitor.moveStockUp",
+        "command": "finbox.stock.moveUp",
         "title": "上移股票",
         "icon": "$(arrow-up)"
       },
       {
-        "command": "finboxFundMonitor.moveStockDown",
+        "command": "finbox.stock.moveDown",
         "title": "下移股票",
         "icon": "$(arrow-down)"
       },
       {
-        "command": "finboxFundMonitor.openFundTrend",
+        "command": "finbox.fund.openTrend",
         "title": "基金走势",
         "icon": "$(graph-line)"
       },
       {
-        "command": "finboxFundMonitor.openGroupTrend",
-        "title": "打开分组趋势",
+        "command": "finbox.fund.openGroupTrend",
+        "title": "分组趋势",
         "icon": "$(pulse)"
       }
     ]

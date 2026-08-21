@@ -75,8 +75,8 @@ class StockEmptyItem extends vscode.TreeItem {
 }
 
 function buildStockLabel(symbol: string, quote: StockQuote | undefined, failed: boolean): string {
-  if (failed) return `失败    ${formatPriceColumn(null)}    [${symbol}]`;
-  if (!quote) return `--    ${formatPriceColumn(null)}    [${symbol}]`;
+  if (failed) return `失败    ${formatPriceColumn(null)}    ${symbol}[刷新失败]`;
+  if (!quote) return `--    ${formatPriceColumn(null)}    ${symbol}[等待刷新]`;
   return `${formatChange(quote.changePct)}    ${formatPriceColumn(quote.price)}    [${quote.name || symbol}]`;
 }
 

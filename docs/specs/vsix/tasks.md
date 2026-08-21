@@ -39,7 +39,7 @@
 
 ## Phase 5: Sidebar Fund Monitor
 
-- [x] Implement native TreeView provider for `finboxFundMonitor.sidebar`.
+- [x] Implement native TreeView provider for `finbox.fund`.
 - [x] Replace sidebar Webview with VSCode TreeView items and menus.
 - [x] Render grouped fund estimate rows.
 - [x] Render empty, loading, stale, and error states.
@@ -71,11 +71,11 @@
 
 ## Phase 8: Command Integration
 
-- [x] Register `finboxFundMonitor.open`.
-- [x] Register `finboxFundMonitor.refresh`.
-- [x] Register `finboxFundMonitor.addFund`.
-- [x] Register `finboxFundMonitor.openFundTrend`.
-- [x] Register `finboxFundMonitor.openGroupTrend`.
+- [x] Register `finbox.open`.
+- [x] Register `finbox.fund.refresh`.
+- [x] Register `finbox.fund.add`.
+- [x] Register `finbox.fund.openTrend`.
+- [x] Register `finbox.fund.openGroupTrend`.
 - [x] Add command palette titles and categories.
 - [x] Add context menu entries if using native tree or supported sidebar actions.
 

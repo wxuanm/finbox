@@ -15,8 +15,8 @@ This document defines the VSIX adaptation of Fund Monitor. It does not replace t
 
 ### Product Identity
 
-- Tool name: FinBox Fund Monitor VSIX
-- Chinese name: FinBox 基金监控 VSCode 插件
+- Tool name: FinBox VSIX
+- Chinese name: FinBox VSCode 插件
 - Primary surface: VSCode sidebar plus editor webview
 - Primary module: mutual fund real-time estimate monitoring and historical trend analysis inside VSCode
 
@@ -46,7 +46,7 @@ The extension should feel like a VSCode-native tool rather than a full browser d
 ### In Scope
 
 - Create a VSIX subproject under `vsix/`.
-- Register a FinBox Fund Monitor sidebar contribution.
+- Register a FinBox sidebar contribution.
 - Show grouped fund estimates in the sidebar.
 - Add one or more fund codes from the sidebar.
 - Remove funds from monitoring.
@@ -257,11 +257,16 @@ Initial command set:
 
 | Command | Purpose |
 | --- | --- |
-| `finboxFundMonitor.open` | Open or reveal the Fund Monitor sidebar/view |
-| `finboxFundMonitor.refresh` | Refresh all monitored funds |
-| `finboxFundMonitor.addFund` | Add fund code input flow |
-| `finboxFundMonitor.openFundTrend` | Open selected fund trend in editor area |
-| `finboxFundMonitor.openGroupTrend` | Open selected group trend comparison in editor area |
+| `finbox.open` | Open or reveal the FinBox sidebar/view |
+| `finbox.fund.refresh` | Refresh all monitored funds |
+| `finbox.fund.add` | Add fund code input flow |
+| `finbox.fund.openTrend` | Open selected fund trend in editor area |
+| `finbox.fund.openGroupTrend` | Open selected group trend comparison in editor area |
+| `finbox.stock.refresh` | Refresh all monitored A-share stocks |
+| `finbox.stock.add` | Add stock symbol input flow |
+| `finbox.stock.remove` | Remove selected stock |
+| `finbox.stock.moveUp` | Move selected stock up |
+| `finbox.stock.moveDown` | Move selected stock down |
 
 ### Storage Rules
 
@@ -281,7 +286,7 @@ Initial command set:
 
 ### Acceptance Criteria
 
-- The extension can be launched from VSCode with the Fund Monitor sidebar visible.
+- The extension can be launched from VSCode with the FinBox sidebar visible.
 - Adding a six-digit fund code persists it across VSCode reloads.
 - Refreshing the sidebar fetches and displays real-time estimate data.
 - Positive and negative changes are visually distinct.

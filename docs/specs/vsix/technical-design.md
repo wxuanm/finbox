@@ -2,7 +2,7 @@
 
 ## Scope
 
-- Tool: FinBox Fund Monitor VSIX
+- Tool: FinBox VSIX
 - Planned source path: `vsix/`
 - Spec source: `docs/specs/vsix/sdd.md`
 - Browser baseline: `fundmonitor/`
@@ -51,9 +51,9 @@ Expected `package.json` contributions:
 ```json
 {
   "activationEvents": [
-    "onView:finboxFundMonitor.sidebar",
-    "onCommand:finboxFundMonitor.open",
-    "onCommand:finboxFundMonitor.refresh"
+    "onView:finbox.fund",
+    "onCommand:finbox.open",
+    "onCommand:finbox.fund.refresh"
   ],
   "contributes": {
     "viewsContainers": {
@@ -68,23 +68,23 @@ Expected `package.json` contributions:
     "views": {
       "finbox": [
         {
-          "id": "finboxFundMonitor.sidebar",
-          "name": "Fund Monitor"
+          "id": "finbox.fund",
+          "name": "FUND"
         }
       ]
     },
     "commands": [
       {
-        "command": "finboxFundMonitor.open",
-        "title": "FinBox: Open Fund Monitor"
+        "command": "finbox.open",
+        "title": "打开监控"
       },
       {
-        "command": "finboxFundMonitor.refresh",
-        "title": "FinBox: Refresh Fund Monitor"
+        "command": "finbox.fund.refresh",
+        "title": "刷新基金"
       },
       {
-        "command": "finboxFundMonitor.addFund",
-        "title": "FinBox: Add Fund"
+        "command": "finbox.fund.add",
+        "title": "添加基金"
       }
     ]
   }
@@ -363,12 +363,12 @@ npm run compile
 npx @vscode/vsce package
 ```
 
-The generated VSIX file is written under `vsix/` and named from `package.json` as `<name>-<version>.vsix`, for example `finbox-0.0.4.vsix`.
+The generated VSIX file is written under `vsix/` and named from `package.json` as `<name>-<version>.vsix`, for example `finbox-0.0.5.vsix`.
 
 Install a generated VSIX with:
 
 ```powershell
-code --install-extension .\finbox-0.0.4.vsix
+code --install-extension .\finbox-0.0.5.vsix
 ```
 
 Alternatively, use `Extensions -> ... -> Install from VSIX...` in VS Code.

@@ -2,6 +2,16 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.0.5
+
+- Renamed the extension display name and marketplace description to reflect both fund and stock monitoring.
+- Renamed command IDs from `finboxFundMonitor.*` to the broader `finbox.*`, `finbox.fund.*`, and `finbox.stock.*` namespaces.
+- Shortened command titles for opening, fund refresh, stock refresh, and stock add actions.
+- Added inline group trend actions to fund group rows.
+- Removed the redundant stock-group add action and moved stock removal below ordering actions.
+- Improved stock waiting and failure labels by showing `symbol[status]` in the name column.
+- Updated the Activity Bar icon and rotated the marketplace icon.
+
 ## 0.0.4
 
 - Added a `STOCK` view implementation with an `A Stock` group.
