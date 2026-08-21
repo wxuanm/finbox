@@ -36,7 +36,7 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
     }
 
     if (element instanceof FundGroupItem) {
-      const codes = this.store.getCodesForGroup(element.group.id);
+      const codes = this.store.getCodesForGroup(element.group.id).sort((a, b) => compareFundsByChange(a, b, this.store));
       if (codes.length === 0) return [new EmptyItem('此分组为空')];
       return codes.map(code => new FundItem(code, this.store.getQuote(code), this.store.snapshot().failedCodes.includes(code), this.extensionUri));
     }
@@ -47,6 +47,17 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
   dispose(): void {
     this.onDidChangeTreeDataEmitter.dispose();
   }
+}
+
+function compareFundsByChange(a: string, b: string, store: FundMonitorStore): number {
+  const changeA = store.getQuote(a)?.estimatedChange;
+  const changeB = store.getQuote(b)?.estimatedChange;
+  const hasChangeA = Number.isFinite(changeA);
+  const hasChangeB = Number.isFinite(changeB);
+
+  if (hasChangeA && hasChangeB && changeA !== changeB) return (changeB as number) - (changeA as number);
+  if (hasChangeA !== hasChangeB) return hasChangeA ? -1 : 1;
+  return a.localeCompare(b, 'en', { numeric: true });
 }
 
 export class FundGroupItem extends vscode.TreeItem {
