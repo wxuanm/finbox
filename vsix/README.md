@@ -16,7 +16,7 @@ Open the repository in VSCode and run the `Run FinBox VSIX` launch configuration
 从项目源码打包并安装 VSIX：
 
 ```powershell
-cd C:\Users\222243672\Desktop\Finhub\finbox\vsix
+cd vsix
 npm install
 npm run compile
 npx @vscode/vsce package
