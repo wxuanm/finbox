@@ -113,7 +113,7 @@ async function fetchEastmoneyAshareQuoteBatch(items) {
 
 async function fetchSinaAshareQuoteBatch(items) {
   const itemBySinaSymbol = new Map(items.map(item => [getSinaAshareSymbol(item.symbol), item]));
-  const targetUrl = `https://hq.sinajs.cn/list=${items.map(getSinaAshareSymbol).join(',')}`;
+  const targetUrl = `https://hq.sinajs.cn/list=${items.map(item => getSinaAshareSymbol(item.symbol)).join(',')}`;
   const response = await fetch(targetUrl, {
     headers: {
       'Referer': 'https://finance.sina.com.cn/',
