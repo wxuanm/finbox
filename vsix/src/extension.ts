@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const trendPanel = new TrendPanel(context.extensionUri, store, navService);
   const treeProvider = new FundMonitorTreeProvider(store, context.extensionUri);
   const stockTreeProvider = new StockMonitorTreeProvider(store, context.extensionUri);
-  const settingsTreeProvider = new SettingsTreeProvider(store);
+  const settingsTreeProvider = new SettingsTreeProvider();
   const fundTreeView = vscode.window.createTreeView('finbox.fund', {
     treeDataProvider: treeProvider,
     showCollapseAll: false
@@ -115,7 +115,7 @@ export function activate(context: vscode.ExtensionContext): void {
     return isAshareTradingWindow(new Date());
   }
 
-  async function openFinBoxSettings(settingId = 'finbox.stock.autoRefresh.enabled'): Promise<void> {
+  async function openFinBoxSettings(settingId = 'finbox.stock'): Promise<void> {
     await vscode.commands.executeCommand('workbench.action.openSettings', settingId);
   }
 
@@ -228,7 +228,6 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration(STOCK_AUTO_REFRESH_CONFIG)) {
         restartStockAutoRefresh();
-        settingsTreeProvider.refresh();
       }
     }),
     new vscode.Disposable(() => {

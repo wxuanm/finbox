@@ -250,7 +250,7 @@
         "finbox.stock.autoRefresh.tradingHoursOnly": {
           "type": "boolean",
           "default": true,
-          "description": "Only refresh stock quotes automatically during weekday A-share market windows."
+          "description": "Only refresh stock quotes automatically during weekday A-share market windows: 09:25-11:35 and 12:55-15:05 local time."
         }
       }
     }

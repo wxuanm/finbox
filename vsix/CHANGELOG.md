@@ -6,7 +6,7 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 
 - Batched stock quote refresh through Sina first and Eastmoney batch fallback to reduce per-symbol requests.
 - Added optional automatic stock quote refresh with configurable interval, trading-hours filtering, and an immediate silent refresh when active.
-- Replaced the placeholder settings view with stock auto-refresh status, last refresh time, and quick actions.
+- Replaced the placeholder settings view with a shortcut that opens native FinBox stock settings.
 
 ## 0.0.5
 

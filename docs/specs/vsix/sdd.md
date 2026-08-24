@@ -153,9 +153,9 @@ Each stock tooltip should show stock identity, including the exchange-prefixed s
 
 A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: batched Sina quote data first, then batched Eastmoney quote data as fallback.
 
-Stock quote refresh can run manually from the STOCK view or automatically when enabled through VS Code settings. Automatic stock refresh is disabled by default, runs an immediate silent refresh when active, uses a configurable interval, and can be limited to weekday A-share market windows to avoid unnecessary background requests.
+Stock quote refresh can run manually from the STOCK view or automatically when enabled through VS Code settings. Automatic stock refresh is disabled by default, runs an immediate silent refresh when active, uses a configurable interval, and can be limited to weekday A-share market windows of 09:25-11:35 and 12:55-15:05 local time to avoid unnecessary background requests.
 
-The `SETTINGS` view should surface stock auto-refresh state, interval, trading-window status, tracked-stock count, last stock refresh time, and quick actions for opening FinBox settings or refreshing stocks immediately. Configuration editing remains in native VS Code Settings rather than custom TreeView form controls.
+The `SETTINGS` view should only provide an `Open FinBox Settings` shortcut. Configuration editing remains in native VS Code Settings rather than custom TreeView form controls, and the shortcut opens the `finbox.stock` settings scope by default.
 
 The sidebar should avoid heavyweight dashboard cards, large hero copy, mobile controls, and full-width tables from the browser page.
 

@@ -128,15 +128,13 @@ finbox.fundMonitor.state
 - Normalizes each quote to symbol, stock name, latest price, previous close, open, high, low, price change, percentage change, volume, amount, quote time, and source.
 - Uses canonical `sh`/`sz` prefixed symbols for storage, quote cache keys, requests, and row identity so same numeric codes on different exchanges do not collide.
 - Returns partial failures so the stock sidebar can keep successful rows visible.
-- Stock refresh supports optional automatic polling through VS Code settings. Manual refresh shows progress and failure warnings; automatic refresh runs silently, performs an immediate refresh when active, skips non-trading windows by default, and reuses the same in-flight refresh lock as manual refresh.
+- Stock refresh supports optional automatic polling through VS Code settings. Manual refresh shows progress and failure warnings; automatic refresh runs silently, performs an immediate refresh when active, skips non-trading windows by default, and reuses the same in-flight refresh lock as manual refresh. The default trading windows are 09:25-11:35 and 12:55-15:05 local time on weekdays.
 
 ### `settingsTreeProvider.ts`
 
 - Renders FinBox operational settings as TreeView status rows and command shortcuts.
-- Reads stock auto-refresh configuration from native VS Code Settings.
-- Displays auto-refresh enabled state, interval, trading-hours-only state, current trading-window status, tracked-stock count, and last stock refresh time.
-- Opens native VS Code Settings for configuration edits instead of implementing custom TreeView form controls.
-- Refreshes when the store changes or relevant VS Code settings change.
+- Shows only the `Open FinBox Settings` shortcut.
+- Opens the native VS Code Settings `finbox.stock` scope for configuration edits instead of implementing custom TreeView form controls.
 
 Initial shape:
 
@@ -298,12 +296,12 @@ VS Code setting enabled
   -> Stock TreeView refreshes from quote cache
 ```
 
-Settings view synchronization:
+Settings view shortcut:
 
 ```text
-Store or FinBox setting changes
-  -> settingsTreeProvider.refresh()
-  -> SETTINGS TreeView re-renders current auto-refresh and quote status
+SETTINGS TreeView
+  -> Open FinBox Settings
+  -> Native VS Code Settings opens at finbox.stock
 ```
 
 Historical NAV data is panel-scoped with optional same-day cache:
