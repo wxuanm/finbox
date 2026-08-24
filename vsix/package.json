@@ -2,7 +2,7 @@
   "name": "finbox",
   "displayName": "FinBox",
   "description": "Monitor mutual fund estimates, fund trends, and A-share stock quotes inside VS Code.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "finx",
   "icon": "media/extension-icon.png",
   "license": "MIT",
@@ -35,6 +35,7 @@
     "onCommand:finbox.stock.remove",
     "onCommand:finbox.stock.moveUp",
     "onCommand:finbox.stock.moveDown",
+    "onCommand:finbox.settings.open",
     "onCommand:finbox.fund.openTrend",
     "onCommand:finbox.fund.openGroupTrend"
   ],
@@ -225,8 +226,34 @@
         "command": "finbox.fund.openGroupTrend",
         "title": "分组趋势",
         "icon": "$(pulse)"
+      },
+      {
+        "command": "finbox.settings.open",
+        "title": "打开 FinBox 设置",
+        "icon": "$(settings-gear)"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "FinBox",
+      "properties": {
+        "finbox.stock.autoRefresh.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic A-share stock quote refresh."
+        },
+        "finbox.stock.autoRefresh.intervalMinutes": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "description": "Automatic stock quote refresh interval in minutes."
+        },
+        "finbox.stock.autoRefresh.tradingHoursOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "Only refresh stock quotes automatically during weekday A-share market windows."
+        }
+      }
+    }
   },
   "devDependencies": {
     "@types/vscode": "^1.92.0",

@@ -6,8 +6,12 @@ import { StorageService } from './services/storageService';
 import { FundMonitorStore } from './state/fundMonitorStore';
 import { TrendPanel } from './webviews/trendPanel';
 import { FundGroupItem, FundItem, FundMonitorTreeProvider } from './views/fundMonitorTreeProvider';
-import { StaticTreeProvider } from './views/staticTreeProvider';
+import { SettingsTreeProvider } from './views/settingsTreeProvider';
 import { StockItem, StockMonitorTreeProvider } from './views/stockMonitorTreeProvider';
+
+const STOCK_AUTO_REFRESH_CONFIG = 'finbox.stock.autoRefresh';
+const DEFAULT_STOCK_AUTO_REFRESH_MINUTES = 5;
+const MIN_STOCK_AUTO_REFRESH_MINUTES = 1;
 
 export function activate(context: vscode.ExtensionContext): void {
   const storage = new StorageService(context);
@@ -18,6 +22,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const trendPanel = new TrendPanel(context.extensionUri, store, navService);
   const treeProvider = new FundMonitorTreeProvider(store, context.extensionUri);
   const stockTreeProvider = new StockMonitorTreeProvider(store, context.extensionUri);
+  const settingsTreeProvider = new SettingsTreeProvider(store);
   const fundTreeView = vscode.window.createTreeView('finbox.fund', {
     treeDataProvider: treeProvider,
     showCollapseAll: false
@@ -27,8 +32,10 @@ export function activate(context: vscode.ExtensionContext): void {
     showCollapseAll: false
   });
   const settingsTreeView = vscode.window.createTreeView('finbox.settings', {
-    treeDataProvider: new StaticTreeProvider('设置项待扩展', 'settings-gear')
+    treeDataProvider: settingsTreeProvider
   });
+  let stockRefreshInFlight: Promise<void> | undefined;
+  let stockAutoRefreshTimer: ReturnType<typeof setInterval> | undefined;
 
   async function refreshQuotes(): Promise<void> {
     const codes = store.getCodes();
@@ -49,23 +56,67 @@ export function activate(context: vscode.ExtensionContext): void {
     });
   }
 
-  async function refreshStockQuotes(): Promise<void> {
+  async function refreshStockQuotes(options: { showProgress: boolean; showWarnings: boolean } = { showProgress: true, showWarnings: true }): Promise<void> {
+    if (stockRefreshInFlight) return stockRefreshInFlight;
+    stockRefreshInFlight = refreshStockQuotesCore(options).finally(() => {
+      stockRefreshInFlight = undefined;
+    });
+    return stockRefreshInFlight;
+  }
+
+  async function refreshStockQuotesCore(options: { showProgress: boolean; showWarnings: boolean }): Promise<void> {
     const symbols = store.getStockSymbols();
     if (symbols.length === 0) {
       stockTreeProvider.refresh();
       return;
     }
 
+    const runRefresh = async () => {
+      const result = await stockQuoteService.fetchQuotes(symbols);
+      store.setStockQuotes(result.quotes, result.failedSymbols, result.updatedAt);
+      if (options.showWarnings && result.failedSymbols.length > 0) {
+        vscode.window.showWarningMessage(`部分股票行情刷新失败: ${result.failedSymbols.join(', ')}`);
+      }
+    };
+
+    if (!options.showProgress) {
+      await runRefresh();
+      return;
+    }
+
     await vscode.window.withProgress({
       location: { viewId: 'finbox.stock' },
       title: '刷新股票...'
-    }, async () => {
-      const result = await stockQuoteService.fetchQuotes(symbols);
-      store.setStockQuotes(result.quotes, result.failedSymbols, result.updatedAt);
-      if (result.failedSymbols.length > 0) {
-        vscode.window.showWarningMessage(`部分股票行情刷新失败: ${result.failedSymbols.join(', ')}`);
-      }
-    });
+    }, runRefresh);
+  }
+
+  function restartStockAutoRefresh(): void {
+    if (stockAutoRefreshTimer) clearInterval(stockAutoRefreshTimer);
+    stockAutoRefreshTimer = undefined;
+
+    const config = vscode.workspace.getConfiguration(STOCK_AUTO_REFRESH_CONFIG);
+    if (!config.get<boolean>('enabled', false)) return;
+
+    const intervalMinutes = Math.max(MIN_STOCK_AUTO_REFRESH_MINUTES, config.get<number>('intervalMinutes', DEFAULT_STOCK_AUTO_REFRESH_MINUTES));
+    stockAutoRefreshTimer = setInterval(() => {
+      if (!shouldRunStockAutoRefresh()) return;
+      void refreshStockQuotes({ showProgress: false, showWarnings: false });
+    }, intervalMinutes * 60 * 1000);
+
+    if (shouldRunStockAutoRefresh()) {
+      void refreshStockQuotes({ showProgress: false, showWarnings: false });
+    }
+  }
+
+  function shouldRunStockAutoRefresh(): boolean {
+    if (store.getStockSymbols().length === 0) return false;
+    const config = vscode.workspace.getConfiguration(STOCK_AUTO_REFRESH_CONFIG);
+    if (!config.get<boolean>('tradingHoursOnly', true)) return true;
+    return isAshareTradingWindow(new Date());
+  }
+
+  async function openFinBoxSettings(settingId = 'finbox.stock.autoRefresh.enabled'): Promise<void> {
+    await vscode.commands.executeCommand('workbench.action.openSettings', settingId);
   }
 
   async function promptAddFund(groupId = 'default'): Promise<void> {
@@ -127,12 +178,14 @@ export function activate(context: vscode.ExtensionContext): void {
     store,
     treeProvider,
     stockTreeProvider,
+    settingsTreeProvider,
     fundTreeView,
     stockTreeView,
     settingsTreeView,
     vscode.commands.registerCommand('finbox.open', () => vscode.commands.executeCommand('workbench.view.extension.finbox')),
     vscode.commands.registerCommand('finbox.fund.refresh', () => refreshQuotes()),
     vscode.commands.registerCommand('finbox.stock.refresh', () => refreshStockQuotes()),
+    vscode.commands.registerCommand('finbox.settings.open', (settingId?: string) => openFinBoxSettings(settingId)),
     vscode.commands.registerCommand('finbox.fund.add', () => promptAddFund('default')),
     vscode.commands.registerCommand('finbox.stock.add', () => promptAddStock()),
     vscode.commands.registerCommand('finbox.fund.addToGroup', (item?: FundGroupItem) => promptAddFund(item instanceof FundGroupItem ? item.group.id : 'default')),
@@ -171,8 +224,28 @@ export function activate(context: vscode.ExtensionContext): void {
       if (input instanceof FundGroupItem) return trendPanel.openGroup(input.group.id);
       if (typeof input === 'string' && input) return trendPanel.openGroup(input);
       return trendPanel.openGroup('default');
+    }),
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration(STOCK_AUTO_REFRESH_CONFIG)) {
+        restartStockAutoRefresh();
+        settingsTreeProvider.refresh();
+      }
+    }),
+    new vscode.Disposable(() => {
+      if (stockAutoRefreshTimer) clearInterval(stockAutoRefreshTimer);
     })
   );
+
+  restartStockAutoRefresh();
 }
 
 export function deactivate(): void {}
+
+function isAshareTradingWindow(date: Date): boolean {
+  const day = date.getDay();
+  if (day === 0 || day === 6) return false;
+
+  const minutes = date.getHours() * 60 + date.getMinutes();
+  return (minutes >= 9 * 60 + 25 && minutes <= 11 * 60 + 35)
+    || (minutes >= 12 * 60 + 55 && minutes <= 15 * 60 + 5);
+}
