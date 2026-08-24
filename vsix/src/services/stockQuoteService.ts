@@ -37,7 +37,7 @@ export class StockQuoteService {
   }
 
   private async fetchSinaAshareQuoteBatch(symbols: string[]): Promise<StockQuote[]> {
-    const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(symbols.join(','))}`;
+    const targetUrl = `https://hq.sinajs.cn/list=${symbols.join(',')}`;
     const response = await fetchWithTimeout(targetUrl, {
       headers: {
         Referer: 'https://finance.sina.com.cn/',
@@ -52,7 +52,7 @@ export class StockQuoteService {
 
   private async fetchEastmoneyAshareQuoteBatch(symbols: string[]): Promise<StockQuote[]> {
     const secids = symbols.map(symbol => `${getAshareExchangePrefix(symbol)}.${getAshareCode(symbol)}`).join(',');
-    const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f13,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f86&secids=${encodeURIComponent(secids)}`;
+    const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f13,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f124&secids=${encodeURIComponent(secids)}`;
     const response = await fetchWithTimeout(targetUrl, {
       headers: {
         Referer: 'https://quote.eastmoney.com/',
@@ -130,7 +130,7 @@ function normalizeEastmoneyAshareRow(row: Record<string, unknown>): StockQuote |
       volume: toNumber(row.f5),
       amount: toNumber(row.f6),
       currency: 'CNY',
-      quoteTime: formatEastmoneyTimestamp(row.f86),
+      quoteTime: formatEastmoneyTimestamp(row.f124),
       source: 'eastmoney'
     };
 }

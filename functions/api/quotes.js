@@ -97,7 +97,7 @@ async function fetchAshareQuotes(items) {
 async function fetchEastmoneyAshareQuoteBatch(items) {
   const itemBySymbol = new Map(items.map(item => [item.symbol, item]));
   const secids = items.map(item => `${getAshareExchangePrefix(item.symbol)}.${item.symbol}`).join(',');
-  const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f14,f2,f3,f18,f86&secids=${encodeURIComponent(secids)}`;
+  const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f14,f2,f3,f18,f124&secids=${encodeURIComponent(secids)}`;
   const response = await fetch(targetUrl, {
     headers: {
       'Referer': 'https://quote.eastmoney.com/',
@@ -113,7 +113,7 @@ async function fetchEastmoneyAshareQuoteBatch(items) {
 
 async function fetchSinaAshareQuoteBatch(items) {
   const itemBySinaSymbol = new Map(items.map(item => [getSinaAshareSymbol(item.symbol), item]));
-  const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(items.map(getSinaAshareSymbol).join(','))}`;
+  const targetUrl = `https://hq.sinajs.cn/list=${items.map(getSinaAshareSymbol).join(',')}`;
   const response = await fetch(targetUrl, {
     headers: {
       'Referer': 'https://finance.sina.com.cn/',
@@ -173,7 +173,7 @@ function normalizeEastmoneyAshareRow(row, itemBySymbol) {
     previousClose,
     changePct: toNumber(row.f3),
     currency: 'CNY',
-    quoteTime: formatEastmoneyTimestamp(row.f86),
+    quoteTime: formatEastmoneyTimestamp(row.f124),
     source: 'eastmoney'
   };
 }
