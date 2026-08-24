@@ -124,7 +124,7 @@ finbox.fundMonitor.state
 ### `stockQuoteService.ts`
 
 - Fetches A-share quotes directly from the extension host.
-- Follows `functions/api/quotes.js` source priority: Sina first, Eastmoney fallback.
+- Follows `functions/api/quotes.js` source priority: batched Sina first, batched Eastmoney fallback.
 - Normalizes each quote to symbol, stock name, latest price, previous close, open, high, low, price change, percentage change, volume, amount, quote time, and source.
 - Uses canonical `sh`/`sz` prefixed symbols for storage, quote cache keys, requests, and row identity so same numeric codes on different exchanges do not collide.
 - Returns partial failures so the stock sidebar can keep successful rows visible.

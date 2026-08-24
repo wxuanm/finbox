@@ -256,7 +256,7 @@ Import behavior:
 /api/quotes?items=CN:600519,Fund:003026
 ```
 
-- `CN` uses Sina A-share quote data first and Eastmoney stock quote data as fallback. Shanghai exchange-traded funds such as `510300` are treated as Shanghai `CN` instruments when they are stored as stock holdings.
+- `CN` uses batched Sina A-share quote data first and batched Eastmoney stock quote data as fallback. Shanghai exchange-traded funds such as `510300` are treated as Shanghai `CN` instruments when they are stored as stock holdings.
 - `Fund` uses Eastmoney fund comparison data and normalizes the refresh price to the latest disclosed unit NAV, not the intraday estimated NAV.
 - Unsupported markets are returned in `failedItems`.
 - Quote refresh updates only current price, name when available, price source, and price update time.

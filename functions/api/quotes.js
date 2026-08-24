@@ -1,4 +1,5 @@
 const MAX_ITEMS = 40;
+const STOCK_BATCH_SIZE = 20;
 
 export async function onRequest(context) {
   const { request } = context;
@@ -63,30 +64,40 @@ async function fetchAshareQuotes(items) {
   const quotes = [];
   const failedItems = [];
 
-  const sinaResults = await Promise.allSettled(items.map(fetchSinaAshareQuote));
+  const sinaResults = await Promise.allSettled(chunkItems(items, STOCK_BATCH_SIZE).map(fetchSinaAshareQuoteBatch));
   sinaResults.forEach(result => {
-    if (result.status === 'fulfilled' && result.value) quotes.push(result.value);
+    if (result.status === 'fulfilled') quotes.push(...result.value);
   });
 
   const missingItems = items.filter(item => !quotes.some(quote => quote.symbol === item.symbol));
   if (missingItems.length > 0) {
-    const fallbackResults = await Promise.allSettled(missingItems.map(fetchSingleEastmoneyAshareQuote));
+    const fallbackChunks = chunkItems(missingItems, STOCK_BATCH_SIZE);
+    const fallbackResults = await Promise.allSettled(fallbackChunks.map(fetchEastmoneyAshareQuoteBatch));
     fallbackResults.forEach((result, index) => {
-      const itemKey = formatItemKey(missingItems[index]);
-      if (result.status === 'fulfilled' && result.value) {
-        quotes.push(result.value);
-        return;
+      const chunk = fallbackChunks[index];
+      if (result.status === 'fulfilled') {
+        quotes.push(...result.value);
+        const returnedSymbols = new Set(result.value.map(quote => quote.symbol));
+        chunk.forEach(item => {
+          const itemKey = formatItemKey(item);
+          if (!returnedSymbols.has(item.symbol) && !failedItems.includes(itemKey)) failedItems.push(itemKey);
+        });
+      } else {
+        chunk.forEach(item => {
+          const itemKey = formatItemKey(item);
+          if (!failedItems.includes(itemKey)) failedItems.push(itemKey);
+        });
       }
-      if (!failedItems.includes(itemKey)) failedItems.push(itemKey);
     });
   }
 
   return { quotes, failedItems };
 }
 
-async function fetchSingleEastmoneyAshareQuote(item) {
-  const secid = `${getAshareExchangePrefix(item.symbol)}.${item.symbol}`;
-  const targetUrl = `https://push2.eastmoney.com/api/qt/stock/get?fltt=2&fields=f57,f58,f43,f60,f86,f170&secid=${encodeURIComponent(secid)}`;
+async function fetchEastmoneyAshareQuoteBatch(items) {
+  const itemBySymbol = new Map(items.map(item => [item.symbol, item]));
+  const secids = items.map(item => `${getAshareExchangePrefix(item.symbol)}.${item.symbol}`).join(',');
+  const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f14,f2,f3,f18,f86&secids=${encodeURIComponent(secids)}`;
   const response = await fetch(targetUrl, {
     headers: {
       'Referer': 'https://quote.eastmoney.com/',
@@ -94,29 +105,15 @@ async function fetchSingleEastmoneyAshareQuote(item) {
     }
   });
 
-  if (!response.ok) throw new Error(`Eastmoney single stock quote failed: ${response.status}`);
+  if (!response.ok) throw new Error(`Eastmoney stock quote batch failed: ${response.status}`);
   const data = await response.json();
-  const row = data?.data;
-  const latestPrice = toNumber(row?.f43);
-  const previousClose = toNumber(row?.f60);
-  const price = latestPrice ?? previousClose;
-  if (!row || price === null) return null;
-  return {
-    market: item.market,
-    symbol: item.symbol,
-    name: row.f58 || item.symbol,
-    price,
-    latestPrice,
-    previousClose,
-    changePct: toNumber(row.f170),
-    currency: 'CNY',
-    quoteTime: formatEastmoneyTimestamp(row.f86),
-    source: 'eastmoney'
-  };
+  const rows = Array.isArray(data?.data?.diff) ? data.data.diff : [];
+  return rows.map(row => normalizeEastmoneyAshareRow(row, itemBySymbol)).filter(Boolean);
 }
 
-async function fetchSinaAshareQuote(item) {
-  const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(getSinaAshareSymbol(item.symbol))}`;
+async function fetchSinaAshareQuoteBatch(items) {
+  const itemBySinaSymbol = new Map(items.map(item => [getSinaAshareSymbol(item.symbol), item]));
+  const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(items.map(getSinaAshareSymbol).join(','))}`;
   const response = await fetch(targetUrl, {
     headers: {
       'Referer': 'https://finance.sina.com.cn/',
@@ -126,8 +123,22 @@ async function fetchSinaAshareQuote(item) {
 
   if (!response.ok) throw new Error(`Sina quote failed: ${response.status}`);
   const script = await decodeResponseText(response);
-  const match = script.match(/="([^"]*)"/);
-  const fields = match ? match[1].split(',') : [];
+  return parseSinaAshareScript(script, itemBySinaSymbol);
+}
+
+function parseSinaAshareScript(script, itemBySinaSymbol) {
+  const quotes = [];
+  const pattern = /var\s+hq_str_([a-z]{2}\d{6})="([^"]*)";?/g;
+  let match;
+  while ((match = pattern.exec(script))) {
+    const item = itemBySinaSymbol.get(match[1]);
+    const quote = item ? normalizeSinaAshareFields(item, match[2].split(',')) : null;
+    if (quote) quotes.push(quote);
+  }
+  return quotes;
+}
+
+function normalizeSinaAshareFields(item, fields) {
   const latestPrice = toNumber(fields[3]);
   const previousClose = toNumber(fields[2]);
   const price = latestPrice ?? previousClose;
@@ -143,6 +154,27 @@ async function fetchSinaAshareQuote(item) {
     currency: 'CNY',
     quoteTime: formatSinaTimestamp(fields[30], fields[31]),
     source: 'sina'
+  };
+}
+
+function normalizeEastmoneyAshareRow(row, itemBySymbol) {
+  const symbol = String(row?.f12 || '');
+  const item = itemBySymbol.get(symbol);
+  const latestPrice = toNumber(row?.f2);
+  const previousClose = toNumber(row?.f18);
+  const price = latestPrice ?? previousClose;
+  if (!item || price === null) return null;
+  return {
+    market: item.market,
+    symbol: item.symbol,
+    name: row.f14 || item.symbol,
+    price,
+    latestPrice,
+    previousClose,
+    changePct: toNumber(row.f3),
+    currency: 'CNY',
+    quoteTime: formatEastmoneyTimestamp(row.f86),
+    source: 'eastmoney'
   };
 }
 
@@ -231,6 +263,14 @@ function getSinaAshareSymbol(symbol) {
 
 function formatItemKey(item) {
   return `${item.market}:${item.symbol}`;
+}
+
+function chunkItems(items, size) {
+  const chunks = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
 }
 
 function formatEastmoneyTimestamp(value) {

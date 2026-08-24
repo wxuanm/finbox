@@ -151,7 +151,7 @@ Stock input requires `sh`/`sz` prefixed symbols. Stock rows keep the user's add 
 
 Each stock tooltip should show stock identity, including the exchange-prefixed symbol, on the first line, then two-column metric rows for percentage change, price change, high, low, open, previous close, volume, and amount. Source and update time stay hidden from the tooltip.
 
-A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: Sina quote data first, then Eastmoney single-stock quote data as fallback.
+A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: batched Sina quote data first, then batched Eastmoney quote data as fallback.
 
 The sidebar should avoid heavyweight dashboard cards, large hero copy, mobile controls, and full-width tables from the browser page.
 

@@ -2,34 +2,42 @@ import { StockQuote, StockQuoteResult } from '../types';
 import { normalizeStockSymbols } from '../utils/fundCodes';
 
 const REQUEST_TIMEOUT_MS = 12000;
+const STOCK_BATCH_SIZE = 20;
 
 export class StockQuoteService {
   async fetchQuotes(inputSymbols: string[]): Promise<StockQuoteResult> {
     const symbols = normalizeStockSymbols(inputSymbols);
     const updatedAt = new Date().toISOString();
-    const results = await Promise.allSettled(symbols.map(symbol => this.fetchAshareQuote(symbol)));
     const quotes: StockQuote[] = [];
     const failedSymbols: string[] = [];
 
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled' && result.value) {
-        quotes.push(result.value);
-        return;
+    const sinaResults = await Promise.allSettled(chunkItems(symbols, STOCK_BATCH_SIZE).map(chunk => this.fetchSinaAshareQuoteBatch(chunk)));
+    sinaResults.forEach(result => {
+      if (result.status === 'fulfilled') quotes.push(...result.value);
+    });
+
+    const missingSymbols = symbols.filter(symbol => !quotes.some(quote => quote.symbol === symbol));
+    const fallbackChunks = chunkItems(missingSymbols, STOCK_BATCH_SIZE);
+    const fallbackResults = await Promise.allSettled(fallbackChunks.map(chunk => this.fetchEastmoneyAshareQuoteBatch(chunk)));
+
+    fallbackResults.forEach((result, index) => {
+      const chunk = fallbackChunks[index];
+      if (result.status === 'fulfilled') {
+        quotes.push(...result.value);
+        const returnedSymbols = new Set(result.value.map(quote => quote.symbol));
+        chunk.forEach(symbol => {
+          if (!returnedSymbols.has(symbol)) failedSymbols.push(symbol);
+        });
+      } else {
+        failedSymbols.push(...chunk);
       }
-      failedSymbols.push(symbols[index]);
     });
 
     return { quotes, failedSymbols, updatedAt };
   }
 
-  private async fetchAshareQuote(symbol: string): Promise<StockQuote | null> {
-    const sinaQuote = await this.fetchSinaAshareQuote(symbol).catch(() => null);
-    if (sinaQuote) return sinaQuote;
-    return this.fetchEastmoneyAshareQuote(symbol).catch(() => null);
-  }
-
-  private async fetchSinaAshareQuote(symbol: string): Promise<StockQuote | null> {
-    const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(symbol)}`;
+  private async fetchSinaAshareQuoteBatch(symbols: string[]): Promise<StockQuote[]> {
+    const targetUrl = `https://hq.sinajs.cn/list=${encodeURIComponent(symbols.join(','))}`;
     const response = await fetchWithTimeout(targetUrl, {
       headers: {
         Referer: 'https://finance.sina.com.cn/',
@@ -39,8 +47,40 @@ export class StockQuoteService {
 
     if (!response.ok) throw new Error(`Sina quote failed: ${response.status}`);
     const script = await decodeResponseText(response);
-    const match = script.match(/="([^"]*)"/);
-    const fields = match ? match[1].split(',') : [];
+    return parseSinaAshareScript(script);
+  }
+
+  private async fetchEastmoneyAshareQuoteBatch(symbols: string[]): Promise<StockQuote[]> {
+    const secids = symbols.map(symbol => `${getAshareExchangePrefix(symbol)}.${getAshareCode(symbol)}`).join(',');
+    const targetUrl = `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f12,f13,f14,f2,f3,f4,f5,f6,f15,f16,f17,f18,f86&secids=${encodeURIComponent(secids)}`;
+    const response = await fetchWithTimeout(targetUrl, {
+      headers: {
+        Referer: 'https://quote.eastmoney.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    if (!response.ok) throw new Error(`Eastmoney stock quote batch failed: ${response.status}`);
+    const data = await response.json();
+    const rows = Array.isArray(data?.data?.diff) ? data.data.diff : [];
+    return rows
+      .map((row: Record<string, unknown>) => normalizeEastmoneyAshareRow(row))
+      .filter((quote: StockQuote | null): quote is StockQuote => Boolean(quote));
+  }
+}
+
+function parseSinaAshareScript(script: string): StockQuote[] {
+  const quotes: StockQuote[] = [];
+  const pattern = /var\s+hq_str_([a-z]{2}\d{6})="([^"]*)";?/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(script))) {
+    const quote = normalizeSinaAshareFields(match[1], match[2].split(','));
+    if (quote) quotes.push(quote);
+  }
+  return quotes;
+}
+
+function normalizeSinaAshareFields(symbol: string, fields: string[]): StockQuote | null {
     const latestPrice = toNumber(fields[3]);
     const previousClose = toNumber(fields[2]);
     const price = latestPrice ?? previousClose;
@@ -67,43 +107,32 @@ export class StockQuoteService {
     };
   }
 
-  private async fetchEastmoneyAshareQuote(symbol: string): Promise<StockQuote | null> {
-    const secid = `${getAshareExchangePrefix(symbol)}.${getAshareCode(symbol)}`;
-    const targetUrl = `https://push2.eastmoney.com/api/qt/stock/get?fltt=2&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f86,f169,f170&secid=${encodeURIComponent(secid)}`;
-    const response = await fetchWithTimeout(targetUrl, {
-      headers: {
-        Referer: 'https://quote.eastmoney.com/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
-
-    if (!response.ok) throw new Error(`Eastmoney single stock quote failed: ${response.status}`);
-    const data = await response.json();
-    const row = data?.data;
-    const latestPrice = toNumber(row?.f43);
-    const previousClose = toNumber(row?.f60);
+function normalizeEastmoneyAshareRow(row: Record<string, unknown>): StockQuote | null {
+    const code = String(row?.f12 || '');
+    const symbol = `${String(row?.f13) === '1' ? 'sh' : 'sz'}${code}`;
+    const latestPrice = toNumber(row?.f2);
+    const previousClose = toNumber(row?.f18);
     const price = latestPrice ?? previousClose;
     if (!row || price === null) return null;
 
     return {
       market: 'CN',
       symbol,
-      name: row.f58 || symbol,
+      name: String(row.f14 || symbol),
       price,
       latestPrice,
       previousClose,
-      openPrice: toNumber(row.f46),
-      highPrice: toNumber(row.f44),
-      lowPrice: toNumber(row.f45),
-      changeAmount: toSignedNumber(row.f169),
-      changePct: toSignedNumber(row.f170),
-      volume: toNumber(row.f47),
-      amount: toNumber(row.f48),
+      openPrice: toNumber(row.f17),
+      highPrice: toNumber(row.f15),
+      lowPrice: toNumber(row.f16),
+      changeAmount: toSignedNumber(row.f4),
+      changePct: toSignedNumber(row.f3),
+      volume: toNumber(row.f5),
+      amount: toNumber(row.f6),
       currency: 'CNY',
       quoteTime: formatEastmoneyTimestamp(row.f86),
       source: 'eastmoney'
     };
-  }
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
@@ -122,6 +151,18 @@ function getAshareExchangePrefix(symbol: string): string {
 
 function getAshareCode(symbol: string): string {
   return symbol.replace(/^(sh|sz)/, '');
+}
+
+function getSinaAshareSymbol(symbol: string): string {
+  return getAshareExchangePrefix(symbol) === '1' ? `sh${getAshareCode(symbol)}` : `sz${getAshareCode(symbol)}`;
+}
+
+function chunkItems<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
 }
 
 async function decodeResponseText(response: Response): Promise<string> {
