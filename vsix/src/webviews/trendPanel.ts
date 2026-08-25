@@ -49,7 +49,6 @@ export class TrendPanel {
     const existing = this.panels.get(target.key);
     if (existing) {
       existing.reveal(vscode.ViewColumn.Active);
-      await this.loadTrend(existing, target);
       return;
     }
 
@@ -117,9 +116,6 @@ export class TrendPanel {
         <div class="eyebrow">FINBOX FUND TREND</div>
         <h1 id="title">${title}</h1>
       </div>
-      <div class="actions">
-        <button id="refreshBtn" type="button">刷新</button>
-      </div>
     </header>
     <div id="status" class="status">加载中...</div>
     <nav id="periodTabs" class="period-tabs" aria-label="趋势周期">
@@ -135,7 +131,6 @@ export class TrendPanel {
       <div class="chart-toolbar">
         <div>
           <div id="chartTitle" class="chart-title">历史收益走势</div>
-          <div id="chartHint" class="chart-hint">按所选周期归一化展示累计收益</div>
         </div>
       </div>
       <div id="chart" class="chart"></div>

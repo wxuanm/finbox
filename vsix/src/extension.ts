@@ -36,6 +36,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
   let stockRefreshInFlight: Promise<void> | undefined;
   let stockAutoRefreshTimer: ReturnType<typeof setInterval> | undefined;
+  let stockTreeVisible = false;
 
   async function refreshQuotes(): Promise<void> {
     const codes = store.getCodes();
@@ -91,8 +92,7 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   function restartStockAutoRefresh(): void {
-    if (stockAutoRefreshTimer) clearInterval(stockAutoRefreshTimer);
-    stockAutoRefreshTimer = undefined;
+    stopStockAutoRefresh();
 
     const config = vscode.workspace.getConfiguration(STOCK_AUTO_REFRESH_CONFIG);
     if (!config.get<boolean>('enabled', false)) return;
@@ -106,6 +106,11 @@ export function activate(context: vscode.ExtensionContext): void {
     if (shouldRunStockAutoRefresh()) {
       void refreshStockQuotes({ showProgress: false, showWarnings: false });
     }
+  }
+
+  function stopStockAutoRefresh(): void {
+    if (stockAutoRefreshTimer) clearInterval(stockAutoRefreshTimer);
+    stockAutoRefreshTimer = undefined;
   }
 
   function shouldRunStockAutoRefresh(): boolean {
@@ -225,17 +230,27 @@ export function activate(context: vscode.ExtensionContext): void {
       if (typeof input === 'string' && input) return trendPanel.openGroup(input);
       return trendPanel.openGroup('default');
     }),
+    stockTreeView.onDidChangeVisibility(event => {
+      stockTreeVisible = event.visible;
+      if (event.visible) {
+        restartStockAutoRefresh();
+      } else {
+        stopStockAutoRefresh();
+      }
+    }),
     vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration(STOCK_AUTO_REFRESH_CONFIG)) {
-        restartStockAutoRefresh();
+        if (stockTreeVisible) {
+          restartStockAutoRefresh();
+        } else {
+          stopStockAutoRefresh();
+        }
       }
     }),
     new vscode.Disposable(() => {
-      if (stockAutoRefreshTimer) clearInterval(stockAutoRefreshTimer);
+      stopStockAutoRefresh();
     })
   );
-
-  restartStockAutoRefresh();
 }
 
 export function deactivate(): void {}

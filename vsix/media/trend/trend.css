@@ -40,7 +40,7 @@ button:focus-visible {
 
 .trend-shell {
   width: 100%;
-  padding: 12px 12px 18px;
+  padding: 10px 8px 18px;
 }
 
 .trend-header {
@@ -73,13 +73,6 @@ h1 {
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.actions {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 8px;
 }
 
 .status {
@@ -118,6 +111,10 @@ h1 {
   margin-bottom: 12px;
 }
 
+.summary-grid:empty {
+  display: none;
+}
+
 .card,
 .chart-panel {
   border: 1px solid var(--trend-border);
@@ -126,13 +123,14 @@ h1 {
 }
 
 .card {
-  padding: 10px 12px;
+  padding: 12px;
 }
 
 .card-title {
-  color: var(--trend-muted);
-  font-size: 12px;
-  margin-bottom: 4px;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-value {
@@ -140,33 +138,98 @@ h1 {
   font-weight: 600;
 }
 
-.card-sub {
-  color: var(--trend-muted);
-  font-size: 12px;
-  margin-top: 4px;
+.card-value.metric-highlight {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
-.metric-row {
+.fund-metric-card {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+
+.fund-metric-card:hover,
+.fund-metric-card:focus-visible {
+  border-color: var(--trend-focus);
+  outline: none;
+}
+
+.fund-metric-card.selected {
+  border-color: var(--trend-focus);
+  box-shadow: inset 0 0 0 1px var(--trend-focus);
+}
+
+.fund-card-header {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 5px;
+}
+
+.fund-card-title-block {
+  min-width: 0;
+}
+
+.fund-code {
+  color: var(--trend-muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metric-cell {
+  min-width: 0;
+  border-radius: 3px;
+  background: var(--vscode-editor-background);
+  padding: 7px 8px;
+}
+
+.metric-cell span {
+  display: block;
+  color: var(--trend-muted);
+  font-size: 11px;
+}
+
+.metric-cell strong {
+  display: block;
+  color: var(--vscode-foreground);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.metric-cell strong.positive { color: var(--vscode-charts-red, #f14c4c); }
+.metric-cell strong.negative { color: var(--vscode-charts-green, #89d185); }
+.metric-cell strong.neutral { color: var(--trend-muted); }
+
+.metric-cell.metric-highlight {
+  border: 1px solid var(--vscode-badge-background, var(--vscode-button-background));
+  background: color-mix(in srgb, var(--vscode-badge-background, var(--vscode-button-background)) 16%, transparent);
+}
+
+.metric-cell.metric-risk-highlight {
+  border: 1px solid var(--vscode-charts-orange, #d18616);
+  background: color-mix(in srgb, var(--vscode-charts-orange, #d18616) 12%, transparent);
+}
+
+.fund-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   color: var(--trend-muted);
   font-size: 12px;
 }
 
-.metric-row strong {
-  color: var(--vscode-foreground);
-  font-weight: 500;
-}
-
-.metric-row strong.positive { color: var(--vscode-charts-red, #f14c4c); }
-.metric-row strong.negative { color: var(--vscode-charts-green, #89d185); }
-.metric-row strong.neutral { color: var(--trend-muted); }
-
 .chart-panel {
-  padding: 12px;
+  padding: 10px 6px;
   margin-bottom: 12px;
 }
 
@@ -180,12 +243,6 @@ h1 {
 
 .chart-title {
   font-weight: 600;
-}
-
-.chart-hint {
-  color: var(--trend-muted);
-  margin-top: 2px;
-  font-size: 12px;
 }
 
 .chart {
@@ -204,7 +261,7 @@ h1 {
 .chart svg {
   width: 100%;
   height: clamp(340px, 52vh, 620px);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .interaction-layer {
@@ -268,7 +325,8 @@ h1 {
 }
 
 .axis,
-.grid-line {
+.grid-line,
+.axis-tick {
   stroke: var(--trend-border);
   stroke-width: 1;
 }
@@ -285,14 +343,19 @@ h1 {
   stroke-opacity: .9;
 }
 
-.benchmark-label {
-  fill: var(--vscode-charts-yellow, #cca700);
-  font-size: 11px;
-}
-
 .chart-label {
   fill: var(--trend-muted);
   font-size: 11px;
+}
+
+.chart-label-inside {
+  paint-order: stroke;
+  stroke: var(--trend-card-bg);
+  stroke-width: 3px;
+}
+
+.x-axis-label {
+  font-size: 10px;
 }
 
 .line-0 { color: var(--vscode-charts-blue, #3794ff); stroke: currentColor; }
@@ -313,6 +376,7 @@ h1 {
 .legend {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px 12px;
   margin-top: 10px;
   color: var(--trend-muted);

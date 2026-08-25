@@ -10,10 +10,7 @@ const PERIODS = {
 const ANNUAL_BENCHMARK = 10;
 let currentPayload = null;
 let currentPeriod = 'y3';
-
-document.getElementById('refreshBtn').addEventListener('click', () => {
-  vscode.postMessage({ type: 'refreshTrend' });
-});
+let selectedFundCode = null;
 
 document.getElementById('periodTabs').addEventListener('click', event => {
   const target = event.target;
@@ -50,7 +47,8 @@ function renderCurrentTrend() {
   if (!currentPayload) return;
   const { target, nav, metrics } = currentPayload;
   document.getElementById('title').textContent = target.title;
-  setStatus(`数据源 eastmoney · ${formatTime(nav.updatedAt)}${nav.failedCodes.length ? ` · 失败 ${nav.failedCodes.join(', ')}` : ''}`);
+  setStatus(nav.failedCodes.length ? `加载失败 ${nav.failedCodes.join(', ')}` : '');
+  if (selectedFundCode && !metrics.some(metric => metric.code === selectedFundCode)) selectedFundCode = null;
   updatePeriodTabs();
   renderSummary(metrics, currentPeriod);
   renderChart(metrics, currentPeriod);
@@ -58,19 +56,7 @@ function renderCurrentTrend() {
 }
 
 function renderSummary(metrics, period) {
-  const validReturns = metrics.filter(metric => Number.isFinite(metricValue(metric, period, 'returnValue')));
-  const validDrawdowns = metrics.filter(metric => Number.isFinite(metricValue(metric, period, 'maxDrawdown')));
-  const validCalmar = metrics.filter(metric => Number.isFinite(metricValue(metric, period, 'calmarRatio')));
-  const best = validReturns.slice().sort((a, b) => metricValue(b, period, 'returnValue') - metricValue(a, period, 'returnValue'))[0];
-  const worstDrawdown = validDrawdowns.slice().sort((a, b) => metricValue(a, period, 'maxDrawdown') - metricValue(b, period, 'maxDrawdown'))[0];
-  const bestCalmar = validCalmar.slice().sort((a, b) => metricValue(b, period, 'calmarRatio') - metricValue(a, period, 'calmarRatio'))[0];
-  const latestDate = metrics.map(metric => metric.latestDate).filter(Boolean).sort().at(-1) || '-';
-  document.getElementById('summary').innerHTML = [
-    card('分析周期', PERIODS[period], `最新净值日 ${latestDate}`),
-    card('收益领先', best ? formatPercent(metricValue(best, period, 'returnValue')) : '-', best ? `${best.name} ${best.code}` : '暂无有效收益'),
-    card('最大回撤', worstDrawdown ? formatPercent(metricValue(worstDrawdown, period, 'maxDrawdown')) : '-', worstDrawdown ? `${worstDrawdown.name} ${worstDrawdown.code}` : '暂无回撤数据'),
-    card('卡玛比率', bestCalmar ? formatNumber(metricValue(bestCalmar, period, 'calmarRatio')) : '-', bestCalmar ? bestCalmar.name : '收益/最大回撤')
-  ].join('');
+  document.getElementById('summary').innerHTML = '';
 }
 
 function renderChart(metrics, period) {
@@ -81,12 +67,12 @@ function renderChart(metrics, period) {
   }
 
   document.getElementById('chartTitle').textContent = `${PERIODS[period]}累计收益走势`;
-  document.getElementById('chartHint').textContent = '每条线以周期首个可用净值为 0% 起点，便于横向比较。';
 
   const width = 900;
   const height = 340;
-  const pad = { left: 18, right: 18, top: 20, bottom: 30 };
-  const series = metrics.map(metric => ({ metric, points: metric.chartSeries?.[period] || [] })).filter(item => item.points.length > 1);
+  const pad = { left: 8, right: 8, top: 20, bottom: 42 };
+  const visibleMetrics = selectedFundCode ? metrics.filter(metric => metric.code === selectedFundCode) : metrics;
+  const series = visibleMetrics.map(metric => ({ metric, points: metric.chartSeries?.[period] || [] })).filter(item => item.points.length > 1);
   if (!series.length) {
     chartEl.innerHTML = '<div class="empty-state">当前周期暂无足够历史数据</div>';
     return;
@@ -104,12 +90,14 @@ function renderChart(metrics, period) {
     const tickY = y(value);
     const gridClass = value === 0 ? 'grid-line zero-axis' : 'grid-line';
     return `<line class="${gridClass}" x1="${plotLeft}" y1="${tickY}" x2="${plotRight}" y2="${tickY}"/>
-      <text class="chart-label" x="${pad.left - 8}" y="${tickY + 4}" text-anchor="end">${formatAxisPercent(value)}</text>
-      <text class="chart-label" x="${width - pad.right + 8}" y="${tickY + 4}">${formatAxisPercent(value)}</text>`;
+      <text class="chart-label chart-label-inside" x="${plotRight - 4}" y="${tickY + 4}" text-anchor="end">${formatAxisPercent(value)}</text>`;
+  }).join('');
+  const xLabels = buildXAxisLabels(series[0].points, 8).map(item => {
+    const labelX = x(item.index, series[0].points.length);
+    return `<line class="axis-tick" x1="${labelX}" y1="${height - pad.bottom}" x2="${labelX}" y2="${height - pad.bottom + 4}"/>
+      <text class="chart-label x-axis-label" x="${labelX}" y="${height - pad.bottom + 18}" text-anchor="middle">${escapeHtml(formatDateTick(item.date, period))}</text>`;
   }).join('');
   const benchmarkPath = benchmark.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index, benchmark.length).toFixed(1)} ${y(point[1]).toFixed(1)}`).join(' ');
-  const benchmarkEnd = benchmark.at(-1);
-  const benchmarkLabelY = benchmarkEnd ? Math.max(pad.top + 12, y(benchmarkEnd[1]) - 6) : pad.top + 12;
 
   const lines = series.map((item, index) => {
     const d = item.points.map((point, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'} ${x(pointIndex, item.points.length).toFixed(1)} ${y(point[1]).toFixed(1)}`).join(' ');
@@ -117,12 +105,12 @@ function renderChart(metrics, period) {
   }).join('');
   const hoverPoints = series.map((item, index) => `<circle id="hoverPoint${index}" class="line-${index % 10} hover-point" r="4" cx="0" cy="0" visibility="hidden"/>`).join('');
 
-  chartEl.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${PERIODS[period]}历史趋势">
-    <line class="axis" x1="${plotLeft}" y1="${pad.top}" x2="${plotLeft}" y2="${height - pad.bottom}"/>
+  chartEl.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${PERIODS[period]}历史趋势">
     <line class="axis" x1="${plotRight}" y1="${pad.top}" x2="${plotRight}" y2="${height - pad.bottom}"/>
+    <line class="axis" x1="${plotLeft}" y1="${height - pad.bottom}" x2="${plotRight}" y2="${height - pad.bottom}"/>
     ${gridLines}
+    ${xLabels}
     <path class="benchmark-line" d="${benchmarkPath}" fill="none"/>
-    <text class="benchmark-label" x="${plotRight - 6}" y="${benchmarkLabelY}" text-anchor="end">年化10%${benchmarkEnd ? ` ${formatAxisPercent(benchmarkEnd[1])}` : ''}</text>
     ${lines}
     <line id="hoverLine" class="crosshair" x1="0" y1="${pad.top}" x2="0" y2="${height - pad.bottom}" visibility="hidden"/>
     <g>${hoverPoints}</g>
@@ -215,28 +203,83 @@ function getSvgPoint(svg, event) {
 }
 
 function renderMetrics(metrics, period) {
+  const rankings = buildMetricRankings(metrics, period);
   document.getElementById('metrics').innerHTML = metrics.map(metric => {
     const current = metric.periods?.[period] || {};
-    return `<article class="card">
-      <div class="card-title">${escapeHtml(metric.name)} ${escapeHtml(metric.code)}</div>
-      <div class="card-value ${classFor(current.returnValue)}">${formatPercent(current.returnValue)}</div>
-      <div class="metric-row"><span>最大回撤</span><strong class="${classFor(current.maxDrawdown)}">${formatPercent(current.maxDrawdown)}</strong></div>
-      <div class="metric-row"><span>年化波动</span><strong>${formatPercent(current.annualizedVolatility)}</strong></div>
-      <div class="metric-row"><span>卡玛比率</span><strong>${formatNumber(current.calmarRatio)}</strong></div>
-      <div class="metric-row"><span>上涨日占比</span><strong>${formatPercent(current.upDayRatio)}</strong></div>
-      <div class="card-sub">规模 ${formatScale(metric.scale)} · 最新 ${escapeHtml(metric.latestDate || '-')}</div>
-      <div class="card-sub">经理 ${escapeHtml(metric.manager || '-')}</div>
+    const highlights = buildMetricHighlights(metric, rankings);
+    const selectedClass = selectedFundCode === metric.code ? ' selected' : '';
+    return `<article class="card fund-metric-card${selectedClass}" data-code="${escapeHtml(metric.code)}" role="button" tabindex="0" title="点击仅显示此基金曲线，再次点击恢复全部曲线">
+      <div class="fund-card-header">
+        <div class="fund-card-title-block">
+          <div class="card-title">${escapeHtml(metric.name)}</div>
+          <div class="fund-code">${escapeHtml(metric.code)} · ${escapeHtml(PERIODS[period])}</div>
+        </div>
+        <div class="card-value ${classFor(current.returnValue)} ${highlights.returnValue}">${formatPercent(current.returnValue)}</div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-cell ${highlights.maxDrawdown}"><span>最大回撤</span><strong class="${classFor(current.maxDrawdown)}">${formatPercent(current.maxDrawdown)}</strong></div>
+        <div class="metric-cell ${highlights.annualizedVolatility}"><span>年化波动</span><strong>${formatPercent(current.annualizedVolatility)}</strong></div>
+        <div class="metric-cell ${highlights.calmarRatio}"><span>卡玛比率</span><strong>${formatNumber(current.calmarRatio)}</strong></div>
+        <div class="metric-cell ${highlights.upDayRatio}"><span>上涨占比</span><strong>${formatPercent(current.upDayRatio)}</strong></div>
+      </div>
+      <div class="fund-card-footer">
+        <span>规模 ${formatScale(metric.scale)}</span>
+        <span>经理 ${escapeHtml(metric.manager || '-')}</span>
+      </div>
     </article>`;
   }).join('');
+  bindMetricCardSelection();
 }
 
-function card(title, value, sub) {
-  return `<article class="card"><div class="card-title">${escapeHtml(title)}</div><div class="card-value ${classFor(parseFloat(value))}">${escapeHtml(value)}</div><div class="card-sub">${escapeHtml(sub)}</div></article>`;
+function bindMetricCardSelection() {
+  document.querySelectorAll('.fund-metric-card').forEach(card => {
+    const select = () => {
+      const code = card.dataset.code;
+      if (!code) return;
+      selectedFundCode = selectedFundCode === code ? null : code;
+      renderCurrentTrend();
+    };
+    card.onclick = select;
+    card.onkeydown = event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      select();
+    };
+  });
 }
 
 function metricValue(metric, period, field) {
   const value = metric?.periods?.[period]?.[field];
   return Number.isFinite(value) ? value : null;
+}
+
+function buildMetricRankings(metrics, period) {
+  const returns = rankMetrics(metrics, period, 'returnValue', 'desc');
+  const drawdowns = rankMetrics(metrics, period, 'maxDrawdown', 'desc');
+  const calmar = rankMetrics(metrics, period, 'calmarRatio', 'desc');
+  const volatility = rankMetrics(metrics, period, 'annualizedVolatility', 'asc');
+  const upDayRatio = rankMetrics(metrics, period, 'upDayRatio', 'desc');
+  return { returns, drawdowns, calmar, volatility, upDayRatio };
+}
+
+function rankMetrics(metrics, period, field, direction) {
+  return new Map(metrics
+    .filter(metric => Number.isFinite(metricValue(metric, period, field)))
+    .sort((a, b) => {
+      const diff = metricValue(a, period, field) - metricValue(b, period, field);
+      return direction === 'desc' ? -diff : diff;
+    })
+    .map((metric, index) => [metric.code, index + 1]));
+}
+
+function buildMetricHighlights(metric, rankings) {
+  return {
+    returnValue: rankings.returns.get(metric.code) === 1 ? 'metric-highlight' : '',
+    calmarRatio: rankings.calmar.get(metric.code) === 1 ? 'metric-highlight' : '',
+    annualizedVolatility: rankings.volatility.get(metric.code) === 1 ? 'metric-highlight' : '',
+    upDayRatio: rankings.upDayRatio.get(metric.code) === 1 ? 'metric-highlight' : '',
+    maxDrawdown: rankings.drawdowns.get(metric.code) === rankings.drawdowns.size && rankings.drawdowns.size > 1 ? 'metric-risk-highlight' : ''
+  };
 }
 
 function buildAnnualBenchmarkSeries(series) {
@@ -250,6 +293,25 @@ function buildAnnualBenchmarkSeries(series) {
     const value = ((1 + ANNUAL_BENCHMARK / 100) ** (days / 365) - 1) * 100;
     return [point[0], value];
   });
+}
+
+function buildXAxisLabels(points, count) {
+  if (!points.length) return [];
+  const maxIndex = points.length - 1;
+  const labels = [];
+  for (let index = 0; index < count; index += 1) {
+    const pointIndex = Math.round(index / Math.max(count - 1, 1) * maxIndex);
+    const point = points[pointIndex];
+    if (point) labels.push({ index: pointIndex, date: point[0] });
+  }
+  return labels.filter((item, index, items) => items.findIndex(candidate => candidate.index === item.index) === index);
+}
+
+function formatDateTick(date, period) {
+  const parts = String(date || '').split('-');
+  if (parts.length < 3) return date || '';
+  if (period === 'm1' || period === 'm3') return `${parts[1]}/${parts[2]}`;
+  return `${parts[0].slice(2)}/${parts[1]}`;
 }
 
 function parseDate(date) {
@@ -291,11 +353,6 @@ function setStatus(text) {
   document.getElementById('status').textContent = text;
 }
 
-function formatTime(value) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toLocaleString('zh-CN') : '-';
-}
-
 function formatPercent(value) {
   return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '-';
 }
@@ -312,7 +369,7 @@ function formatNumber(value) {
 
 function formatScale(scale) {
   if (!scale || !Number.isFinite(scale.value)) return '-';
-  return `${scale.value.toFixed(2)}亿${scale.date ? ` · ${scale.date}` : ''}`;
+  return `${scale.value.toFixed(2)}亿`;
 }
 
 function classFor(value) {
