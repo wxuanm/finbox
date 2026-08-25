@@ -11,6 +11,10 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 - Kept fund trend webviews alive when switching editor tabs so loaded charts remain visible.
 - Added period switching and risk/return metrics to fund trend views for portfolio-style comparison.
 - Reduced trend page side padding and added hover crosshair tooltips for historical curves.
+- Refined fund trend charts with a 0% baseline, annualized 10% benchmark curve, right-side axis labels, horizontal date ticks, and precise hover alignment.
+- Added fund-card curve filtering and inline metric highlighting for leading return, drawdown, volatility, Calmar ratio, and up-day ratio.
+- Removed row-click trend loading from fund rows and avoided reloading already-open trend panels.
+- Limited stock automatic refresh startup to visible stock views instead of extension activation.
 
 ## 0.0.5
 
