@@ -2,6 +2,10 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.0.7
+
+- Added a spinning refresh indicator on the `A Stock` group row while stock quotes are refreshing, including silent automatic refreshes.
+
 ## 0.0.6
 
 - Batched stock quote refresh through Sina first and Eastmoney batch fallback to reduce per-symbol requests.

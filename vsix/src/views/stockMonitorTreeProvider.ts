@@ -6,6 +6,7 @@ export type StockMonitorTreeItem = StockGroupItem | StockItem | StockEmptyItem;
 
 export class StockMonitorTreeProvider implements vscode.TreeDataProvider<StockMonitorTreeItem> {
   private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<StockMonitorTreeItem | undefined | null | void>();
+  private refreshing = false;
   readonly onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
 
   constructor(
@@ -19,13 +20,19 @@ export class StockMonitorTreeProvider implements vscode.TreeDataProvider<StockMo
     this.onDidChangeTreeDataEmitter.fire();
   }
 
+  setRefreshing(refreshing: boolean): void {
+    if (this.refreshing === refreshing) return;
+    this.refreshing = refreshing;
+    this.refresh();
+  }
+
   getTreeItem(element: StockMonitorTreeItem): vscode.TreeItem {
     return element;
   }
 
   getChildren(element?: StockMonitorTreeItem): StockMonitorTreeItem[] {
     if (!element) {
-      return [new StockGroupItem(this.store.getStockSymbols().length)];
+      return [new StockGroupItem(this.store.getStockSymbols().length, this.refreshing)];
     }
 
     if (element instanceof StockGroupItem) {
@@ -46,10 +53,11 @@ export class StockMonitorTreeProvider implements vscode.TreeDataProvider<StockMo
 export class StockGroupItem extends vscode.TreeItem {
   readonly contextValue = 'stockGroup';
 
-  constructor(count: number) {
+  constructor(count: number, refreshing: boolean) {
     super(`A Stock(${count})`, vscode.TreeItemCollapsibleState.Expanded);
     this.id = 'stock-group:cn';
-    this.tooltip = `A Stock · ${count} 只股票`;
+    this.tooltip = refreshing ? `A Stock · ${count} 只股票 · 正在刷新` : `A Stock · ${count} 只股票`;
+    if (refreshing) this.iconPath = new vscode.ThemeIcon('sync~spin');
   }
 }
 

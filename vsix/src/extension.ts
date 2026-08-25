@@ -80,15 +80,20 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     };
 
-    if (!options.showProgress) {
-      await runRefresh();
-      return;
-    }
+    stockTreeProvider.setRefreshing(true);
+    try {
+      if (!options.showProgress) {
+        await runRefresh();
+        return;
+      }
 
-    await vscode.window.withProgress({
-      location: { viewId: 'finbox.stock' },
-      title: '刷新股票...'
-    }, runRefresh);
+      await vscode.window.withProgress({
+        location: { viewId: 'finbox.stock' },
+        title: '刷新股票...'
+      }, runRefresh);
+    } finally {
+      stockTreeProvider.setRefreshing(false);
+    }
   }
 
   function restartStockAutoRefresh(): void {
