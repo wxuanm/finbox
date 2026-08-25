@@ -205,7 +205,10 @@ Input validation:
 - Uses the available editor width with minimal side padding, compact spacing and typography, and adapts the header and metric cards for narrow editor columns.
 - Uses `retainContextWhenHidden` so loaded trend charts remain visible after switching editor tabs.
 - Provides client-side period switching across YTD, one month, three months, six months, one year, and three years using cached trend payloads.
-- Adds SVG hover interaction with crosshair, highlighted points, and per-fund return tooltip values.
+- Defaults trend rendering to the three-month period and keeps x-axis labels readable with explicit first/last label anchoring.
+- Adds SVG hover interaction with crosshair, highlighted points, and per-fund cumulative return tooltip values; single-fund charts also show unit NAV and daily return details.
+- Tracks max-drawdown start and end dates per period and overlays the drawdown segment only when a single fund is displayed.
+- Provides a single-fund-only chart/list radio switcher. The list view uses the same cached historical NAV payload, paginates records, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
 - Renders fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date.
 
 ## Message Protocol

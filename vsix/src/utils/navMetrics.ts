@@ -22,6 +22,15 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 interface NormalizedPoint {
   date: string;
   value: number;
+  unitNav: number | null;
+  accNav: number | null;
+  dailyReturn: number | null;
+}
+
+interface DrawdownResult {
+  value: number;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 export function buildNavMetrics(funds: FundNav[]): NavMetric[] {
@@ -42,7 +51,7 @@ export function buildNavMetrics(funds: FundNav[]): NavMetric[] {
         latestDate: lastPoint.date,
         oneYearReturn: (lastPoint.value / firstValue - 1) * 100,
         periods: calculatePeriodMetrics(points, lastPoint),
-        maxDrawdown: calculateMaxDrawdown(points),
+        maxDrawdown: calculateMaxDrawdown(points).value,
         series,
         chartSeries: calculateChartSeries(points, lastPoint)
       };
@@ -57,21 +66,27 @@ function normalizePoints(items: FundNav['items']): NormalizedPoint[] {
       const unitNav = toNumber(item.unitNav);
       const value = accNav !== null ? accNav : unitNav;
       if (!item.date || value === null || value <= 0) return null;
-      return { date: item.date, value };
+      return { date: item.date, value, unitNav, accNav, dailyReturn: item.dailyReturn };
     })
     .filter((item): item is NormalizedPoint => item !== null)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function calculateMaxDrawdown(points: NormalizedPoint[]): number {
-  let peak = points[0].value;
+function calculateMaxDrawdown(points: NormalizedPoint[]): DrawdownResult {
+  let peak = points[0];
   let maxDrawdown = 0;
+  let startDate: string | null = null;
+  let endDate: string | null = null;
   points.forEach(point => {
-    if (point.value > peak) peak = point.value;
-    const drawdown = (point.value / peak - 1) * 100;
-    if (drawdown < maxDrawdown) maxDrawdown = drawdown;
+    if (point.value > peak.value) peak = point;
+    const drawdown = (point.value / peak.value - 1) * 100;
+    if (drawdown < maxDrawdown) {
+      maxDrawdown = drawdown;
+      startDate = peak.date;
+      endDate = point.date;
+    }
   });
-  return maxDrawdown;
+  return { value: maxDrawdown, startDate, endDate };
 }
 
 function calculatePeriodMetrics(points: NormalizedPoint[], lastPoint: NormalizedPoint): Record<string, NavMetricPeriod> {
@@ -84,7 +99,8 @@ function calculatePeriodMetrics(points: NormalizedPoint[], lastPoint: Normalized
       : getPeriodPoints(points, latestTime - days * DAY_MS);
     const startPoint = periodPoints[0];
     const returnValue = startPoint ? (lastPoint.value / startPoint.value - 1) * 100 : null;
-    const maxDrawdown = periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null;
+    const drawdown = periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null;
+    const maxDrawdown = drawdown?.value ?? null;
     const dailyReturns = calculateDailyReturns(periodPoints);
     const annualizedVolatility = dailyReturns.length > 1 ? standardDeviation(dailyReturns) * Math.sqrt(252) * 100 : null;
     const upDayRatio = dailyReturns.length > 0 ? dailyReturns.filter(value => value > 0).length / dailyReturns.length * 100 : null;
@@ -92,7 +108,15 @@ function calculatePeriodMetrics(points: NormalizedPoint[], lastPoint: Normalized
       ? returnValue / Math.abs(maxDrawdown)
       : null;
 
-    return [key, { returnValue, maxDrawdown, annualizedVolatility, calmarRatio, upDayRatio }];
+    return [key, {
+      returnValue,
+      maxDrawdown,
+      maxDrawdownStartDate: drawdown?.startDate ?? null,
+      maxDrawdownEndDate: drawdown?.endDate ?? null,
+      annualizedVolatility,
+      calmarRatio,
+      upDayRatio
+    }];
   }));
 }
 
@@ -112,7 +136,7 @@ function standardDeviation(values: number[]): number {
   return Math.sqrt(variance);
 }
 
-function calculateChartSeries(points: NormalizedPoint[], lastPoint: NormalizedPoint): Record<string, Array<[string, number]>> {
+function calculateChartSeries(points: NormalizedPoint[], lastPoint: NormalizedPoint): Record<string, Array<[string, number, number | null, number | null, number | null]>> {
   const latestTime = parseDate(lastPoint.date);
   if (latestTime === null) return {};
 
@@ -121,7 +145,9 @@ function calculateChartSeries(points: NormalizedPoint[], lastPoint: NormalizedPo
       ? getYtdPoints(points, lastPoint.date)
       : getPeriodPoints(points, latestTime - days * DAY_MS);
     const firstPoint = periodPoints[0];
-    const series = firstPoint ? periodPoints.map(point => [point.date, (point.value / firstPoint.value - 1) * 100] as [string, number]) : [];
+    const series = firstPoint
+      ? periodPoints.map(point => [point.date, (point.value / firstPoint.value - 1) * 100, point.unitNav ?? point.value, point.accNav, point.dailyReturn] as [string, number, number | null, number | null, number | null])
+      : [];
     return [key, series];
   }));
 }

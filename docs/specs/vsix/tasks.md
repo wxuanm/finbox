@@ -66,6 +66,8 @@
 - [x] Render single-fund historical trend.
 - [x] Render group historical trend comparison.
 - [x] Reuse or port NAV metric calculations.
+- [x] Add single-fund historical NAV list with pagination.
+- [x] Add single-fund max-drawdown curve marker.
 - [x] Add retry action for failed historical data requests.
 - [ ] Handle ECharts absence with readable fallback.
 

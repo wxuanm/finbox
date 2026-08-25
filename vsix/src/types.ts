@@ -107,6 +107,8 @@ export interface StockSidebarState {
 export interface NavMetricPeriod {
   returnValue: number | null;
   maxDrawdown: number | null;
+  maxDrawdownStartDate: string | null;
+  maxDrawdownEndDate: string | null;
   annualizedVolatility: number | null;
   calmarRatio: number | null;
   upDayRatio: number | null;
@@ -122,5 +124,5 @@ export interface NavMetric {
   periods: Record<string, NavMetricPeriod>;
   maxDrawdown: number;
   series: Array<[string, number]>;
-  chartSeries: Record<string, Array<[string, number]>>;
+  chartSeries: Record<string, Array<[string, number, number | null, number | null, number | null]>>;
 }

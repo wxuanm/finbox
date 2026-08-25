@@ -49,10 +49,15 @@ export function activate(context: vscode.ExtensionContext): void {
       location: { viewId: 'finbox.fund' },
       title: '刷新基金...'
     }, async () => {
-      const result = await quoteService.fetchQuotes(codes);
-      store.setQuotes(result.quotes, result.failedCodes, result.updatedAt);
-      if (result.failedCodes.length > 0) {
-        vscode.window.showWarningMessage(`部分基金估值刷新失败: ${result.failedCodes.join(', ')}`);
+      treeProvider.setRefreshing(true);
+      try {
+        const result = await quoteService.fetchQuotes(codes);
+        store.setQuotes(result.quotes, result.failedCodes, result.updatedAt);
+        if (result.failedCodes.length > 0) {
+          vscode.window.showWarningMessage(`部分基金估值刷新失败: ${result.failedCodes.join(', ')}`);
+        }
+      } finally {
+        treeProvider.setRefreshing(false);
       }
     });
   }

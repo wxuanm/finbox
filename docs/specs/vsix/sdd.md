@@ -168,11 +168,15 @@ Trend webviews should use VS Code theme variables for background, foreground, bo
 Single-fund trend view should show:
 
 - Fund name and code
+- Editor tab title as `<fund code> 趋势`, while the page title keeps the fund name and code when available
 - Manager names when available
 - Fund scale when available
-- Three-year NAV chart
+- Normalized return chart defaulting to the three-month period
 - Period switcher for YTD, one month, three months, six months, one year, and three years
-- Interactive chart hover state with crosshair, highlighted points, date, and per-fund return values
+- Chart/list radio switcher for single-fund views only
+- Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return
+- Interactive chart hover state with crosshair, highlighted points, date, cumulative return, and single-fund NAV/daily-return details
+- Max-drawdown curve marking for the active single-fund chart period
 - Period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics derived from existing NAV metric logic
 - Source update time and failed state if data cannot be loaded
 
@@ -180,7 +184,7 @@ Group trend view should show:
 
 - Group name
 - Included fund codes
-- Multi-fund normalized return chart
+- Multi-fund normalized return chart without NAV-list switching
 - Comparison cards for period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics
 - Clear message when the group has no valid fund data
 

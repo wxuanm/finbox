@@ -8,8 +8,11 @@ const PERIODS = {
   y3: '近3年'
 };
 const ANNUAL_BENCHMARK = 10;
+const NAV_LIST_PAGE_SIZE = 20;
 let currentPayload = null;
-let currentPeriod = 'y3';
+let currentPeriod = 'm3';
+let currentViewMode = 'chart';
+let currentListPage = 1;
 let selectedFundCode = null;
 
 document.getElementById('periodTabs').addEventListener('click', event => {
@@ -18,6 +21,38 @@ document.getElementById('periodTabs').addEventListener('click', event => {
   const period = target.dataset.period;
   if (!period || !PERIODS[period] || period === currentPeriod) return;
   currentPeriod = period;
+  currentListPage = 1;
+  renderCurrentTrend();
+});
+
+document.getElementById('viewTabs').addEventListener('change', event => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement) || target.type !== 'radio') return;
+  const view = target.value;
+  if (!view || view === currentViewMode) return;
+  currentViewMode = view;
+  currentListPage = 1;
+  renderCurrentTrend();
+});
+
+document.getElementById('navList').addEventListener('click', event => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) return;
+  const page = Number(target.dataset.page);
+  if (!Number.isInteger(page) || page === currentListPage) return;
+  currentListPage = page;
+  renderCurrentTrend();
+});
+
+document.getElementById('navList').addEventListener('submit', event => {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || !form.classList.contains('pager-jump')) return;
+  event.preventDefault();
+  const input = form.querySelector('input[name="page"]');
+  const pageCount = Number(form.dataset.pageCount);
+  const page = input instanceof HTMLInputElement ? Number(input.value) : NaN;
+  if (!Number.isInteger(page) || !Number.isInteger(pageCount)) return;
+  currentListPage = Math.min(Math.max(page, 1), pageCount);
   renderCurrentTrend();
 });
 
@@ -34,6 +69,7 @@ window.addEventListener('message', event => {
     setStatus(message.message || '历史趋势加载失败');
     document.getElementById('summary').innerHTML = '';
     document.getElementById('chart').innerHTML = '<div class="card">暂无可展示数据</div>';
+    document.getElementById('navList').innerHTML = '';
     document.getElementById('metrics').innerHTML = '';
   }
 });
@@ -49,9 +85,15 @@ function renderCurrentTrend() {
   document.getElementById('title').textContent = target.title;
   setStatus(nav.failedCodes.length ? `加载失败 ${nav.failedCodes.join(', ')}` : '');
   if (selectedFundCode && !metrics.some(metric => metric.code === selectedFundCode)) selectedFundCode = null;
+  if (target.kind !== 'fund') currentViewMode = 'chart';
   updatePeriodTabs();
+  updateViewTabs(target.kind === 'fund');
   renderSummary(metrics, currentPeriod);
-  renderChart(metrics, currentPeriod);
+  if (currentViewMode === 'list' && target.kind === 'fund') {
+    renderNavList(metrics[0], currentPeriod);
+  } else {
+    renderChart(metrics, currentPeriod);
+  }
   renderMetrics(metrics, currentPeriod);
 }
 
@@ -59,8 +101,19 @@ function renderSummary(metrics, period) {
   document.getElementById('summary').innerHTML = '';
 }
 
+function updateViewTabs(visible) {
+  const tabs = document.getElementById('viewTabs');
+  tabs.hidden = !visible;
+  tabs.querySelectorAll('input[type="radio"]').forEach(input => {
+    input.checked = input.value === currentViewMode;
+  });
+}
+
 function renderChart(metrics, period) {
   const chartEl = document.getElementById('chart');
+  const listEl = document.getElementById('navList');
+  chartEl.hidden = false;
+  listEl.hidden = true;
   if (!metrics.length) {
     chartEl.innerHTML = '<div class="card">暂无可展示数据</div>';
     return;
@@ -70,7 +123,7 @@ function renderChart(metrics, period) {
 
   const width = 900;
   const height = 340;
-  const pad = { left: 8, right: 8, top: 20, bottom: 42 };
+  const pad = { left: 8, right: 28, top: 20, bottom: 42 };
   const visibleMetrics = selectedFundCode ? metrics.filter(metric => metric.code === selectedFundCode) : metrics;
   const series = visibleMetrics.map(metric => ({ metric, points: metric.chartSeries?.[period] || [] })).filter(item => item.points.length > 1);
   if (!series.length) {
@@ -92,10 +145,11 @@ function renderChart(metrics, period) {
     return `<line class="${gridClass}" x1="${plotLeft}" y1="${tickY}" x2="${plotRight}" y2="${tickY}"/>
       <text class="chart-label chart-label-inside" x="${plotRight - 4}" y="${tickY + 4}" text-anchor="end">${formatAxisPercent(value)}</text>`;
   }).join('');
-  const xLabels = buildXAxisLabels(series[0].points, 8).map(item => {
+  const xLabels = buildXAxisLabels(series[0].points, 12).map(item => {
     const labelX = x(item.index, series[0].points.length);
+    const anchor = item.index === 0 ? 'start' : item.index === series[0].points.length - 1 ? 'end' : 'middle';
     return `<line class="axis-tick" x1="${labelX}" y1="${height - pad.bottom}" x2="${labelX}" y2="${height - pad.bottom + 4}"/>
-      <text class="chart-label x-axis-label" x="${labelX}" y="${height - pad.bottom + 18}" text-anchor="middle">${escapeHtml(formatDateTick(item.date, period))}</text>`;
+      <text class="chart-label x-axis-label" x="${labelX}" y="${height - pad.bottom + 18}" text-anchor="${anchor}">${escapeHtml(formatDateTick(item.date, period))}</text>`;
   }).join('');
   const benchmarkPath = benchmark.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index, benchmark.length).toFixed(1)} ${y(point[1]).toFixed(1)}`).join(' ');
 
@@ -103,6 +157,7 @@ function renderChart(metrics, period) {
     const d = item.points.map((point, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'} ${x(pointIndex, item.points.length).toFixed(1)} ${y(point[1]).toFixed(1)}`).join(' ');
     return `<path class="line-${index % 10}" d="${d}" fill="none" stroke-width="2"/>`;
   }).join('');
+  const drawdownLines = series.length === 1 ? buildDrawdownPath(series[0], period, x, y) : '';
   const hoverPoints = series.map((item, index) => `<circle id="hoverPoint${index}" class="line-${index % 10} hover-point" r="4" cx="0" cy="0" visibility="hidden"/>`).join('');
 
   chartEl.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${PERIODS[period]}历史趋势">
@@ -112,6 +167,7 @@ function renderChart(metrics, period) {
     ${xLabels}
     <path class="benchmark-line" d="${benchmarkPath}" fill="none"/>
     ${lines}
+    ${drawdownLines}
     <line id="hoverLine" class="crosshair" x1="0" y1="${pad.top}" x2="0" y2="${height - pad.bottom}" visibility="hidden"/>
     <g>${hoverPoints}</g>
     <rect class="interaction-layer" x="0" y="0" width="${width}" height="${height}"/>
@@ -119,6 +175,107 @@ function renderChart(metrics, period) {
   <div id="chartTooltip" class="chart-tooltip" hidden></div>
   <div class="legend">${series.map((item, index) => `<span class="legend-item line-${index % 10}">${escapeHtml(item.metric.name)} ${escapeHtml(item.metric.code)}</span>`).join('')}</div>`;
   bindChartInteraction(chartEl, series, { width, height, pad, min, max, span });
+}
+
+function renderNavList(metric, period) {
+  const chartEl = document.getElementById('chart');
+  const listEl = document.getElementById('navList');
+  chartEl.hidden = true;
+  listEl.hidden = false;
+  document.getElementById('chartTitle').textContent = `${PERIODS[period]}历史净值列表`;
+
+  const points = metric?.chartSeries?.[period] || [];
+  if (!points.length) {
+    listEl.innerHTML = '<div class="empty-state">当前周期暂无历史净值数据</div>';
+    return;
+  }
+
+  const rows = points.slice().reverse();
+  const pageCount = Math.max(1, Math.ceil(rows.length / NAV_LIST_PAGE_SIZE));
+  currentListPage = Math.min(Math.max(currentListPage, 1), pageCount);
+  const pageRows = rows.slice((currentListPage - 1) * NAV_LIST_PAGE_SIZE, currentListPage * NAV_LIST_PAGE_SIZE);
+
+  const rowCount = Math.ceil(pageRows.length / 2);
+  const tableRows = [];
+  for (let index = 0; index < rowCount; index += 1) {
+    tableRows.push([pageRows[index], pageRows[index + rowCount]]);
+  }
+
+  listEl.innerHTML = `<table class="nav-table">
+    <thead>
+      <tr>
+        <th>日期</th>
+        <th>单位净值</th>
+        <th>累计净值</th>
+        <th>日涨幅</th>
+        <th>日期</th>
+        <th>单位净值</th>
+        <th>累计净值</th>
+        <th>日涨幅</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows.map(([left, right]) => `<tr>
+        ${renderNavTableCells(left)}
+        ${right ? renderNavTableCells(right) : '<td class="nav-empty" colspan="4"></td>'}
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  <div class="pager">
+    <span>第 ${currentListPage} / ${pageCount} 页，共 ${rows.length} 条</span>
+    <div class="pager-actions">
+      <button type="button" data-page="1" ${currentListPage <= 1 ? 'disabled' : ''}>首页</button>
+      <button type="button" data-page="${currentListPage - 1}" ${currentListPage <= 1 ? 'disabled' : ''}>上一页</button>
+      ${renderPageButtons(currentListPage, pageCount)}
+      <button type="button" data-page="${currentListPage + 1}" ${currentListPage >= pageCount ? 'disabled' : ''}>下一页</button>
+      <button type="button" data-page="${pageCount}" ${currentListPage >= pageCount ? 'disabled' : ''}>末页</button>
+    </div>
+    <form class="pager-jump" data-page-count="${pageCount}">
+      <label>跳至 <input type="number" name="page" min="1" max="${pageCount}" value="${currentListPage}"> 页</label>
+      <button type="submit">跳转</button>
+    </form>
+  </div>`;
+}
+
+function renderPageButtons(currentPage, pageCount) {
+  const pages = new Set([1, pageCount]);
+  for (let page = currentPage - 2; page <= currentPage + 2; page += 1) {
+    if (page >= 1 && page <= pageCount) pages.add(page);
+  }
+
+  let previousPage = 0;
+  return [...pages].sort((a, b) => a - b).map(page => {
+    const gap = page - previousPage > 1 ? '<span class="pager-gap">...</span>' : '';
+    previousPage = page;
+    return `${gap}<button type="button" data-page="${page}" class="pager-page${page === currentPage ? ' active' : ''}" aria-current="${page === currentPage ? 'page' : 'false'}" ${page === currentPage ? 'disabled' : ''}>${page}</button>`;
+  }).join('');
+}
+
+function renderNavTableCells(point) {
+  return `<td>${escapeHtml(point[0])}</td>
+    <td>${formatNav(point[2])}</td>
+    <td>${formatNav(point[3])}</td>
+    <td class="${classFor(point[4])}">${formatPercent(point[4])}</td>`;
+}
+
+function buildDrawdownPath(item, period, x, y) {
+  const startDate = item.metric.periods?.[period]?.maxDrawdownStartDate;
+  const endDate = item.metric.periods?.[period]?.maxDrawdownEndDate;
+  const maxDrawdown = item.metric.periods?.[period]?.maxDrawdown;
+  if (!startDate || !endDate || startDate === endDate || !Number.isFinite(maxDrawdown) || maxDrawdown >= 0) return '';
+
+  const startIndex = item.points.findIndex(point => point[0] === startDate);
+  const endIndex = item.points.findIndex(point => point[0] === endDate);
+  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) return '';
+
+  const points = item.points.slice(startIndex, endIndex + 1);
+  if (points.length < 2) return '';
+
+  const d = points.map((point, offset) => {
+    const pointIndex = startIndex + offset;
+    return `${offset === 0 ? 'M' : 'L'} ${x(pointIndex, item.points.length).toFixed(1)} ${y(point[1]).toFixed(1)}`;
+  }).join(' ');
+  return `<path class="drawdown-line" d="${d}" fill="none"/>`;
 }
 
 function bindChartInteraction(chartEl, series, dimensions) {
@@ -174,8 +331,14 @@ function bindChartInteraction(chartEl, series, dimensions) {
     const date = selected[0]?.point?.[0] || '';
     tooltip.innerHTML = `<div class="tooltip-date">${escapeHtml(date)}</div>${selected.map(({ item, point }, index) => `
       <div class="tooltip-row line-${index % 10}">
-        <span class="tooltip-name">${escapeHtml(item.metric.name)} ${escapeHtml(item.metric.code)}</span>
-        <strong class="tooltip-value ${classFor(point[1])}">${formatPercent(point[1])}</strong>
+        <div class="tooltip-main">
+          <span class="tooltip-name">${escapeHtml(item.metric.name)} ${escapeHtml(item.metric.code)}</span>
+          <strong class="tooltip-value ${classFor(point[1])}">累计 ${formatPercent(point[1])}</strong>
+        </div>
+        ${selected.length === 1 ? `<div class="tooltip-detail">
+          <span>净值 ${formatNav(point[2])}</span>
+          <span class="${classFor(point[4])}">日涨幅 ${formatPercent(point[4])}</span>
+        </div>` : ''}
       </div>`).join('')}`;
     tooltip.hidden = false;
 
@@ -365,6 +528,10 @@ function formatAxisPercent(value) {
 
 function formatNumber(value) {
   return Number.isFinite(value) ? value.toFixed(2) : '-';
+}
+
+function formatNav(value) {
+  return Number.isFinite(value) ? value.toFixed(4) : '-';
 }
 
 function formatScale(scale) {

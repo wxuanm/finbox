@@ -5,6 +5,10 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 ## 0.0.7
 
 - Added a spinning refresh indicator on the `A Stock` group row while stock quotes are refreshing, including silent automatic refreshes.
+- Added a spinning refresh indicator on fund group rows while fund quotes are refreshing.
+- Changed fund trend panels to default to the three-month period and use fund-code-only editor tab titles for single-fund trends.
+- Added single-fund trend details including max-drawdown curve marking, richer hover details, and a paginated historical NAV list.
+- Improved trend chart x-axis labels, tooltip layout, chart/list switching, and NAV list pagination controls.
 
 ## 0.0.6
 

@@ -6,6 +6,7 @@ export type FundMonitorTreeItem = FundGroupItem | FundItem | EmptyItem;
 
 export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMonitorTreeItem> {
   private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<FundMonitorTreeItem | undefined | null | void>();
+  private refreshing = false;
   readonly onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
 
   constructor(
@@ -19,6 +20,12 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
     this.onDidChangeTreeDataEmitter.fire();
   }
 
+  setRefreshing(refreshing: boolean): void {
+    if (this.refreshing === refreshing) return;
+    this.refreshing = refreshing;
+    this.refresh();
+  }
+
   getTreeItem(element: FundMonitorTreeItem): vscode.TreeItem {
     return element;
   }
@@ -30,7 +37,7 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
 
       const groups = snapshot.groups
         .filter(group => group.id !== 'default' || snapshot.groups.length === 1 || this.store.getCodesForGroup('default').length > 0)
-        .map(group => new FundGroupItem(group, this.store.getCodesForGroup(group.id).length));
+        .map(group => new FundGroupItem(group, this.store.getCodesForGroup(group.id).length, this.refreshing));
 
       return groups.length > 0 ? groups : [new EmptyItem(codes.length === 0 ? '还没有监控基金。' : '没有可显示的基金分组。')];
     }
@@ -63,10 +70,11 @@ function compareFundsByChange(a: string, b: string, store: FundMonitorStore): nu
 export class FundGroupItem extends vscode.TreeItem {
   readonly contextValue: string;
 
-  constructor(readonly group: FundGroup, count: number) {
+  constructor(readonly group: FundGroup, count: number, refreshing: boolean) {
     super(`${group.name}(${count})`, vscode.TreeItemCollapsibleState.Expanded);
     this.id = `group:${group.id}`;
-    this.tooltip = `${group.name} · ${count} 只基金`;
+    this.tooltip = refreshing ? `${group.name} · ${count} 只基金 · 正在刷新` : `${group.name} · ${count} 只基金`;
+    if (refreshing) this.iconPath = new vscode.ThemeIcon('sync~spin');
     this.contextValue = group.id === 'default' ? 'group' : 'groupCustom';
   }
 }

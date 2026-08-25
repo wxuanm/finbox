@@ -58,6 +58,13 @@ button:focus-visible {
   min-width: 0;
 }
 
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
 .eyebrow {
   color: var(--trend-muted);
   font-size: 11px;
@@ -66,6 +73,7 @@ button:focus-visible {
 }
 
 h1 {
+  min-width: 0;
   margin: 2px 0 0;
   overflow: hidden;
   font-size: 18px;
@@ -77,9 +85,8 @@ h1 {
 
 .status {
   color: var(--trend-muted);
-  min-height: 20px;
-  margin-bottom: 12px;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .period-tabs {
@@ -101,6 +108,51 @@ h1 {
 .period-tabs button.active {
   color: var(--vscode-button-foreground);
   background: var(--vscode-button-background);
+}
+
+.view-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--vscode-button-border, var(--trend-border));
+  border-radius: 999px;
+  background: var(--vscode-button-secondaryBackground, var(--vscode-editor-background));
+}
+
+.view-tabs[hidden] {
+  display: none;
+}
+
+.view-tabs label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 3px 12px;
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  cursor: pointer;
+  transition: color .12s ease, background .12s ease;
+}
+
+.view-tabs label + label {
+  border-left: 1px solid var(--trend-border);
+}
+
+.view-tabs input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.view-tabs label:has(input:checked) {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+.view-tabs label:has(input:focus-visible) {
+  outline: 1px solid var(--trend-focus);
+  outline-offset: -2px;
 }
 
 .summary-grid,
@@ -250,6 +302,123 @@ h1 {
   min-height: clamp(340px, 52vh, 620px);
 }
 
+.chart[hidden],
+.nav-list[hidden] {
+  display: none;
+}
+
+.nav-table {
+  width: 100%;
+  border: 1px solid var(--trend-border);
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-table th,
+.nav-table td {
+  padding: 7px 8px;
+  border-right: 1px solid var(--trend-border);
+  border-bottom: 1px solid var(--trend-border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nav-table tbody tr:nth-child(odd) {
+  background: color-mix(in srgb, var(--trend-card-bg) 88%, var(--vscode-foreground) 12%);
+}
+
+.nav-table th:nth-child(1),
+.nav-table td:nth-child(1),
+.nav-table th:nth-child(5),
+.nav-table td:nth-child(5) {
+  text-align: left;
+}
+
+.nav-table th:nth-child(5),
+.nav-table td:nth-child(5) {
+  border-left: 1px solid var(--trend-border);
+}
+
+.nav-table th {
+  color: var(--trend-muted);
+  font-weight: 500;
+}
+
+.nav-empty {
+  border-left: 1px solid var(--trend-border);
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 8px 0;
+  color: var(--trend-muted);
+  font-size: 12px;
+}
+
+.pager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.pager-actions button,
+.pager-jump button {
+  min-width: 30px;
+  padding: 3px 9px;
+  border-color: var(--trend-border);
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  background: var(--vscode-button-secondaryBackground, transparent);
+}
+
+.pager-actions button:hover:not(:disabled),
+.pager-jump button:hover:not(:disabled) {
+  border-color: var(--trend-focus);
+  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-toolbar-hoverBackground));
+}
+
+.pager-actions button:disabled {
+  cursor: default;
+  opacity: .5;
+}
+
+.pager-page.active {
+  border-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  opacity: 1;
+}
+
+.pager-gap {
+  align-self: center;
+  color: var(--trend-muted);
+}
+
+.pager-jump {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px 3px 8px;
+  border: 1px solid var(--trend-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--trend-card-bg) 92%, var(--vscode-foreground) 8%);
+}
+
+.pager-jump input {
+  width: 54px;
+  padding: 2px 5px;
+  border: 1px solid var(--vscode-input-border, var(--trend-border));
+  border-radius: 3px;
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
@@ -306,11 +475,16 @@ h1 {
 }
 
 .tooltip-row {
+  display: grid;
+  gap: 2px;
+  line-height: 1.7;
+}
+
+.tooltip-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  line-height: 1.7;
 }
 
 .tooltip-name {
@@ -322,6 +496,15 @@ h1 {
 .tooltip-value {
   flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
+}
+
+.tooltip-detail {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  color: var(--trend-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .axis,
@@ -341,6 +524,14 @@ h1 {
   stroke-dasharray: 6 4;
   stroke-width: 1.2;
   stroke-opacity: .9;
+}
+
+.drawdown-line {
+  stroke: var(--vscode-charts-green, #89d185);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-opacity: .95;
 }
 
 .chart-label {

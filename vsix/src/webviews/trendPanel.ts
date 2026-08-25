@@ -10,6 +10,7 @@ interface TrendTarget {
   key: string;
   kind: TrendKind;
   title: string;
+  tabTitle: string;
   codes: string[];
 }
 
@@ -29,6 +30,7 @@ export class TrendPanel {
       key: `fund:${code}`,
       kind: 'fund',
       title: quote?.name ? `${quote.name} ${code}` : code,
+      tabTitle: `${code} 趋势`,
       codes: [code]
     });
   }
@@ -41,6 +43,7 @@ export class TrendPanel {
       key: `group:${groupId}`,
       kind: 'group',
       title: `${group.name} 趋势`,
+      tabTitle: `${group.name} 趋势`,
       codes
     });
   }
@@ -54,7 +57,7 @@ export class TrendPanel {
 
     const panel = vscode.window.createWebviewPanel(
       'finboxFundTrend',
-      target.title,
+      target.tabTitle,
       vscode.ViewColumn.Active,
       {
         enableScripts: true,
@@ -114,17 +117,19 @@ export class TrendPanel {
     <header class="trend-header">
       <div class="title-block">
         <div class="eyebrow">FINBOX FUND TREND</div>
-        <h1 id="title">${title}</h1>
+        <div class="title-row">
+          <h1 id="title">${title}</h1>
+          <span id="status" class="status">加载中...</span>
+        </div>
       </div>
     </header>
-    <div id="status" class="status">加载中...</div>
     <nav id="periodTabs" class="period-tabs" aria-label="趋势周期">
       <button type="button" data-period="ytd">今年</button>
       <button type="button" data-period="m1">1月</button>
-      <button type="button" data-period="m3">3月</button>
+      <button type="button" data-period="m3" class="active">3月</button>
       <button type="button" data-period="m6">6月</button>
       <button type="button" data-period="y1">1年</button>
-      <button type="button" data-period="y3" class="active">3年</button>
+      <button type="button" data-period="y3">3年</button>
     </nav>
     <section id="summary" class="summary-grid"></section>
     <section class="chart-panel">
@@ -132,8 +137,13 @@ export class TrendPanel {
         <div>
           <div id="chartTitle" class="chart-title">历史收益走势</div>
         </div>
+        <div id="viewTabs" class="view-tabs" role="radiogroup" aria-label="显示方式" hidden>
+          <label><input type="radio" name="trendView" value="chart" checked><span>曲线</span></label>
+          <label><input type="radio" name="trendView" value="list"><span>列表</span></label>
+        </div>
       </div>
       <div id="chart" class="chart"></div>
+      <div id="navList" class="nav-list" hidden></div>
     </section>
     <section id="metrics" class="metrics-grid"></section>
   </main>
