@@ -129,6 +129,7 @@ finbox.fundMonitor.state
 - Uses canonical `sh`/`sz` prefixed symbols for storage, quote cache keys, requests, and row identity so same numeric codes on different exchanges do not collide.
 - Returns partial failures so the stock sidebar can keep successful rows visible.
 - Stock refresh supports optional automatic polling through VS Code settings. Manual refresh shows progress and failure warnings; automatic refresh runs silently, performs an immediate refresh when active, skips non-trading windows by default, and reuses the same in-flight refresh lock as manual refresh. The default trading windows are 09:25-11:35 and 12:55-15:05 local time on weekdays.
+- Stock auto-refresh startup checks the initial `TreeView.visible` state as well as later visibility changes, so opening or changing settings while the stock view is already visible still starts the refresh timer.
 
 ### `settingsTreeProvider.ts`
 
@@ -208,8 +209,8 @@ Input validation:
 - Defaults trend rendering to the three-month period and keeps x-axis labels readable with explicit first/last label anchoring.
 - Adds SVG hover interaction with crosshair, highlighted points, and per-fund cumulative return tooltip values; single-fund charts also show unit NAV and daily return details.
 - Tracks max-drawdown start and end dates per period and overlays the drawdown segment only when a single fund is displayed.
-- Provides a single-fund-only chart/list radio switcher. The list view uses the same cached historical NAV payload, paginates records, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
-- Renders fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date.
+- Provides a single-fund-only chart/list radio switcher. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
+- Renders group fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.
 
 ## Message Protocol
 

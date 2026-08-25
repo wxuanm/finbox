@@ -7,6 +7,7 @@ const PERIODS = {
   y1: '近1年',
   y3: '近3年'
 };
+const DETAIL_PERIODS = ['m1', 'm3', 'm6', 'ytd', 'y1', 'y3'];
 const ANNUAL_BENCHMARK = 10;
 const NAV_LIST_PAGE_SIZE = 20;
 let currentPayload = null;
@@ -123,7 +124,7 @@ function renderChart(metrics, period) {
 
   const width = 900;
   const height = 340;
-  const pad = { left: 8, right: 28, top: 20, bottom: 42 };
+  const pad = { left: 24, right: 24, top: 20, bottom: 42 };
   const visibleMetrics = selectedFundCode ? metrics.filter(metric => metric.code === selectedFundCode) : metrics;
   const series = visibleMetrics.map(metric => ({ metric, points: metric.chartSeries?.[period] || [] })).filter(item => item.points.length > 1);
   if (!series.length) {
@@ -366,6 +367,11 @@ function getSvgPoint(svg, event) {
 }
 
 function renderMetrics(metrics, period) {
+  if (currentPayload?.target?.kind === 'fund' && metrics.length === 1) {
+    renderSingleFundMetrics(metrics[0]);
+    return;
+  }
+
   const rankings = buildMetricRankings(metrics, period);
   document.getElementById('metrics').innerHTML = metrics.map(metric => {
     const current = metric.periods?.[period] || {};
@@ -392,6 +398,48 @@ function renderMetrics(metrics, period) {
     </article>`;
   }).join('');
   bindMetricCardSelection();
+}
+
+function renderSingleFundMetrics(metric) {
+  document.getElementById('metrics').innerHTML = `<article class="card fund-detail-card">
+    <div class="fund-card-header">
+      <div class="fund-card-title-block">
+        <div class="card-title">${escapeHtml(metric.name)} ${escapeHtml(metric.code)} · ${escapeHtml(metric.latestDate || '-')}</div>
+      </div>
+      <div class="fund-card-meta">
+        <span>规模 ${formatScale(metric.scale)}</span>
+        <span>经理 ${escapeHtml(metric.manager || '-')}</span>
+      </div>
+    </div>
+    <div class="period-metric-table-wrap">
+      <table class="period-metric-table">
+        <thead>
+          <tr>
+            <th>周期</th>
+            <th>收益</th>
+            <th>最大回撤</th>
+            <th>年化波动</th>
+            <th>卡玛</th>
+            <th>上涨占比</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${DETAIL_PERIODS.map(periodKey => {
+            const current = metric.periods?.[periodKey] || {};
+            const activeClass = periodKey === currentPeriod ? ' class="active"' : '';
+            return `<tr${activeClass}>
+              <td>${escapeHtml(PERIODS[periodKey])}</td>
+              <td class="${classFor(current.returnValue)}">${formatPercent(current.returnValue)}</td>
+              <td class="${classFor(current.maxDrawdown)}">${formatPercent(current.maxDrawdown)}</td>
+              <td>${formatPercent(current.annualizedVolatility)}</td>
+              <td>${formatNumber(current.calmarRatio)}</td>
+              <td>${formatPercent(current.upDayRatio)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </article>`;
 }
 
 function bindMetricCardSelection() {

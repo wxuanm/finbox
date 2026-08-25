@@ -9,6 +9,9 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 - Changed fund trend panels to default to the three-month period and use fund-code-only editor tab titles for single-fund trends.
 - Added single-fund trend details including max-drawdown curve marking, richer hover details, and a paginated historical NAV list.
 - Improved trend chart x-axis labels, tooltip layout, chart/list switching, and NAV list pagination controls.
+- Refined fund trend visual styling and single-fund metric cards, including all period metrics in one card.
+- Fixed stock automatic refresh startup when the stock view is already visible after settings changes or activation.
+- Simplified add/rename input prompts by removing redundant dialog titles.
 
 ## 0.0.6
 

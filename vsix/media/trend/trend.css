@@ -4,6 +4,9 @@
   --trend-border: var(--vscode-panel-border, var(--vscode-editorWidget-border, transparent));
   --trend-muted: var(--vscode-descriptionForeground);
   --trend-focus: var(--vscode-focusBorder);
+  --trend-soft-bg: color-mix(in srgb, var(--vscode-editor-background) 88%, var(--vscode-foreground) 12%);
+  --trend-hover-bg: color-mix(in srgb, var(--vscode-editor-background) 78%, var(--vscode-foreground) 22%);
+  --trend-accent-soft: color-mix(in srgb, var(--vscode-button-background) 18%, transparent);
 }
 
 * {
@@ -13,7 +16,9 @@
 body {
   margin: 0;
   color: var(--vscode-foreground);
-  background: var(--vscode-editor-background);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--vscode-button-background) 10%, transparent), transparent 34rem),
+    var(--vscode-editor-background);
   font-family: var(--vscode-font-family);
   font-size: var(--vscode-font-size);
   line-height: 1.45;
@@ -40,7 +45,9 @@ button:focus-visible {
 
 .trend-shell {
   width: 100%;
-  padding: 10px 8px 18px;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 14px 12px 22px;
 }
 
 .trend-header {
@@ -48,10 +55,12 @@ button:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 44px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
+  min-height: 52px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
   border-bottom: 1px solid var(--trend-border);
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--trend-soft-bg), transparent 72%);
 }
 
 .title-block {
@@ -66,9 +75,10 @@ button:focus-visible {
 }
 
 .eyebrow {
-  color: var(--trend-muted);
+  color: var(--vscode-button-background, var(--trend-muted));
   font-size: 11px;
-  letter-spacing: .06em;
+  font-weight: 700;
+  letter-spacing: .11em;
   text-transform: uppercase;
 }
 
@@ -76,8 +86,8 @@ h1 {
   min-width: 0;
   margin: 2px 0 0;
   overflow: hidden;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -92,22 +102,30 @@ h1 {
 .period-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 0 2px;
 }
 
 .period-tabs button {
+  border-color: var(--trend-border);
+  border-radius: 999px;
   color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
   background: var(--vscode-button-secondaryBackground, transparent);
+  padding: 4px 13px;
+  transition: border-color .12s ease, background .12s ease, transform .12s ease;
 }
 
 .period-tabs button:hover {
+  border-color: var(--trend-focus);
   background: var(--vscode-button-secondaryHoverBackground, var(--vscode-toolbar-hoverBackground));
 }
 
 .period-tabs button.active {
+  border-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
   background: var(--vscode-button-background);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vscode-button-background) 42%, transparent);
 }
 
 .view-tabs {
@@ -170,17 +188,18 @@ h1 {
 .card,
 .chart-panel {
   border: 1px solid var(--trend-border);
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--trend-card-bg);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--vscode-foreground) 8%, transparent);
 }
 
 .card {
-  padding: 12px;
+  padding: 13px;
 }
 
 .card-title {
   overflow: hidden;
-  font-weight: 600;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -201,18 +220,23 @@ h1 {
   flex-direction: column;
   gap: 10px;
   cursor: pointer;
-  transition: border-color .12s ease, box-shadow .12s ease;
+  transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
 }
 
 .fund-metric-card:hover,
 .fund-metric-card:focus-visible {
   border-color: var(--trend-focus);
   outline: none;
+  transform: translateY(-1px);
 }
 
 .fund-metric-card.selected {
   border-color: var(--trend-focus);
-  box-shadow: inset 0 0 0 1px var(--trend-focus);
+  box-shadow: inset 0 0 0 1px var(--trend-focus), 0 4px 16px color-mix(in srgb, var(--trend-focus) 14%, transparent);
+}
+
+.fund-detail-card {
+  gap: 10px;
 }
 
 .fund-card-header {
@@ -224,6 +248,16 @@ h1 {
 
 .fund-card-title-block {
   min-width: 0;
+}
+
+.fund-card-meta {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 12px;
+  color: var(--trend-muted);
+  font-size: 12px;
 }
 
 .fund-code {
@@ -240,9 +274,10 @@ h1 {
 
 .metric-cell {
   min-width: 0;
-  border-radius: 3px;
-  background: var(--vscode-editor-background);
-  padding: 7px 8px;
+  border: 1px solid color-mix(in srgb, var(--trend-border) 72%, transparent);
+  border-radius: 6px;
+  background: var(--trend-soft-bg);
+  padding: 8px 9px;
 }
 
 .metric-cell span {
@@ -264,12 +299,12 @@ h1 {
 
 .metric-cell.metric-highlight {
   border: 1px solid var(--vscode-badge-background, var(--vscode-button-background));
-  background: color-mix(in srgb, var(--vscode-badge-background, var(--vscode-button-background)) 16%, transparent);
+  background: color-mix(in srgb, var(--vscode-badge-background, var(--vscode-button-background)) 18%, transparent);
 }
 
 .metric-cell.metric-risk-highlight {
   border: 1px solid var(--vscode-charts-orange, #d18616);
-  background: color-mix(in srgb, var(--vscode-charts-orange, #d18616) 12%, transparent);
+  background: color-mix(in srgb, var(--vscode-charts-orange, #d18616) 14%, transparent);
 }
 
 .fund-card-footer {
@@ -280,21 +315,59 @@ h1 {
   font-size: 12px;
 }
 
+.period-metric-table-wrap {
+  overflow-x: auto;
+}
+
+.period-metric-table {
+  width: 100%;
+  border: 1px solid var(--trend-border);
+  border-collapse: collapse;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.period-metric-table th,
+.period-metric-table td {
+  padding: 8px 10px;
+  border-right: 1px solid var(--trend-border);
+  border-bottom: 1px solid var(--trend-border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.period-metric-table th:first-child,
+.period-metric-table td:first-child {
+  text-align: left;
+}
+
+.period-metric-table th {
+  color: var(--trend-muted);
+  background: var(--trend-soft-bg);
+  font-weight: 500;
+}
+
+.period-metric-table tr.active {
+  background: var(--trend-accent-soft);
+}
+
 .chart-panel {
-  padding: 10px 6px;
+  padding: 12px 10px 10px;
   margin-bottom: 12px;
 }
 
 .chart-toolbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
+  min-height: 30px;
+  margin-bottom: 10px;
+  padding: 0 2px;
 }
 
 .chart-title {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .chart {
@@ -316,7 +389,7 @@ h1 {
 
 .nav-table th,
 .nav-table td {
-  padding: 7px 8px;
+  padding: 8px 9px;
   border-right: 1px solid var(--trend-border);
   border-bottom: 1px solid var(--trend-border);
   text-align: right;
@@ -324,7 +397,11 @@ h1 {
 }
 
 .nav-table tbody tr:nth-child(odd) {
-  background: color-mix(in srgb, var(--trend-card-bg) 88%, var(--vscode-foreground) 12%);
+  background: var(--trend-soft-bg);
+}
+
+.nav-table tbody tr:hover {
+  background: var(--trend-hover-bg);
 }
 
 .nav-table th:nth-child(1),
@@ -336,16 +413,17 @@ h1 {
 
 .nav-table th:nth-child(5),
 .nav-table td:nth-child(5) {
-  border-left: 1px solid var(--trend-border);
+  border-left: 2px solid var(--vscode-panelTitle-activeBorder, var(--vscode-focusBorder));
 }
 
 .nav-table th {
   color: var(--trend-muted);
+  background: color-mix(in srgb, var(--trend-card-bg) 78%, var(--vscode-foreground) 22%);
   font-weight: 500;
 }
 
 .nav-empty {
-  border-left: 1px solid var(--trend-border);
+  border-left: 2px solid var(--vscode-panelTitle-activeBorder, var(--vscode-focusBorder));
 }
 
 .pager {
@@ -457,10 +535,10 @@ h1 {
   max-width: min(420px, calc(100% - 16px));
   padding: 8px 10px;
   border: 1px solid var(--trend-border);
-  border-radius: 4px;
+  border-radius: 8px;
   color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
   background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
-  box-shadow: 0 4px 16px var(--vscode-widget-shadow, rgba(0, 0, 0, .25));
+  box-shadow: 0 8px 24px var(--vscode-widget-shadow, rgba(0, 0, 0, .3));
   font-size: 12px;
   pointer-events: none;
 }
@@ -569,7 +647,7 @@ h1 {
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px 12px;
-  margin-top: 10px;
+  margin-top: 12px;
   color: var(--trend-muted);
   font-size: 12px;
 }
@@ -582,6 +660,20 @@ h1 {
   border-radius: 50%;
   margin-right: 6px;
   background: currentColor;
+}
+
+@media (max-width: 900px) {
+  .fund-card-header,
+  .chart-toolbar,
+  .pager {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fund-card-meta,
+  .pager-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 720px) {

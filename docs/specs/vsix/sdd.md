@@ -155,6 +155,8 @@ A-share quote data is fetched in the extension host using the same source priori
 
 Stock quote refresh can run manually from the STOCK view or automatically when enabled through VS Code settings. Automatic stock refresh is disabled by default, runs an immediate silent refresh when active, uses a configurable interval, and can be limited to weekday A-share market windows of 09:25-11:35 and 12:55-15:05 local time to avoid unnecessary background requests.
 
+Fund and stock group rows should show an in-row spinning refresh icon while their respective quote refresh is running.
+
 The `SETTINGS` view should only provide an `Open FinBox Settings` shortcut. Configuration editing remains in native VS Code Settings rather than custom TreeView form controls, and the shortcut opens the `finbox.stock` settings scope by default.
 
 The sidebar should avoid heavyweight dashboard cards, large hero copy, mobile controls, and full-width tables from the browser page.
@@ -174,10 +176,10 @@ Single-fund trend view should show:
 - Normalized return chart defaulting to the three-month period
 - Period switcher for YTD, one month, three months, six months, one year, and three years
 - Chart/list radio switcher for single-fund views only
-- Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return
+- Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
 - Interactive chart hover state with crosshair, highlighted points, date, cumulative return, and single-fund NAV/daily-return details
 - Max-drawdown curve marking for the active single-fund chart period
-- Period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics derived from existing NAV metric logic
+- A single fund information card with all period return, drawdown, volatility, return-to-drawdown ratio, and up-day ratio rows; the active chart/list period row is highlighted
 - Source update time and failed state if data cannot be loaded
 
 Group trend view should show:

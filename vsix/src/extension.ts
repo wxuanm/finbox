@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
   let stockRefreshInFlight: Promise<void> | undefined;
   let stockAutoRefreshTimer: ReturnType<typeof setInterval> | undefined;
-  let stockTreeVisible = false;
+  let stockTreeVisible = stockTreeView.visible;
 
   async function refreshQuotes(): Promise<void> {
     const codes = store.getCodes();
@@ -136,7 +136,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function promptAddFund(groupId = 'default'): Promise<void> {
     const codes = await vscode.window.showInputBox({
-      title: '添加基金',
       prompt: '输入六位基金代码，多个代码可用逗号或空格分隔',
       placeHolder: '例如 003026, 110022'
     });
@@ -152,7 +151,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function promptCreateGroup(): Promise<void> {
     const name = await vscode.window.showInputBox({
-      title: '新建基金分组',
       prompt: '输入分组名称',
       placeHolder: '例如 稳健组合'
     });
@@ -164,7 +162,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
   async function promptAddStock(): Promise<void> {
     const symbols = await vscode.window.showInputBox({
-      title: '添加股票',
       prompt: '输入带 sh/sz 前缀的股票代码，多个代码可用逗号或空格分隔',
       placeHolder: '例如 sh000001, sz000001'
     });
@@ -181,7 +178,6 @@ export function activate(context: vscode.ExtensionContext): void {
   async function promptRenameGroup(item?: FundGroupItem): Promise<void> {
     if (!(item instanceof FundGroupItem) || item.group.id === 'default') return;
     const name = await vscode.window.showInputBox({
-      title: '修改分组名称',
       prompt: '输入新的分组名称',
       value: item.group.name
     });
@@ -261,6 +257,8 @@ export function activate(context: vscode.ExtensionContext): void {
       stopStockAutoRefresh();
     })
   );
+
+  if (stockTreeVisible) restartStockAutoRefresh();
 }
 
 export function deactivate(): void {}

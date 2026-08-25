@@ -68,6 +68,7 @@
 - [x] Reuse or port NAV metric calculations.
 - [x] Add single-fund historical NAV list with pagination.
 - [x] Add single-fund max-drawdown curve marker.
+- [x] Add single-fund all-period metric table.
 - [x] Add retry action for failed historical data requests.
 - [ ] Handle ECharts absence with readable fallback.
 
@@ -90,6 +91,7 @@
 - [x] Show stock tooltip metrics for percentage change, price change, high, low, open, previous close, volume, and amount.
 - [x] Add stock add, refresh, and remove commands.
 - [x] Preserve stock add order and add move up/down actions.
+- [x] Start automatic stock refresh when the stock view is already visible.
 
 ## Phase 9: Security And Packaging
 

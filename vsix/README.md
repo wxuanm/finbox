@@ -7,8 +7,10 @@ FinBox brings lightweight fund and A-share stock monitoring into VS Code. It is 
 - Monitor mutual funds in grouped watchlists.
 - Refresh real-time fund estimates from Eastmoney.
 - Open single-fund and group historical NAV trend views in editor panels.
+- Review single-fund trend details with a chart/list switch, max-drawdown marking, all-period metrics, and paginated NAV records.
 - Monitor A-share stocks under the `A Stock` group.
 - Refresh A-share quotes using Sina first and Eastmoney as fallback.
+- Show in-sidebar refresh indicators while fund or stock quotes are updating.
 - Keep stock rows in your add order, with context menu actions to move stocks up or down.
 - Persist funds, fund groups, stock symbols, and preferences with VS Code global storage.
 
@@ -32,6 +34,10 @@ Available fund actions include:
 - Open group trend comparison views
 
 Deleting a custom fund group moves contained funds back to the default group.
+
+Single-fund trend panels default to the recent three-month period. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. Single-fund panels provide a `曲线 / 列表` switch. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
+
+Group trend panels focus on comparison. They show normalized return curves and comparison metric cards, but do not show the historical NAV list switch.
 
 ## Stock Monitor
 
@@ -61,6 +67,8 @@ Available stock actions include:
 - Refresh stock quotes
 - Remove stocks
 - Move stocks up or down
+
+Optional automatic stock refresh can be enabled in FinBox settings. When enabled, stock refresh starts when the `STOCK` view is visible and can be limited to A-share trading windows.
 
 ## Usage
 
