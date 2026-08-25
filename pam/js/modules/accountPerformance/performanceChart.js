@@ -7,6 +7,11 @@ let anchoringZoom = false;
 const ANNUALIZED_BENCHMARK_RATE = 0.10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const INTERNAL_SERIES_PREFIX = '__';
+const MAX_DRAWDOWN_SEGMENT_SERIES_NAME = '__max_drawdown_segment__';
+const CHART_LINE_WIDTH = 2.5;
+const CHART_FOCUSED_LINE_WIDTH = 3.2;
+const CHART_DRAWDOWN_LINE_WIDTH = 2.6;
+const CHART_BENCHMARK_LINE_WIDTH = 1.5;
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
@@ -57,6 +62,7 @@ export function renderPerformanceChart(metrics) {
     const benchmarkSeries = buildBenchmarkSeries(validMetrics);
     const selectedMetric = validMetrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
     const drawdownSeries = selectedMetric ? buildDrawdownSeries(selectedMetric) : [];
+    const maxDrawdownSegmentSeries = buildSingleAccountMaxDrawdownSegmentSeries(validMetrics);
     const zeroLineSeries = buildZeroLineSeries(series[0]?.data || benchmarkSeries.data || []);
     const axisMirrorSeries = {
         name: '__axis_mirror__',
@@ -101,9 +107,9 @@ export function renderPerformanceChart(metrics) {
             }
         ],
         dataZoom: [{ id: 'performance-inside-zoom', type: 'inside', xAxisIndex: 0, filterMode: 'none' }],
-        series: [...series, benchmarkSeries, zeroLineSeries, ...drawdownSeries, axisMirrorSeries]
+        series: [...series, benchmarkSeries, zeroLineSeries, ...drawdownSeries, ...maxDrawdownSegmentSeries, axisMirrorSeries]
     });
-    bindLegendMarkerFocus(validMetrics, benchmarkSeries, zeroLineSeries, drawdownSeries, axisMirrorSeries);
+    bindLegendMarkerFocus(validMetrics, benchmarkSeries, zeroLineSeries, drawdownSeries, maxDrawdownSegmentSeries, axisMirrorSeries);
     bindRightAnchoredZoom();
 }
 
@@ -185,7 +191,7 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
             smooth: false,
             emphasis: { focus: 'none' },
             lineStyle: {
-                width: focused ? 3 : 1.8,
+                width: focused ? CHART_FOCUSED_LINE_WIDTH : CHART_LINE_WIDTH,
                 opacity: !focusAccountId || focused ? 1 : 0.18
             },
             data,
@@ -251,14 +257,14 @@ function buildBenchmarkSeries(metrics) {
         lineStyle: {
             color: getCssVar('--text-muted') || '#64748b',
             type: 'dashed',
-            width: 1.6,
+            width: CHART_BENCHMARK_LINE_WIDTH,
             opacity: 0.9
         },
         data
     };
 }
 
-function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, drawdownSeries, axisMirrorSeries) {
+function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, drawdownSeries, maxDrawdownSegmentSeries, axisMirrorSeries) {
     const updateMarkerFocus = (markerAccountId, focusAccountId = markerAccountId) => {
         chartInstance.setOption({
             series: [
@@ -266,6 +272,7 @@ function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, drawdow
                 benchmarkSeries,
                 zeroLineSeries,
                 ...drawdownSeries,
+                ...maxDrawdownSegmentSeries,
                 axisMirrorSeries
             ]
         }, false);
@@ -379,6 +386,73 @@ function buildDrawdownSeries(metric) {
             z: 0
         }
     ];
+}
+
+function buildSingleAccountMaxDrawdownSegmentSeries(metrics) {
+    if (metrics.length !== 1) return [];
+
+    const metric = metrics[0];
+    const baseUnitNav = metric.periodPoints[0]?.unitNav;
+    if (!Number.isFinite(baseUnitNav) || baseUnitNav <= 0) return [];
+
+    const data = metric.periodPoints.map(point => ({
+        value: [point.date, (point.unitNav / baseUnitNav - 1) * 100],
+        accountName: metric.account.name
+    }));
+    const segmentData = getMaxDrawdownSegment(data);
+    if (segmentData.length < 2) return [];
+
+    const drawdownColor = getCssVar('--negative-color') || '#059669';
+    return [{
+        name: MAX_DRAWDOWN_SEGMENT_SERIES_NAME,
+        type: 'line',
+        data: segmentData,
+        showSymbol: false,
+        smooth: false,
+        silent: true,
+        tooltip: { show: false },
+        lineStyle: {
+            color: drawdownColor,
+            width: CHART_DRAWDOWN_LINE_WIDTH,
+            opacity: 1
+        },
+        itemStyle: { color: drawdownColor },
+        emphasis: { disabled: true },
+        z: 12
+    }];
+}
+
+function getMaxDrawdownSegment(data) {
+    if (!Array.isArray(data) || data.length < 2) return [];
+
+    let peakIndex = -1;
+    let peakValue = -Infinity;
+    let segmentStartIndex = -1;
+    let segmentEndIndex = -1;
+    let maxDrawdown = 0;
+
+    data.forEach((point, index) => {
+        const returnValue = Number(point?.value?.[1]);
+        if (!Number.isFinite(returnValue)) return;
+
+        const navValue = 1 + returnValue / 100;
+        if (navValue > peakValue) {
+            peakValue = navValue;
+            peakIndex = index;
+        }
+
+        if (peakValue <= 0 || peakIndex < 0) return;
+
+        const drawdown = navValue / peakValue - 1;
+        if (drawdown < maxDrawdown) {
+            maxDrawdown = drawdown;
+            segmentStartIndex = peakIndex;
+            segmentEndIndex = index;
+        }
+    });
+
+    if (segmentStartIndex < 0 || segmentEndIndex <= segmentStartIndex) return [];
+    return data.slice(segmentStartIndex, segmentEndIndex + 1);
 }
 
 function formatChartTooltip(params) {

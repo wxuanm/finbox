@@ -13,6 +13,11 @@ let modalRequestSeq = 0;
 const defaultNavChartPeriod = 'y3';
 const navBenchmarkAnnualReturn = 0.1;
 const dayMs = 24 * 60 * 60 * 1000;
+const maxDrawdownSeriesName = '__max_drawdown_segment__';
+const navChartLineWidth = 2.5;
+const navChartFocusedLineWidth = 3.2;
+const navChartDrawdownLineWidth = 2.6;
+const navChartBenchmarkLineWidth = 1.5;
 let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
@@ -344,6 +349,39 @@ function getLastSeriesPoint(seriesData) {
     return null;
 }
 
+function getMaxDrawdownSegment(seriesData) {
+    if (!Array.isArray(seriesData) || seriesData.length < 2) return [];
+
+    let peakIndex = -1;
+    let peakValue = -Infinity;
+    let segmentStartIndex = -1;
+    let segmentEndIndex = -1;
+    let maxDrawdown = 0;
+
+    seriesData.forEach((point, index) => {
+        const returnValue = Number(point?.[1]);
+        if (!Number.isFinite(returnValue)) return;
+
+        const navValue = 1 + returnValue / 100;
+        if (navValue > peakValue) {
+            peakValue = navValue;
+            peakIndex = index;
+        }
+
+        if (peakValue <= 0 || peakIndex < 0) return;
+
+        const drawdown = navValue / peakValue - 1;
+        if (drawdown < maxDrawdown) {
+            maxDrawdown = drawdown;
+            segmentStartIndex = peakIndex;
+            segmentEndIndex = index;
+        }
+    });
+
+    if (segmentStartIndex < 0 || segmentEndIndex <= segmentStartIndex) return [];
+    return seriesData.slice(segmentStartIndex, segmentEndIndex + 1);
+}
+
 function buildAnnualBenchmarkSeries(chartSeries) {
     const dates = [...new Set(chartSeries.flatMap(series => (series.data || []).map(point => point?.[0]).filter(Boolean)))].sort();
     if (dates.length < 2) return [];
@@ -410,7 +448,7 @@ function buildNavChartSeries(metrics, periodKey, markerFundCode = selectedNavFun
             smooth: false,
             emphasis: { focus: 'none' },
             lineStyle: {
-                width: focused ? 3 : 1.5,
+                width: focused ? navChartFocusedLineWidth : navChartLineWidth,
                 opacity: !focusFundCode || focused ? 1 : 0.18
             },
             z: focused ? 10 : 1,
@@ -432,6 +470,35 @@ function buildNavChartSeries(metrics, periodKey, markerFundCode = selectedNavFun
             } : undefined
         };
     });
+}
+
+function buildSingleFundMaxDrawdownSeries(metrics, periodKey) {
+    if (metrics.length !== 1) return [];
+
+    const metric = metrics[0];
+    const seriesData = metric.chartSeries?.[periodKey] || metric.series;
+    const drawdownData = getMaxDrawdownSegment(seriesData);
+    if (drawdownData.length < 2) return [];
+
+    const drawdownColor = getComputedStyle(document.documentElement).getPropertyValue('--negative-color').trim() || '#10b981';
+
+    return [{
+        name: maxDrawdownSeriesName,
+        type: 'line',
+        showSymbol: false,
+        smooth: false,
+        silent: true,
+        tooltip: { show: false },
+        lineStyle: {
+            width: navChartDrawdownLineWidth,
+            color: drawdownColor,
+            opacity: 1
+        },
+        itemStyle: { color: drawdownColor },
+        emphasis: { disabled: true },
+        z: 12,
+        data: drawdownData
+    }];
 }
 
 function getActiveNavChartPeriod() {
@@ -473,6 +540,7 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
 
     const chart = window.echarts.init(chartEl);
     const chartSeries = buildNavChartSeries(metrics, periodKey);
+    const drawdownSeries = buildSingleFundMaxDrawdownSeries(metrics, periodKey);
     const benchmarkName = dict.navBenchmarkAnnual10;
     const benchmarkData = buildAnnualBenchmarkSeries(chartSeries);
     const benchmarkSeries = benchmarkData.length > 0 ? {
@@ -482,7 +550,7 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         smooth: false,
         data: benchmarkData,
         lineStyle: {
-            width: 1.8,
+            width: navChartBenchmarkLineWidth,
             type: 'dashed',
             color: '#94a3b8',
             opacity: 0.95
@@ -510,7 +578,7 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             trigger: 'axis',
             formatter: params => {
                 const items = (Array.isArray(params) ? params : [params])
-                    .filter(item => item.seriesName !== benchmarkName && item.seriesName !== '__axis_mirror__');
+                    .filter(item => item.seriesName !== benchmarkName && item.seriesName !== '__axis_mirror__' && item.seriesName !== maxDrawdownSeriesName);
                 if (items.length === 0) return '';
 
                 const title = items[0].axisValueLabel || items[0].axisValue || '';
@@ -551,13 +619,14 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             }
         ],
         dataZoom: [{ type: 'inside' }],
-        series: [...chartSeries, ...(benchmarkSeries ? [benchmarkSeries] : []), axisMirrorSeries]
+        series: [...chartSeries, ...drawdownSeries, ...(benchmarkSeries ? [benchmarkSeries] : []), axisMirrorSeries]
     });
 
     const updateMarkerFocus = (markerFundCode, focusFundCode = markerFundCode) => {
         chart.setOption({
             series: [
                 ...buildNavChartSeries(metrics, periodKey, markerFundCode, focusFundCode),
+                ...buildSingleFundMaxDrawdownSeries(metrics, periodKey),
                 ...(benchmarkSeries ? [benchmarkSeries] : []),
                 axisMirrorSeries
             ]
