@@ -59,6 +59,7 @@ export class TrendPanel {
       vscode.ViewColumn.Active,
       {
         enableScripts: true,
+        retainContextWhenHidden: true,
         localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media')]
       }
     );
@@ -112,15 +113,31 @@ export class TrendPanel {
 <body>
   <main class="trend-shell">
     <header class="trend-header">
-      <div>
-        <div class="eyebrow">FinBox Fund Monitor</div>
+      <div class="title-block">
+        <div class="eyebrow">FINBOX FUND TREND</div>
         <h1 id="title">${title}</h1>
       </div>
-      <button id="refreshBtn" type="button">刷新</button>
+      <div class="actions">
+        <button id="refreshBtn" type="button">刷新</button>
+      </div>
     </header>
     <div id="status" class="status">加载中...</div>
+    <nav id="periodTabs" class="period-tabs" aria-label="趋势周期">
+      <button type="button" data-period="ytd">今年</button>
+      <button type="button" data-period="m1">1月</button>
+      <button type="button" data-period="m3">3月</button>
+      <button type="button" data-period="m6">6月</button>
+      <button type="button" data-period="y1">1年</button>
+      <button type="button" data-period="y3" class="active">3年</button>
+    </nav>
     <section id="summary" class="summary-grid"></section>
     <section class="chart-panel">
+      <div class="chart-toolbar">
+        <div>
+          <div id="chartTitle" class="chart-title">历史收益走势</div>
+          <div id="chartHint" class="chart-hint">按所选周期归一化展示累计收益</div>
+        </div>
+      </div>
       <div id="chart" class="chart"></div>
     </section>
     <section id="metrics" class="metrics-grid"></section>

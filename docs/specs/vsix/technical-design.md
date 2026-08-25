@@ -201,6 +201,12 @@ Input validation:
 - Requests historical NAV data through `fundNavService` via extension host.
 - Sends trend payloads to the webview.
 - Handles retry and refresh messages.
+- Uses VS Code theme CSS variables for editor background, foreground, widget surfaces, borders, button states, and chart colors.
+- Uses the available editor width with minimal side padding, compact spacing and typography, and adapts the header and metric cards for narrow editor columns.
+- Uses `retainContextWhenHidden` so loaded trend charts remain visible after switching editor tabs.
+- Provides client-side period switching across YTD, one month, three months, six months, one year, and three years using cached trend payloads.
+- Adds SVG hover interaction with crosshair, highlighted points, and per-fund return tooltip values.
+- Renders fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date.
 
 ## Message Protocol
 

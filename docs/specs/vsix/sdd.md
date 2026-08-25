@@ -163,13 +163,17 @@ The sidebar should avoid heavyweight dashboard cards, large hero copy, mobile co
 
 Historical analysis opens as an editor webview panel.
 
+Trend webviews should use VS Code theme variables for background, foreground, borders, buttons, and chart colors so they fit light, dark, and high-contrast editor themes. Layout should use the available editor width with minimal side padding and collapse cleanly in narrow editor columns.
+
 Single-fund trend view should show:
 
 - Fund name and code
 - Manager names when available
 - Fund scale when available
 - Three-year NAV chart
-- Period return and risk metrics derived from existing NAV metric logic
+- Period switcher for YTD, one month, three months, six months, one year, and three years
+- Interactive chart hover state with crosshair, highlighted points, date, and per-fund return values
+- Period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics derived from existing NAV metric logic
 - Source update time and failed state if data cannot be loaded
 
 Group trend view should show:
@@ -177,7 +181,7 @@ Group trend view should show:
 - Group name
 - Included fund codes
 - Multi-fund normalized return chart
-- Comparison table or compact cards for key metrics
+- Comparison cards for period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics
 - Clear message when the group has no valid fund data
 
 ### Extension Data Model

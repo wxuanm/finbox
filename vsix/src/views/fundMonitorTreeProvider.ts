@@ -113,11 +113,9 @@ function buildFundTooltip(code: string, quote: FundQuote | undefined, failed: bo
   if (!quote) return `${code}\n等待刷新`;
   return [
     `${quote.name} (${code})`,
-    `估算涨幅: ${formatChange(quote.estimatedChange)}`,
-    `估算净值: ${quote.estimatedNav || '-'}`,
-    `单位净值: ${quote.unitNav || '-'} ${quote.unitNavDate || ''}`.trim(),
-    `基金经理: ${quote.manager || '-'}`,
-    `更新时间: ${new Date(quote.updatedAt).toLocaleString('zh-CN')}`
+    `估算净值: ${quote.estimatedNav || '-'}    估算涨幅: ${formatChange(quote.estimatedChange)}`,
+    `披露净值: ${quote.unitNav || '-'}    披露涨幅: ${formatChange(quote.navChange)}`,
+    `披露日期: ${quote.unitNavDate || '-'}    经理: ${quote.manager || '-'}`
   ].join('\n');
 }
 

@@ -7,6 +7,10 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 - Batched stock quote refresh through Sina first and Eastmoney batch fallback to reduce per-symbol requests.
 - Added optional automatic stock quote refresh with configurable interval, trading-hours filtering, and an immediate silent refresh when active.
 - Replaced the placeholder settings view with a shortcut that opens native FinBox stock settings.
+- Adapted fund trend webviews to VS Code editor theming and compact panel layout.
+- Kept fund trend webviews alive when switching editor tabs so loaded charts remain visible.
+- Added period switching and risk/return metrics to fund trend views for portfolio-style comparison.
+- Reduced trend page side padding and added hover crosshair tooltips for historical curves.
 
 ## 0.0.5
 
