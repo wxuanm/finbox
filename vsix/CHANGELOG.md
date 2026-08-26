@@ -2,6 +2,13 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.0.8
+
+- Rebuilt fund trend charts with bundled ECharts for smoother multi-fund comparison, scrollable legends, tooltips, and time-window zooming.
+- Moved trend chart value axes to the right and kept the annualized 10% benchmark visible without adding it to the legend.
+- Let group and single-fund trend charts keep the full three-year history available through the bottom zoom slider while rebasing visible-window returns to the selected range start.
+- Enlarged and repositioned the chart zoom slider and moved legends above the curve area for clearer chart controls.
+
 ## 0.0.7
 
 - Added a spinning refresh indicator on the `A Stock` group row while stock quotes are refreshing, including silent automatic refreshes.

@@ -15,6 +15,13 @@ let currentPeriod = 'm3';
 let currentViewMode = 'chart';
 let currentListPage = 1;
 let selectedFundCode = null;
+let trendChart = null;
+let currentChartContext = null;
+let isRebasingChart = false;
+
+window.addEventListener('resize', () => {
+  trendChart?.resize();
+});
 
 document.getElementById('periodTabs').addEventListener('click', event => {
   const target = event.target;
@@ -69,6 +76,7 @@ window.addEventListener('message', event => {
   if (message.type === 'trendError') {
     setStatus(message.message || '历史趋势加载失败');
     document.getElementById('summary').innerHTML = '';
+    disposeChart();
     document.getElementById('chart').innerHTML = '<div class="card">暂无可展示数据</div>';
     document.getElementById('navList').innerHTML = '';
     document.getElementById('metrics').innerHTML = '';
@@ -116,71 +124,290 @@ function renderChart(metrics, period) {
   chartEl.hidden = false;
   listEl.hidden = true;
   if (!metrics.length) {
+    disposeChart();
     chartEl.innerHTML = '<div class="card">暂无可展示数据</div>';
     return;
   }
 
   document.getElementById('chartTitle').textContent = `${PERIODS[period]}累计收益走势`;
-
-  const width = 900;
-  const height = 340;
-  const pad = { left: 24, right: 24, top: 20, bottom: 42 };
   const visibleMetrics = selectedFundCode ? metrics.filter(metric => metric.code === selectedFundCode) : metrics;
-  const series = visibleMetrics.map(metric => ({ metric, points: metric.chartSeries?.[period] || [] })).filter(item => item.points.length > 1);
+  const series = visibleMetrics
+    .map(metric => ({ metric, points: metric.chartSeries?.y3 || metric.chartSeries?.[period] || [] }))
+    .filter(item => item.points.length > 1);
   if (!series.length) {
+    disposeChart();
     chartEl.innerHTML = '<div class="empty-state">当前周期暂无足够历史数据</div>';
     return;
   }
-  const benchmark = buildAnnualBenchmarkSeries(series);
-  const values = series.flatMap(item => item.points.map(point => point[1])).concat(benchmark.map(point => point[1]), [0]);
-  const { min, max, ticks } = buildYAxisScale(values, 7);
-  const span = max - min || 1;
-  const plotLeft = pad.left;
-  const plotRight = width - pad.right;
-  const plotWidth = plotRight - plotLeft;
-  const x = (index, total) => plotLeft + index / Math.max(total - 1, 1) * plotWidth;
-  const y = value => pad.top + (max - value) / span * (height - pad.top - pad.bottom);
-  const gridLines = ticks.map(value => {
-    const tickY = y(value);
-    const gridClass = value === 0 ? 'grid-line zero-axis' : 'grid-line';
-    return `<line class="${gridClass}" x1="${plotLeft}" y1="${tickY}" x2="${plotRight}" y2="${tickY}"/>
-      <text class="chart-label chart-label-inside" x="${plotRight - 4}" y="${tickY + 4}" text-anchor="end">${formatAxisPercent(value)}</text>`;
-  }).join('');
-  const xLabels = buildXAxisLabels(series[0].points, 12).map(item => {
-    const labelX = x(item.index, series[0].points.length);
-    const anchor = item.index === 0 ? 'start' : item.index === series[0].points.length - 1 ? 'end' : 'middle';
-    return `<line class="axis-tick" x1="${labelX}" y1="${height - pad.bottom}" x2="${labelX}" y2="${height - pad.bottom + 4}"/>
-      <text class="chart-label x-axis-label" x="${labelX}" y="${height - pad.bottom + 18}" text-anchor="${anchor}">${escapeHtml(formatDateTick(item.date, period))}</text>`;
-  }).join('');
-  const benchmarkPath = benchmark.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index, benchmark.length).toFixed(1)} ${y(point[1]).toFixed(1)}`).join(' ');
 
-  const lines = series.map((item, index) => {
-    const d = item.points.map((point, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'} ${x(pointIndex, item.points.length).toFixed(1)} ${y(point[1]).toFixed(1)}`).join(' ');
-    return `<path class="line-${index % 10}" d="${d}" fill="none" stroke-width="2"/>`;
-  }).join('');
-  const drawdownLines = series.length === 1 ? buildDrawdownPath(series[0], period, x, y) : '';
-  const hoverPoints = series.map((item, index) => `<circle id="hoverPoint${index}" class="line-${index % 10} hover-point" r="4" cx="0" cy="0" visibility="hidden"/>`).join('');
+  if (!window.echarts) {
+    disposeChart();
+    chartEl.innerHTML = '<div class="empty-state">ECharts 加载失败，无法展示趋势图</div>';
+    return;
+  }
 
-  chartEl.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${PERIODS[period]}历史趋势">
-    <line class="axis" x1="${plotRight}" y1="${pad.top}" x2="${plotRight}" y2="${height - pad.bottom}"/>
-    <line class="axis" x1="${plotLeft}" y1="${height - pad.bottom}" x2="${plotRight}" y2="${height - pad.bottom}"/>
-    ${gridLines}
-    ${xLabels}
-    <path class="benchmark-line" d="${benchmarkPath}" fill="none"/>
-    ${lines}
-    ${drawdownLines}
-    <line id="hoverLine" class="crosshair" x1="0" y1="${pad.top}" x2="0" y2="${height - pad.bottom}" visibility="hidden"/>
-    <g>${hoverPoints}</g>
-    <rect class="interaction-layer" x="0" y="0" width="${width}" height="${height}"/>
-  </svg>
-  <div id="chartTooltip" class="chart-tooltip" hidden></div>
-  <div class="legend">${series.map((item, index) => `<span class="legend-item line-${index % 10}">${escapeHtml(item.metric.name)} ${escapeHtml(item.metric.code)}</span>`).join('')}</div>`;
-  bindChartInteraction(chartEl, series, { width, height, pad, min, max, span });
+  if (!trendChart || trendChart.isDisposed()) {
+    chartEl.innerHTML = '';
+    trendChart = echarts.init(chartEl, null, { renderer: 'canvas' });
+  }
+  currentChartContext = { series, period, zoomRange: buildZoomRange(series, period) };
+  bindChartZoomRebase();
+  trendChart.setOption(buildChartOption(currentChartContext), true);
+  trendChart.resize();
+}
+
+function disposeChart() {
+  if (!trendChart) return;
+  trendChart.dispose();
+  trendChart = null;
+  currentChartContext = null;
+}
+
+function buildChartOption(context) {
+  const { series, period, zoomRange } = context;
+  const colors = getChartColors();
+  const zoomBounds = getZoomBounds(series, zoomRange);
+  const rebasedSeries = rebaseSeriesForZoom(series, zoomRange);
+  const benchmark = buildAnnualBenchmarkSeries(rebasedSeries, zoomBounds?.startTime ?? null);
+  const lineSeries = rebasedSeries.map(item => ({
+    name: `${item.metric.name} ${item.metric.code}`,
+    type: 'line',
+    showSymbol: false,
+    smooth: false,
+    sampling: 'lttb',
+    emphasis: { focus: 'series' },
+    lineStyle: { width: 2 },
+    data: item.points.map(point => [parseDate(point[0]), point[1], point[0], point[2], point[3], point[4]])
+  }));
+  const drawdownSeries = rebasedSeries.length === 1 ? buildDrawdownEchartsSeries(rebasedSeries[0], period) : null;
+  const allSeries = [
+    {
+      name: '年化10%',
+      type: 'line',
+      showSymbol: false,
+      silent: true,
+      lineStyle: { width: 1.4, type: 'dashed', color: getCssVar('--vscode-charts-yellow', '#cca700') },
+      data: benchmark.map(point => [parseDate(point[0]), point[1], point[0]])
+    },
+    ...lineSeries
+  ];
+  if (drawdownSeries) allSeries.push(drawdownSeries);
+
+  return {
+    animation: false,
+    color: colors,
+    backgroundColor: 'transparent',
+    textStyle: {
+      color: getCssVar('--vscode-foreground', '#cccccc'),
+      fontFamily: getCssVar('--vscode-font-family', 'sans-serif'),
+      fontSize: Number.parseInt(getCssVar('--vscode-font-size', '13'), 10) || 13
+    },
+    grid: { left: 12, right: 18, top: 48, bottom: 64, containLabel: true },
+    legend: {
+      type: 'scroll',
+      data: lineSeries.map(item => item.name),
+      top: 2,
+      itemWidth: 16,
+      itemHeight: 8,
+      textStyle: { color: getCssVar('--vscode-descriptionForeground', '#999999') },
+      pageIconColor: getCssVar('--vscode-button-background', '#0e639c'),
+      pageIconInactiveColor: getCssVar('--vscode-disabledForeground', '#666666'),
+      pageTextStyle: { color: getCssVar('--vscode-descriptionForeground', '#999999') }
+    },
+    tooltip: {
+      trigger: 'axis',
+      renderMode: 'richText',
+      confine: true,
+      backgroundColor: getCssVar('--vscode-editorWidget-background', '#252526'),
+      borderColor: getCssVar('--vscode-editorWidget-border', '#454545'),
+      textStyle: { color: getCssVar('--vscode-editorWidget-foreground', '#cccccc') },
+      axisPointer: {
+        type: 'line',
+        lineStyle: { color: getCssVar('--vscode-focusBorder', '#007fd4'), type: 'dashed' }
+      },
+      formatter: params => formatChartTooltip(Array.isArray(params) ? params : [params])
+    },
+    xAxis: {
+      type: 'time',
+      axisLine: { lineStyle: { color: getCssVar('--trend-border', '#454545') } },
+      axisTick: { lineStyle: { color: getCssVar('--trend-border', '#454545') } },
+      axisLabel: {
+        color: getCssVar('--vscode-descriptionForeground', '#999999'),
+        formatter: value => formatDateTick(new Date(value).toLocaleDateString('sv-SE'), period)
+      },
+      splitLine: { show: false }
+    },
+    yAxis: {
+      type: 'value',
+      position: 'right',
+      axisLabel: {
+        color: getCssVar('--vscode-descriptionForeground', '#999999'),
+        formatter: value => formatAxisPercent(value)
+      },
+      splitLine: { lineStyle: { color: getCssVar('--trend-border', '#454545') } }
+    },
+    dataZoom: [
+      { type: 'inside', throttle: 60, ...zoomRange },
+      {
+        type: 'slider',
+        ...zoomRange,
+        height: 26,
+        bottom: 16,
+        borderColor: getCssVar('--trend-border', '#454545'),
+        backgroundColor: getCssVar('--trend-soft-bg', 'transparent'),
+        fillerColor: getCssVar('--trend-accent-soft', 'rgba(55, 148, 255, .18)'),
+        handleStyle: { color: getCssVar('--vscode-button-background', '#0e639c') },
+        textStyle: { color: getCssVar('--vscode-descriptionForeground', '#999999') }
+      }
+    ],
+    series: allSeries
+  };
+}
+
+function bindChartZoomRebase() {
+  if (!trendChart) return;
+  trendChart.off('datazoom');
+  trendChart.on('datazoom', () => {
+    if (!trendChart || !currentChartContext || isRebasingChart) return;
+    const option = trendChart.getOption();
+    const zoom = Array.isArray(option.dataZoom) ? option.dataZoom[0] : null;
+    const start = Number.isFinite(zoom?.start) ? zoom.start : currentChartContext.zoomRange.start;
+    const end = Number.isFinite(zoom?.end) ? zoom.end : currentChartContext.zoomRange.end;
+    currentChartContext.zoomRange = { start, end };
+    isRebasingChart = true;
+    trendChart.setOption(buildChartOption(currentChartContext), true);
+    isRebasingChart = false;
+  });
+}
+
+function rebaseSeriesForZoom(series, zoomRange) {
+  const bounds = getZoomBounds(series, zoomRange);
+  if (!bounds) return series;
+  return series.map(item => {
+    const basePoint = findBasePoint(item.points, bounds.startTime);
+    if (!basePoint) return item;
+    const baseValue = returnToValue(basePoint[1]);
+    return {
+      ...item,
+      points: item.points.map(point => [
+        point[0],
+        (returnToValue(point[1]) / baseValue - 1) * 100,
+        point[2],
+        point[3],
+        point[4]
+      ])
+    };
+  });
+}
+
+function getZoomBounds(series, zoomRange) {
+  const points = series[0]?.points || [];
+  const firstTime = parseDate(points[0]?.[0]);
+  const lastTime = parseDate(points[points.length - 1]?.[0]);
+  if (firstTime === null || lastTime === null || firstTime >= lastTime) return null;
+  const start = Number.isFinite(zoomRange?.start) ? zoomRange.start : 0;
+  const end = Number.isFinite(zoomRange?.end) ? zoomRange.end : 100;
+  return {
+    startTime: firstTime + (lastTime - firstTime) * Math.max(0, Math.min(100, start)) / 100,
+    endTime: firstTime + (lastTime - firstTime) * Math.max(0, Math.min(100, end)) / 100
+  };
+}
+
+function findBasePoint(points, startTime) {
+  let fallback = null;
+  for (const point of points) {
+    const time = parseDate(point[0]);
+    if (time === null) continue;
+    if (time >= startTime) return point;
+    fallback = point;
+  }
+  return fallback;
+}
+
+function returnToValue(returnValue) {
+  return 1 + (Number(returnValue) || 0) / 100;
+}
+
+function buildDrawdownEchartsSeries(item, period) {
+  const startDate = item.metric.periods?.[period]?.maxDrawdownStartDate;
+  const endDate = item.metric.periods?.[period]?.maxDrawdownEndDate;
+  const maxDrawdown = item.metric.periods?.[period]?.maxDrawdown;
+  if (!startDate || !endDate || startDate === endDate || !Number.isFinite(maxDrawdown) || maxDrawdown >= 0) return null;
+
+  const startIndex = item.points.findIndex(point => point[0] === startDate);
+  const endIndex = item.points.findIndex(point => point[0] === endDate);
+  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) return null;
+
+  return {
+    name: '最大回撤区间',
+    type: 'line',
+    showSymbol: false,
+    silent: true,
+    lineStyle: { width: 2, color: getCssVar('--vscode-charts-green', '#89d185') },
+    data: item.points.slice(startIndex, endIndex + 1).map(point => [parseDate(point[0]), point[1], point[0]])
+  };
+}
+
+function buildZoomRange(series, period) {
+  const points = series[0]?.points || [];
+  const firstTime = parseDate(points[0]?.[0]);
+  const lastTime = parseDate(points[points.length - 1]?.[0]);
+  if (firstTime === null || lastTime === null || firstTime >= lastTime) return {};
+
+  const startTime = period === 'ytd'
+    ? new Date(new Date(lastTime).getFullYear(), 0, 1).getTime()
+    : lastTime - periodDays(period) * 24 * 60 * 60 * 1000;
+  const clampedStart = Math.max(firstTime, startTime);
+  return {
+    start: Math.max(0, Math.min(100, (clampedStart - firstTime) / (lastTime - firstTime) * 100)),
+    end: 100
+  };
+}
+
+function periodDays(period) {
+  if (period === 'm1') return 30;
+  if (period === 'm3') return 90;
+  if (period === 'm6') return 180;
+  if (period === 'y1') return 365;
+  return 365 * 3;
+}
+
+function formatChartTooltip(params) {
+  const visibleParams = params.filter(item => item.seriesName !== '最大回撤区间');
+  const first = visibleParams.find(item => Array.isArray(item.value) && item.value[2]);
+  const date = first?.value?.[2] || '';
+  return [date, ...visibleParams.map(item => {
+    const value = Array.isArray(item.value) ? item.value : [];
+    const isBenchmark = item.seriesName === '年化10%';
+    const main = `${item.seriesName}  累计 ${formatPercent(value[1])}`;
+    if (isBenchmark || visibleParams.length > 2) return main;
+    return `${main}\n  净值 ${formatNav(value[3])}  日涨幅 ${formatPercent(value[5])}`;
+  })].filter(Boolean).join('\n');
+}
+
+function getChartColors() {
+  return [
+    getCssVar('--vscode-charts-blue', '#3794ff'),
+    getCssVar('--vscode-charts-red', '#f14c4c'),
+    getCssVar('--vscode-charts-green', '#89d185'),
+    getCssVar('--vscode-charts-yellow', '#cca700'),
+    getCssVar('--vscode-charts-purple', '#b180d7'),
+    getCssVar('--vscode-charts-foreground', '#cccccc'),
+    getCssVar('--vscode-charts-orange', '#d18616'),
+    getCssVar('--vscode-terminal-ansiBrightGreen', '#b5cea8'),
+    getCssVar('--vscode-terminal-ansiMagenta', '#c586c0'),
+    getCssVar('--vscode-terminal-ansiCyan', '#4ec9b0')
+  ];
+}
+
+function getCssVar(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
 
 function renderNavList(metric, period) {
   const chartEl = document.getElementById('chart');
   const listEl = document.getElementById('navList');
+  disposeChart();
   chartEl.hidden = true;
   listEl.hidden = false;
   document.getElementById('chartTitle').textContent = `${PERIODS[period]}历史净值列表`;
@@ -257,113 +484,6 @@ function renderNavTableCells(point) {
     <td>${formatNav(point[2])}</td>
     <td>${formatNav(point[3])}</td>
     <td class="${classFor(point[4])}">${formatPercent(point[4])}</td>`;
-}
-
-function buildDrawdownPath(item, period, x, y) {
-  const startDate = item.metric.periods?.[period]?.maxDrawdownStartDate;
-  const endDate = item.metric.periods?.[period]?.maxDrawdownEndDate;
-  const maxDrawdown = item.metric.periods?.[period]?.maxDrawdown;
-  if (!startDate || !endDate || startDate === endDate || !Number.isFinite(maxDrawdown) || maxDrawdown >= 0) return '';
-
-  const startIndex = item.points.findIndex(point => point[0] === startDate);
-  const endIndex = item.points.findIndex(point => point[0] === endDate);
-  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) return '';
-
-  const points = item.points.slice(startIndex, endIndex + 1);
-  if (points.length < 2) return '';
-
-  const d = points.map((point, offset) => {
-    const pointIndex = startIndex + offset;
-    return `${offset === 0 ? 'M' : 'L'} ${x(pointIndex, item.points.length).toFixed(1)} ${y(point[1]).toFixed(1)}`;
-  }).join(' ');
-  return `<path class="drawdown-line" d="${d}" fill="none"/>`;
-}
-
-function bindChartInteraction(chartEl, series, dimensions) {
-  const svg = chartEl.querySelector('svg');
-  const hoverLine = chartEl.querySelector('#hoverLine');
-  const tooltip = chartEl.querySelector('#chartTooltip');
-  if (!svg || !hoverLine || !tooltip) return;
-
-  const { width, height, pad, min, max, span } = dimensions;
-  const chartWidth = width - pad.left - pad.right;
-  const chartHeight = height - pad.top - pad.bottom;
-  const y = value => pad.top + (max - value) / span * chartHeight;
-
-  const hide = () => {
-    hoverLine.setAttribute('visibility', 'hidden');
-    tooltip.hidden = true;
-    series.forEach((_, index) => chartEl.querySelector(`#hoverPoint${index}`)?.setAttribute('visibility', 'hidden'));
-  };
-
-  svg.onmouseleave = hide;
-  svg.onmousemove = event => {
-    const svgPoint = getSvgPoint(svg, event);
-    if (!svgPoint) {
-      hide();
-      return;
-    }
-
-    const svgX = svgPoint.x;
-    const svgY = svgPoint.y;
-    if (svgX < pad.left || svgX > width - pad.right || svgY < pad.top || svgY > height - pad.bottom) {
-      hide();
-      return;
-    }
-
-    const ratio = (svgX - pad.left) / chartWidth;
-    const selected = series.map((item, index) => {
-      const pointIndex = Math.min(item.points.length - 1, Math.max(0, Math.round(ratio * (item.points.length - 1))));
-      const point = item.points[pointIndex];
-      const pointX = pad.left + pointIndex / Math.max(item.points.length - 1, 1) * chartWidth;
-      const pointY = y(point[1]);
-      const marker = chartEl.querySelector(`#hoverPoint${index}`);
-      marker?.setAttribute('cx', pointX.toFixed(1));
-      marker?.setAttribute('cy', pointY.toFixed(1));
-      marker?.setAttribute('visibility', 'visible');
-      return { item, point };
-    });
-
-    const hoverX = svgX;
-    hoverLine.setAttribute('x1', hoverX.toFixed(1));
-    hoverLine.setAttribute('x2', hoverX.toFixed(1));
-    hoverLine.setAttribute('visibility', 'visible');
-
-    const date = selected[0]?.point?.[0] || '';
-    tooltip.innerHTML = `<div class="tooltip-date">${escapeHtml(date)}</div>${selected.map(({ item, point }, index) => `
-      <div class="tooltip-row line-${index % 10}">
-        <div class="tooltip-main">
-          <span class="tooltip-name">${escapeHtml(item.metric.name)} ${escapeHtml(item.metric.code)}</span>
-          <strong class="tooltip-value ${classFor(point[1])}">累计 ${formatPercent(point[1])}</strong>
-        </div>
-        ${selected.length === 1 ? `<div class="tooltip-detail">
-          <span>净值 ${formatNav(point[2])}</span>
-          <span class="${classFor(point[4])}">日涨幅 ${formatPercent(point[4])}</span>
-        </div>` : ''}
-      </div>`).join('')}`;
-    tooltip.hidden = false;
-
-    const chartRect = chartEl.getBoundingClientRect();
-    const localX = event.clientX - chartRect.left;
-    const localY = event.clientY - chartRect.top;
-    const tooltipWidth = tooltip.offsetWidth || 240;
-    const tooltipHeight = tooltip.offsetHeight || 120;
-    const left = localX + tooltipWidth + 28 > chartEl.clientWidth
-      ? Math.max(8, localX - tooltipWidth - 14)
-      : Math.min(chartEl.clientWidth - tooltipWidth - 8, Math.max(8, localX + 14));
-    const top = Math.min(chartEl.clientHeight - tooltipHeight - 8, Math.max(8, localY + 14));
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
-  };
-}
-
-function getSvgPoint(svg, event) {
-  const matrix = svg.getScreenCTM();
-  if (!matrix) return null;
-  const point = svg.createSVGPoint();
-  point.x = event.clientX;
-  point.y = event.clientY;
-  return point.matrixTransform(matrix.inverse());
 }
 
 function renderMetrics(metrics, period) {
@@ -493,10 +613,10 @@ function buildMetricHighlights(metric, rankings) {
   };
 }
 
-function buildAnnualBenchmarkSeries(series) {
+function buildAnnualBenchmarkSeries(series, startTime = null) {
   const points = series[0]?.points || [];
-  const firstDate = points[0]?.[0];
-  const start = parseDate(firstDate);
+  const firstDate = startTime === null ? points[0]?.[0] : new Date(startTime).toLocaleDateString('sv-SE');
+  const start = startTime === null ? parseDate(firstDate) : startTime;
   if (points.length < 2 || start === null) return [];
   return points.map(point => {
     const current = parseDate(point[0]);
@@ -504,18 +624,6 @@ function buildAnnualBenchmarkSeries(series) {
     const value = ((1 + ANNUAL_BENCHMARK / 100) ** (days / 365) - 1) * 100;
     return [point[0], value];
   });
-}
-
-function buildXAxisLabels(points, count) {
-  if (!points.length) return [];
-  const maxIndex = points.length - 1;
-  const labels = [];
-  for (let index = 0; index < count; index += 1) {
-    const pointIndex = Math.round(index / Math.max(count - 1, 1) * maxIndex);
-    const point = points[pointIndex];
-    if (point) labels.push({ index: pointIndex, date: point[0] });
-  }
-  return labels.filter((item, index, items) => items.findIndex(candidate => candidate.index === item.index) === index);
 }
 
 function formatDateTick(date, period) {
@@ -528,30 +636,6 @@ function formatDateTick(date, period) {
 function parseDate(date) {
   const time = new Date(`${date}T00:00:00`).getTime();
   return Number.isFinite(time) ? time : null;
-}
-
-function buildYAxisScale(values, targetTickCount) {
-  const rawMin = Math.min(...values);
-  const rawMax = Math.max(...values);
-  const range = rawMax - rawMin || 1;
-  const paddedMin = rawMin < 0 ? rawMin - range * 0.08 : 0;
-  const paddedMax = rawMax > 0 ? rawMax + range * 0.08 : 0;
-  const step = niceStep((paddedMax - paddedMin || 1) / Math.max(targetTickCount - 1, 1));
-  const min = paddedMin < 0 ? Math.floor(paddedMin / step) * step : 0;
-  const max = paddedMax > 0 ? Math.ceil(paddedMax / step) * step : 0;
-  const ticks = [];
-  for (let value = max; value >= min - step / 2; value -= step) {
-    ticks.push(Math.abs(value) < 1e-10 ? 0 : value);
-  }
-  if (!ticks.includes(0)) ticks.push(0);
-  ticks.sort((a, b) => b - a);
-  return { min, max, ticks };
-}
-
-function niceStep(roughStep) {
-  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
-  const normalized = roughStep / magnitude;
-  return (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude;
 }
 
 function updatePeriodTabs() {

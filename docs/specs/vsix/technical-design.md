@@ -32,9 +32,10 @@ vsix/
 │  └─ webviews/
 │     └─ trendPanel.ts
 └─ media/
-   └─ trend/
-      ├─ trend.css
-      ├─ trend.js
+   ├─ trend/
+   │  ├─ trend.css
+   │  └─ trend.js
+   └─ vendor/
       └─ echarts.min.js
 ```
 
@@ -207,7 +208,9 @@ Input validation:
 - Uses `retainContextWhenHidden` so loaded trend charts remain visible after switching editor tabs.
 - Provides client-side period switching across YTD, one month, three months, six months, one year, and three years using cached trend payloads.
 - Defaults trend rendering to the three-month period and keeps x-axis labels readable with explicit first/last label anchoring.
-- Adds SVG hover interaction with crosshair, highlighted points, and per-fund cumulative return tooltip values; single-fund charts also show unit NAV and daily return details.
+- Renders trend curves through a bundled local ECharts asset, with top scrollable legends, right-side value axes, tooltip values, and a bottom time-window zoom slider.
+- Keeps the full three-year history available to the ECharts zoom slider while rebasing visible-window returns to the current zoom range start, so one month, three month, year-to-date, and dragged custom windows start from 0% semantics without discarding older data.
+- Keeps the annualized 10% benchmark line visible in the chart but excluded from the legend; single-fund tooltips also show unit NAV and daily return details.
 - Tracks max-drawdown start and end dates per period and overlays the drawdown segment only when a single fund is displayed.
 - Provides a single-fund-only chart/list radio switcher. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
 - Renders group fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.

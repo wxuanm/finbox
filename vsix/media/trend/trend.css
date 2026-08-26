@@ -505,46 +505,10 @@ h1 {
   color: var(--trend-muted);
 }
 
-.chart svg {
+.chart canvas {
   width: 100%;
   height: clamp(340px, 52vh, 620px);
   overflow: hidden;
-}
-
-.interaction-layer {
-  fill: transparent;
-  cursor: default;
-}
-
-.crosshair {
-  stroke: var(--vscode-editorWidget-border, var(--vscode-focusBorder));
-  stroke-dasharray: 3 3;
-  stroke-width: 1;
-}
-
-.hover-point {
-  fill: currentColor;
-  stroke: var(--vscode-editor-background);
-  stroke-width: 2;
-}
-
-.chart-tooltip {
-  position: absolute;
-  z-index: 2;
-  min-width: 220px;
-  max-width: min(420px, calc(100% - 16px));
-  padding: 8px 10px;
-  border: 1px solid var(--trend-border);
-  border-radius: 8px;
-  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
-  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
-  box-shadow: 0 8px 24px var(--vscode-widget-shadow, rgba(0, 0, 0, .3));
-  font-size: 12px;
-  pointer-events: none;
-}
-
-.chart-tooltip[hidden] {
-  display: none;
 }
 
 .tooltip-date {
@@ -585,82 +549,9 @@ h1 {
   white-space: nowrap;
 }
 
-.axis,
-.grid-line,
-.axis-tick {
-  stroke: var(--trend-border);
-  stroke-width: 1;
-}
-
-.zero-axis {
-  stroke: var(--vscode-foreground);
-  stroke-opacity: .48;
-}
-
-.benchmark-line {
-  stroke: var(--vscode-charts-yellow, #cca700);
-  stroke-dasharray: 6 4;
-  stroke-width: 1.2;
-  stroke-opacity: .9;
-}
-
-.drawdown-line {
-  stroke: var(--vscode-charts-green, #89d185);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-opacity: .95;
-}
-
-.chart-label {
-  fill: var(--trend-muted);
-  font-size: 11px;
-}
-
-.chart-label-inside {
-  paint-order: stroke;
-  stroke: var(--trend-card-bg);
-  stroke-width: 3px;
-}
-
-.x-axis-label {
-  font-size: 10px;
-}
-
-.line-0 { color: var(--vscode-charts-blue, #3794ff); stroke: currentColor; }
-.line-1 { color: var(--vscode-charts-red, #f14c4c); stroke: currentColor; }
-.line-2 { color: var(--vscode-charts-green, #89d185); stroke: currentColor; }
-.line-3 { color: var(--vscode-charts-yellow, #cca700); stroke: currentColor; }
-.line-4 { color: var(--vscode-charts-purple, #b180d7); stroke: currentColor; }
-.line-5 { color: var(--vscode-charts-foreground, #cccccc); stroke: currentColor; }
-.line-6 { color: var(--vscode-charts-orange, #d18616); stroke: currentColor; }
-.line-7 { color: var(--vscode-terminal-ansiBrightGreen, #b5cea8); stroke: currentColor; }
-.line-8 { color: var(--vscode-terminal-ansiMagenta, #c586c0); stroke: currentColor; }
-.line-9 { color: var(--vscode-terminal-ansiCyan, #4ec9b0); stroke: currentColor; }
-
 .positive { color: var(--vscode-charts-red, #f14c4c); }
 .negative { color: var(--vscode-charts-green, #89d185); }
 .neutral { color: var(--trend-muted); }
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 12px;
-  margin-top: 12px;
-  color: var(--trend-muted);
-  font-size: 12px;
-}
-
-.legend-item::before {
-  content: '';
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 6px;
-  background: currentColor;
-}
 
 @media (max-width: 900px) {
   .fund-card-header,

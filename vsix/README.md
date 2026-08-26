@@ -35,9 +35,9 @@ Available fund actions include:
 
 Deleting a custom fund group moves contained funds back to the default group.
 
-Single-fund trend panels default to the recent three-month period. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. Single-fund panels provide a `曲线 / 列表` switch. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
+Single-fund trend panels default to the recent three-month period. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. ECharts-powered trend charts provide a top legend, right-side value axis, bottom time-window slider, and an annualized 10% benchmark line. The slider keeps the full three-year history available while rebasing visible-window returns to the selected range start. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. Single-fund panels provide a `曲线 / 列表` switch. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
 
-Group trend panels focus on comparison. They show normalized return curves and comparison metric cards, but do not show the historical NAV list switch.
+Group trend panels focus on comparison. They show normalized return curves with the same zoomable ECharts controls and comparison metric cards, but do not show the historical NAV list switch.
 
 ## Stock Monitor
 

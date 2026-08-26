@@ -102,6 +102,7 @@ export class TrendPanel {
   private getHtml(webview: vscode.Webview, title: string): string {
     const nonce = getNonce();
     const cssUri = mediaUri(webview, this.extensionUri, 'trend', 'trend.css');
+    const echartsUri = mediaUri(webview, this.extensionUri, 'vendor', 'echarts.min.js');
     const jsUri = mediaUri(webview, this.extensionUri, 'trend', 'trend.js');
     return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -147,6 +148,7 @@ export class TrendPanel {
     </section>
     <section id="metrics" class="metrics-grid"></section>
   </main>
+  <script nonce="${nonce}" src="${echartsUri}"></script>
   <script nonce="${nonce}" src="${jsUri}"></script>
 </body>
 </html>`;
