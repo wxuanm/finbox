@@ -83,7 +83,7 @@ function renderComparisonAccountHeader(metric) {
     return `
         <th class="comparison-account-heading${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
             <strong>${escapeHtml(metric.account.name)}</strong>
-            <small>${metric.valid ? t('clickHighlight') : escapeHtml(metric.error || t('insufficientData'))}</small>
+            ${metric.valid ? '' : `<small>${escapeHtml(metric.error || t('insufficientData'))}</small>`}
         </th>
     `;
 }

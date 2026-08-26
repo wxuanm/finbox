@@ -12,6 +12,7 @@ const CHART_LINE_WIDTH = 2.5;
 const CHART_FOCUSED_LINE_WIDTH = 3.2;
 const CHART_DRAWDOWN_LINE_WIDTH = 3;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
+const CHART_SELECTED_LINE_COLOR = '#4f46e5';
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
@@ -162,6 +163,7 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
         const showReturnMarkers = metrics.length === 1 || markerAccountId === metric.account.id;
         const baseUnitNav = metric.periodPoints[0]?.unitNav;
         const data = buildReturnSeries(metric.periodPoints, baseUnitNav, metric.account.name);
+        const focusedColor = getCssVar('--primary-color') || CHART_SELECTED_LINE_COLOR;
         const highPoint = showReturnMarkers ? getHighestSeriesPoint(data) : null;
         const lastPoint = showReturnMarkers ? getLastSeriesPoint(data) : null;
         const markPointData = [];
@@ -192,8 +194,10 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
             emphasis: { focus: 'none' },
             lineStyle: {
                 width: focused ? CHART_FOCUSED_LINE_WIDTH : CHART_LINE_WIDTH,
+                color: focused ? focusedColor : undefined,
                 opacity: !focusAccountId || focused ? 1 : 0.18
             },
+            itemStyle: focused ? { color: focusedColor } : undefined,
             data,
             markPoint: markPointData.length > 0 ? {
                 symbol: 'circle',
