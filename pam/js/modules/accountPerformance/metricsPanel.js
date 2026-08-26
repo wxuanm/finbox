@@ -33,31 +33,27 @@ export function renderAccountComparison(metrics) {
     }
 
     const sortedMetrics = [...metrics].sort(compareMetrics);
-    const columns = [
-        ['name', t('account')],
-        ['periodReturn', t('periodReturn')],
-        ['annualizedReturn', t('annualizedReturn')],
-        ['maxDrawdown', t('maxDrawdown'), 'desktop-only'],
-        ['annualizedVolatility', t('annualizedVolatility'), 'desktop-only'],
-        ['calmarRatio', t('calmarRatio')],
-        ['latestValue', t('latestAssets')],
-        ['profitLoss', t('cumulativePnl'), 'desktop-only'],
-        ['latestDate', t('latestSnapshot'), 'desktop-only']
+    const rows = [
+        ['periodReturn', t('periodReturn'), metric => formatMetricPercent(metric, 'periodReturn')],
+        ['annualizedReturn', t('annualizedReturn'), metric => formatMetricPercent(metric, 'annualizedReturn')],
+        ['maxDrawdown', t('maxDrawdown'), metric => formatMetricPercent(metric, 'maxDrawdown')],
+        ['annualizedVolatility', t('annualizedVolatility'), metric => formatMetricPercent(metric, 'annualizedVolatility', false)],
+        ['calmarRatio', t('calmarRatio'), metric => formatMetricRatio(metric, 'calmarRatio')],
+        ['latestValue', t('latestAssets'), metric => formatMetricCurrency(metric, 'latestValue')],
+        ['profitLoss', t('cumulativePnl'), metric => formatMetricCurrency(metric, 'profitLoss')],
+        ['latestDate', t('latestSnapshot'), metric => metric.valid ? (metric.latestDate || '-') : '-']
     ];
 
     wrap.innerHTML = `
         <table class="comparison-table">
             <thead>
                 <tr>
-                    ${columns.map(([key, label, visibility]) => `
-                        <th class="${[key === 'name' ? '' : 'number-cell', visibility || ''].filter(Boolean).join(' ')}" data-comparison-sort="${key}">
-                            <button type="button">${label}${sortIcon(key)}</button>
-                        </th>
-                    `).join('')}
+                    <th data-comparison-sort="name"><button type="button">${t('account')}${sortIcon('name')}</button></th>
+                    ${sortedMetrics.map(metric => renderComparisonAccountHeader(metric)).join('')}
                 </tr>
             </thead>
             <tbody>
-                ${sortedMetrics.map(metric => renderComparisonRow(metric)).join('')}
+                ${rows.map(([key, label, renderValue]) => renderComparisonMetricRow(key, label, sortedMetrics, renderValue)).join('')}
             </tbody>
         </table>
     `;
@@ -82,30 +78,44 @@ function card(label, value, note, className = '') {
     return `<div class="overview-card management-overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${escapeHtml(note)}</small></div>`;
 }
 
-function renderComparisonRow(metric) {
+function renderComparisonAccountHeader(metric) {
     const active = state.selectedHighlightAccountId === metric.account.id;
-    if (!metric.valid) {
-        return `
-            <tr class="comparison-row invalid${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
-                <td><strong>${escapeHtml(metric.account.name)}</strong><small>${escapeHtml(metric.error || t('insufficientData'))}</small></td>
-                <td colspan="8">${t('needTwoSnapshots')}</td>
-            </tr>
-        `;
-    }
-
     return `
-        <tr class="comparison-row${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
-            <td><strong>${escapeHtml(metric.account.name)}</strong><small>${t('clickHighlight')}</small></td>
-            <td class="number-cell ${signedClass(metric.periodReturn)}" data-mobile-label="${t('periodReturn')}">${formatPercent(metric.periodReturn)}</td>
-            <td class="number-cell ${signedClass(metric.annualizedReturn)}" data-mobile-label="${t('annualizedReturn')}">${formatPercent(metric.annualizedReturn)}</td>
-            <td class="number-cell desktop-only ${signedClass(metric.maxDrawdown)}">${formatPercent(metric.maxDrawdown)}</td>
-            <td class="number-cell desktop-only">${formatPercent(metric.annualizedVolatility)}</td>
-            <td class="number-cell ${signedClass(metric.calmarRatio)}" data-mobile-label="${t('calmarRatio')}">${formatRatio(metric.calmarRatio)}</td>
-            <td class="number-cell" data-mobile-label="${t('latestAssets')}">${formatCurrency(metric.latestValue, state.amountsHidden)}</td>
-            <td class="number-cell desktop-only ${signedClass(metric.profitLoss)}">${formatCurrency(metric.profitLoss, state.amountsHidden)}</td>
-            <td class="number-cell desktop-only">${metric.latestDate || '-'}</td>
+        <th class="comparison-account-heading${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">
+            <strong>${escapeHtml(metric.account.name)}</strong>
+            <small>${metric.valid ? t('clickHighlight') : escapeHtml(metric.error || t('insufficientData'))}</small>
+        </th>
+    `;
+}
+
+function renderComparisonMetricRow(key, label, metrics, renderValue) {
+    return `
+        <tr class="comparison-metric-row">
+            <th data-comparison-sort="${key}"><button type="button">${label}${sortIcon(key)}</button></th>
+            ${metrics.map(metric => renderComparisonMetricCell(metric, renderValue)).join('')}
         </tr>
     `;
+}
+
+function renderComparisonMetricCell(metric, renderValue) {
+    const active = state.selectedHighlightAccountId === metric.account.id;
+    if (!metric.valid) {
+        return `<td class="comparison-account-cell invalid${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">-</td>`;
+    }
+
+    return `<td class="comparison-account-cell${active ? ' active' : ''}" data-highlight-account="${metric.account.id}">${renderValue(metric)}</td>`;
+}
+
+function formatMetricPercent(metric, key, signed = true) {
+    return `<span class="${signed ? signedClass(metric[key]) : ''}">${formatPercent(metric[key])}</span>`;
+}
+
+function formatMetricRatio(metric, key) {
+    return `<span class="${signedClass(metric[key])}">${formatRatio(metric[key])}</span>`;
+}
+
+function formatMetricCurrency(metric, key) {
+    return `<span class="${signedClass(key === 'profitLoss' ? metric[key] : null)}">${formatCurrency(metric[key], state.amountsHidden)}</span>`;
 }
 
 function compareMetrics(a, b) {

@@ -10,7 +10,7 @@ const INTERNAL_SERIES_PREFIX = '__';
 const MAX_DRAWDOWN_SEGMENT_SERIES_NAME = '__max_drawdown_segment__';
 const CHART_LINE_WIDTH = 2.5;
 const CHART_FOCUSED_LINE_WIDTH = 3.2;
-const CHART_DRAWDOWN_LINE_WIDTH = 2.6;
+const CHART_DRAWDOWN_LINE_WIDTH = 3;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
 
 export function renderPeriodSwitch() {
@@ -61,8 +61,8 @@ export function renderPerformanceChart(metrics) {
     const series = buildAccountChartSeries(validMetrics);
     const benchmarkSeries = buildBenchmarkSeries(validMetrics);
     const selectedMetric = validMetrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
-    const drawdownSeries = selectedMetric ? buildDrawdownSeries(selectedMetric) : [];
-    const maxDrawdownSegmentSeries = buildSingleAccountMaxDrawdownSegmentSeries(validMetrics);
+    const maxDrawdownMetric = selectedMetric || (validMetrics.length === 1 ? validMetrics[0] : null);
+    const maxDrawdownSegmentSeries = maxDrawdownMetric ? buildAccountMaxDrawdownSegmentSeries(maxDrawdownMetric) : [];
     const zeroLineSeries = buildZeroLineSeries(series[0]?.data || benchmarkSeries.data || []);
     const axisMirrorSeries = {
         name: '__axis_mirror__',
@@ -107,9 +107,9 @@ export function renderPerformanceChart(metrics) {
             }
         ],
         dataZoom: [{ id: 'performance-inside-zoom', type: 'inside', xAxisIndex: 0, filterMode: 'none' }],
-        series: [...series, benchmarkSeries, zeroLineSeries, ...drawdownSeries, ...maxDrawdownSegmentSeries, axisMirrorSeries]
+        series: [...series, benchmarkSeries, zeroLineSeries, ...maxDrawdownSegmentSeries, axisMirrorSeries]
     });
-    bindLegendMarkerFocus(validMetrics, benchmarkSeries, zeroLineSeries, drawdownSeries, maxDrawdownSegmentSeries, axisMirrorSeries);
+    bindLegendMarkerFocus(validMetrics, benchmarkSeries, zeroLineSeries, maxDrawdownSegmentSeries, axisMirrorSeries);
     bindRightAnchoredZoom();
 }
 
@@ -264,14 +264,13 @@ function buildBenchmarkSeries(metrics) {
     };
 }
 
-function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, drawdownSeries, maxDrawdownSegmentSeries, axisMirrorSeries) {
+function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, maxDrawdownSegmentSeries, axisMirrorSeries) {
     const updateMarkerFocus = (markerAccountId, focusAccountId = markerAccountId) => {
         chartInstance.setOption({
             series: [
                 ...buildAccountChartSeries(metrics, markerAccountId, focusAccountId),
                 benchmarkSeries,
                 zeroLineSeries,
-                ...drawdownSeries,
                 ...maxDrawdownSegmentSeries,
                 axisMirrorSeries
             ]
@@ -336,62 +335,7 @@ function buildZeroLineSeries(data) {
     };
 }
 
-function buildDrawdownSeries(metric) {
-    const baseUnitNav = metric.periodPoints[0]?.unitNav;
-    if (!Number.isFinite(baseUnitNav) || baseUnitNav <= 0) return [];
-
-    let peakReturn = 0;
-    const baseData = [];
-    const drawdownData = [];
-    metric.periodPoints.forEach(point => {
-        const returnValue = (point.unitNav / baseUnitNav - 1) * 100;
-        if (!Number.isFinite(returnValue)) return;
-        peakReturn = Math.max(peakReturn, returnValue);
-        baseData.push([point.date, returnValue]);
-        drawdownData.push([point.date, peakReturn - returnValue]);
-    });
-
-    if (drawdownData.every(point => point[1] <= 0)) return [];
-
-    const stackName = `drawdown-${metric.account.id}`;
-    return [
-        {
-            name: '__drawdown_base__',
-            type: 'line',
-            stack: stackName,
-            data: baseData,
-            showSymbol: false,
-            silent: true,
-            tooltip: { show: false },
-            lineStyle: { opacity: 0 },
-            itemStyle: { opacity: 0 },
-            emphasis: { disabled: true },
-            z: 0
-        },
-        {
-            name: '__drawdown_area__',
-            type: 'line',
-            stack: stackName,
-            data: drawdownData,
-            showSymbol: false,
-            silent: true,
-            tooltip: { show: false },
-            lineStyle: { opacity: 0 },
-            itemStyle: { opacity: 0 },
-            areaStyle: {
-                color: getCssVar('--negative-bg') || 'rgba(16, 185, 129, 0.1)',
-                opacity: 0.8
-            },
-            emphasis: { disabled: true },
-            z: 0
-        }
-    ];
-}
-
-function buildSingleAccountMaxDrawdownSegmentSeries(metrics) {
-    if (metrics.length !== 1) return [];
-
-    const metric = metrics[0];
+function buildAccountMaxDrawdownSegmentSeries(metric) {
     const baseUnitNav = metric.periodPoints[0]?.unitNav;
     if (!Number.isFinite(baseUnitNav) || baseUnitNav <= 0) return [];
 
@@ -403,6 +347,7 @@ function buildSingleAccountMaxDrawdownSegmentSeries(metrics) {
     if (segmentData.length < 2) return [];
 
     const drawdownColor = getCssVar('--negative-color') || '#059669';
+    const drawdownShadowColor = getCssVar('--negative-bg') || 'rgba(5, 150, 105, 0.18)';
     return [{
         name: MAX_DRAWDOWN_SEGMENT_SERIES_NAME,
         type: 'line',
@@ -414,7 +359,9 @@ function buildSingleAccountMaxDrawdownSegmentSeries(metrics) {
         lineStyle: {
             color: drawdownColor,
             width: CHART_DRAWDOWN_LINE_WIDTH,
-            opacity: 1
+            opacity: 1,
+            shadowBlur: 4,
+            shadowColor: drawdownShadowColor
         },
         itemStyle: { color: drawdownColor },
         emphasis: { disabled: true },
