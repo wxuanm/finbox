@@ -216,7 +216,7 @@ function buildChartOption(context) {
     },
     tooltip: {
       trigger: 'axis',
-      renderMode: 'richText',
+      renderMode: 'html',
       confine: true,
       backgroundColor: getCssVar('--vscode-editorWidget-background', '#252526'),
       borderColor: getCssVar('--vscode-editorWidget-border', '#454545'),
@@ -373,16 +373,39 @@ function periodDays(period) {
 }
 
 function formatChartTooltip(params) {
-  const visibleParams = params.filter(item => item.seriesName !== '最大回撤区间');
+  const visibleParams = params.filter(item => item.seriesName !== '最大回撤区间' && item.seriesName !== '年化10%');
   const first = visibleParams.find(item => Array.isArray(item.value) && item.value[2]);
   const date = first?.value?.[2] || '';
-  return [date, ...visibleParams.map(item => {
+  if (!visibleParams.length) return '';
+
+  const showDetails = visibleParams.length === 1;
+  const rows = visibleParams.map(item => {
     const value = Array.isArray(item.value) ? item.value : [];
-    const isBenchmark = item.seriesName === '年化10%';
-    const main = `${item.seriesName}  累计 ${formatPercent(value[1])}`;
-    if (isBenchmark || visibleParams.length > 2) return main;
-    return `${main}\n  净值 ${formatNav(value[3])}  日涨幅 ${formatPercent(value[5])}`;
-  })].filter(Boolean).join('\n');
+    const returnClass = classFor(value[1]);
+    const dailyClass = classFor(value[5]);
+    if (showDetails) {
+      return `<div class="tooltip-single">
+        <div class="tooltip-name tooltip-single-name">${escapeHtml(item.seriesName)}</div>
+        <div class="tooltip-detail-lines">
+          <div><span>净值日期</span><strong>${escapeHtml(date)}</strong><span>日涨幅</span><strong class="${dailyClass}">${formatPercent(value[5])}</strong></div>
+          <div><span>累计收益</span><strong class="${returnClass}">${formatPercent(value[1])}</strong><span>单位净值</span><strong>${formatNav(value[3])}</strong></div>
+        </div>
+      </div>`;
+    }
+    return `<div class="tooltip-row">
+      <div class="tooltip-main">
+        <span class="tooltip-name">${escapeHtml(item.seriesName)}</span>
+        <strong class="tooltip-value ${returnClass}">${formatPercent(value[1])}</strong>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (showDetails) return `<div class="trend-tooltip">${rows}</div>`;
+
+  return `<div class="trend-tooltip">
+    <div class="tooltip-date"><span>净值日期</span><strong>${escapeHtml(date)}</strong></div>
+    ${rows}
+  </div>`;
 }
 
 function getChartColors() {

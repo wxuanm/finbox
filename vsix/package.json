@@ -2,7 +2,7 @@
   "name": "finbox",
   "displayName": "FinBox",
   "description": "Monitor mutual fund estimates, fund trends, and A-share stock quotes inside VS Code.",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "finx",
   "icon": "media/extension-icon.png",
   "license": "MIT",

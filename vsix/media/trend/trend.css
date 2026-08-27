@@ -511,43 +511,124 @@ h1 {
   overflow: hidden;
 }
 
+.trend-tooltip {
+  min-width: 200px;
+  max-width: min(360px, 78vw);
+  padding: 0;
+}
+
 .tooltip-date {
-  margin-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 3px;
+  font-size: 12px;
+}
+
+.tooltip-date span {
   color: var(--trend-muted);
+}
+
+.tooltip-date strong {
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .tooltip-row {
   display: grid;
-  gap: 2px;
-  line-height: 1.7;
+  gap: 0;
+  padding: 1px 0;
+  line-height: 1.35;
 }
 
 .tooltip-main {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
 }
 
 .tooltip-name {
+  min-width: 0;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.tooltip-single {
+  display: grid;
+  gap: 3px;
+}
+
+.tooltip-single-name {
+  max-width: 100%;
+}
+
+.tooltip-detail-lines {
+  display: grid;
+  gap: 2px;
+}
+
+.tooltip-detail-lines div {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  column-gap: 3px;
+  align-items: baseline;
+}
+
+.tooltip-detail-lines div span:nth-of-type(2) {
+  margin-left: 6px;
+}
+
+.tooltip-detail-lines span {
+  color: var(--trend-muted);
+  font-size: 11px;
+}
+
+.tooltip-detail-lines strong {
+  justify-self: end;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.tooltip-detail-lines strong.positive { color: var(--vscode-charts-red, #f14c4c); }
+.tooltip-detail-lines strong.negative { color: var(--vscode-charts-green, #89d185); }
+.tooltip-detail-lines strong.neutral { color: var(--trend-muted); }
+
+.tooltip-label {
+  color: var(--trend-muted);
+  font-size: 11px;
+}
+
 .tooltip-value {
-  flex: 0 0 auto;
+  justify-self: end;
   font-variant-numeric: tabular-nums;
 }
 
 .tooltip-detail {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   justify-content: flex-end;
   color: var(--trend-muted);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+.tooltip-detail strong {
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  font-weight: 600;
+}
+
+.tooltip-detail strong.positive { color: var(--vscode-charts-red, #f14c4c); }
+.tooltip-detail strong.negative { color: var(--vscode-charts-green, #89d185); }
+.tooltip-detail strong.neutral { color: var(--trend-muted); }
 
 .positive { color: var(--vscode-charts-red, #f14c4c); }
 .negative { color: var(--vscode-charts-green, #89d185); }
