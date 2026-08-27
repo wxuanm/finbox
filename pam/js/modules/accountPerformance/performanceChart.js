@@ -3,7 +3,8 @@ import { periodLabel, t } from '../../config/i18n.js';
 import { formatChartAxisPercent, formatPercent } from '../../utils/formatter.js';
 
 let chartInstance = null;
-let anchoringZoom = false;
+let chartContext = null;
+let rebasingChart = false;
 const ANNUALIZED_BENCHMARK_RATE = 0.10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const INTERNAL_SERIES_PREFIX = '__';
@@ -59,24 +60,8 @@ export function renderPerformanceChart(metrics) {
     if (chartInstance) chartInstance.dispose();
     chartInstance = window.echarts.init(chartEl);
 
-    const series = buildAccountChartSeries(validMetrics);
-    const benchmarkSeries = buildBenchmarkSeries(validMetrics);
-    const selectedMetric = validMetrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
-    const maxDrawdownMetric = selectedMetric || (validMetrics.length === 1 ? validMetrics[0] : null);
-    const maxDrawdownSegmentSeries = maxDrawdownMetric ? buildAccountMaxDrawdownSegmentSeries(maxDrawdownMetric) : [];
-    const zeroLineSeries = buildZeroLineSeries(series[0]?.data || benchmarkSeries.data || []);
-    const axisMirrorSeries = {
-        name: '__axis_mirror__',
-        type: 'line',
-        yAxisIndex: 1,
-        data: [...series, benchmarkSeries].flatMap(item => (item.data || []).map(point => point.value)),
-        showSymbol: false,
-        silent: true,
-        tooltip: { show: false },
-        lineStyle: { opacity: 0 },
-        itemStyle: { opacity: 0 },
-        emphasis: { disabled: true }
-    };
+    chartContext = { metrics: validMetrics, zoomRange: buildPerformanceZoomRange(validMetrics) };
+    const chartParts = buildPerformanceChartParts(chartContext);
 
     chartInstance.setOption({
         color: ['#2563eb', '#0891b2', '#f59e0b', '#ef4444', '#059669', '#6366f1', '#ec4899', '#64748b'],
@@ -87,10 +72,10 @@ export function renderPerformanceChart(metrics) {
         legend: {
             type: 'scroll',
             top: 0,
-            data: series.map(item => item.name),
+            data: chartParts.accountSeries.map(item => item.name),
             textStyle: { color: getCssVar('--text-color') }
         },
-        grid: { top: 46, right: 54, bottom: 34, left: 54 },
+        grid: { top: 46, right: 54, bottom: 64, left: 54 },
         xAxis: { type: 'time', boundaryGap: false },
         yAxis: [
             {
@@ -107,11 +92,27 @@ export function renderPerformanceChart(metrics) {
                 splitLine: { show: false }
             }
         ],
-        dataZoom: [{ id: 'performance-inside-zoom', type: 'inside', xAxisIndex: 0, filterMode: 'none' }],
-        series: [...series, benchmarkSeries, zeroLineSeries, ...maxDrawdownSegmentSeries, axisMirrorSeries]
+        dataZoom: [
+            { id: 'performance-inside-zoom', type: 'inside', xAxisIndex: 0, filterMode: 'none', throttle: 60, ...chartContext.zoomRange },
+            {
+                id: 'performance-slider-zoom',
+                type: 'slider',
+                xAxisIndex: 0,
+                filterMode: 'none',
+                ...chartContext.zoomRange,
+                height: 26,
+                bottom: 16,
+                borderColor: getCssVar('--border-color') || '#e5e7eb',
+                backgroundColor: getCssVar('--surface-color') || 'transparent',
+                fillerColor: getCssVar('--primary-soft') || 'rgba(79, 70, 229, 0.16)',
+                handleStyle: { color: getCssVar('--primary-color') || '#4f46e5' },
+                textStyle: { color: getCssVar('--muted-text') || '#64748b' }
+            }
+        ],
+        series: chartParts.series
     });
-    bindLegendMarkerFocus(validMetrics, benchmarkSeries, zeroLineSeries, maxDrawdownSegmentSeries, axisMirrorSeries);
-    bindRightAnchoredZoom();
+    bindLegendMarkerFocus(validMetrics);
+    bindChartRebase();
 }
 
 export function resizeChart() {
@@ -122,33 +123,6 @@ function getCssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-function bindRightAnchoredZoom() {
-    chartInstance.off('datazoom');
-    chartInstance.on('datazoom', params => {
-        if (anchoringZoom) return;
-
-        const zoom = getZoomRange(params);
-        if (!zoom || !Number.isFinite(zoom.start) || !Number.isFinite(zoom.end) || zoom.end >= 99.99) return;
-
-        const span = Math.max(zoom.end - zoom.start, 0);
-        anchoringZoom = true;
-        chartInstance.dispatchAction({
-            type: 'dataZoom',
-            dataZoomId: 'performance-inside-zoom',
-            start: Math.max(100 - span, 0),
-            end: 100
-        });
-        anchoringZoom = false;
-    });
-}
-
-function getZoomRange(params) {
-    if (Number.isFinite(params?.start) && Number.isFinite(params?.end)) return params;
-    const batch = Array.isArray(params?.batch) ? params.batch[0] : null;
-    if (Number.isFinite(batch?.start) && Number.isFinite(batch?.end)) return batch;
-    return null;
-}
-
 function buildReturnSeries(points, baseUnitNav, accountName) {
     if (!Number.isFinite(baseUnitNav) || baseUnitNav <= 0) return [];
     return points.map(point => ({
@@ -157,15 +131,18 @@ function buildReturnSeries(points, baseUnitNav, accountName) {
     }));
 }
 
-function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighlightAccountId, focusAccountId = state.selectedHighlightAccountId) {
+function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighlightAccountId, focusAccountId = state.selectedHighlightAccountId, zoomBounds = null) {
     return metrics.map(metric => {
         const focused = focusAccountId === metric.account.id;
         const showReturnMarkers = metrics.length === 1 || markerAccountId === metric.account.id;
-        const baseUnitNav = metric.periodPoints[0]?.unitNav;
-        const data = buildReturnSeries(metric.periodPoints, baseUnitNav, metric.account.name);
+        const points = metric.points || metric.periodPoints;
+        const basePoint = zoomBounds ? findPerformanceBasePoint(points, zoomBounds.startTime) : metric.periodPoints[0];
+        const baseUnitNav = basePoint?.unitNav;
+        const data = buildReturnSeries(points, baseUnitNav, metric.account.name);
+        const visibleData = filterPerformanceSeriesByZoom(data, zoomBounds);
         const focusedColor = getCssVar('--primary-color') || CHART_SELECTED_LINE_COLOR;
-        const highPoint = showReturnMarkers ? getHighestSeriesPoint(data) : null;
-        const lastPoint = showReturnMarkers ? getLastSeriesPoint(data) : null;
+        const highPoint = showReturnMarkers ? getHighestSeriesPoint(visibleData) : null;
+        const lastPoint = showReturnMarkers ? getLastSeriesPoint(visibleData) : null;
         const markPointData = [];
 
         if (highPoint && (!lastPoint || highPoint[0] !== lastPoint[0] || highPoint[1] !== lastPoint[1])) {
@@ -237,10 +214,9 @@ function getLastSeriesPoint(data) {
     return null;
 }
 
-function buildBenchmarkSeries(metrics) {
-    const dates = [...new Set(metrics.flatMap(metric => metric.periodPoints.map(point => point.date)))].sort();
-    const startDate = dates[0];
-    const startTime = parseDate(startDate)?.getTime();
+function buildBenchmarkSeries(metrics, zoomBounds = null) {
+    const dates = [...new Set(metrics.flatMap(metric => (metric.points || metric.periodPoints).map(point => point.date)))].sort();
+    const startTime = Number.isFinite(zoomBounds?.startTime) ? zoomBounds.startTime : parseDate(dates[0])?.getTime();
     const data = Number.isFinite(startTime)
         ? dates.map(date => {
             const time = parseDate(date)?.getTime();
@@ -268,16 +244,11 @@ function buildBenchmarkSeries(metrics) {
     };
 }
 
-function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, maxDrawdownSegmentSeries, axisMirrorSeries) {
+function bindLegendMarkerFocus(metrics) {
     const updateMarkerFocus = (markerAccountId, focusAccountId = markerAccountId) => {
+        const focusedParts = buildPerformanceChartParts(chartContext, markerAccountId, focusAccountId);
         chartInstance.setOption({
-            series: [
-                ...buildAccountChartSeries(metrics, markerAccountId, focusAccountId),
-                benchmarkSeries,
-                zeroLineSeries,
-                ...maxDrawdownSegmentSeries,
-                axisMirrorSeries
-            ]
+            series: focusedParts.series
         }, false);
     };
 
@@ -303,6 +274,122 @@ function bindLegendMarkerFocus(metrics, benchmarkSeries, zeroLineSeries, maxDraw
     chartInstance.on('downplay', () => {
         updateMarkerFocus(state.selectedHighlightAccountId, state.selectedHighlightAccountId);
     });
+}
+
+function bindChartRebase() {
+    chartInstance.off('datazoom');
+    chartInstance.on('datazoom', () => {
+        if (!chartInstance || !chartContext || rebasingChart) return;
+
+        const option = chartInstance.getOption();
+        const zoom = Array.isArray(option.dataZoom) ? option.dataZoom[0] : null;
+        chartContext.zoomRange = {
+            start: Number.isFinite(zoom?.start) ? zoom.start : 0,
+            end: Number.isFinite(zoom?.end) ? zoom.end : 100
+        };
+
+        const chartParts = buildPerformanceChartParts(chartContext);
+        rebasingChart = true;
+        chartInstance.setOption({ series: chartParts.series }, false);
+        rebasingChart = false;
+    });
+}
+
+function getPerformanceZoomBounds(metrics, zoomRange) {
+    if (!zoomRange) return null;
+
+    const times = metrics
+        .flatMap(metric => (metric.points || metric.periodPoints).map(point => parseDate(point.date)?.getTime()))
+        .filter(time => Number.isFinite(time))
+        .sort((a, b) => a - b);
+    const firstTime = times[0];
+    const lastTime = times[times.length - 1];
+    if (!Number.isFinite(firstTime) || !Number.isFinite(lastTime) || firstTime >= lastTime) return null;
+
+    const start = Number.isFinite(zoomRange.start) ? Math.max(0, Math.min(100, zoomRange.start)) : 0;
+    const end = Number.isFinite(zoomRange.end) ? Math.max(0, Math.min(100, zoomRange.end)) : 100;
+    return {
+        startTime: firstTime + (lastTime - firstTime) * start / 100,
+        endTime: firstTime + (lastTime - firstTime) * end / 100
+    };
+}
+
+function buildPerformanceZoomRange(metrics) {
+    const times = metrics
+        .flatMap(metric => (metric.points || metric.periodPoints).map(point => parseDate(point.date)?.getTime()))
+        .filter(time => Number.isFinite(time))
+        .sort((a, b) => a - b);
+    const firstTime = times[0];
+    const lastTime = times[times.length - 1];
+    if (!Number.isFinite(firstTime) || !Number.isFinite(lastTime) || firstTime >= lastTime) return {};
+
+    const startTime = state.selectedPeriod === 'YTD'
+        ? new Date(new Date(lastTime).getFullYear(), 0, 1).getTime()
+        : lastTime - getPerformancePeriodDays(state.selectedPeriod) * DAY_MS;
+    const clampedStart = Math.max(firstTime, startTime);
+    return {
+        start: Math.max(0, Math.min(100, (clampedStart - firstTime) / (lastTime - firstTime) * 100)),
+        end: 100
+    };
+}
+
+function getPerformancePeriodDays(periodKey) {
+    if (periodKey === '1M') return 30;
+    if (periodKey === '3M') return 90;
+    if (periodKey === '6M') return 180;
+    if (periodKey === '1Y') return 365;
+    if (periodKey === '3Y') return 365 * 3;
+    return Infinity;
+}
+
+function findPerformanceBasePoint(points, startTime) {
+    let fallback = null;
+    for (const point of points || []) {
+        const time = parseDate(point.date)?.getTime();
+        if (!Number.isFinite(time)) continue;
+        if (time >= startTime) return point;
+        fallback = point;
+    }
+    return fallback;
+}
+
+function filterPerformanceSeriesByZoom(data, zoomBounds) {
+    if (!zoomBounds) return data;
+
+    return (data || []).filter(point => {
+        const time = parseDate(point?.value?.[0])?.getTime();
+        return Number.isFinite(time) && time >= zoomBounds.startTime && time <= zoomBounds.endTime;
+    });
+}
+
+function buildAxisMirrorSeries(accountSeries, benchmarkSeries) {
+    return {
+        name: '__axis_mirror__',
+        type: 'line',
+        yAxisIndex: 1,
+        data: [...accountSeries, benchmarkSeries].flatMap(item => (item.data || []).map(point => point.value)),
+        showSymbol: false,
+        silent: true,
+        tooltip: { show: false },
+        lineStyle: { opacity: 0 },
+        itemStyle: { opacity: 0 },
+        emphasis: { disabled: true }
+    };
+}
+
+function buildPerformanceChartParts(context, markerAccountId = state.selectedHighlightAccountId, focusAccountId = state.selectedHighlightAccountId) {
+    const zoomBounds = getPerformanceZoomBounds(context.metrics, context.zoomRange);
+    const accountSeries = buildAccountChartSeries(context.metrics, markerAccountId, focusAccountId, zoomBounds);
+    const benchmarkSeries = buildBenchmarkSeries(context.metrics, zoomBounds);
+    const selectedMetric = context.metrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
+    const maxDrawdownMetric = selectedMetric || (context.metrics.length === 1 ? context.metrics[0] : null);
+    const maxDrawdownSegmentSeries = maxDrawdownMetric ? buildAccountMaxDrawdownSegmentSeries(maxDrawdownMetric, zoomBounds) : [];
+    const zeroLineSeries = buildZeroLineSeries(accountSeries[0]?.data || benchmarkSeries.data || []);
+    const axisMirrorSeries = buildAxisMirrorSeries(accountSeries, benchmarkSeries);
+    return {
+        accountSeries,
+        series: [...accountSeries, benchmarkSeries, zeroLineSeries, ...maxDrawdownSegmentSeries, axisMirrorSeries]
+    };
 }
 
 function findMetricBySeriesName(metrics, seriesName) {
@@ -339,15 +426,17 @@ function buildZeroLineSeries(data) {
     };
 }
 
-function buildAccountMaxDrawdownSegmentSeries(metric) {
-    const baseUnitNav = metric.periodPoints[0]?.unitNav;
+function buildAccountMaxDrawdownSegmentSeries(metric, zoomBounds = null) {
+    const points = metric.points || metric.periodPoints;
+    const basePoint = zoomBounds ? findPerformanceBasePoint(points, zoomBounds.startTime) : metric.periodPoints[0];
+    const baseUnitNav = basePoint?.unitNav;
     if (!Number.isFinite(baseUnitNav) || baseUnitNav <= 0) return [];
 
-    const data = metric.periodPoints.map(point => ({
+    const data = points.map(point => ({
         value: [point.date, (point.unitNav / baseUnitNav - 1) * 100],
         accountName: metric.account.name
     }));
-    const segmentData = getMaxDrawdownSegment(data);
+    const segmentData = getMaxDrawdownSegment(filterPerformanceSeriesByZoom(data, zoomBounds));
     if (segmentData.length < 2) return [];
 
     const drawdownColor = getCssVar('--negative-color') || '#059669';

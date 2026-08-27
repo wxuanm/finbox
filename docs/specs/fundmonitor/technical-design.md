@@ -131,6 +131,7 @@ Destructive group and fund removal actions use native `dialog` confirmation pane
 - Owns modal open, close, stale-request protection, and Escape handling.
 - Renders period return comparison from `fundinfo_yjpj` data.
 - Renders historical NAV trend summaries, charts, and metric cards.
+- Historical NAV trend charts support both wheel/pinch zoom and a visible ECharts slider; visible-window returns, benchmark, markers, and drawdown are rebased from the current zoom-window start.
 - Supports desktop comparison-table sorting and mobile comparison-card sorting.
 - Uses `modalRequestSeq` and modal dataset fields to ignore async responses from closed or replaced modal sessions.
 
