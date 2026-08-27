@@ -501,11 +501,11 @@ function formatChartTooltip(params) {
         .filter(item => item.seriesName !== t('annualizedBenchmark10'));
     if (items.length === 0) return '';
 
-    const title = items[0].axisValueLabel || items[0].value?.[0] || '';
+    const title = formatTooltipDate(items[0].value?.[0] || items[0].axisValue || items[0].axisValueLabel || '');
     const rows = items.map(item => {
         const value = Array.isArray(item.value) ? item.value[1] : item.value;
         return `
-            <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;min-width:220px;">
+            <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;min-width:180px;line-height:1.35;">
                 <span>${item.marker || ''}</span>
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.data?.accountName || item.seriesName}</span>
                 <span style="font-variant-numeric:tabular-nums;text-align:right;">${formatPercent(Number(value))}</span>
@@ -513,7 +513,16 @@ function formatChartTooltip(params) {
         `;
     }).join('');
 
-    return `<div style="font-weight:700;margin-bottom:6px;">${title}</div>${rows}`;
+    return `<div style="font-weight:700;margin-bottom:4px;line-height:1.25;">${title}</div>${rows}`;
+}
+
+function formatTooltipDate(value) {
+    if (!value) return '';
+    if (typeof value === 'string') return value.split(/[ T]/)[0];
+
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (!Number.isFinite(parsed.getTime())) return String(value);
+    return parsed.toLocaleDateString('sv-SE');
 }
 
 function parseDate(date) {

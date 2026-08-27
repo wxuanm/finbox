@@ -638,23 +638,25 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         color: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#64748b'],
         tooltip: {
             trigger: 'axis',
+            renderMode: 'html',
+            confine: true,
             formatter: params => {
                 const items = (Array.isArray(params) ? params : [params])
-                    .filter(item => item.seriesName !== benchmarkName && item.seriesName !== '__axis_mirror__' && item.seriesName !== maxDrawdownSeriesName);
+                    .filter(item => item.seriesName !== chartContext.benchmarkName && item.seriesName !== '__axis_mirror__' && item.seriesName !== maxDrawdownSeriesName);
                 if (items.length === 0) return '';
 
-                const title = items[0].axisValueLabel || items[0].axisValue || '';
+                const title = formatNavTooltipDate(items[0].value?.[0] || items[0].axisValue || items[0].axisValueLabel || '');
                 const rows = items.map(item => {
                     const value = Number(Array.isArray(item.value) ? item.value[1] : item.value);
                     return `
-                        <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;min-width:220px;">
+                        <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;min-width:180px;line-height:1.35;">
                             <span>${item.marker}</span>
                             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.seriesName}</span>
                             <span style="font-variant-numeric:tabular-nums;text-align:right;">${Number.isFinite(value) ? value.toFixed(2) : '-'}%</span>
                         </div>
                     `;
                 }).join('');
-                return `<div style="font-weight:700;margin-bottom:6px;">${title}</div>${rows}`;
+                return `<div style="font-weight:700;margin-bottom:4px;line-height:1.25;">${title}</div>${rows}`;
             }
         },
         legend: {
@@ -741,6 +743,15 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
     });
 
     window.addEventListener('resize', () => chart.resize(), { passive: true });
+}
+
+function formatNavTooltipDate(value) {
+    if (!value) return '';
+    if (typeof value === 'string') return value.split(/[ T]/)[0];
+
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (!Number.isFinite(parsed.getTime())) return String(value);
+    return parsed.toLocaleDateString('sv-SE');
 }
 
 function buildNavBenchmarkSeries(benchmarkName, benchmarkData) {
