@@ -19,6 +19,7 @@ const navChartFocusedLineWidth = 3.2;
 const navChartDrawdownLineWidth = 2.6;
 const navChartBenchmarkLineWidth = 1.5;
 const navChartYAxisPaddingRatio = 0.12;
+const navChartYAxisTargetSplits = 5;
 let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
@@ -805,16 +806,35 @@ function buildNavYAxisBounds(chartSeries, benchmarkData, zoomBounds) {
 
     if (values.length === 0) return {};
 
+    return calculateNavIntegerYAxisBounds(values);
+}
+
+function calculateNavIntegerYAxisBounds(values) {
     values.push(0);
     const min = Math.min(...values);
     const max = Math.max(...values);
     const span = max - min;
     const padding = span > 0 ? span * navChartYAxisPaddingRatio : Math.max(Math.abs(max) * navChartYAxisPaddingRatio, 0.5);
+    const paddedMin = min - padding;
+    const paddedMax = max + padding;
+    const interval = getNiceIntegerYAxisInterval((paddedMax - paddedMin) / navChartYAxisTargetSplits);
+    const axisMin = Math.floor(paddedMin / interval) * interval;
+    const axisMax = Math.ceil(paddedMax / interval) * interval;
 
     return {
-        min: min - padding,
-        max: max + padding
+        min: axisMin,
+        max: axisMax > axisMin ? axisMax : axisMin + interval,
+        interval
     };
+}
+
+function getNiceIntegerYAxisInterval(rawInterval) {
+    if (!Number.isFinite(rawInterval) || rawInterval <= 1) return 1;
+
+    const magnitude = 10 ** Math.floor(Math.log10(rawInterval));
+    const normalized = rawInterval / magnitude;
+    const niceNormalized = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+    return Math.max(1, niceNormalized * magnitude);
 }
 
 function isNavPointInZoom(point, zoomBounds) {

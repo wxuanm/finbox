@@ -55,7 +55,7 @@ export function formatChartAxisPercent(value) {
     if (!Number.isFinite(num)) return '-';
     return `${new Intl.NumberFormat(currentLocale(), {
         minimumFractionDigits: 0,
-        maximumFractionDigits: 1
+        maximumFractionDigits: 0
     }).format(num)}%`;
 }
 

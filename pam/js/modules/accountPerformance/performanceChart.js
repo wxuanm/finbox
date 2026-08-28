@@ -15,6 +15,7 @@ const CHART_DRAWDOWN_LINE_WIDTH = 3;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
 const CHART_SELECTED_LINE_COLOR = '#4f46e5';
 const CHART_Y_AXIS_PADDING_RATIO = 0.12;
+const CHART_Y_AXIS_TARGET_SPLITS = 5;
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
@@ -392,16 +393,35 @@ function buildYAxisBounds(accountSeries, benchmarkSeries, zoomBounds) {
 
     if (values.length === 0) return {};
 
+    return calculateIntegerYAxisBounds(values);
+}
+
+function calculateIntegerYAxisBounds(values) {
     values.push(0);
     const min = Math.min(...values);
     const max = Math.max(...values);
     const span = max - min;
     const padding = span > 0 ? span * CHART_Y_AXIS_PADDING_RATIO : Math.max(Math.abs(max) * CHART_Y_AXIS_PADDING_RATIO, 0.5);
+    const paddedMin = min - padding;
+    const paddedMax = max + padding;
+    const interval = getNiceIntegerInterval((paddedMax - paddedMin) / CHART_Y_AXIS_TARGET_SPLITS);
+    const axisMin = Math.floor(paddedMin / interval) * interval;
+    const axisMax = Math.ceil(paddedMax / interval) * interval;
 
     return {
-        min: min - padding,
-        max: max + padding
+        min: axisMin,
+        max: axisMax > axisMin ? axisMax : axisMin + interval,
+        interval
     };
+}
+
+function getNiceIntegerInterval(rawInterval) {
+    if (!Number.isFinite(rawInterval) || rawInterval <= 1) return 1;
+
+    const magnitude = 10 ** Math.floor(Math.log10(rawInterval));
+    const normalized = rawInterval / magnitude;
+    const niceNormalized = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+    return Math.max(1, niceNormalized * magnitude);
 }
 
 function isPointInZoom(point, zoomBounds) {

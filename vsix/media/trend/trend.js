@@ -11,6 +11,7 @@ const DETAIL_PERIODS = ['m1', 'm3', 'm6', 'ytd', 'y1', 'y3'];
 const ANNUAL_BENCHMARK = 10;
 const NAV_LIST_PAGE_SIZE = 20;
 const CHART_Y_AXIS_PADDING_RATIO = 0.12;
+const CHART_Y_AXIS_TARGET_SPLITS = 5;
 let currentPayload = null;
 let currentPeriod = 'm3';
 let currentViewMode = 'chart';
@@ -294,16 +295,35 @@ function buildYAxisBounds(series, benchmark, zoomBounds) {
 
   if (!values.length) return {};
 
+  return calculateIntegerYAxisBounds(values);
+}
+
+function calculateIntegerYAxisBounds(values) {
   values.push(0);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min;
   const padding = span > 0 ? span * CHART_Y_AXIS_PADDING_RATIO : Math.max(Math.abs(max) * CHART_Y_AXIS_PADDING_RATIO, 0.5);
+  const paddedMin = min - padding;
+  const paddedMax = max + padding;
+  const interval = getNiceIntegerYAxisInterval((paddedMax - paddedMin) / CHART_Y_AXIS_TARGET_SPLITS);
+  const axisMin = Math.floor(paddedMin / interval) * interval;
+  const axisMax = Math.ceil(paddedMax / interval) * interval;
 
   return {
-    min: min - padding,
-    max: max + padding
+    min: axisMin,
+    max: axisMax > axisMin ? axisMax : axisMin + interval,
+    interval
   };
+}
+
+function getNiceIntegerYAxisInterval(rawInterval) {
+  if (!Number.isFinite(rawInterval) || rawInterval <= 1) return 1;
+
+  const magnitude = 10 ** Math.floor(Math.log10(rawInterval));
+  const normalized = rawInterval / magnitude;
+  const niceNormalized = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return Math.max(1, niceNormalized * magnitude);
 }
 
 function isPointInZoom(point, zoomBounds) {
@@ -710,7 +730,7 @@ function formatPercent(value) {
 function formatAxisPercent(value) {
   if (!Number.isFinite(value)) return '-';
   if (Math.abs(value) < 1e-10) return '0%';
-  return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+  return `${value > 0 ? '+' : ''}${Math.round(value)}%`;
 }
 
 function formatNumber(value) {
