@@ -185,7 +185,7 @@ The performance chart uses ECharts from CDN.
 - Lines use straight segments between manually entered snapshots instead of smoothed curves, avoiding implied unobserved performance between data points.
 - The chart includes a `0%` reference line, a compounded `10%` annualized benchmark line from the active period anchor date, and mirrors the return axis on the right for easier scanning. The benchmark line is visible in the chart but omitted from the legend and tooltip to keep account comparison focused.
 - Legend labels include each account's active-period return.
-- Latest and highest return point markers are shown only for single-account charts, the selected account, or the legend-hovered account in multi-account charts; if the highest return point equals the latest point, only one value marker is shown.
+- Lowest, latest, and highest return point markers are shown only for single-account charts, the selected account, or the legend-hovered account in multi-account charts; if the highest or lowest return point equals the latest point, only one value marker is shown.
 - Tooltip rows use aligned account names and right-aligned percentage values for multi-account readability.
 - Active account highlight dims other series and shows a subtle drawdown area between the selected line and its prior peak; unselected accounts do not show drawdown shading.
 - The performance chart supports both wheel/pinch zoom and a visible ECharts slider; visible-window returns, benchmark, markers, and drawdown are rebased from the current zoom-window start.

@@ -6,6 +6,7 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 
 - Refined fund trend hover tooltips with a more compact layout and clearer single-fund metrics.
 - Removed the annualized 10% benchmark entry from trend hover tooltips while keeping the benchmark line visible on the chart.
+- Tightened fund trend Y-axis bounds with compact integer ticks and fractional ticks for sub-1% moves.
 
 ## 0.0.8
 

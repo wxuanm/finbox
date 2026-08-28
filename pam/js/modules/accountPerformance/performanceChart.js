@@ -144,9 +144,23 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
         const data = buildReturnSeries(points, baseUnitNav, metric.account.name);
         const visibleData = filterPerformanceSeriesByZoom(data, zoomBounds);
         const focusedColor = getCssVar('--primary-color') || CHART_SELECTED_LINE_COLOR;
+        const lowPoint = showReturnMarkers ? getLowestSeriesPoint(visibleData) : null;
         const highPoint = showReturnMarkers ? getHighestSeriesPoint(visibleData) : null;
         const lastPoint = showReturnMarkers ? getLastSeriesPoint(visibleData) : null;
         const markPointData = [];
+
+        if (
+            lowPoint &&
+            (!highPoint || lowPoint[0] !== highPoint[0] || lowPoint[1] !== highPoint[1]) &&
+            (!lastPoint || lowPoint[0] !== lastPoint[0] || lowPoint[1] !== lastPoint[1])
+        ) {
+            markPointData.push({
+                name: 'Low',
+                coord: lowPoint,
+                value: lowPoint[1],
+                label: { position: 'bottom' }
+            });
+        }
 
         if (highPoint && (!lastPoint || highPoint[0] !== lastPoint[0] || highPoint[1] !== lastPoint[1])) {
             markPointData.push({
@@ -196,6 +210,15 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
             } : undefined
         };
     });
+}
+
+function getLowestSeriesPoint(data) {
+    return (data || []).reduce((lowest, point) => {
+        const value = Number(point?.value?.[1]);
+        if (!Number.isFinite(value)) return lowest;
+        if (!lowest || value < lowest[1]) return [point.value[0], value];
+        return lowest;
+    }, null);
 }
 
 function getHighestSeriesPoint(data) {
