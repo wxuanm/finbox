@@ -15,7 +15,7 @@ const CHART_DRAWDOWN_LINE_WIDTH = 3;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
 const CHART_SELECTED_LINE_COLOR = '#4f46e5';
 const CHART_Y_AXIS_PADDING_RATIO = 0.12;
-const CHART_Y_AXIS_TARGET_SPLITS = 5;
+const CHART_Y_AXIS_TARGET_SPLITS = 6;
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');

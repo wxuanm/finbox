@@ -19,7 +19,7 @@ const navChartFocusedLineWidth = 3.2;
 const navChartDrawdownLineWidth = 2.6;
 const navChartBenchmarkLineWidth = 1.5;
 const navChartYAxisPaddingRatio = 0.12;
-const navChartYAxisTargetSplits = 5;
+const navChartYAxisTargetSplits = 6;
 let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
