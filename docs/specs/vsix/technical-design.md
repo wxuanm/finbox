@@ -210,7 +210,7 @@ Input validation:
 - Defaults trend rendering to the three-month period and keeps x-axis labels readable with explicit first/last label anchoring.
 - Renders trend curves through a bundled local ECharts asset, with top scrollable legends, right-side value axes, tooltip values, and a bottom time-window zoom slider.
 - Keeps the full three-year history available to the ECharts zoom slider while rebasing visible-window returns to the current zoom range start, so one month, three month, year-to-date, and dragged custom windows start from 0% semantics without discarding older data.
-- Calculates Y-axis bounds from current visible fund returns, benchmark values, and `0%` with modest padding, then snaps to integer, evenly spaced ticks so short periods such as one month do not inherit full-history extremes.
+- Calculates Y-axis bounds from current visible fund returns, benchmark values, and `0%`, then snaps to compact integer, evenly spaced ticks so short periods such as one month do not inherit full-history extremes.
 - Keeps the annualized 10% benchmark line visible in the chart but excluded from the legend; single-fund tooltips also show unit NAV and daily return details.
 - Tracks max-drawdown start and end dates per period and overlays the drawdown segment only when a single fund is displayed.
 - Provides a single-fund-only chart/list radio switcher. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.

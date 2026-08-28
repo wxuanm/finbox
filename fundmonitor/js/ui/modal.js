@@ -18,8 +18,7 @@ const navChartLineWidth = 2.5;
 const navChartFocusedLineWidth = 3.2;
 const navChartDrawdownLineWidth = 2.6;
 const navChartBenchmarkLineWidth = 1.5;
-const navChartYAxisPaddingRatio = 0.12;
-const navChartYAxisTargetSplits = 6;
+const navChartYAxisTargetSplits = 5;
 let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
@@ -814,12 +813,9 @@ function calculateNavIntegerYAxisBounds(values) {
     const min = Math.min(...values);
     const max = Math.max(...values);
     const span = max - min;
-    const padding = span > 0 ? span * navChartYAxisPaddingRatio : Math.max(Math.abs(max) * navChartYAxisPaddingRatio, 0.5);
-    const paddedMin = min - padding;
-    const paddedMax = max + padding;
-    const interval = getNiceIntegerYAxisInterval((paddedMax - paddedMin) / navChartYAxisTargetSplits);
-    const axisMin = Math.floor(paddedMin / interval) * interval;
-    const axisMax = Math.ceil(paddedMax / interval) * interval;
+    const interval = getNiceIntegerYAxisInterval(span / navChartYAxisTargetSplits);
+    const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
+    const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
 
     return {
         min: axisMin,

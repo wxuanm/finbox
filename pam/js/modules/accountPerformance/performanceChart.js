@@ -14,8 +14,7 @@ const CHART_FOCUSED_LINE_WIDTH = 3.2;
 const CHART_DRAWDOWN_LINE_WIDTH = 3;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
 const CHART_SELECTED_LINE_COLOR = '#4f46e5';
-const CHART_Y_AXIS_PADDING_RATIO = 0.12;
-const CHART_Y_AXIS_TARGET_SPLITS = 6;
+const CHART_Y_AXIS_TARGET_SPLITS = 5;
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
@@ -401,12 +400,9 @@ function calculateIntegerYAxisBounds(values) {
     const min = Math.min(...values);
     const max = Math.max(...values);
     const span = max - min;
-    const padding = span > 0 ? span * CHART_Y_AXIS_PADDING_RATIO : Math.max(Math.abs(max) * CHART_Y_AXIS_PADDING_RATIO, 0.5);
-    const paddedMin = min - padding;
-    const paddedMax = max + padding;
-    const interval = getNiceIntegerInterval((paddedMax - paddedMin) / CHART_Y_AXIS_TARGET_SPLITS);
-    const axisMin = Math.floor(paddedMin / interval) * interval;
-    const axisMax = Math.ceil(paddedMax / interval) * interval;
+    const interval = getNiceIntegerInterval(span / CHART_Y_AXIS_TARGET_SPLITS);
+    const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
+    const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
 
     return {
         min: axisMin,

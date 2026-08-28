@@ -10,8 +10,7 @@ const PERIODS = {
 const DETAIL_PERIODS = ['m1', 'm3', 'm6', 'ytd', 'y1', 'y3'];
 const ANNUAL_BENCHMARK = 10;
 const NAV_LIST_PAGE_SIZE = 20;
-const CHART_Y_AXIS_PADDING_RATIO = 0.12;
-const CHART_Y_AXIS_TARGET_SPLITS = 6;
+const CHART_Y_AXIS_TARGET_SPLITS = 5;
 let currentPayload = null;
 let currentPeriod = 'm3';
 let currentViewMode = 'chart';
@@ -303,12 +302,9 @@ function calculateIntegerYAxisBounds(values) {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min;
-  const padding = span > 0 ? span * CHART_Y_AXIS_PADDING_RATIO : Math.max(Math.abs(max) * CHART_Y_AXIS_PADDING_RATIO, 0.5);
-  const paddedMin = min - padding;
-  const paddedMax = max + padding;
-  const interval = getNiceIntegerYAxisInterval((paddedMax - paddedMin) / CHART_Y_AXIS_TARGET_SPLITS);
-  const axisMin = Math.floor(paddedMin / interval) * interval;
-  const axisMax = Math.ceil(paddedMax / interval) * interval;
+  const interval = getNiceIntegerYAxisInterval(span / CHART_Y_AXIS_TARGET_SPLITS);
+  const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
+  const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
 
   return {
     min: axisMin,

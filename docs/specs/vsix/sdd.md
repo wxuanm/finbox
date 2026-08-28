@@ -178,7 +178,7 @@ Single-fund trend view should show:
 - Chart/list radio switcher for single-fund views only
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
 - Interactive chart hover state with crosshair, highlighted points, date, cumulative return, and single-fund NAV/daily-return details
-- Chart Y-axis bounds based on the current visible returns plus modest padding and integer, evenly spaced ticks, avoiding excessive blank space on short periods such as one month
+- Chart Y-axis bounds based on the current visible returns with compact integer, evenly spaced ticks, avoiding excessive blank space on short periods such as one month
 - Max-drawdown curve marking for the active single-fund chart period
 - A single fund information card with all period return, drawdown, volatility, return-to-drawdown ratio, and up-day ratio rows; the active chart/list period row is highlighted
 - Source update time and failed state if data cannot be loaded
