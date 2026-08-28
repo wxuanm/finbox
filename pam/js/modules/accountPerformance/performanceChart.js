@@ -400,7 +400,7 @@ function calculateIntegerYAxisBounds(values) {
     const min = Math.min(...values);
     const max = Math.max(...values);
     const span = max - min;
-    const interval = getNiceIntegerInterval(span / CHART_Y_AXIS_TARGET_SPLITS);
+    const interval = getChartYAxisInterval(span / CHART_Y_AXIS_TARGET_SPLITS);
     const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
     const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
 
@@ -411,8 +411,10 @@ function calculateIntegerYAxisBounds(values) {
     };
 }
 
-function getNiceIntegerInterval(rawInterval) {
-    if (!Number.isFinite(rawInterval) || rawInterval <= 1) return 1;
+function getChartYAxisInterval(rawInterval) {
+    if (!Number.isFinite(rawInterval) || rawInterval <= 0.2) return 0.2;
+    if (rawInterval <= 0.5) return 0.5;
+    if (rawInterval <= 1) return 1;
 
     return Math.max(1, Math.ceil(rawInterval));
 }

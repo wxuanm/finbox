@@ -672,14 +672,14 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             {
                 type: 'value',
                 ...chartParts.yAxisBounds,
-                axisLabel: { formatter: '{value}%' },
+                axisLabel: { formatter: value => formatNavAxisPercent(value) },
                 splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#e5e7eb' } }
             },
             {
                 type: 'value',
                 position: 'right',
                 ...chartParts.yAxisBounds,
-                axisLabel: { formatter: '{value}%' },
+                axisLabel: { formatter: value => formatNavAxisPercent(value) },
                 axisTick: { show: false },
                 axisLine: { show: false },
                 splitLine: { show: false }

@@ -53,9 +53,10 @@ export function formatRatio(value) {
 export function formatChartAxisPercent(value) {
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
+    const digits = Number.isInteger(num) ? 0 : 1;
     return `${new Intl.NumberFormat(currentLocale(), {
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0
+        maximumFractionDigits: digits
     }).format(num)}%`;
 }
 

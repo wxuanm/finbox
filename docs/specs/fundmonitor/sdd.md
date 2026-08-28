@@ -303,7 +303,7 @@ Historical NAV notice:
 - Use accumulated NAV when present, otherwise unit NAV.
 - Calculate max drawdown from the selected point sequence.
 - Calculate period returns for `YTD`, `1W`, `1M`, `3M`, `6M`, `1Y`, and `3Y` using the first point inside the lookback window, or the latest point before the window as fallback when no inside point exists. `YTD` starts from January 1 of the latest NAV data year.
-- Keep historical trend Y-axis bounds based on the current visible returns with compact integer, evenly spaced ticks, avoiding excessive blank space on short periods such as `1M`.
+- Keep historical trend Y-axis bounds based on the current visible returns with compact, evenly spaced ticks, allowing `0.2%` or `0.5%` steps for sub-1% moves and integer steps for larger moves to avoid excessive blank space on short periods such as `1M`.
 - Calculate annualized volatility from point-to-point returns and annualize with `sqrt(252)`.
 - Calculate up-day ratio as positive point-to-point returns divided by all point-to-point returns.
 - Calculate Calmar ratio as period return divided by absolute max drawdown when max drawdown is negative.
