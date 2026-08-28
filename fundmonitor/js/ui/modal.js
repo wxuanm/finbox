@@ -831,10 +831,7 @@ function calculateNavIntegerYAxisBounds(values) {
 function getNiceIntegerYAxisInterval(rawInterval) {
     if (!Number.isFinite(rawInterval) || rawInterval <= 1) return 1;
 
-    const magnitude = 10 ** Math.floor(Math.log10(rawInterval));
-    const normalized = rawInterval / magnitude;
-    const niceNormalized = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
-    return Math.max(1, niceNormalized * magnitude);
+    return Math.max(1, Math.ceil(rawInterval));
 }
 
 function isNavPointInZoom(point, zoomBounds) {
