@@ -813,7 +813,7 @@ function calculateNavIntegerYAxisBounds(values) {
     const min = Math.min(...values);
     const max = Math.max(...values);
     const span = max - min;
-    const interval = getNiceIntegerYAxisInterval(span / navChartYAxisTargetSplits);
+    const interval = getChartYAxisInterval(span / navChartYAxisTargetSplits);
     const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
     const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
 
@@ -824,10 +824,18 @@ function calculateNavIntegerYAxisBounds(values) {
     };
 }
 
-function getNiceIntegerYAxisInterval(rawInterval) {
-    if (!Number.isFinite(rawInterval) || rawInterval <= 1) return 1;
+function getChartYAxisInterval(rawInterval) {
+    if (!Number.isFinite(rawInterval) || rawInterval <= 0.2) return 0.2;
+    if (rawInterval <= 0.5) return 0.5;
+    if (rawInterval <= 1) return 1;
 
     return Math.max(1, Math.ceil(rawInterval));
+}
+
+function formatNavAxisPercent(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    return `${Number.isInteger(num) ? num : num.toFixed(1)}%`;
 }
 
 function isNavPointInZoom(point, zoomBounds) {
