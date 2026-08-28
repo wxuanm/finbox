@@ -14,6 +14,7 @@ const CHART_FOCUSED_LINE_WIDTH = 3.2;
 const CHART_DRAWDOWN_LINE_WIDTH = 3;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
 const CHART_SELECTED_LINE_COLOR = '#4f46e5';
+const CHART_Y_AXIS_PADDING_RATIO = 0.12;
 
 export function renderPeriodSwitch() {
     const wrap = document.getElementById('periodSwitch');
@@ -80,12 +81,14 @@ export function renderPerformanceChart(metrics) {
         yAxis: [
             {
                 type: 'value',
+                ...chartParts.yAxisBounds,
                 axisLabel: { formatter: value => formatChartAxisPercent(value) },
                 splitLine: { lineStyle: { color: getCssVar('--border-color') } }
             },
             {
                 type: 'value',
                 position: 'right',
+                ...chartParts.yAxisBounds,
                 axisLabel: { formatter: value => formatChartAxisPercent(value) },
                 axisTick: { show: false },
                 axisLine: { show: false },
@@ -290,7 +293,10 @@ function bindChartRebase() {
 
         const chartParts = buildPerformanceChartParts(chartContext);
         rebasingChart = true;
-        chartInstance.setOption({ series: chartParts.series }, false);
+        chartInstance.setOption({
+            yAxis: [chartParts.yAxisBounds, chartParts.yAxisBounds],
+            series: chartParts.series
+        }, false);
         rebasingChart = false;
     });
 }
@@ -377,6 +383,33 @@ function buildAxisMirrorSeries(accountSeries, benchmarkSeries) {
     };
 }
 
+function buildYAxisBounds(accountSeries, benchmarkSeries, zoomBounds) {
+    const values = [...accountSeries, benchmarkSeries]
+        .flatMap(item => item.data || [])
+        .filter(point => isPointInZoom(point, zoomBounds))
+        .map(point => Number(point?.value?.[1]))
+        .filter(value => Number.isFinite(value));
+
+    if (values.length === 0) return {};
+
+    values.push(0);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = max - min;
+    const padding = span > 0 ? span * CHART_Y_AXIS_PADDING_RATIO : Math.max(Math.abs(max) * CHART_Y_AXIS_PADDING_RATIO, 0.5);
+
+    return {
+        min: min - padding,
+        max: max + padding
+    };
+}
+
+function isPointInZoom(point, zoomBounds) {
+    if (!zoomBounds) return true;
+    const time = parseDate(point?.value?.[0])?.getTime();
+    return Number.isFinite(time) && time >= zoomBounds.startTime && time <= zoomBounds.endTime;
+}
+
 function buildPerformanceChartParts(context, markerAccountId = state.selectedHighlightAccountId, focusAccountId = state.selectedHighlightAccountId) {
     const zoomBounds = getPerformanceZoomBounds(context.metrics, context.zoomRange);
     const accountSeries = buildAccountChartSeries(context.metrics, markerAccountId, focusAccountId, zoomBounds);
@@ -386,8 +419,10 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const maxDrawdownSegmentSeries = maxDrawdownMetric ? buildAccountMaxDrawdownSegmentSeries(maxDrawdownMetric, zoomBounds) : [];
     const zeroLineSeries = buildZeroLineSeries(accountSeries[0]?.data || benchmarkSeries.data || []);
     const axisMirrorSeries = buildAxisMirrorSeries(accountSeries, benchmarkSeries);
+    const yAxisBounds = buildYAxisBounds(accountSeries, benchmarkSeries, zoomBounds);
     return {
         accountSeries,
+        yAxisBounds,
         series: [...accountSeries, benchmarkSeries, zeroLineSeries, ...maxDrawdownSegmentSeries, axisMirrorSeries]
     };
 }

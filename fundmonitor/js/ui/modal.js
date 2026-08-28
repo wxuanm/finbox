@@ -18,6 +18,7 @@ const navChartLineWidth = 2.5;
 const navChartFocusedLineWidth = 3.2;
 const navChartDrawdownLineWidth = 2.6;
 const navChartBenchmarkLineWidth = 1.5;
+const navChartYAxisPaddingRatio = 0.12;
 let selectedNavFundCode = '';
 
 function parseReturnValue(value) {
@@ -670,12 +671,14 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
         yAxis: [
             {
                 type: 'value',
+                ...chartParts.yAxisBounds,
                 axisLabel: { formatter: '{value}%' },
                 splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || '#e5e7eb' } }
             },
             {
                 type: 'value',
                 position: 'right',
+                ...chartParts.yAxisBounds,
                 axisLabel: { formatter: '{value}%' },
                 axisTick: { show: false },
                 axisLine: { show: false },
@@ -739,7 +742,10 @@ function renderNavChart(metrics, periodKey = defaultNavChartPeriod) {
             end: Number.isFinite(zoom.end) ? zoom.end : 100
         };
         const zoomedParts = buildNavChartParts(chartContext);
-        chart.setOption({ series: zoomedParts.series }, false);
+        chart.setOption({
+            yAxis: [zoomedParts.yAxisBounds, zoomedParts.yAxisBounds],
+            series: zoomedParts.series
+        }, false);
     });
 
     window.addEventListener('resize', () => chart.resize(), { passive: true });
@@ -788,6 +794,35 @@ function buildNavAxisMirrorSeries(chartSeries, benchmarkData) {
     };
 }
 
+function buildNavYAxisBounds(chartSeries, benchmarkData, zoomBounds) {
+    const values = [
+        ...chartSeries.flatMap(series => series.data || []),
+        ...(benchmarkData || [])
+    ]
+        .filter(point => isNavPointInZoom(point, zoomBounds))
+        .map(point => Number(point?.[1]))
+        .filter(value => Number.isFinite(value));
+
+    if (values.length === 0) return {};
+
+    values.push(0);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = max - min;
+    const padding = span > 0 ? span * navChartYAxisPaddingRatio : Math.max(Math.abs(max) * navChartYAxisPaddingRatio, 0.5);
+
+    return {
+        min: min - padding,
+        max: max + padding
+    };
+}
+
+function isNavPointInZoom(point, zoomBounds) {
+    if (!zoomBounds) return true;
+    const time = parseChartDate(point?.[0]);
+    return time !== null && time >= zoomBounds.startTime && time <= zoomBounds.endTime;
+}
+
 function buildNavChartParts(context, markerFundCode = selectedNavFundCode, focusFundCode = selectedNavFundCode) {
     const zoomBounds = getNavZoomBounds(context.metrics, context.periodKey, context.zoomRange);
     const chartSeries = buildNavChartSeries(context.metrics, context.periodKey, markerFundCode, focusFundCode, zoomBounds);
@@ -795,8 +830,10 @@ function buildNavChartParts(context, markerFundCode = selectedNavFundCode, focus
     const benchmarkData = buildAnnualBenchmarkSeries(chartSeries, zoomBounds?.startTime ?? null);
     const benchmarkSeries = buildNavBenchmarkSeries(context.benchmarkName, benchmarkData);
     const axisMirrorSeries = buildNavAxisMirrorSeries(chartSeries, benchmarkData);
+    const yAxisBounds = buildNavYAxisBounds(chartSeries, benchmarkData, zoomBounds);
     return {
         chartSeries,
+        yAxisBounds,
         series: [...chartSeries, ...drawdownSeries, ...(benchmarkSeries ? [benchmarkSeries] : []), axisMirrorSeries]
     };
 }

@@ -10,6 +10,7 @@ const PERIODS = {
 const DETAIL_PERIODS = ['m1', 'm3', 'm6', 'ytd', 'y1', 'y3'];
 const ANNUAL_BENCHMARK = 10;
 const NAV_LIST_PAGE_SIZE = 20;
+const CHART_Y_AXIS_PADDING_RATIO = 0.12;
 let currentPayload = null;
 let currentPeriod = 'm3';
 let currentViewMode = 'chart';
@@ -169,6 +170,7 @@ function buildChartOption(context) {
   const zoomBounds = getZoomBounds(series, zoomRange);
   const rebasedSeries = rebaseSeriesForZoom(series, zoomRange);
   const benchmark = buildAnnualBenchmarkSeries(rebasedSeries, zoomBounds?.startTime ?? null);
+  const yAxisBounds = buildYAxisBounds(rebasedSeries, benchmark, zoomBounds);
   const lineSeries = rebasedSeries.map(item => ({
     name: `${item.metric.name} ${item.metric.code}`,
     type: 'line',
@@ -240,6 +242,7 @@ function buildChartOption(context) {
     yAxis: {
       type: 'value',
       position: 'right',
+      ...yAxisBounds,
       axisLabel: {
         color: getCssVar('--vscode-descriptionForeground', '#999999'),
         formatter: value => formatAxisPercent(value)
@@ -278,6 +281,35 @@ function bindChartZoomRebase() {
     trendChart.setOption(buildChartOption(currentChartContext), true);
     isRebasingChart = false;
   });
+}
+
+function buildYAxisBounds(series, benchmark, zoomBounds) {
+  const values = [
+    ...series.flatMap(item => item.points || []),
+    ...(benchmark || [])
+  ]
+    .filter(point => isPointInZoom(point, zoomBounds))
+    .map(point => Number(point?.[1]))
+    .filter(value => Number.isFinite(value));
+
+  if (!values.length) return {};
+
+  values.push(0);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min;
+  const padding = span > 0 ? span * CHART_Y_AXIS_PADDING_RATIO : Math.max(Math.abs(max) * CHART_Y_AXIS_PADDING_RATIO, 0.5);
+
+  return {
+    min: min - padding,
+    max: max + padding
+  };
+}
+
+function isPointInZoom(point, zoomBounds) {
+  if (!zoomBounds) return true;
+  const time = parseDate(point?.[0]);
+  return time !== null && time >= zoomBounds.startTime && time <= zoomBounds.endTime;
 }
 
 function rebaseSeriesForZoom(series, zoomRange) {

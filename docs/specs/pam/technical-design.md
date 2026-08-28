@@ -189,6 +189,7 @@ The performance chart uses ECharts from CDN.
 - Tooltip rows use aligned account names and right-aligned percentage values for multi-account readability.
 - Active account highlight dims other series and shows a subtle drawdown area between the selected line and its prior peak; unselected accounts do not show drawdown shading.
 - The performance chart supports both wheel/pinch zoom and a visible ECharts slider; visible-window returns, benchmark, markers, and drawdown are rebased from the current zoom-window start.
+- The return axis range is calculated from the current visible window plus a small padding, so short periods such as `1M` remain compact instead of inheriting full-history extremes.
 - Period chips update chart and metrics together.
 - If ECharts is unavailable, show an inline warning without blocking account management.
 

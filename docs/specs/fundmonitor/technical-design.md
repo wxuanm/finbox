@@ -304,6 +304,7 @@ The historical trend chart uses ECharts from CDN.
 - Latest and highest return point markers are shown only for single-fund charts, the selected fund, or the legend-hovered fund in multi-fund charts; if the highest return point equals the latest point, only one value marker is shown.
 - An annualized 10% benchmark is rendered as a dashed independent series for both single-fund and multi-fund charts, using compound growth from the first chart date.
 - Inside data zoom is enabled, and zoom end is kept anchored at 100.
+- The Y-axis range is calculated from current visible fund returns, benchmark values, and `0%` with modest padding so short periods such as `1M` stay visually compact.
 
 ## Responsive Behavior
 

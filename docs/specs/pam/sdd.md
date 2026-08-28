@@ -280,6 +280,7 @@ This formula is intentionally approximate for manual snapshot tracking. It is de
 - Summary cards, chart series, and account comparison table must use the same active period.
 - Chart series are normalized to the active period anchor, so the latest chart value matches the account comparison table's selected-period return.
 - The chart should keep personal-user review compact: show a `0%` reference line, show each account's active-period return in the legend, keep the annualized `10%` benchmark visible as a dashed line without adding it to the legend or tooltip, and only show drawdown shading for the selected highlighted account.
+- The chart return axis should use the current visible period's values with modest padding, avoiding excessive vertical blank space on short periods such as `1M`.
 - The chart labels latest and highest return values only when one account is shown, when an account is selected, or while an account legend item is hovered in a multi-account chart; when the highest point is also the latest point, only one value is shown.
 
 ### Invalid Data Cases
