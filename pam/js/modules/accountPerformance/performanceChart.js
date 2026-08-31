@@ -149,11 +149,7 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
         const lastPoint = showReturnMarkers ? getLastSeriesPoint(visibleData) : null;
         const markPointData = [];
 
-        if (
-            lowPoint &&
-            (!highPoint || lowPoint[0] !== highPoint[0] || lowPoint[1] !== highPoint[1]) &&
-            (!lastPoint || lowPoint[0] !== lastPoint[0] || lowPoint[1] !== lastPoint[1])
-        ) {
+        if (lowPoint && (!lastPoint || lowPoint[1] !== lastPoint[1])) {
             markPointData.push({
                 name: 'Low',
                 coord: lowPoint,
@@ -162,7 +158,7 @@ function buildAccountChartSeries(metrics, markerAccountId = state.selectedHighli
             });
         }
 
-        if (highPoint && (!lastPoint || highPoint[0] !== lastPoint[0] || highPoint[1] !== lastPoint[1])) {
+        if (highPoint && (!lastPoint || highPoint[1] !== lastPoint[1])) {
             markPointData.push({
                 name: 'High',
                 coord: highPoint,
