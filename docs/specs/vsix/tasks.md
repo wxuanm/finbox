@@ -113,7 +113,7 @@
 - [ ] Remove a fund and confirm persistence.
 - [ ] Create and delete a custom group, confirming deleted group funds move to `default`.
 - [ ] Reload VSCode window and confirm watchlist restores.
-- [ ] Open single-fund trend in editor.
+- [x] Open single-fund trend in editor from fund row click.
 - [ ] Open group trend comparison in editor.
 - [ ] Confirm invalid codes and network failures show recoverable errors.
 - [ ] Confirm existing browser `/fundmonitor/` still works through `npx wrangler pages dev .` if browser files were touched.

@@ -2,6 +2,13 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.0
+
+- Restored fund-row click behavior so clicking a fund opens its single-fund trend panel.
+- Added lowest, highest, and latest cumulative-return labels to single-fund trend charts and selected single-fund views inside group trends.
+- Added max-drawdown line marking when one fund is displayed, including selected funds in group trend charts.
+- Kept max-drawdown lines visible during chart hover without showing a separate max-drawdown value label.
+
 ## 0.0.9
 
 - Refined fund trend hover tooltips with a more compact layout and clearer single-fund metrics.

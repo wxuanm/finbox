@@ -88,6 +88,11 @@ export class FundItem extends vscode.TreeItem {
     this.description = buildFundDescription(quote, failed);
     this.tooltip = buildFundTooltip(code, quote, failed);
     this.iconPath = buildFundIconPath(quote, failed, extensionUri);
+    this.command = {
+      command: 'finbox.fund.openTrend',
+      title: '基金走势',
+      arguments: [this]
+    };
   }
 }
 

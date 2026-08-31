@@ -6,8 +6,8 @@ FinBox brings lightweight fund and A-share stock monitoring into VS Code. It is 
 
 - Monitor mutual funds in grouped watchlists.
 - Refresh real-time fund estimates from Eastmoney.
-- Open single-fund and group historical NAV trend views in editor panels.
-- Review single-fund trend details with a chart/list switch, max-drawdown marking, all-period metrics, and paginated NAV records.
+- Open single-fund and group historical NAV trend views in editor panels, including by clicking a fund row.
+- Review single-fund trend details with a chart/list switch, low/high/latest labels, max-drawdown marking, all-period metrics, and paginated NAV records.
 - Monitor A-share stocks under the `A Stock` group.
 - Refresh A-share quotes using Sina first and Eastmoney as fallback.
 - Show in-sidebar refresh indicators while fund or stock quotes are updating.
@@ -35,9 +35,9 @@ Available fund actions include:
 
 Deleting a custom fund group moves contained funds back to the default group.
 
-Single-fund trend panels default to the recent three-month period. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. ECharts-powered trend charts provide a top legend, compact right-side value axis, bottom time-window slider, and an annualized 10% benchmark line. The slider keeps the full three-year history available while rebasing visible-window returns to the selected range start. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. Single-fund panels provide a `曲线 / 列表` switch. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
+Single-fund trend panels default to the recent three-month period. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. ECharts-powered trend charts provide a top legend, compact right-side value axis, bottom time-window slider, and an annualized 10% benchmark line. The slider keeps the full three-year history available while rebasing visible-window returns to the selected range start. When only one fund is displayed, the chart labels the visible window's lowest, highest, and latest cumulative return values, and marks the visible-window max-drawdown segment with a line. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. Single-fund panels provide a `曲线 / 列表` switch. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
 
-Group trend panels focus on comparison. They show normalized return curves with the same zoomable ECharts controls and comparison metric cards, but do not show the historical NAV list switch.
+Group trend panels focus on comparison. They show normalized return curves with the same zoomable ECharts controls and comparison metric cards, but do not show the historical NAV list switch. Clicking a comparison card filters the chart to that fund, showing the same low/high/latest labels and max-drawdown line used by single-fund charts.
 
 ## Stock Monitor
 

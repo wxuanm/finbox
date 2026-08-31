@@ -179,7 +179,8 @@ Single-fund trend view should show:
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
 - Interactive chart hover state with crosshair, highlighted points, date, cumulative return, and single-fund NAV/daily-return details
 - Chart Y-axis bounds based on the current visible returns with compact, evenly spaced ticks, allowing `0.2%` or `0.5%` steps for sub-1% moves and integer steps for larger moves to avoid excessive blank space on short periods such as one month
-- Max-drawdown curve marking for the active single-fund chart period
+- Single-fund chart labels for the current visible window's lowest, highest, and latest cumulative return values; if the highest or lowest value matches the latest value, only the latest label is shown
+- Max-drawdown curve marking for the active single-fund chart period or selected single fund in a group trend
 - A single fund information card with all period return, drawdown, volatility, return-to-drawdown ratio, and up-day ratio rows; the active chart/list period row is highlighted
 - Source update time and failed state if data cannot be loaded
 
@@ -188,6 +189,7 @@ Group trend view should show:
 - Group name
 - Included fund codes
 - Multi-fund normalized return chart without NAV-list switching
+- Selecting one fund card filters the group chart to that fund and shows single-fund labels and max-drawdown marking
 - Comparison cards for period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics
 - Clear message when the group has no valid fund data
 

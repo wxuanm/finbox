@@ -171,17 +171,34 @@ function buildChartOption(context) {
   const rebasedSeries = rebaseSeriesForZoom(series, zoomRange);
   const benchmark = buildAnnualBenchmarkSeries(rebasedSeries, zoomBounds?.startTime ?? null);
   const yAxisBounds = buildYAxisBounds(rebasedSeries, benchmark, zoomBounds);
-  const lineSeries = rebasedSeries.map(item => ({
-    name: `${item.metric.name} ${item.metric.code}`,
-    type: 'line',
-    showSymbol: false,
-    smooth: false,
-    sampling: 'lttb',
-    emphasis: { focus: 'series' },
-    lineStyle: { width: 2 },
-    data: item.points.map(point => [parseDate(point[0]), point[1], point[0], point[2], point[3], point[4]])
-  }));
-  const drawdownSeries = rebasedSeries.length === 1 ? buildDrawdownEchartsSeries(rebasedSeries[0], period) : null;
+  const showReturnMarkers = rebasedSeries.length === 1;
+  const lineSeries = rebasedSeries.map(item => {
+    const data = item.points.map(point => [parseDate(point[0]), point[1], point[0], point[2], point[3], point[4]]);
+    const markPointData = showReturnMarkers ? buildReturnMarkPoints(data, zoomBounds) : [];
+    return {
+      name: `${item.metric.name} ${item.metric.code}`,
+      type: 'line',
+      showSymbol: false,
+      smooth: false,
+      sampling: 'lttb',
+      emphasis: showReturnMarkers ? { focus: 'none' } : { focus: 'series' },
+      lineStyle: { width: 2 },
+      data,
+      markPoint: markPointData.length > 0 ? {
+        symbol: 'circle',
+        symbolSize: 8,
+        itemStyle: { opacity: 1 },
+        label: {
+          formatter: params => formatPercent(Number(params.value)),
+          color: getCssVar('--vscode-foreground', '#cccccc'),
+          fontSize: 10,
+          fontWeight: 700
+        },
+        data: markPointData
+      } : undefined
+    };
+  });
+  const drawdownSeries = rebasedSeries.length === 1 ? buildDrawdownEchartsSeries(rebasedSeries[0], zoomBounds) : null;
   const allSeries = [
     {
       name: '年化10%',
@@ -265,6 +282,79 @@ function buildChartOption(context) {
     ],
     series: allSeries
   };
+}
+
+function buildReturnMarkPoints(data, zoomBounds) {
+  const visibleData = filterEchartsSeriesByZoom(data, zoomBounds);
+  const lowPoint = getLowestSeriesPoint(visibleData);
+  const highPoint = getHighestSeriesPoint(visibleData);
+  const lastPoint = getLastSeriesPoint(visibleData);
+  const markPointData = [];
+
+  if (lowPoint && (!lastPoint || lowPoint[1] !== lastPoint[1])) {
+    markPointData.push({
+      name: 'Low',
+      coord: lowPoint,
+      value: lowPoint[1],
+      label: { position: 'bottom' }
+    });
+  }
+
+  if (highPoint && (!lastPoint || highPoint[1] !== lastPoint[1])) {
+    markPointData.push({
+      name: 'High',
+      coord: highPoint,
+      value: highPoint[1],
+      label: { position: 'top' }
+    });
+  }
+
+  if (lastPoint) {
+    markPointData.push({
+      name: 'Latest',
+      coord: lastPoint,
+      value: lastPoint[1],
+      label: { position: 'top' }
+    });
+  }
+
+  return markPointData;
+}
+
+function filterEchartsSeriesByZoom(data, zoomBounds) {
+  if (!zoomBounds) return data || [];
+  return (data || []).filter(point => {
+    const time = Number(point?.[0]);
+    return Number.isFinite(time) && time >= zoomBounds.startTime && time <= zoomBounds.endTime;
+  });
+}
+
+function getLowestSeriesPoint(data) {
+  return (data || []).reduce((lowest, point) => {
+    const value = Number(point?.[1]);
+    if (!Number.isFinite(value)) return lowest;
+    if (!lowest || value < lowest[1]) return [point[0], value];
+    return lowest;
+  }, null);
+}
+
+function getHighestSeriesPoint(data) {
+  return (data || []).reduce((highest, point) => {
+    const value = Number(point?.[1]);
+    if (!Number.isFinite(value)) return highest;
+    if (!highest || value > highest[1]) return [point[0], value];
+    return highest;
+  }, null);
+}
+
+function getLastSeriesPoint(data) {
+  for (let index = (data || []).length - 1; index >= 0; index -= 1) {
+    const point = data[index];
+    const value = Number(point?.[1]);
+    if (Number.isFinite(value)) return [point[0], value];
+  }
+
+  return null;
 }
 
 function bindChartZoomRebase() {
@@ -375,23 +465,60 @@ function returnToValue(returnValue) {
   return 1 + (Number(returnValue) || 0) / 100;
 }
 
-function buildDrawdownEchartsSeries(item, period) {
-  const startDate = item.metric.periods?.[period]?.maxDrawdownStartDate;
-  const endDate = item.metric.periods?.[period]?.maxDrawdownEndDate;
-  const maxDrawdown = item.metric.periods?.[period]?.maxDrawdown;
-  if (!startDate || !endDate || startDate === endDate || !Number.isFinite(maxDrawdown) || maxDrawdown >= 0) return null;
-
-  const startIndex = item.points.findIndex(point => point[0] === startDate);
-  const endIndex = item.points.findIndex(point => point[0] === endDate);
-  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) return null;
-
+function buildDrawdownEchartsSeries(item, zoomBounds) {
+  const segment = getMaxDrawdownSegment(filterPointsByZoom(item.points, zoomBounds));
+  if (!segment.points.length) return null;
   return {
     name: '最大回撤区间',
     type: 'line',
     showSymbol: false,
     silent: true,
     lineStyle: { width: 2, color: getCssVar('--vscode-charts-green', '#89d185') },
-    data: item.points.slice(startIndex, endIndex + 1).map(point => [parseDate(point[0]), point[1], point[0]])
+    emphasis: { disabled: true },
+    blur: { lineStyle: { opacity: 1 } },
+    z: 12,
+    data: segment.points.map(point => [parseDate(point[0]), point[1], point[0]])
+  };
+}
+
+function filterPointsByZoom(points, zoomBounds) {
+  if (!zoomBounds) return points || [];
+  return (points || []).filter(point => isPointInZoom(point, zoomBounds));
+}
+
+function getMaxDrawdownSegment(points) {
+  if (!Array.isArray(points) || points.length < 2) return { points: [], maxDrawdown: 0 };
+
+  let peakIndex = -1;
+  let peakValue = -Infinity;
+  let segmentStartIndex = -1;
+  let segmentEndIndex = -1;
+  let maxDrawdown = 0;
+
+  points.forEach((point, index) => {
+    const returnValue = Number(point?.[1]);
+    if (!Number.isFinite(returnValue)) return;
+
+    const navValue = returnToValue(returnValue);
+    if (navValue > peakValue) {
+      peakValue = navValue;
+      peakIndex = index;
+    }
+
+    if (peakValue <= 0 || peakIndex < 0) return;
+
+    const drawdown = navValue / peakValue - 1;
+    if (drawdown < maxDrawdown) {
+      maxDrawdown = drawdown;
+      segmentStartIndex = peakIndex;
+      segmentEndIndex = index;
+    }
+  });
+
+  if (segmentStartIndex < 0 || segmentEndIndex <= segmentStartIndex) return { points: [], maxDrawdown: 0 };
+  return {
+    points: points.slice(segmentStartIndex, segmentEndIndex + 1),
+    maxDrawdown: maxDrawdown * 100
   };
 }
 
