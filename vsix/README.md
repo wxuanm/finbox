@@ -10,6 +10,7 @@ FinBox brings lightweight fund and A-share stock monitoring into VS Code. It is 
 - Review single-fund trend details with a chart/list switch, low/high/latest labels, max-drawdown marking, all-period metrics, and paginated NAV records.
 - Monitor A-share stocks under the `A Stock` group.
 - Refresh A-share quotes using Sina first and Eastmoney as fallback.
+- Open A-share stock real-time trend views in editor panels by clicking a stock row.
 - Show in-sidebar refresh indicators while fund or stock quotes are updating.
 - Keep stock rows in your add order, with context menu actions to move stocks up or down.
 - Persist funds, fund groups, stock symbols, and preferences with VS Code global storage.
@@ -65,8 +66,11 @@ Available stock actions include:
 
 - Add A-share symbols by six-digit code
 - Refresh stock quotes
+- Open stock real-time trend views
 - Remove stocks
 - Move stocks up or down
+
+Clicking a stock row opens a VS Code editor tab titled `实时走势(<stock code>)`. The trend page uses the Eastmoney A-share trend view in a darkened embedded panel and refreshes when the tab becomes visible again.
 
 Optional automatic stock refresh can be enabled in FinBox settings. When enabled, stock refresh starts when the `STOCK` view is visible and can be limited to A-share trading windows.
 
@@ -88,6 +92,7 @@ Use view title buttons or item context menus for add, refresh, remove, trend, an
 - Fund real-time estimates: Eastmoney fund comparison data.
 - Fund historical NAV trends: Eastmoney fund historical script data.
 - A-share stock quotes: Sina quote data first, Eastmoney single-stock quote data as fallback.
+- A-share stock trend views: Eastmoney quote pages embedded in VS Code editor panels.
 
 All quote requests are made from the VS Code extension host. The extension does not require FinBox Cloudflare Pages Functions at runtime.
 

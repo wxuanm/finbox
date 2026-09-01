@@ -92,7 +92,7 @@
 - [x] Add stock add, refresh, and remove commands.
 - [x] Preserve stock add order and add move up/down actions.
 - [x] Start automatic stock refresh when the stock view is already visible.
-- [x] Open stock real-time trend in editor from stock row click.
+- [x] Open stock trend in editor from stock row click.
 
 ## Phase 9: Security And Packaging
 

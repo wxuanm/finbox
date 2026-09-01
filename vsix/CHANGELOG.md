@@ -2,6 +2,12 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.1
+
+- Added stock-row click behavior so clicking an A-share stock opens its Eastmoney real-time trend view in an editor panel.
+- Added darkened stock trend panels that fill the editor area and refresh the embedded trend page when the tab becomes visible again.
+- Renamed internal VSIX modules and media folders for clearer fund trend, stock trend, store, and market symbol ownership.
+
 ## 0.1.0
 
 - Restored fund-row click behavior so clicking a fund opens its single-fund trend panel.

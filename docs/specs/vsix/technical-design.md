@@ -223,8 +223,9 @@ Input validation:
 
 - Creates and reveals one editor webview panel per A-share symbol.
 - Accepts canonical `sh`/`sz` prefixed symbols and builds Eastmoney `mcid` values as `1.<code>` for Shanghai and `0.<code>` for Shenzhen.
-- Opens Eastmoney's A-share real-time trend page in a sandboxed iframe because the source page owns the chart rendering and data loading.
-- Uses `retainContextWhenHidden` so the embedded real-time trend remains loaded after switching editor tabs.
+- Opens Eastmoney's A-share trend page in a sandboxed iframe because the source page owns the chart rendering and data loading.
+- Uses `retainContextWhenHidden` so the embedded stock trend remains loaded after switching editor tabs.
+- Reloads the embedded frame when the tab becomes visible again, allowing the remote chart to reinitialize for the current editor size without refreshing during live resize.
 
 ## Message Protocol
 
@@ -249,7 +250,7 @@ type HostToTrendMessage =
 - Use a nonce for script tags.
 - Restrict `script-src` to the nonce and local webview resources.
 - Restrict `style-src` to local styles and VSCode CSS variables; avoid inline styles unless nonce/hash is used.
-- Stock real-time trend webviews allow only `https://quote.eastmoney.com` as a remote frame source.
+- Stock trend webviews allow only `https://quote.eastmoney.com` as a remote frame source.
 - Do not load ECharts from CDN.
 - Do not inject raw Eastmoney script responses into webviews.
 - Sanitize user-provided group names before rendering.
@@ -449,7 +450,7 @@ npx @vscode/vsce package
 - Refresh: real-time estimate data updates without executing remote scripts in the extension UI.
 - Add A-share stocks: entering `sh000001,sz000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, and stock name after refresh; prefixed symbols remain visible in tooltips and non-quote states.
 - Stock ordering: stock rows preserve add order by default; context menu actions can move a stock up or down.
-- Stock trend: clicking a stock tree item opens an editor webview with the stock's Eastmoney A-share real-time trend page.
+- Stock trend: clicking a stock tree item opens an editor webview with the stock's Eastmoney A-share trend page.
 - Persistence: `Developer: Reload Window` preserves funds and groups through `globalState`.
 - Single trend: clicking a fund tree item opens an editor webview with historical NAV trend data.
 - Group trend: clicking a group tree item opens a group comparison editor webview.
