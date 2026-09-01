@@ -1,5 +1,5 @@
 import { StockQuote, StockQuoteResult } from '../types';
-import { normalizeStockSymbols } from '../utils/fundCodes';
+import { normalizeStockSymbols } from '../utils/marketSymbols';
 
 const REQUEST_TIMEOUT_MS = 12000;
 const STOCK_BATCH_SIZE = 20;

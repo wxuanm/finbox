@@ -1,5 +1,5 @@
 import { FundNav, FundNavResponse } from '../types';
-import { normalizeFundCodes } from '../utils/fundCodes';
+import { normalizeFundCodes } from '../utils/marketSymbols';
 
 const MAX_CODES = 10;
 const THREE_YEARS_MS = 365 * 3 * 24 * 60 * 60 * 1000;

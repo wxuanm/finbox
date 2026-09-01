@@ -220,7 +220,7 @@
       },
       {
         "command": "finbox.stock.openTrend",
-        "title": "股票K线",
+        "title": "股票实时走势",
         "icon": "$(graph-line)"
       },
       {

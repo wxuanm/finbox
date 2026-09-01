@@ -3,9 +3,9 @@ import { FundQuoteService } from './services/fundQuoteService';
 import { FundNavService } from './services/fundNavService';
 import { StockQuoteService } from './services/stockQuoteService';
 import { StorageService } from './services/storageService';
-import { FundMonitorStore } from './state/fundMonitorStore';
+import { FinBoxStore } from './state/finboxStore';
+import { FundTrendPanel } from './webviews/fundTrendPanel';
 import { StockTrendPanel } from './webviews/stockTrendPanel';
-import { TrendPanel } from './webviews/trendPanel';
 import { FundGroupItem, FundItem, FundMonitorTreeProvider } from './views/fundMonitorTreeProvider';
 import { SettingsTreeProvider } from './views/settingsTreeProvider';
 import { StockItem, StockMonitorTreeProvider } from './views/stockMonitorTreeProvider';
@@ -16,11 +16,11 @@ const MIN_STOCK_AUTO_REFRESH_MINUTES = 1;
 
 export function activate(context: vscode.ExtensionContext): void {
   const storage = new StorageService(context);
-  const store = new FundMonitorStore(storage);
+  const store = new FinBoxStore(storage);
   const quoteService = new FundQuoteService();
   const stockQuoteService = new StockQuoteService();
   const navService = new FundNavService();
-  const trendPanel = new TrendPanel(context.extensionUri, store, navService);
+  const fundTrendPanel = new FundTrendPanel(context.extensionUri, store, navService);
   const stockTrendPanel = new StockTrendPanel(store);
   const treeProvider = new FundMonitorTreeProvider(store, context.extensionUri);
   const stockTreeProvider = new StockMonitorTreeProvider(store, context.extensionUri);
@@ -237,17 +237,17 @@ export function activate(context: vscode.ExtensionContext): void {
       });
     }),
     vscode.commands.registerCommand('finbox.fund.openTrend', (input?: string | FundItem) => {
-      if (input instanceof FundItem) return trendPanel.openFund(input.code);
-      if (typeof input === 'string' && input) return trendPanel.openFund(input);
+      if (input instanceof FundItem) return fundTrendPanel.openFund(input.code);
+      if (typeof input === 'string' && input) return fundTrendPanel.openFund(input);
       return vscode.window.showInputBox({ prompt: '输入六位基金代码' }).then(input => {
-        if (input) return trendPanel.openFund(input.trim());
+        if (input) return fundTrendPanel.openFund(input.trim());
         return undefined;
       });
     }),
     vscode.commands.registerCommand('finbox.fund.openGroupTrend', (input?: string | FundGroupItem) => {
-      if (input instanceof FundGroupItem) return trendPanel.openGroup(input.group.id);
-      if (typeof input === 'string' && input) return trendPanel.openGroup(input);
-      return trendPanel.openGroup('default');
+      if (input instanceof FundGroupItem) return fundTrendPanel.openGroup(input.group.id);
+      if (typeof input === 'string' && input) return fundTrendPanel.openGroup(input);
+      return fundTrendPanel.openGroup('default');
     }),
     stockTreeView.onDidChangeVisibility(event => {
       stockTreeVisible = event.visible;

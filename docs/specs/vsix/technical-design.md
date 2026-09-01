@@ -25,17 +25,17 @@ vsix/
 │  │  ├─ stockQuoteService.ts
 │  │  └─ storageService.ts
 │  ├─ state/
-│  │  └─ fundMonitorStore.ts
+│  │  └─ finboxStore.ts
 │  ├─ views/
 │  │  ├─ fundMonitorTreeProvider.ts
 │  │  └─ stockMonitorTreeProvider.ts
 │  └─ webviews/
-│     ├─ trendPanel.ts
+│     ├─ fundTrendPanel.ts
 │     └─ stockTrendPanel.ts
 └─ media/
-   ├─ trend/
-   │  ├─ trend.css
-   │  └─ trend.js
+   ├─ fundTrend/
+   │  ├─ fundTrend.css
+   │  └─ fundTrend.js
    └─ vendor/
       └─ echarts.min.js
 ```
@@ -102,7 +102,7 @@ Expected `package.json` contributions:
 - Creates shared services and store instances.
 - Disposes timers, panels, and subscriptions.
 
-### `fundMonitorStore.ts`
+### `finboxStore.ts`
 
 - Owns in-memory watchlist state.
 - Loads and saves canonical state through `StorageService`.
@@ -117,11 +117,12 @@ Expected `package.json` contributions:
 - Keeps migration logic isolated from UI code.
 - Persists fund groups, fund-to-group mapping, and the A-share watchlist.
 
-Suggested key:
+Current key:
 
 ```text
-finbox.fundMonitor.state
+finbox.state
 ```
+
 
 ### `stockQuoteService.ts`
 
@@ -196,7 +197,7 @@ Input validation:
   - `openGroupTrend`
 - Applies strict Content Security Policy.
 
-### `trendPanel.ts`
+### `fundTrendPanel.ts`
 
 - Creates and reveals editor webview panels.
 - Supports one panel per fund or group where practical.
@@ -222,8 +223,8 @@ Input validation:
 
 - Creates and reveals one editor webview panel per A-share symbol.
 - Accepts canonical `sh`/`sz` prefixed symbols and builds Eastmoney `mcid` values as `1.<code>` for Shanghai and `0.<code>` for Shenzhen.
-- Opens Eastmoney's A-share K-line page in a sandboxed iframe because the source page owns the K-line rendering and data loading.
-- Uses `retainContextWhenHidden` so the embedded K-line remains loaded after switching editor tabs.
+- Opens Eastmoney's A-share real-time trend page in a sandboxed iframe because the source page owns the chart rendering and data loading.
+- Uses `retainContextWhenHidden` so the embedded real-time trend remains loaded after switching editor tabs.
 
 ## Message Protocol
 
@@ -248,7 +249,7 @@ type HostToTrendMessage =
 - Use a nonce for script tags.
 - Restrict `script-src` to the nonce and local webview resources.
 - Restrict `style-src` to local styles and VSCode CSS variables; avoid inline styles unless nonce/hash is used.
-- Stock K-line webviews allow only `https://quote.eastmoney.com` as a remote frame source.
+- Stock real-time trend webviews allow only `https://quote.eastmoney.com` as a remote frame source.
 - Do not load ECharts from CDN.
 - Do not inject raw Eastmoney script responses into webviews.
 - Sanitize user-provided group names before rendering.
@@ -448,7 +449,7 @@ npx @vscode/vsce package
 - Refresh: real-time estimate data updates without executing remote scripts in the extension UI.
 - Add A-share stocks: entering `sh000001,sz000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, and stock name after refresh; prefixed symbols remain visible in tooltips and non-quote states.
 - Stock ordering: stock rows preserve add order by default; context menu actions can move a stock up or down.
-- Stock trend: clicking a stock tree item opens an editor webview with the stock's Eastmoney A-share K-line page.
+- Stock trend: clicking a stock tree item opens an editor webview with the stock's Eastmoney A-share real-time trend page.
 - Persistence: `Developer: Reload Window` preserves funds and groups through `globalState`.
 - Single trend: clicking a fund tree item opens an editor webview with historical NAV trend data.
 - Group trend: clicking a group tree item opens a group comparison editor webview.

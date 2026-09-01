@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FundNavService } from '../services/fundNavService';
-import { FundMonitorStore } from '../state/fundMonitorStore';
+import { FinBoxStore } from '../state/finboxStore';
 import { buildNavMetrics } from '../utils/navMetrics';
 import { getNonce, mediaUri } from '../utils/webview';
 
@@ -14,12 +14,12 @@ interface TrendTarget {
   codes: string[];
 }
 
-export class TrendPanel {
+export class FundTrendPanel {
   private readonly panels = new Map<string, vscode.WebviewPanel>();
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly store: FundMonitorStore,
+    private readonly store: FinBoxStore,
     private readonly navService: FundNavService
   ) {}
 
@@ -101,9 +101,9 @@ export class TrendPanel {
 
   private getHtml(webview: vscode.Webview, title: string): string {
     const nonce = getNonce();
-    const cssUri = mediaUri(webview, this.extensionUri, 'trend', 'trend.css');
+    const cssUri = mediaUri(webview, this.extensionUri, 'fundTrend', 'fundTrend.css');
     const echartsUri = mediaUri(webview, this.extensionUri, 'vendor', 'echarts.min.js');
-    const jsUri = mediaUri(webview, this.extensionUri, 'trend', 'trend.js');
+    const jsUri = mediaUri(webview, this.extensionUri, 'fundTrend', 'fundTrend.js');
     return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>

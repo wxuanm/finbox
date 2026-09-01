@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { FundGroup, FundQuote, PersistedFundMonitorState, SidebarState, StockQuote, StockSidebarState } from '../types';
-import { normalizeFundCodes, normalizeStockSymbols } from '../utils/fundCodes';
+import { normalizeFundCodes, normalizeStockSymbols } from '../utils/marketSymbols';
 import { StorageService } from '../services/storageService';
 
-export class FundMonitorStore {
+export class FinBoxStore {
   private persisted: PersistedFundMonitorState;
   private quotes = new Map<string, FundQuote>();
   private stockQuotes = new Map<string, StockQuote>();

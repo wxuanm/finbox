@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FundMonitorStore } from '../state/fundMonitorStore';
+import { FinBoxStore } from '../state/finboxStore';
 import { StockQuote } from '../types';
 
 export type StockMonitorTreeItem = StockGroupItem | StockItem | StockEmptyItem;
@@ -10,7 +10,7 @@ export class StockMonitorTreeProvider implements vscode.TreeDataProvider<StockMo
   readonly onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
 
   constructor(
-    private readonly store: FundMonitorStore,
+    private readonly store: FinBoxStore,
     private readonly extensionUri: vscode.Uri
   ) {
     this.store.onDidChange(() => this.refresh());
@@ -72,7 +72,7 @@ export class StockItem extends vscode.TreeItem {
     this.iconPath = buildStockIconPath(quote, failed, extensionUri);
     this.command = {
       command: 'finbox.stock.openTrend',
-      title: '股票K线',
+      title: '股票实时走势',
       arguments: [this]
     };
   }

@@ -61,7 +61,7 @@
 ## Phase 7: Editor Trend Panels
 
 - [x] Implement trend panel creation and reveal behavior.
-- [x] Add trend panel HTML, CSS, and JavaScript under `vsix/media/trend/`.
+- [x] Add fund trend panel HTML, CSS, and JavaScript under `vsix/media/fundTrend/`.
 - [ ] Bundle or vendor ECharts locally.
 - [x] Render single-fund historical trend.
 - [x] Render group historical trend comparison.
@@ -92,7 +92,7 @@
 - [x] Add stock add, refresh, and remove commands.
 - [x] Preserve stock add order and add move up/down actions.
 - [x] Start automatic stock refresh when the stock view is already visible.
-- [x] Open stock K-line in editor from stock row click.
+- [x] Open stock real-time trend in editor from stock row click.
 
 ## Phase 9: Security And Packaging
 

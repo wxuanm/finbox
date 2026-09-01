@@ -1,5 +1,5 @@
 import { FundQuote, FundQuoteResult } from '../types';
-import { chunkCodes, normalizeFundCodes } from '../utils/fundCodes';
+import { chunkCodes, normalizeFundCodes } from '../utils/marketSymbols';
 
 const MAX_CODES_PER_REQUEST = 10;
 const REQUEST_TIMEOUT_MS = 12000;

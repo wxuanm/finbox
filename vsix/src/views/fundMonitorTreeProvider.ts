@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FundMonitorStore } from '../state/fundMonitorStore';
+import { FinBoxStore } from '../state/finboxStore';
 import { FundGroup, FundQuote } from '../types';
 
 export type FundMonitorTreeItem = FundGroupItem | FundItem | EmptyItem;
@@ -10,7 +10,7 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
   readonly onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
 
   constructor(
-    private readonly store: FundMonitorStore,
+    private readonly store: FinBoxStore,
     private readonly extensionUri: vscode.Uri
   ) {
     this.store.onDidChange(() => this.refresh());
@@ -56,7 +56,7 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
   }
 }
 
-function compareFundsByChange(a: string, b: string, store: FundMonitorStore): number {
+function compareFundsByChange(a: string, b: string, store: FinBoxStore): number {
   const changeA = store.getQuote(a)?.estimatedChange;
   const changeB = store.getQuote(b)?.estimatedChange;
   const hasChangeA = Number.isFinite(changeA);

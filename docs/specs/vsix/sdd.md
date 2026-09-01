@@ -151,7 +151,7 @@ Stock input requires `sh`/`sz` prefixed symbols. Stock rows keep the user's add 
 
 Each stock tooltip should show stock identity, including the exchange-prefixed symbol, on the first line, then two-column metric rows for percentage change, price change, high, low, open, previous close, volume, and amount. Source and update time stay hidden from the tooltip.
 
-Clicking a stock row opens an editor webview with the stock's Eastmoney A-share K-line page. The extension stores stock symbols as `sh`/`sz` prefixed codes and converts them to Eastmoney `mcid` values only when building the trend URL.
+Clicking a stock row opens an editor webview with the stock's Eastmoney A-share real-time trend page. The extension stores stock symbols as `sh`/`sz` prefixed codes and converts them to Eastmoney `mcid` values only when building the trend URL.
 
 A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: batched Sina quote data first, then batched Eastmoney quote data as fallback.
 
@@ -286,7 +286,7 @@ Initial command set:
 | `finbox.stock.remove` | Remove selected stock |
 | `finbox.stock.moveUp` | Move selected stock up |
 | `finbox.stock.moveDown` | Move selected stock down |
-| `finbox.stock.openTrend` | Open selected stock K-line in editor area |
+| `finbox.stock.openTrend` | Open selected stock real-time trend in editor area |
 
 ### Storage Rules
 

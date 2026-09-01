@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { FundMonitorStore } from '../state/fundMonitorStore';
-import { normalizeStockSymbols } from '../utils/fundCodes';
+import { FinBoxStore } from '../state/finboxStore';
+import { normalizeStockSymbols } from '../utils/marketSymbols';
 import { escapeHtml, getNonce } from '../utils/webview';
 
 export class StockTrendPanel {
-  private readonly panels = new Map<string, vscode.WebviewPanel>();
+  private readonly panelsBySymbol = new Map<string, vscode.WebviewPanel>();
 
-  constructor(private readonly store: FundMonitorStore) {}
+  constructor(private readonly store: FinBoxStore) {}
 
   open(symbolInput: string): void {
     const symbol = normalizeStockSymbols([symbolInput])[0];
@@ -15,7 +15,7 @@ export class StockTrendPanel {
       return;
     }
 
-    const existing = this.panels.get(symbol);
+    const existing = this.panelsBySymbol.get(symbol);
     if (existing) {
       existing.reveal(vscode.ViewColumn.Active);
       return;
@@ -35,11 +35,11 @@ export class StockTrendPanel {
       }
     );
 
-    this.panels.set(symbol, panel);
-    panel.onDidDispose(() => this.panels.delete(symbol));
+    this.panelsBySymbol.set(symbol, panel);
+    panel.onDidDispose(() => this.panelsBySymbol.delete(symbol));
     panel.onDidChangeViewState(event => {
       if (event.webviewPanel.visible) {
-        void event.webviewPanel.webview.postMessage({ type: 'reloadTrendFrame' });
+        void event.webviewPanel.webview.postMessage({ type: 'reloadStockTrendFrame' });
       }
     });
     panel.webview.html = this.getHtml(panel.webview, title, buildEastmoneyTrendUrl(symbol));
@@ -88,14 +88,14 @@ export class StockTrendPanel {
 </head>
 <body>
   <div class="frame-wrap">
-    <iframe id="trendFrame" title="${safeTitle}" src="${safeUrl}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    <iframe id="stockTrendFrame" title="${safeTitle}" src="${safeUrl}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
   </div>
   <script nonce="${nonce}">
-    const frame = document.getElementById('trendFrame');
+    const frame = document.getElementById('stockTrendFrame');
     const trendUrl = ${JSON.stringify(trendUrl)};
 
     window.addEventListener('message', event => {
-      if (event.data && event.data.type === 'reloadTrendFrame') {
+      if (event.data && event.data.type === 'reloadStockTrendFrame') {
         const separator = trendUrl.includes('?') ? '&' : '?';
         frame.src = trendUrl + separator + '_finboxVisible=' + Date.now();
       }

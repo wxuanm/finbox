@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { PersistedFundMonitorState } from '../types';
-import { normalizeStockSymbols } from '../utils/fundCodes';
+import { normalizeStockSymbols } from '../utils/marketSymbols';
 
-const STORAGE_KEY = 'finbox.fundMonitor.state';
+const STORAGE_KEY = 'finbox.state';
 
 export class StorageService {
   constructor(private readonly context: vscode.ExtensionContext) {}
