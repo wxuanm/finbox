@@ -35,6 +35,7 @@
     "onCommand:finbox.stock.remove",
     "onCommand:finbox.stock.moveUp",
     "onCommand:finbox.stock.moveDown",
+    "onCommand:finbox.stock.openTrend",
     "onCommand:finbox.settings.open",
     "onCommand:finbox.fund.openTrend",
     "onCommand:finbox.fund.openGroupTrend"
@@ -216,6 +217,11 @@
         "command": "finbox.stock.moveDown",
         "title": "下移股票",
         "icon": "$(arrow-down)"
+      },
+      {
+        "command": "finbox.stock.openTrend",
+        "title": "股票K线",
+        "icon": "$(graph-line)"
       },
       {
         "command": "finbox.fund.openTrend",

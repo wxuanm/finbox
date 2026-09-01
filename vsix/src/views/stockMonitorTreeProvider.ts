@@ -70,6 +70,11 @@ export class StockItem extends vscode.TreeItem {
     this.description = '';
     this.tooltip = buildStockTooltip(symbol, quote, failed);
     this.iconPath = buildStockIconPath(quote, failed, extensionUri);
+    this.command = {
+      command: 'finbox.stock.openTrend',
+      title: '股票K线',
+      arguments: [this]
+    };
   }
 }
 

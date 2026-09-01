@@ -30,7 +30,8 @@ vsix/
 │  │  ├─ fundMonitorTreeProvider.ts
 │  │  └─ stockMonitorTreeProvider.ts
 │  └─ webviews/
-│     └─ trendPanel.ts
+│     ├─ trendPanel.ts
+│     └─ stockTrendPanel.ts
 └─ media/
    ├─ trend/
    │  ├─ trend.css
@@ -217,9 +218,16 @@ Input validation:
 - Provides a single-fund-only chart/list radio switcher. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
 - Renders group fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.
 
+### `stockTrendPanel.ts`
+
+- Creates and reveals one editor webview panel per A-share symbol.
+- Accepts canonical `sh`/`sz` prefixed symbols and builds Eastmoney `mcid` values as `1.<code>` for Shanghai and `0.<code>` for Shenzhen.
+- Opens Eastmoney's A-share K-line page in a sandboxed iframe because the source page owns the K-line rendering and data loading.
+- Uses `retainContextWhenHidden` so the embedded K-line remains loaded after switching editor tabs.
+
 ## Message Protocol
 
-The native TreeView does not use webview message passing. User actions are routed through VSCode commands registered by `extension.ts`, fund row clicks invoke `finbox.fund.openTrend`, and tree refreshes are driven by the store's `onDidChange` event.
+The native TreeView does not use webview message passing. User actions are routed through VSCode commands registered by `extension.ts`, fund row clicks invoke `finbox.fund.openTrend`, stock row clicks invoke `finbox.stock.openTrend`, and tree refreshes are driven by the store's `onDidChange` event.
 
 Trend panel messages:
 
@@ -240,6 +248,7 @@ type HostToTrendMessage =
 - Use a nonce for script tags.
 - Restrict `script-src` to the nonce and local webview resources.
 - Restrict `style-src` to local styles and VSCode CSS variables; avoid inline styles unless nonce/hash is used.
+- Stock K-line webviews allow only `https://quote.eastmoney.com` as a remote frame source.
 - Do not load ECharts from CDN.
 - Do not inject raw Eastmoney script responses into webviews.
 - Sanitize user-provided group names before rendering.
@@ -439,6 +448,7 @@ npx @vscode/vsce package
 - Refresh: real-time estimate data updates without executing remote scripts in the extension UI.
 - Add A-share stocks: entering `sh000001,sz000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, and stock name after refresh; prefixed symbols remain visible in tooltips and non-quote states.
 - Stock ordering: stock rows preserve add order by default; context menu actions can move a stock up or down.
+- Stock trend: clicking a stock tree item opens an editor webview with the stock's Eastmoney A-share K-line page.
 - Persistence: `Developer: Reload Window` preserves funds and groups through `globalState`.
 - Single trend: clicking a fund tree item opens an editor webview with historical NAV trend data.
 - Group trend: clicking a group tree item opens a group comparison editor webview.

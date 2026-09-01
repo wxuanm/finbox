@@ -151,6 +151,8 @@ Stock input requires `sh`/`sz` prefixed symbols. Stock rows keep the user's add 
 
 Each stock tooltip should show stock identity, including the exchange-prefixed symbol, on the first line, then two-column metric rows for percentage change, price change, high, low, open, previous close, volume, and amount. Source and update time stay hidden from the tooltip.
 
+Clicking a stock row opens an editor webview with the stock's Eastmoney A-share K-line page. The extension stores stock symbols as `sh`/`sz` prefixed codes and converts them to Eastmoney `mcid` values only when building the trend URL.
+
 A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: batched Sina quote data first, then batched Eastmoney quote data as fallback.
 
 Stock quote refresh can run manually from the STOCK view or automatically when enabled through VS Code settings. Automatic stock refresh is disabled by default, runs an immediate silent refresh when active, uses a configurable interval, and can be limited to weekday A-share market windows of 09:25-11:35 and 12:55-15:05 local time to avoid unnecessary background requests.
@@ -284,6 +286,7 @@ Initial command set:
 | `finbox.stock.remove` | Remove selected stock |
 | `finbox.stock.moveUp` | Move selected stock up |
 | `finbox.stock.moveDown` | Move selected stock down |
+| `finbox.stock.openTrend` | Open selected stock K-line in editor area |
 
 ### Storage Rules
 

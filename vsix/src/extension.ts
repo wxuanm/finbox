@@ -4,6 +4,7 @@ import { FundNavService } from './services/fundNavService';
 import { StockQuoteService } from './services/stockQuoteService';
 import { StorageService } from './services/storageService';
 import { FundMonitorStore } from './state/fundMonitorStore';
+import { StockTrendPanel } from './webviews/stockTrendPanel';
 import { TrendPanel } from './webviews/trendPanel';
 import { FundGroupItem, FundItem, FundMonitorTreeProvider } from './views/fundMonitorTreeProvider';
 import { SettingsTreeProvider } from './views/settingsTreeProvider';
@@ -20,6 +21,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const stockQuoteService = new StockQuoteService();
   const navService = new FundNavService();
   const trendPanel = new TrendPanel(context.extensionUri, store, navService);
+  const stockTrendPanel = new StockTrendPanel(store);
   const treeProvider = new FundMonitorTreeProvider(store, context.extensionUri);
   const stockTreeProvider = new StockMonitorTreeProvider(store, context.extensionUri);
   const settingsTreeProvider = new SettingsTreeProvider();
@@ -222,6 +224,17 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('finbox.stock.moveDown', async (item?: StockItem) => {
       if (item instanceof StockItem) await store.moveStock(item.symbol, 'down');
+    }),
+    vscode.commands.registerCommand('finbox.stock.openTrend', (input?: string | StockItem) => {
+      if (input instanceof StockItem) return stockTrendPanel.open(input.symbol);
+      if (typeof input === 'string' && input) return stockTrendPanel.open(input);
+      return vscode.window.showInputBox({
+        prompt: '输入带 sh/sz 前缀的股票代码',
+        placeHolder: '例如 sh600519, sz000001'
+      }).then(input => {
+        if (input) return stockTrendPanel.open(input.trim());
+        return undefined;
+      });
     }),
     vscode.commands.registerCommand('finbox.fund.openTrend', (input?: string | FundItem) => {
       if (input instanceof FundItem) return trendPanel.openFund(input.code);
