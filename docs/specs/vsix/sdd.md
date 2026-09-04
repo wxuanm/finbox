@@ -54,6 +54,7 @@ The extension should feel like a VSCode-native tool rather than a full browser d
 - Move funds between groups.
 - Refresh all monitored funds manually.
 - Persist fund codes, groups, fund-to-group mapping, and extension preferences with VSCode storage APIs.
+- Import and export fund groups, fund watchlist, stock watchlist, and extension preferences as a portable JSON configuration file.
 - Fetch real-time fund data directly from Eastmoney in the extension host.
 - Parse Eastmoney `fundinfo` JavaScript responses into structured data before sending to webviews.
 - Open a single-fund historical trend view in the editor area.
@@ -159,7 +160,9 @@ Stock quote refresh can run manually from the STOCK view or automatically when e
 
 Fund and stock group rows should show an in-row spinning refresh icon while their respective quote refresh is running.
 
-The `SETTINGS` view should only provide an `Open FinBox Settings` shortcut. Configuration editing remains in native VS Code Settings rather than custom TreeView form controls, and the shortcut opens the `finbox.stock` settings scope by default.
+The `SETTINGS` view should provide an `Open FinBox Settings` shortcut. Configuration editing remains in native VS Code Settings rather than custom TreeView form controls, and the shortcut opens the `finbox.stock` settings scope by default.
+
+The `SETTINGS` view also provides FinBox configuration import and export shortcuts. Export writes a JSON file containing persisted groups, fund-to-group mapping, stock symbols, and preferences. Import reads the same format and merges it into the current configuration: existing funds and stocks are preserved, new stocks are appended, imported custom groups are added or updated by group ID, and imported fund mappings are applied to valid target groups. Runtime quote caches, failed refresh state, and trend data are not imported or exported.
 
 The sidebar should avoid heavyweight dashboard cards, large hero copy, mobile controls, and full-width tables from the browser page.
 
@@ -202,6 +205,7 @@ interface FundMonitorState {
   schemaVersion: 1;
   groups: FundGroup[];
   fundGroups: Record<string, string>;
+  stockSymbols: string[];
   preferences: FundMonitorPreferences;
 }
 
@@ -217,6 +221,19 @@ interface FundMonitorPreferences {
 ```
 
 `default` remains a reserved group ID. Custom groups use stable IDs where practical, while display names can be renamed.
+
+Portable configuration files use this wrapper shape so future formats can be detected before merge:
+
+```ts
+interface FinBoxConfigFile {
+  format: 'finbox.vsix.config';
+  version: 1;
+  exportedAt: string;
+  state: FundMonitorState;
+}
+```
+
+The extension accepts this wrapper and the raw persisted state shape for import. Both paths are normalized through the same storage validation rules before merge.
 
 ### Real-Time Fund Data Model
 

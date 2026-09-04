@@ -17,14 +17,14 @@ export class StorageService {
   }
 }
 
-function normalizePersistedState(raw: unknown): PersistedFundMonitorState {
-    const fallback: PersistedFundMonitorState = {
-      schemaVersion: 1,
-      groups: [{ id: 'default', name: '默认分组' }],
-      fundGroups: {},
-      stockSymbols: [],
-      preferences: { themeMode: 'vscode' }
-    };
+export function normalizePersistedState(raw: unknown): PersistedFundMonitorState {
+  const fallback: PersistedFundMonitorState = {
+    schemaVersion: 1,
+    groups: [{ id: 'default', name: '默认分组' }],
+    fundGroups: {},
+    stockSymbols: [],
+    preferences: { themeMode: 'vscode' }
+  };
 
   if (!raw || typeof raw !== 'object') return fallback;
 

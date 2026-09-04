@@ -37,6 +37,8 @@
     "onCommand:finbox.stock.moveDown",
     "onCommand:finbox.stock.openTrend",
     "onCommand:finbox.settings.open",
+    "onCommand:finbox.config.export",
+    "onCommand:finbox.config.import",
     "onCommand:finbox.fund.openTrend",
     "onCommand:finbox.fund.openGroupTrend"
   ],
@@ -91,6 +93,16 @@
         {
           "command": "finbox.stock.add",
           "when": "view == finbox.stock",
+          "group": "navigation@2"
+        },
+        {
+          "command": "finbox.config.export",
+          "when": "view == finbox.settings",
+          "group": "navigation@1"
+        },
+        {
+          "command": "finbox.config.import",
+          "when": "view == finbox.settings",
           "group": "navigation@2"
         }
       ],
@@ -235,8 +247,18 @@
       },
       {
         "command": "finbox.settings.open",
-        "title": "打开 FinBox 设置",
+        "title": "Open Settings",
         "icon": "$(settings-gear)"
+      },
+      {
+        "command": "finbox.config.export",
+        "title": "Export Config",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "finbox.config.import",
+        "title": "Import Config",
+        "icon": "$(cloud-upload)"
       }
     ],
     "configuration": {

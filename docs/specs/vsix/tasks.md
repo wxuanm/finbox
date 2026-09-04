@@ -93,6 +93,7 @@
 - [x] Preserve stock add order and add move up/down actions.
 - [x] Start automatic stock refresh when the stock view is already visible.
 - [x] Open stock trend in editor from stock row click.
+- [x] Add JSON import/export of fund groups, fund mappings, stock symbols, and preferences.
 
 ## Phase 9: Security And Packaging
 
@@ -124,7 +125,7 @@
 - [ ] Add status bar summary.
 - [ ] Add configurable auto-refresh interval.
 - [ ] Add price movement notifications or threshold alerts.
-- [ ] Add import/export of watchlist and groups.
+- [x] Add import/export of watchlist and groups.
 - [ ] Add English UI strings.
 - [ ] Add automated unit checks for parser and NAV normalization logic.
 - [x] Evaluate replacing sidebar webview with native `TreeView` after MVP stabilizes.

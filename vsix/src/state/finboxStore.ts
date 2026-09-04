@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { FundGroup, FundQuote, PersistedFundMonitorState, SidebarState, StockQuote, StockSidebarState } from '../types';
+import { FinBoxConfigFile, FundGroup, FundQuote, PersistedFundMonitorState, SidebarState, StockQuote, StockSidebarState } from '../types';
 import { normalizeFundCodes, normalizeStockSymbols } from '../utils/marketSymbols';
-import { StorageService } from '../services/storageService';
+import { normalizePersistedState, StorageService } from '../services/storageService';
 
 export class FinBoxStore {
   private persisted: PersistedFundMonitorState;
@@ -60,6 +60,80 @@ export class FinBoxStore {
 
   getStockQuote(symbol: string): StockQuote | undefined {
     return this.stockQuotes.get(symbol);
+  }
+
+  exportConfig(): FinBoxConfigFile {
+    return {
+      format: 'finbox.vsix.config',
+      version: 1,
+      exportedAt: formatLocalDateTime(new Date()),
+      state: normalizePersistedState(this.persisted)
+    };
+  }
+
+  previewConfigImport(raw: unknown): { groups: number; funds: number; stocks: number } {
+    const imported = readConfigState(raw);
+    return {
+      groups: imported.groups.filter(group => group.id !== 'default').length,
+      funds: Object.keys(imported.fundGroups).length,
+      stocks: imported.stockSymbols.length
+    };
+  }
+
+  async importConfig(raw: unknown): Promise<{ groups: number; funds: number; stocks: number }> {
+    const imported = readConfigState(raw);
+    const existingGroupIds = new Set(this.persisted.groups.map(group => group.id));
+    const groupIdMap = new Map<string, string>([['default', 'default']]);
+    let changed = false;
+
+    imported.groups.forEach(group => {
+      if (group.id === 'default') return;
+
+      const existingById = this.persisted.groups.find(item => item.id === group.id);
+      if (existingById) {
+        if (existingById.name !== group.name) {
+          existingById.name = group.name;
+          changed = true;
+        }
+        groupIdMap.set(group.id, existingById.id);
+        return;
+      }
+
+      const id = buildGroupId(group.id, [...existingGroupIds]);
+      existingGroupIds.add(id);
+      this.persisted.groups.push({ id, name: group.name });
+      groupIdMap.set(group.id, id);
+      changed = true;
+    });
+
+    Object.entries(imported.fundGroups).forEach(([code, groupId]) => {
+      const targetGroupId = groupIdMap.get(groupId) || 'default';
+      if (this.persisted.fundGroups[code] === targetGroupId) return;
+      this.persisted.fundGroups[code] = targetGroupId;
+      changed = true;
+    });
+
+    imported.stockSymbols.forEach(symbol => {
+      if (this.persisted.stockSymbols.includes(symbol)) return;
+      this.persisted.stockSymbols.push(symbol);
+      changed = true;
+    });
+
+    if (imported.preferences.refreshIntervalMinutes !== undefined || imported.preferences.themeMode !== undefined) {
+      this.persisted.preferences = {
+        ...this.persisted.preferences,
+        ...imported.preferences
+      };
+      changed = true;
+    }
+
+    if (changed) await this.persist();
+
+    return {
+      groups: imported.groups.filter(group => group.id !== 'default').length,
+      funds: Object.keys(imported.fundGroups).length,
+      stocks: imported.stockSymbols.length
+    };
   }
 
   async addFunds(codesInput: string, groupId = 'default'): Promise<string[]> {
@@ -202,4 +276,27 @@ function buildGroupId(name: string, existingIds: string[]): string {
     index += 1;
   }
   return id;
+}
+
+function readConfigState(raw: unknown): PersistedFundMonitorState {
+  if (!raw || typeof raw !== 'object') throw new Error('配置文件格式无效。');
+
+  const value = raw as Partial<FinBoxConfigFile> & Partial<PersistedFundMonitorState>;
+  if (value.format === 'finbox.vsix.config') {
+    if (value.version !== 1) throw new Error('不支持的配置文件版本。');
+    return normalizePersistedState(value.state);
+  }
+
+  return normalizePersistedState(raw);
+}
+
+function formatLocalDateTime(date: Date): string {
+  return [
+    `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`,
+    `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}:${padDatePart(date.getSeconds())}`
+  ].join(' ');
+}
+
+function padDatePart(value: number): string {
+  return value.toString().padStart(2, '0');
 }

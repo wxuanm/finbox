@@ -13,7 +13,11 @@ export class SettingsTreeProvider implements vscode.TreeDataProvider<vscode.Tree
   }
 
   getChildren(): vscode.TreeItem[] {
-    return [createCommandItem('Open FinBox Settings', 'settings-gear', 'finbox.settings.open')];
+    return [
+      createCommandItem('Open Settings', 'settings-gear', 'finbox.settings.open'),
+      createCommandItem('Export Config', 'cloud-download', 'finbox.config.export'),
+      createCommandItem('Import Config', 'cloud-upload', 'finbox.config.import')
+    ];
   }
 
   dispose(): void {
@@ -23,6 +27,7 @@ export class SettingsTreeProvider implements vscode.TreeDataProvider<vscode.Tree
 
 function createCommandItem(label: string, icon: string, command: string): vscode.TreeItem {
   const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+  item.tooltip = label;
   item.iconPath = new vscode.ThemeIcon(icon);
   item.command = { command, title: label };
   return item;

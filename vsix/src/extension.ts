@@ -187,6 +187,61 @@ export function activate(context: vscode.ExtensionContext): void {
     await store.renameGroup(item.group.id, name);
   }
 
+  async function exportConfig(): Promise<void> {
+    const target = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.file(`finbox-config-${new Date().toISOString().slice(0, 10)}.json`),
+      filters: { JSON: ['json'] },
+      saveLabel: '导出'
+    });
+    if (!target) return;
+
+    const content = JSON.stringify(store.exportConfig(), null, 2);
+    await vscode.workspace.fs.writeFile(target, encodeUtf8(content));
+    vscode.window.showInformationMessage('FinBox 配置已导出。');
+  }
+
+  async function importConfig(): Promise<void> {
+    const sources = await vscode.window.showOpenDialog({
+      canSelectFiles: true,
+      canSelectFolders: false,
+      canSelectMany: false,
+      filters: { JSON: ['json'] },
+      openLabel: '导入'
+    });
+    const source = sources?.[0];
+    if (!source) return;
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(decodeUtf8(await vscode.workspace.fs.readFile(source)));
+    } catch {
+      vscode.window.showErrorMessage('FinBox 配置文件不是有效的 JSON。');
+      return;
+    }
+
+    let preview: { groups: number; funds: number; stocks: number };
+    try {
+      preview = store.previewConfigImport(parsed);
+    } catch (error) {
+      vscode.window.showErrorMessage(error instanceof Error ? error.message : 'FinBox 配置文件格式无效。');
+      return;
+    }
+
+    const confirm = await vscode.window.showWarningMessage(
+      `将合并导入 ${preview.groups} 个分组、${preview.funds} 只基金、${preview.stocks} 只股票。当前配置会保留。`,
+      { modal: true },
+      '合并导入'
+    );
+    if (confirm !== '合并导入') return;
+
+    try {
+      const result = await store.importConfig(parsed);
+      vscode.window.showInformationMessage(`FinBox 配置已合并：${result.groups} 个分组、${result.funds} 只基金、${result.stocks} 只股票。`);
+    } catch (error) {
+      vscode.window.showErrorMessage(error instanceof Error ? error.message : 'FinBox 配置导入失败。');
+    }
+  }
+
   context.subscriptions.push(
     store,
     treeProvider,
@@ -199,6 +254,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('finbox.fund.refresh', () => refreshQuotes()),
     vscode.commands.registerCommand('finbox.stock.refresh', () => refreshStockQuotes()),
     vscode.commands.registerCommand('finbox.settings.open', (settingId?: string) => openFinBoxSettings(settingId)),
+    vscode.commands.registerCommand('finbox.config.export', () => exportConfig()),
+    vscode.commands.registerCommand('finbox.config.import', () => importConfig()),
     vscode.commands.registerCommand('finbox.fund.add', () => promptAddFund('default')),
     vscode.commands.registerCommand('finbox.stock.add', () => promptAddStock()),
     vscode.commands.registerCommand('finbox.fund.addToGroup', (item?: FundGroupItem) => promptAddFund(item instanceof FundGroupItem ? item.group.id : 'default')),
@@ -283,4 +340,48 @@ function isAshareTradingWindow(date: Date): boolean {
   const minutes = date.getHours() * 60 + date.getMinutes();
   return (minutes >= 9 * 60 + 25 && minutes <= 11 * 60 + 35)
     || (minutes >= 12 * 60 + 55 && minutes <= 15 * 60 + 5);
+}
+
+function encodeUtf8(value: string): Uint8Array {
+  if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(value);
+
+  const bytes: number[] = [];
+  for (let index = 0; index < value.length; index += 1) {
+    let codePoint = value.codePointAt(index) || 0;
+    if (codePoint > 0xffff) index += 1;
+
+    if (codePoint <= 0x7f) {
+      bytes.push(codePoint);
+    } else if (codePoint <= 0x7ff) {
+      bytes.push(0xc0 | (codePoint >> 6), 0x80 | (codePoint & 0x3f));
+    } else if (codePoint <= 0xffff) {
+      bytes.push(0xe0 | (codePoint >> 12), 0x80 | ((codePoint >> 6) & 0x3f), 0x80 | (codePoint & 0x3f));
+    } else {
+      bytes.push(0xf0 | (codePoint >> 18), 0x80 | ((codePoint >> 12) & 0x3f), 0x80 | ((codePoint >> 6) & 0x3f), 0x80 | (codePoint & 0x3f));
+    }
+  }
+
+  return Uint8Array.from(bytes);
+}
+
+function decodeUtf8(bytes: Uint8Array): string {
+  if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(bytes);
+
+  let output = '';
+  for (let index = 0; index < bytes.length;) {
+    const first = bytes[index++];
+    if (first < 0x80) {
+      output += String.fromCodePoint(first);
+    } else if (first >= 0xc0 && first < 0xe0 && index < bytes.length) {
+      output += String.fromCodePoint(((first & 0x1f) << 6) | (bytes[index++] & 0x3f));
+    } else if (first >= 0xe0 && first < 0xf0 && index + 1 < bytes.length) {
+      output += String.fromCodePoint(((first & 0x0f) << 12) | ((bytes[index++] & 0x3f) << 6) | (bytes[index++] & 0x3f));
+    } else if (first >= 0xf0 && first < 0xf8 && index + 2 < bytes.length) {
+      output += String.fromCodePoint(((first & 0x07) << 18) | ((bytes[index++] & 0x3f) << 12) | ((bytes[index++] & 0x3f) << 6) | (bytes[index++] & 0x3f));
+    } else {
+      output += '\ufffd';
+    }
+  }
+
+  return output;
 }

@@ -16,6 +16,13 @@ export interface PersistedFundMonitorState {
   preferences: FundMonitorPreferences;
 }
 
+export interface FinBoxConfigFile {
+  format: 'finbox.vsix.config';
+  version: 1;
+  exportedAt: string;
+  state: PersistedFundMonitorState;
+}
+
 export interface FundQuote {
   code: string;
   name: string;

@@ -101,6 +101,7 @@ Expected `package.json` contributions:
 - Creates and registers `SidebarViewProvider`.
 - Creates shared services and store instances.
 - Disposes timers, panels, and subscriptions.
+- Implements configuration import/export file pickers, JSON parsing/writing, merge confirmation, and result messages.
 
 ### `finboxStore.ts`
 
@@ -108,6 +109,8 @@ Expected `package.json` contributions:
 - Loads and saves canonical state through `StorageService`.
 - Exposes methods for add, remove, move, group create, group rename, group delete, and group reorder.
 - Emits updates to sidebar and open trend panels.
+- Exports the persisted configuration as a versioned JSON payload.
+- Imports configuration by merging normalized funds, custom groups, stock symbols, and preferences into current state without clearing existing items.
 
 ### `storageService.ts`
 
@@ -116,6 +119,7 @@ Expected `package.json` contributions:
 - Validates loaded data and applies safe defaults.
 - Keeps migration logic isolated from UI code.
 - Persists fund groups, fund-to-group mapping, and the A-share watchlist.
+- Exposes state normalization for import validation so malformed files cannot corrupt persisted data.
 
 Current key:
 
@@ -330,6 +334,33 @@ SETTINGS TreeView
   -> Native VS Code Settings opens at finbox.stock
 ```
 
+Configuration import/export:
+
+```text
+SETTINGS TreeView or command palette
+  -> Export Config
+  -> Show Save Dialog
+  -> Store exports groups, fund mappings, stock symbols, and preferences
+  -> Extension writes finbox.vsix.config JSON
+
+SETTINGS TreeView or command palette
+  -> Import Config
+  -> Show Open Dialog
+  -> Extension parses JSON and normalizes state
+  -> User confirms merge summary
+  -> Store merges imported groups, funds, stocks, and preferences
+  -> Store persists and refreshes TreeViews
+```
+
+Import merge rules:
+
+- Existing funds, stocks, and groups are preserved.
+- Imported custom groups with matching IDs update the current group name.
+- Imported custom groups with new IDs are added, with collision-safe IDs if needed.
+- Imported fund mappings are assigned to their imported/current target group, falling back to `default` when invalid.
+- Imported stocks are appended after existing stock symbols and de-duplicated.
+- Runtime quote caches, failed refresh state, and historical trend cache are excluded from the file.
+
 Historical NAV data is panel-scoped with optional same-day cache:
 
 ```text
@@ -449,6 +480,7 @@ npx @vscode/vsce package
 - Add funds: entering `003026,110022,161725` adds valid codes and triggers quote refresh.
 - Refresh: real-time estimate data updates without executing remote scripts in the extension UI.
 - Add A-share stocks: entering `sh000001,sz000001` adds valid stock symbols under `STOCK -> A Stock` and shows percentage change, latest price, and stock name after refresh; prefixed symbols remain visible in tooltips and non-quote states.
+- Configuration export/import: exporting from SETTINGS writes a JSON file with groups, funds, stocks, and preferences; importing the file into an existing configuration merges without deleting current items.
 - Stock ordering: stock rows preserve add order by default; context menu actions can move a stock up or down.
 - Stock trend: clicking a stock tree item opens an editor webview with the stock's Eastmoney A-share trend page.
 - Persistence: `Developer: Reload Window` preserves funds and groups through `globalState`.
