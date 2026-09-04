@@ -34,7 +34,7 @@ Available fund actions include:
 - Open single-fund trend views
 - Open group trend comparison views
 
-Deleting a custom fund group moves contained funds back to the default group.
+The reserved default fund group is displayed as `Default`. Deleting a custom fund group moves contained funds back to `Default`.
 
 Single-fund trend panels default to the recent three-month period. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. ECharts-powered trend charts provide a top legend, compact right-side value axis, bottom time-window slider, and an annualized 10% benchmark line. The slider keeps the full three-year history available while rebasing visible-window returns to the selected range start. When only one fund is displayed, the chart labels the visible window's lowest, highest, and latest cumulative return values, and marks the visible-window max-drawdown segment with a line. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. Single-fund panels provide a `曲线 / 列表` switch. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
 

@@ -220,7 +220,7 @@ interface FundMonitorPreferences {
 }
 ```
 
-`default` remains a reserved group ID. Custom groups use stable IDs where practical, while display names can be renamed.
+`default` remains a reserved group ID and its display name is always normalized to `Default`, including imported or previously persisted configuration. Custom groups use stable IDs where practical, while display names can be renamed.
 
 Portable configuration files use this wrapper shape so future formats can be detected before merge:
 
@@ -307,9 +307,9 @@ Initial command set:
 
 ### Storage Rules
 
-- Extension storage must tolerate missing or malformed data and fall back to a valid default group.
-- The `default` group must always exist.
-- Deleting a custom group moves contained funds back to `default`.
+- Extension storage must tolerate missing or malformed data and fall back to a valid `Default` group.
+- The `default` group ID must always exist and display as `Default`.
+- Deleting a custom group moves contained funds back to `Default`.
 - Removing a fund deletes its group mapping.
 - Real-time quote data is cacheable as transient runtime state but is not canonical user data.
 - Historical NAV cache must be invalidated when the local date changes.

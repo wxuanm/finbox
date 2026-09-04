@@ -20,7 +20,7 @@
 ## Phase 3: Core State And Storage
 
 - [x] Implement versioned storage service using `ExtensionContext.globalState`.
-- [x] Implement default persisted state with immutable `default` group.
+- [x] Implement default persisted state with immutable `default` group displayed as `Default`.
 - [x] Implement fund add and remove operations.
 - [ ] Implement group create, rename, delete, and reorder operations.
 - [x] Implement fund move between groups.
@@ -113,7 +113,7 @@
 - [ ] Refresh real-time quotes.
 - [ ] Add valid A-share symbols, including duplicate numeric codes with `sh`/`sz` prefixes, and refresh stock quotes.
 - [ ] Remove a fund and confirm persistence.
-- [ ] Create and delete a custom group, confirming deleted group funds move to `default`.
+- [ ] Create and delete a custom group, confirming deleted group funds move to `Default`.
 - [ ] Reload VSCode window and confirm watchlist restores.
 - [x] Open single-fund trend in editor from fund row click.
 - [ ] Open group trend comparison in editor.

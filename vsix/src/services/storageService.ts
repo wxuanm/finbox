@@ -20,7 +20,7 @@ export class StorageService {
 export function normalizePersistedState(raw: unknown): PersistedFundMonitorState {
   const fallback: PersistedFundMonitorState = {
     schemaVersion: 1,
-    groups: [{ id: 'default', name: '默认分组' }],
+    groups: [{ id: 'default', name: 'Default' }],
     fundGroups: {},
     stockSymbols: [],
     preferences: { themeMode: 'vscode' }
@@ -36,7 +36,7 @@ export function normalizePersistedState(raw: unknown): PersistedFundMonitorState
     : [];
 
   const groupById = new Map(groups.map(group => [group.id, group]));
-  groupById.set('default', { id: 'default', name: groupById.get('default')?.name || '默认分组' });
+  groupById.set('default', { id: 'default', name: 'Default' });
 
   const orderedGroups = [groupById.get('default')!];
   groups.forEach(group => {

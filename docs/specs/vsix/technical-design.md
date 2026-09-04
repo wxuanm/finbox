@@ -355,9 +355,10 @@ SETTINGS TreeView or command palette
 Import merge rules:
 
 - Existing funds, stocks, and groups are preserved.
+- The reserved `default` group is normalized to display name `Default`; imported legacy default-group names do not overwrite it.
 - Imported custom groups with matching IDs update the current group name.
 - Imported custom groups with new IDs are added, with collision-safe IDs if needed.
-- Imported fund mappings are assigned to their imported/current target group, falling back to `default` when invalid.
+- Imported fund mappings are assigned to their imported/current target group, falling back to the reserved `default` group displayed as `Default` when invalid.
 - Imported stocks are appended after existing stock symbols and de-duplicated.
 - Runtime quote caches, failed refresh state, and historical trend cache are excluded from the file.
 
@@ -379,7 +380,7 @@ Reuse is allowed at the design and utility level:
 
 - Positive, negative, neutral, and failed state semantics from the browser monitor.
 - Formatter behavior.
-- Group hierarchy and default-group behavior.
+- Group hierarchy and `Default` group behavior.
 - Loading and empty state copy.
 
 ### Trend Webview

@@ -263,7 +263,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('finbox.fund.renameGroup', (item?: FundGroupItem) => promptRenameGroup(item)),
     vscode.commands.registerCommand('finbox.fund.deleteGroup', async (item?: FundGroupItem) => {
       if (!(item instanceof FundGroupItem) || item.group.id === 'default') return;
-      const confirm = await vscode.window.showWarningMessage(`删除分组“${item.group.name}”？组内基金将移至默认分组。`, { modal: true }, '删除');
+      const confirm = await vscode.window.showWarningMessage(`删除分组“${item.group.name}”？组内基金将移至 Default。`, { modal: true }, '删除');
       if (confirm === '删除') await store.deleteGroup(item.group.id);
     }),
     vscode.commands.registerCommand('finbox.fund.remove', async (item?: FundItem) => {
