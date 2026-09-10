@@ -135,6 +135,24 @@ export function bindAccountList({ onSelect, onRename, onDelete, onAdd, onReorder
     });
 }
 
+export function scrollAccountCardIntoView(accountId, behavior = 'smooth') {
+    const list = document.getElementById('accountList');
+    if (!list || !accountId) return;
+
+    const item = Array.from(list.querySelectorAll('.account-item'))
+        .find(element => element.dataset.accountId === accountId);
+    if (!item) return;
+
+    const listRect = list.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    const centeredOffset = item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2;
+    const maxScrollLeft = list.scrollWidth - list.clientWidth;
+    const nextScrollLeft = Math.min(Math.max(0, centeredOffset), maxScrollLeft);
+
+    if (Math.abs(nextScrollLeft - list.scrollLeft) < 1 && itemRect.left >= listRect.left && itemRect.right <= listRect.right) return;
+    list.scrollTo({ left: nextScrollLeft, behavior });
+}
+
 function isDropAfter(event, item) {
     const rect = item.getBoundingClientRect();
     return event.clientX > rect.left + rect.width / 2;

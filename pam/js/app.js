@@ -3,7 +3,7 @@ import { i18n, t } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
 import { loadAccounts, loadPreferences, loadSnapshots, saveAccounts, savePreferences, saveSnapshots } from './modules/accountPerformance/storage.js';
 import { buildAccountMetrics } from './modules/accountPerformance/metrics.js';
-import { renderAccountList, bindAccountList } from './modules/accountPerformance/accountList.js';
+import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
 import { readSnapshotForm, renderSnapshotForm, resetSnapshotForm, showFormMessage } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
@@ -350,6 +350,11 @@ function renderApp() {
     renderHoldingsPanel(holdingsMetrics);
 }
 
+function renderAppAndKeepSelectedAccountInView(behavior = 'smooth') {
+    renderApp();
+    requestAnimationFrame(() => scrollAccountCardIntoView(state.selectedAccountId, behavior));
+}
+
 function toggleAmountPrivacy() {
     state.amountsHidden = !state.amountsHidden;
     persistPreferences();
@@ -543,7 +548,7 @@ function selectAccount(accountId) {
     state.selectedAccountId = accountId;
     state.activeView = 'assetData';
     persistPreferences();
-    renderApp();
+    renderAppAndKeepSelectedAccountInView();
 }
 
 function reorderAccounts(draggedAccountId, targetAccountId, position) {

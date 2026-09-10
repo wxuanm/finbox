@@ -138,7 +138,7 @@ function renderHoldingTable(rows) {
 
     const columns = [
         ['name', t('name')],
-        ['marketValue', t('marketValue')],
+        ['marketValue', `${t('marketValue')} / ${t('quantity')}`],
         ['currentPrice', t('latestPrice')],
         ['unrealizedPnl', t('cumulativePnl')],
         ['weight', t('weight')],
@@ -157,11 +157,20 @@ function renderHoldingRow(row) {
     const priceStatus = getPriceStatusParts(row);
     return `
         <tr>
-            <td><strong>${escapeHtml(row.name)}</strong><small>${formatHoldingMeta(row)}</small>${renderHoldingMobileCard(row, priceStatus)}</td>
-            <td class="number-cell">${formatCurrency(row.marketValue, state.amountsHidden)}</td>
+            <td>
+                <div class="holding-asset-cell">
+                    <span class="holding-asset-mark">${escapeHtml(getAssetClassLabel(row.assetClass).slice(0, 1) || 'A')}</span>
+                    <div>
+                        <strong>${escapeHtml(row.name)}</strong>
+                        <small>${formatHoldingMeta(row)}</small>
+                    </div>
+                </div>
+                ${renderHoldingMobileCard(row, priceStatus)}
+            </td>
+            <td class="number-cell"><span class="holding-value-stack"><span class="holding-value-main">${formatCurrency(row.marketValue, state.amountsHidden)}</span><small>${formatQuantity(row.quantity)}</small></span></td>
             <td class="number-cell"><span class="price-pair"><span>${formatPrice(row.costPrice, row.assetClass)}</span><small>${formatPrice(row.currentPrice, row.assetClass)}</small></span></td>
             <td class="number-cell ${signedClass(row.unrealizedPnl)}"><span class="price-pair pnl-pair"><span>${formatCurrency(row.unrealizedPnl, state.amountsHidden)}</span><small>${formatPercent(row.unrealizedPnlPct)}</small></span></td>
-            <td class="number-cell">${formatWeight(row.weight)}</td>
+            <td class="number-cell"><span class="holding-weight"><span style="--weight:${formatWeightBar(row.weight)}"></span><strong>${formatWeight(row.weight)}</strong></span></td>
             <td class="number-cell"><span class="valuation-status status-pair${isStalePrice(row) ? ' stale' : ''}"><span>${priceStatus.label}</span><small>${priceStatus.date}</small></span></td>
             <td><div class="row-actions"><button class="mini-btn icon-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button><button class="mini-btn icon-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button></div></td>
         </tr>
@@ -176,19 +185,17 @@ function renderHoldingMobileCard(row, priceStatus) {
                     <strong>${escapeHtml(row.name)}</strong>
                     <small>${formatHoldingMeta(row)}</small>
                 </div>
+                <div class="holding-mobile-hero">
+                    <span>${t('marketValue')} / ${t('quantity')}</span>
+                    <strong>${formatCurrency(row.marketValue, state.amountsHidden)}</strong>
+                    <small>${formatQuantity(row.quantity)}</small>
+                    <small class="${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)} / ${formatPercent(row.unrealizedPnlPct)}</small>
+                </div>
             </div>
             <div class="holding-mobile-details">
                 <div>
-                    <span>${t('marketValue')}</span>
-                    <strong>${formatCurrency(row.marketValue, state.amountsHidden)}</strong>
-                </div>
-                <div>
-                    <span>${t('cumulativePnl')}</span>
-                    <strong class="${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)} / ${formatPercent(row.unrealizedPnlPct)}</strong>
-                </div>
-                <div>
                     <span>${t('weight')}</span>
-                    <strong>${formatWeight(row.weight)}</strong>
+                    <strong class="holding-weight mobile-weight"><span style="--weight:${formatWeightBar(row.weight)}"></span>${formatWeight(row.weight)}</strong>
                 </div>
                 <div>
                     <span>${t('latestPrice')}</span>
@@ -210,6 +217,21 @@ function renderHoldingMobileCard(row, priceStatus) {
 function formatHoldingMeta(row) {
     const labels = [getAssetClassLabel(row.assetClass), row.symbol || '-', getMarketLabel(row.market)];
     return labels.filter((label, index) => label && labels.indexOf(label) === index).map(escapeHtml).join(' · ');
+}
+
+function formatQuantity(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    return new Intl.NumberFormat(currentLocale(), {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(num);
+}
+
+function formatWeightBar(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '0%';
+    return `${Math.max(0, Math.min(100, num))}%`;
 }
 
 export function readHoldingForm() {

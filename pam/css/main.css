@@ -2440,6 +2440,16 @@ select:focus {
     table-layout: fixed;
 }
 
+.holding-table-wrap {
+    margin: 12px 12px 18px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 76%, transparent);
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at 0 0, color-mix(in srgb, var(--primary-color) 10%, transparent), transparent 28%),
+        linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, transparent), var(--surface-color));
+    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.56);
+}
+
 .comparison-table th,
 .comparison-table td,
 .holding-table th,
@@ -2468,18 +2478,28 @@ select:focus {
     backdrop-filter: blur(14px);
 }
 
+.holding-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.holding-table tbody tr {
+    transition: background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
 .holding-table th:first-child {
     border-top-left-radius: 14px;
 }
 
 .holding-table th:nth-child(2),
 .holding-table td:nth-child(2) {
-    width: 14%;
+    width: 15%;
 }
 
 .holding-table th:nth-child(3),
 .holding-table td:nth-child(3) {
-    width: 13%;
+    width: 12%;
 }
 
 .holding-table th:nth-child(4),
@@ -2588,6 +2608,84 @@ select:focus {
     letter-spacing: -0.01em;
 }
 
+.holding-asset-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.holding-asset-mark {
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 22%, var(--border-color));
+    border-radius: 13px;
+    color: var(--primary-color);
+    background:
+        radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.58), transparent 36%),
+        linear-gradient(135deg, var(--primary-soft), var(--accent-soft));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.holding-asset-cell > div {
+    min-width: 0;
+}
+
+.holding-value-stack {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.holding-value-main {
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.holding-value-stack small {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 760;
+    font-variant-numeric: tabular-nums;
+}
+
+.holding-weight {
+    display: inline-grid;
+    width: min(100%, 92px);
+    gap: 5px;
+    justify-items: end;
+    color: var(--heading-color);
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+}
+
+.holding-weight > span {
+    width: 100%;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--border-color) 70%, transparent);
+}
+
+.holding-weight > span::before {
+    content: "";
+    display: block;
+    width: var(--weight, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+}
+
 .holding-table tbody tr:nth-child(even),
 .snapshot-table tbody tr:nth-child(even),
 .comparison-table tbody tr:nth-child(even) {
@@ -2600,6 +2698,10 @@ select:focus {
         linear-gradient(90deg, var(--primary-soft), transparent 56%),
         color-mix(in srgb, var(--surface-elevated) 88%, transparent);
     box-shadow: inset 3px 0 0 var(--accent-color);
+}
+
+.holding-table tbody tr:hover {
+    transform: translateY(-1px);
 }
 
 .asset-class-pill {
@@ -3738,6 +3840,10 @@ select,
         display: none;
     }
 
+    .holding-table-wrap .holding-table .holding-asset-cell {
+        display: none;
+    }
+
     .holding-mobile-card {
         display: grid;
         gap: 12px;
@@ -3746,7 +3852,8 @@ select,
 
     .holding-mobile-card-head {
         display: grid;
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
         align-items: start;
     }
 
@@ -3777,6 +3884,48 @@ select,
         font-weight: 800;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .holding-mobile-hero {
+        min-width: 118px;
+        display: grid;
+        justify-items: end;
+        gap: 4px;
+        padding: 10px 11px;
+        border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary-color) 14%, transparent), transparent 58%),
+            color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+        text-align: right;
+    }
+
+    .holding-mobile-hero span {
+        color: var(--muted-text);
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+    .holding-mobile-hero strong {
+        color: var(--heading-color);
+        font-size: 15px;
+        font-weight: 950;
+        letter-spacing: -0.025em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .holding-mobile-hero small {
+        max-width: 132px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        font-size: 11px;
+        font-weight: 850;
+        text-align: right;
+        white-space: normal;
     }
 
     .holding-mobile-card-head + .holding-mobile-details {
@@ -3823,6 +3972,10 @@ select,
         font-weight: 850;
         text-align: right;
         font-variant-numeric: tabular-nums;
+    }
+
+    .holding-mobile-details .holding-weight {
+        width: 96px;
     }
 
     .holding-mobile-details .valuation-status {
@@ -4057,7 +4210,8 @@ select,
         font-variant-numeric: tabular-nums;
     }
 
-    .holding-mobile-card .holding-mobile-details > div:first-child strong {
+    .holding-mobile-card .holding-mobile-details > div:first-child strong,
+    .holding-mobile-card .holding-mobile-hero strong {
         font-size: 13px !important;
         font-weight: 850 !important;
         letter-spacing: -0.01em !important;
@@ -4998,6 +5152,8 @@ select,
     .holding-mobile-details > div:first-child strong.negative,
     .holding-mobile-details > div:nth-child(2) strong.positive,
     .holding-mobile-details > div:nth-child(2) strong.negative,
+    .holding-mobile-hero strong,
+    .holding-mobile-hero small,
     .holding-mobile-card .holding-mobile-details > div:first-child strong {
         color: var(--heading-color) !important;
         font-size: 12px !important;
@@ -5008,12 +5164,14 @@ select,
     }
 
     .holding-mobile-details > div:nth-child(2) strong.positive,
-    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.positive {
+    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.positive,
+    .holding-mobile-hero small.positive {
         color: var(--positive-color) !important;
     }
 
     .holding-mobile-details > div:nth-child(2) strong.negative,
-    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.negative {
+    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.negative,
+    .holding-mobile-hero small.negative {
         color: var(--negative-color) !important;
     }
 
