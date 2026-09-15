@@ -139,8 +139,8 @@ export class FundTrendPanel {
           <div id="chartTitle" class="chart-title">历史收益走势</div>
         </div>
         <div id="viewTabs" class="view-tabs" role="radiogroup" aria-label="显示方式" hidden>
-          <label><input type="radio" name="trendView" value="chart" checked><span>曲线</span></label>
-          <label><input type="radio" name="trendView" value="list"><span>列表</span></label>
+          <label><input type="radio" name="trendView" value="chart"><span>曲线</span></label>
+          <label><input type="radio" name="trendView" value="list" checked><span>列表</span></label>
         </div>
       </div>
       <div id="chart" class="chart"></div>

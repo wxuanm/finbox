@@ -2,6 +2,10 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.2
+
+- Changed single-fund trend panels to open on the historical NAV list by default while keeping the chart available through the `曲线 / 列表` switch.
+
 ## 0.1.1
 
 - Added stock-row click behavior so clicking an A-share stock opens its Eastmoney real-time trend view in an editor panel.

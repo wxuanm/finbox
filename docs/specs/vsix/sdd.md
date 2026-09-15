@@ -178,7 +178,7 @@ Single-fund trend view should show:
 - Editor tab title as `<fund code> 趋势`, while the page title keeps the fund name and code when available
 - Manager names when available
 - Fund scale when available
-- Normalized return chart defaulting to the three-month period
+- Single-fund panels defaulting to the three-month historical NAV list, with chart view available through the view switcher
 - Period switcher for YTD, one month, three months, six months, one year, and three years
 - Chart/list radio switcher for single-fund views only
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
