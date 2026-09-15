@@ -6,8 +6,11 @@ import { getNonce, mediaUri } from '../utils/webview';
 
 type TrendKind = 'fund' | 'group';
 type TrendViewMode = 'chart' | 'list';
+type TrendPeriod = 'ytd' | 'm1' | 'm3' | 'm6' | 'y1' | 'y3';
 
 const DEFAULT_FUND_TREND_VIEW_CONFIG = 'finbox.fund.trend.defaultView';
+const DEFAULT_FUND_TREND_PERIOD_CONFIG = 'finbox.fund.trend.defaultPeriod';
+const TREND_PERIODS: TrendPeriod[] = ['ytd', 'm1', 'm3', 'm6', 'y1', 'y3'];
 
 interface TrendTarget {
   key: string;
@@ -16,6 +19,7 @@ interface TrendTarget {
   tabTitle: string;
   codes: string[];
   defaultView: TrendViewMode;
+  defaultPeriod: TrendPeriod;
 }
 
 export class FundTrendPanel {
@@ -36,7 +40,8 @@ export class FundTrendPanel {
       title: quote?.name ? `${quote.name} ${code}` : code,
       tabTitle: `${code} 趋势`,
       codes: [code],
-      defaultView: getDefaultFundTrendView()
+      defaultView: getDefaultFundTrendView(),
+      defaultPeriod: getDefaultFundTrendPeriod()
     });
   }
 
@@ -50,7 +55,8 @@ export class FundTrendPanel {
       title: `${group.name} 趋势`,
       tabTitle: `${group.name} 趋势`,
       codes,
-      defaultView: 'chart'
+      defaultView: 'chart',
+      defaultPeriod: getDefaultFundTrendPeriod()
     });
   }
 
@@ -72,7 +78,7 @@ export class FundTrendPanel {
       }
     );
     this.panels.set(target.key, panel);
-    panel.webview.html = this.getHtml(panel.webview, target.title, target.defaultView);
+    panel.webview.html = this.getHtml(panel.webview, target.title, target.defaultView, target.defaultPeriod);
     panel.onDidDispose(() => this.panels.delete(target.key));
     panel.webview.onDidReceiveMessage(async message => {
       if (message?.type === 'refreshTrend') await this.loadTrend(panel, target);
@@ -105,7 +111,7 @@ export class FundTrendPanel {
     }
   }
 
-  private getHtml(webview: vscode.Webview, title: string, defaultView: TrendViewMode): string {
+  private getHtml(webview: vscode.Webview, title: string, defaultView: TrendViewMode, defaultPeriod: TrendPeriod): string {
     const nonce = getNonce();
     const cssUri = mediaUri(webview, this.extensionUri, 'fundTrend', 'fundTrend.css');
     const echartsUri = mediaUri(webview, this.extensionUri, 'vendor', 'echarts.min.js');
@@ -131,12 +137,12 @@ export class FundTrendPanel {
       </div>
     </header>
     <nav id="periodTabs" class="period-tabs" aria-label="趋势周期">
-      <button type="button" data-period="ytd">今年</button>
-      <button type="button" data-period="m1">1月</button>
-      <button type="button" data-period="m3" class="active">3月</button>
-      <button type="button" data-period="m6">6月</button>
-      <button type="button" data-period="y1">1年</button>
-      <button type="button" data-period="y3">3年</button>
+      <button type="button" data-period="ytd"${defaultPeriod === 'ytd' ? ' class="active"' : ''}>今年</button>
+      <button type="button" data-period="m1"${defaultPeriod === 'm1' ? ' class="active"' : ''}>1月</button>
+      <button type="button" data-period="m3"${defaultPeriod === 'm3' ? ' class="active"' : ''}>3月</button>
+      <button type="button" data-period="m6"${defaultPeriod === 'm6' ? ' class="active"' : ''}>6月</button>
+      <button type="button" data-period="y1"${defaultPeriod === 'y1' ? ' class="active"' : ''}>1年</button>
+      <button type="button" data-period="y3"${defaultPeriod === 'y3' ? ' class="active"' : ''}>3年</button>
     </nav>
     <section id="summary" class="summary-grid"></section>
     <section class="chart-panel">
@@ -163,4 +169,9 @@ export class FundTrendPanel {
 
 function getDefaultFundTrendView(): TrendViewMode {
   return vscode.workspace.getConfiguration().get<TrendViewMode>(DEFAULT_FUND_TREND_VIEW_CONFIG, 'list') === 'chart' ? 'chart' : 'list';
+}
+
+function getDefaultFundTrendPeriod(): TrendPeriod {
+  const value = vscode.workspace.getConfiguration().get<TrendPeriod>(DEFAULT_FUND_TREND_PERIOD_CONFIG, 'm3');
+  return TREND_PERIODS.includes(value) ? value : 'm3';
 }

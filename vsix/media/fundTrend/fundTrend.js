@@ -12,7 +12,7 @@ const ANNUAL_BENCHMARK = 10;
 const NAV_LIST_PAGE_SIZE = 20;
 const CHART_Y_AXIS_TARGET_SPLITS = 5;
 let currentPayload = null;
-let currentPeriod = 'm3';
+let currentPeriod = document.querySelector('#periodTabs button.active')?.dataset.period || 'm3';
 let currentViewMode = document.querySelector('input[name="trendView"]:checked')?.value || 'list';
 let currentListPage = 1;
 let selectedFundCode = null;

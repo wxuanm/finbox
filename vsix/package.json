@@ -288,6 +288,27 @@
           ],
           "default": "list",
           "description": "Default view for newly opened single-fund trend panels. Group trend panels always open as charts."
+        },
+        "finbox.fund.trend.defaultPeriod": {
+          "type": "string",
+          "enum": [
+            "ytd",
+            "m1",
+            "m3",
+            "m6",
+            "y1",
+            "y3"
+          ],
+          "enumDescriptions": [
+            "Year to date",
+            "One month",
+            "Three months",
+            "Six months",
+            "One year",
+            "Three years"
+          ],
+          "default": "m3",
+          "description": "Default period for newly opened fund trend panels."
         }
       }
     }

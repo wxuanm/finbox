@@ -213,7 +213,7 @@ Input validation:
 - Uses the available editor width with minimal side padding, compact spacing and typography, and adapts the header and metric cards for narrow editor columns.
 - Uses `retainContextWhenHidden` so loaded trend charts remain visible after switching editor tabs.
 - Provides client-side period switching across YTD, one month, three months, six months, one year, and three years using cached trend payloads.
-- Defaults trend rendering to the three-month period and keeps x-axis labels readable with explicit first/last label anchoring.
+- Defaults trend rendering from the `finbox.fund.trend.defaultPeriod` setting. The default setting value is `m3`; users can switch it to `ytd`, `m1`, `m3`, `m6`, `y1`, or `y3`. X-axis labels remain readable with explicit first/last label anchoring.
 - Renders trend curves through a bundled local ECharts asset, with top scrollable legends, right-side value axes, tooltip values, and a bottom time-window zoom slider.
 - Keeps the full three-year history available to the ECharts zoom slider while rebasing visible-window returns to the current zoom range start, so one month, three month, year-to-date, and dragged custom windows start from 0% semantics without discarding older data.
 - Calculates Y-axis bounds from current visible fund returns, benchmark values, and `0%`, then snaps to compact, evenly spaced ticks. Sub-1% moves may use `0.2%` or `0.5%` steps, while larger moves use integer steps so short periods such as one month do not inherit full-history extremes.

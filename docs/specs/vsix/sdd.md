@@ -178,8 +178,10 @@ Single-fund trend view should show:
 - Editor tab title as `<fund code> 趋势`, while the page title keeps the fund name and code when available
 - Manager names when available
 - Fund scale when available
-- Single-fund panels defaulting to the three-month historical NAV list, with a VS Code setting to choose list or chart for newly opened single-fund panels
+- Fund trend panels defaulting to the three-month period, with a VS Code setting to choose the initial period for newly opened fund trend panels
+- Single-fund panels defaulting to the historical NAV list, with a VS Code setting to choose list or chart for newly opened single-fund panels
 - Period switcher for YTD, one month, three months, six months, one year, and three years
+- VS Code setting for the default fund trend period, supporting `ytd`, `m1`, `m3`, `m6`, `y1`, and `y3`
 - Chart/list radio switcher for single-fund views only
 - VS Code setting for the default single-fund trend view, supporting `list` and `chart`; group trend panels always default to chart
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
