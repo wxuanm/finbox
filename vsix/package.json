@@ -279,6 +279,15 @@
           "type": "boolean",
           "default": true,
           "description": "Only refresh stock quotes automatically during weekday A-share market windows: 09:25-11:35 and 12:55-15:05 local time."
+        },
+        "finbox.fund.trend.defaultView": {
+          "type": "string",
+          "enum": [
+            "list",
+            "chart"
+          ],
+          "default": "list",
+          "description": "Default view for newly opened single-fund trend panels. Group trend panels always open as charts."
         }
       }
     }

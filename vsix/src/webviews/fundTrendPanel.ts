@@ -5,6 +5,9 @@ import { buildNavMetrics } from '../utils/navMetrics';
 import { getNonce, mediaUri } from '../utils/webview';
 
 type TrendKind = 'fund' | 'group';
+type TrendViewMode = 'chart' | 'list';
+
+const DEFAULT_FUND_TREND_VIEW_CONFIG = 'finbox.fund.trend.defaultView';
 
 interface TrendTarget {
   key: string;
@@ -12,6 +15,7 @@ interface TrendTarget {
   title: string;
   tabTitle: string;
   codes: string[];
+  defaultView: TrendViewMode;
 }
 
 export class FundTrendPanel {
@@ -31,7 +35,8 @@ export class FundTrendPanel {
       kind: 'fund',
       title: quote?.name ? `${quote.name} ${code}` : code,
       tabTitle: `${code} 趋势`,
-      codes: [code]
+      codes: [code],
+      defaultView: getDefaultFundTrendView()
     });
   }
 
@@ -44,7 +49,8 @@ export class FundTrendPanel {
       kind: 'group',
       title: `${group.name} 趋势`,
       tabTitle: `${group.name} 趋势`,
-      codes
+      codes,
+      defaultView: 'chart'
     });
   }
 
@@ -66,7 +72,7 @@ export class FundTrendPanel {
       }
     );
     this.panels.set(target.key, panel);
-    panel.webview.html = this.getHtml(panel.webview, target.title);
+    panel.webview.html = this.getHtml(panel.webview, target.title, target.defaultView);
     panel.onDidDispose(() => this.panels.delete(target.key));
     panel.webview.onDidReceiveMessage(async message => {
       if (message?.type === 'refreshTrend') await this.loadTrend(panel, target);
@@ -99,7 +105,7 @@ export class FundTrendPanel {
     }
   }
 
-  private getHtml(webview: vscode.Webview, title: string): string {
+  private getHtml(webview: vscode.Webview, title: string, defaultView: TrendViewMode): string {
     const nonce = getNonce();
     const cssUri = mediaUri(webview, this.extensionUri, 'fundTrend', 'fundTrend.css');
     const echartsUri = mediaUri(webview, this.extensionUri, 'vendor', 'echarts.min.js');
@@ -139,8 +145,8 @@ export class FundTrendPanel {
           <div id="chartTitle" class="chart-title">历史收益走势</div>
         </div>
         <div id="viewTabs" class="view-tabs" role="radiogroup" aria-label="显示方式" hidden>
-          <label><input type="radio" name="trendView" value="chart"><span>曲线</span></label>
-          <label><input type="radio" name="trendView" value="list" checked><span>列表</span></label>
+          <label><input type="radio" name="trendView" value="chart"${defaultView === 'chart' ? ' checked' : ''}><span>曲线</span></label>
+          <label><input type="radio" name="trendView" value="list"${defaultView === 'list' ? ' checked' : ''}><span>列表</span></label>
         </div>
       </div>
       <div id="chart" class="chart"></div>
@@ -153,4 +159,8 @@ export class FundTrendPanel {
 </body>
 </html>`;
   }
+}
+
+function getDefaultFundTrendView(): TrendViewMode {
+  return vscode.workspace.getConfiguration().get<TrendViewMode>(DEFAULT_FUND_TREND_VIEW_CONFIG, 'list') === 'chart' ? 'chart' : 'list';
 }

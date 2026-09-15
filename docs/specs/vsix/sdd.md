@@ -160,7 +160,7 @@ Stock quote refresh can run manually from the STOCK view or automatically when e
 
 Fund and stock group rows should show an in-row spinning refresh icon while their respective quote refresh is running.
 
-The `SETTINGS` view should provide an `Open FinBox Settings` shortcut. Configuration editing remains in native VS Code Settings rather than custom TreeView form controls, and the shortcut opens the `finbox.stock` settings scope by default.
+The `SETTINGS` view should provide an `Open FinBox Settings` shortcut. Configuration editing remains in native VS Code Settings rather than custom TreeView form controls, and the shortcut opens the FinBox extension settings filter by default.
 
 The `SETTINGS` view also provides FinBox configuration import and export shortcuts. Export writes a JSON file containing persisted groups, fund-to-group mapping, stock symbols, and preferences. Import reads the same format and merges it into the current configuration: existing funds and stocks are preserved, new stocks are appended, imported custom groups are added or updated by group ID, and imported fund mappings are applied to valid target groups. Runtime quote caches, failed refresh state, and trend data are not imported or exported.
 
@@ -178,9 +178,10 @@ Single-fund trend view should show:
 - Editor tab title as `<fund code> 趋势`, while the page title keeps the fund name and code when available
 - Manager names when available
 - Fund scale when available
-- Single-fund panels defaulting to the three-month historical NAV list, with chart view available through the view switcher
+- Single-fund panels defaulting to the three-month historical NAV list, with a VS Code setting to choose list or chart for newly opened single-fund panels
 - Period switcher for YTD, one month, three months, six months, one year, and three years
 - Chart/list radio switcher for single-fund views only
+- VS Code setting for the default single-fund trend view, supporting `list` and `chart`; group trend panels always default to chart
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
 - Interactive chart hover state with crosshair, highlighted points, date, cumulative return, and single-fund NAV/daily-return details
 - Chart Y-axis bounds based on the current visible returns with compact, evenly spaced ticks, allowing `0.2%` or `0.5%` steps for sub-1% moves and integer steps for larger moves to avoid excessive blank space on short periods such as one month

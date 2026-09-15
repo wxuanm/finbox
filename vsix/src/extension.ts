@@ -132,7 +132,7 @@ export function activate(context: vscode.ExtensionContext): void {
     return isAshareTradingWindow(new Date());
   }
 
-  async function openFinBoxSettings(settingId = 'finbox.stock'): Promise<void> {
+  async function openFinBoxSettings(settingId = '@ext:finx.finbox'): Promise<void> {
     await vscode.commands.executeCommand('workbench.action.openSettings', settingId);
   }
 

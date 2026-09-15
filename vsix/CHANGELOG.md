@@ -4,7 +4,8 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 
 ## 0.1.2
 
-- Changed single-fund trend panels to open on the historical NAV list by default while keeping the chart available through the `曲线 / 列表` switch.
+- Changed single-fund trend panels to open on the historical NAV list by default while keeping the chart available through the list or chart switch.
+- Added `FinBox > Fund: Trend Default View` so users can choose whether newly opened single-fund trend panels start on the list or chart.
 
 ## 0.1.1
 

@@ -36,7 +36,7 @@ Available fund actions include:
 
 The reserved default fund group is displayed as `Default`. Deleting a custom fund group moves contained funds back to `Default`.
 
-Single-fund trend panels default to the recent three-month period and open on the historical NAV list first. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. ECharts-powered trend charts remain available through the `曲线 / 列表` switch and provide a top legend, compact right-side value axis, bottom time-window slider, and an annualized 10% benchmark line. The slider keeps the full three-year history available while rebasing visible-window returns to the selected range start. When only one fund is displayed, the chart labels the visible window's lowest, highest, and latest cumulative return values, and marks the visible-window max-drawdown segment with a line. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
+Single-fund trend panels default to the recent three-month period and open on the historical NAV list first unless `FinBox > Fund: Trend Default View` is changed to `chart`. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. ECharts-powered trend charts remain available through the `曲线 / 列表` switch and provide a top legend, compact right-side value axis, bottom time-window slider, and an annualized 10% benchmark line. The slider keeps the full three-year history available while rebasing visible-window returns to the selected range start. When only one fund is displayed, the chart labels the visible window's lowest, highest, and latest cumulative return values, and marks the visible-window max-drawdown segment with a line. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
 
 Group trend panels focus on comparison. They show normalized return curves with the same zoomable ECharts controls and comparison metric cards, but do not show the historical NAV list switch. Clicking a comparison card filters the chart to that fund, showing the same low/high/latest labels and max-drawdown line used by single-fund charts.
 
@@ -73,6 +73,13 @@ Available stock actions include:
 Clicking a stock row opens a VS Code editor tab titled `实时走势(<stock code>)`. The trend page uses the Eastmoney A-share trend view in a darkened embedded panel and refreshes when the tab becomes visible again.
 
 Optional automatic stock refresh can be enabled in FinBox settings. When enabled, stock refresh starts when the `STOCK` view is visible and can be limited to A-share trading windows.
+
+## Settings
+
+- `FinBox > Fund: Trend Default View`: choose `list` or `chart` for newly opened single-fund trend panels. Group trend panels always open as charts.
+- `FinBox > Stock Auto Refresh: Enabled`: enable automatic stock quote refresh.
+- `FinBox > Stock Auto Refresh: Interval Minutes`: set the automatic stock quote refresh interval.
+- `FinBox > Stock Auto Refresh: Trading Hours Only`: limit automatic stock quote refresh to A-share trading windows.
 
 ## Usage
 

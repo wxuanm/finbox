@@ -142,7 +142,7 @@ finbox.state
 
 - Renders FinBox operational settings as TreeView status rows and command shortcuts.
 - Shows only the `Open FinBox Settings` shortcut.
-- Opens the native VS Code Settings `finbox.stock` scope for configuration edits instead of implementing custom TreeView form controls.
+- Opens the native VS Code Settings FinBox extension filter for configuration edits instead of implementing custom TreeView form controls.
 
 Initial shape:
 
@@ -220,7 +220,7 @@ Input validation:
 - Keeps the annualized 10% benchmark line visible in the chart but excluded from the legend; single-fund tooltips also show unit NAV and daily return details.
 - Single-fund trend charts use ECharts mark points to label the current visible window's lowest, highest, and latest cumulative return values; if the highest or lowest value matches the latest value, only the latest label is shown.
 - Calculates the current visible-window max-drawdown segment and overlays it only when one fund is displayed, including single-fund views and a selected fund inside group trend views.
-- Provides a single-fund-only chart/list radio switcher that defaults to the historical NAV list for newly opened single-fund panels. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
+- Provides a single-fund-only chart/list radio switcher that defaults newly opened single-fund panels from the `finbox.fund.trend.defaultView` setting. The default setting value is `list`; users can switch it to `chart`. Group trend panels always open as charts. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
 - Renders group fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.
 
 ### `stockTrendPanel.ts`
@@ -331,7 +331,7 @@ Settings view shortcut:
 ```text
 SETTINGS TreeView
   -> Open FinBox Settings
-  -> Native VS Code Settings opens at finbox.stock
+  -> Native VS Code Settings opens at @ext:finx.finbox
 ```
 
 Configuration import/export:
