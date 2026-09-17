@@ -23,7 +23,9 @@ interface TrendTarget {
 }
 
 export class FundTrendPanel {
-  private readonly panels = new Map<string, vscode.WebviewPanel>();
+  private panel: vscode.WebviewPanel | undefined;
+  private currentTarget: TrendTarget | undefined;
+  private loadSequence = 0;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -61,40 +63,51 @@ export class FundTrendPanel {
   }
 
   private async openTarget(target: TrendTarget): Promise<void> {
-    const existing = this.panels.get(target.key);
-    if (existing) {
-      existing.reveal(vscode.ViewColumn.Active);
-      return;
+    let panel = this.panel;
+
+    if (!panel) {
+      panel = vscode.window.createWebviewPanel(
+        'finboxFundTrend',
+        target.tabTitle,
+        vscode.ViewColumn.Active,
+        {
+          enableScripts: true,
+          retainContextWhenHidden: true,
+          localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media')]
+        }
+      );
+      this.panel = panel;
+      const currentPanel = panel;
+      panel.onDidDispose(() => {
+        if (this.panel === currentPanel) this.panel = undefined;
+        this.currentTarget = undefined;
+        this.loadSequence += 1;
+      });
+      panel.webview.onDidReceiveMessage(async message => {
+        if (message?.type === 'refreshTrend' && this.currentTarget) await this.loadTrend(currentPanel, this.currentTarget);
+      });
+    } else {
+      panel.reveal(vscode.ViewColumn.Active);
+      panel.title = target.tabTitle;
     }
 
-    const panel = vscode.window.createWebviewPanel(
-      'finboxFundTrend',
-      target.tabTitle,
-      vscode.ViewColumn.Active,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
-        localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media')]
-      }
-    );
-    this.panels.set(target.key, panel);
+    this.currentTarget = target;
     panel.webview.html = this.getHtml(panel.webview, target.title, target.defaultView, target.defaultPeriod);
-    panel.onDidDispose(() => this.panels.delete(target.key));
-    panel.webview.onDidReceiveMessage(async message => {
-      if (message?.type === 'refreshTrend') await this.loadTrend(panel, target);
-    });
     await this.loadTrend(panel, target);
   }
 
   private async loadTrend(panel: vscode.WebviewPanel, target: TrendTarget): Promise<void> {
+    const sequence = ++this.loadSequence;
     panel.webview.postMessage({ type: 'trendLoading', title: target.title, codes: target.codes });
     if (target.codes.length === 0) {
+      if (!this.isCurrentLoad(panel, target, sequence)) return;
       panel.webview.postMessage({ type: 'trendError', message: '此分组没有可展示的基金。' });
       return;
     }
 
     try {
       const nav = await this.navService.fetchThreeYearFundNav(target.codes);
+      if (!this.isCurrentLoad(panel, target, sequence)) return;
       panel.webview.postMessage({
         type: 'trendData',
         payload: {
@@ -104,11 +117,16 @@ export class FundTrendPanel {
         }
       });
     } catch (error) {
+      if (!this.isCurrentLoad(panel, target, sequence)) return;
       panel.webview.postMessage({
         type: 'trendError',
         message: error instanceof Error ? error.message : '历史趋势加载失败'
       });
     }
+  }
+
+  private isCurrentLoad(panel: vscode.WebviewPanel, target: TrendTarget, sequence: number): boolean {
+    return this.panel === panel && this.currentTarget === target && this.loadSequence === sequence;
   }
 
   private getHtml(webview: vscode.Webview, title: string, defaultView: TrendViewMode, defaultPeriod: TrendPeriod): string {

@@ -168,7 +168,7 @@ The sidebar should avoid heavyweight dashboard cards, large hero copy, mobile co
 
 ### Editor UX
 
-Historical analysis opens as an editor webview panel.
+Historical analysis opens in a single reusable editor webview panel. Opening another fund or group trend reuses the existing fund trend tab, replaces the page content, and loads the newly selected target instead of keeping multiple fund trend tabs open.
 
 Trend webviews should use VS Code theme variables for background, foreground, borders, buttons, and chart colors so they fit light, dark, and high-contrast editor themes. Layout should use the available editor width with minimal side padding and collapse cleanly in narrow editor columns.
 
@@ -178,12 +178,12 @@ Single-fund trend view should show:
 - Editor tab title as `<fund code> 趋势`, while the page title keeps the fund name and code when available
 - Manager names when available
 - Fund scale when available
-- Fund trend panels defaulting to the three-month period, with a VS Code setting to choose the initial period for newly opened fund trend panels
-- Single-fund panels defaulting to the historical NAV list, with a VS Code setting to choose list or chart for newly opened single-fund panels
+- Fund trend loads defaulting to the three-month period, with a VS Code setting to choose the initial period when a fund or group trend target is opened
+- Single-fund trend loads defaulting to the historical NAV list, with a VS Code setting to choose list or chart when a single-fund target is opened
 - Period switcher for YTD, one month, three months, six months, one year, and three years
 - VS Code setting for the default fund trend period, supporting `ytd`, `m1`, `m3`, `m6`, `y1`, and `y3`
 - Chart/list radio switcher for single-fund views only
-- VS Code setting for the default single-fund trend view, supporting `list` and `chart`; group trend panels always default to chart
+- VS Code setting for the default single-fund trend view, supporting `list` and `chart`; group trend loads always default to chart
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
 - Interactive chart hover state with crosshair, highlighted points, date, cumulative return, and single-fund NAV/daily-return details
 - Chart Y-axis bounds based on the current visible returns with compact, evenly spaced ticks, allowing `0.2%` or `0.5%` steps for sub-1% moves and integer steps for larger moves to avoid excessive blank space on short periods such as one month

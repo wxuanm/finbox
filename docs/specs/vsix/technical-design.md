@@ -203,15 +203,15 @@ Input validation:
 
 ### `fundTrendPanel.ts`
 
-- Creates and reveals editor webview panels.
-- Supports one panel per fund or group where practical.
+- Creates and reveals a single reusable editor webview panel for fund trends.
+- Reuses the existing fund trend panel when another fund or group trend is opened, updating the tab title, webview content, and trend data instead of opening additional editor tabs.
 - Loads bundled ECharts asset through `webview.asWebviewUri`.
 - Requests historical NAV data through `fundNavService` via extension host.
 - Sends trend payloads to the webview.
 - Handles retry and refresh messages.
 - Uses VS Code theme CSS variables for editor background, foreground, widget surfaces, borders, button states, and chart colors.
 - Uses the available editor width with minimal side padding, compact spacing and typography, and adapts the header and metric cards for narrow editor columns.
-- Uses `retainContextWhenHidden` so loaded trend charts remain visible after switching editor tabs.
+- Uses `retainContextWhenHidden` so the active trend chart remains visible after switching editor tabs.
 - Provides client-side period switching across YTD, one month, three months, six months, one year, and three years using cached trend payloads.
 - Defaults trend rendering from the `finbox.fund.trend.defaultPeriod` setting. The default setting value is `m3`; users can switch it to `ytd`, `m1`, `m3`, `m6`, `y1`, or `y3`. X-axis labels remain readable with explicit first/last label anchoring.
 - Renders trend curves through a bundled local ECharts asset, with top scrollable legends, right-side value axes, tooltip values, and a bottom time-window zoom slider.
@@ -220,7 +220,7 @@ Input validation:
 - Keeps the annualized 10% benchmark line visible in the chart but excluded from the legend; single-fund tooltips also show unit NAV and daily return details.
 - Single-fund trend charts use ECharts mark points to label the current visible window's lowest, highest, and latest cumulative return values; if the highest or lowest value matches the latest value, only the latest label is shown.
 - Calculates the current visible-window max-drawdown segment and overlays it only when one fund is displayed, including single-fund views and a selected fund inside group trend views.
-- Provides a single-fund-only chart/list radio switcher that defaults newly opened single-fund panels from the `finbox.fund.trend.defaultView` setting. The default setting value is `list`; users can switch it to `chart`. Group trend panels always open as charts. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
+- Provides a single-fund-only chart/list radio switcher that defaults each opened single-fund target from the `finbox.fund.trend.defaultView` setting. The default setting value is `list`; users can switch it to `chart`. Group trend targets always open as charts. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
 - Renders group fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.
 
 ### `stockTrendPanel.ts`
@@ -362,7 +362,7 @@ Import merge rules:
 - Imported stocks are appended after existing stock symbols and de-duplicated.
 - Runtime quote caches, failed refresh state, and historical trend cache are excluded from the file.
 
-Historical NAV data is panel-scoped with optional same-day cache:
+Historical NAV data uses a service-scoped same-day cache keyed by the sorted fund code list:
 
 ```text
 Open trend panel

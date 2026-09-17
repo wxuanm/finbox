@@ -60,7 +60,7 @@
 
 ## Phase 7: Editor Trend Panels
 
-- [x] Implement trend panel creation and reveal behavior.
+- [x] Implement single reusable fund trend panel creation and reveal behavior.
 - [x] Add fund trend panel HTML, CSS, and JavaScript under `vsix/media/fundTrend/`.
 - [ ] Bundle or vendor ECharts locally.
 - [x] Render single-fund historical trend.
