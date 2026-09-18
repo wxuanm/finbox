@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import { FundNavService } from '../services/fundNavService';
 import { FinBoxStore } from '../state/finboxStore';
 import { buildNavMetrics } from '../utils/navMetrics';
+import { normalizeFundCodes } from '../utils/marketSymbols';
 import { getNonce, mediaUri } from '../utils/webview';
 
-type TrendKind = 'fund' | 'group';
+type TrendKind = 'fund' | 'group' | 'compare';
 type TrendViewMode = 'chart' | 'list';
 type TrendPeriod = 'ytd' | 'm1' | 'm3' | 'm6' | 'y1' | 'y3';
 
@@ -56,6 +57,20 @@ export class FundTrendPanel {
       kind: 'group',
       title: `${group.name} 趋势`,
       tabTitle: `${group.name} 趋势`,
+      codes,
+      defaultView: 'chart',
+      defaultPeriod: getDefaultFundTrendPeriod()
+    });
+  }
+
+  async openCompare(inputCodes: string[]): Promise<void> {
+    const codes = normalizeFundCodes(inputCodes).slice(0, 10);
+    if (codes.length === 0) return;
+    await this.openTarget({
+      key: `compare:${codes.join(',')}`,
+      kind: 'compare',
+      title: `基金对比 (${codes.length})`,
+      tabTitle: '基金对比',
       codes,
       defaultView: 'chart',
       defaultPeriod: getDefaultFundTrendPeriod()

@@ -79,6 +79,8 @@
 - [x] Register `finbox.fund.add`.
 - [x] Register `finbox.fund.openTrend`.
 - [x] Register `finbox.fund.openGroupTrend`.
+- [x] Register `finbox.fund.openCompareTrend` for selecting and opening custom comparison of monitored funds.
+- [x] Register `finbox.fund.addToCompare` for fund row context-menu comparison baskets.
 - [x] Add command palette titles and categories.
 - [x] Add context menu entries if using native tree or supported sidebar actions.
 

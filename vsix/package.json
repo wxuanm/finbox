@@ -32,6 +32,8 @@
     "onCommand:finbox.fund.renameGroup",
     "onCommand:finbox.fund.deleteGroup",
     "onCommand:finbox.fund.remove",
+    "onCommand:finbox.fund.openCompareTrend",
+    "onCommand:finbox.fund.addToCompare",
     "onCommand:finbox.stock.remove",
     "onCommand:finbox.stock.moveUp",
     "onCommand:finbox.stock.moveDown",
@@ -86,6 +88,11 @@
           "group": "navigation@2"
         },
         {
+          "command": "finbox.fund.openCompareTrend",
+          "when": "view == finbox.fund",
+          "group": "navigation@3"
+        },
+        {
           "command": "finbox.stock.refresh",
           "when": "view == finbox.stock",
           "group": "navigation@1"
@@ -113,9 +120,14 @@
           "group": "1_fund@1"
         },
         {
-          "command": "finbox.fund.remove",
+          "command": "finbox.fund.addToCompare",
           "when": "view == finbox.fund && viewItem == fund",
           "group": "1_fund@2"
+        },
+        {
+          "command": "finbox.fund.remove",
+          "when": "view == finbox.fund && viewItem == fund",
+          "group": "1_fund@3"
         },
         {
           "command": "finbox.fund.addToGroup",
@@ -244,6 +256,16 @@
         "command": "finbox.fund.openGroupTrend",
         "title": "分组趋势",
         "icon": "$(pulse)"
+      },
+      {
+        "command": "finbox.fund.openCompareTrend",
+        "title": "选择对比基金",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "finbox.fund.addToCompare",
+        "title": "加入对比",
+        "icon": "$(add)"
       },
       {
         "command": "finbox.settings.open",

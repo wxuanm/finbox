@@ -6,24 +6,32 @@ const THREE_YEARS_MS = 365 * 3 * 24 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 15000;
 
 export class FundNavService {
-  private readonly cache = new Map<string, { dateKey: string; data: FundNavResponse }>();
+  private readonly cache = new Map<string, { dateKey: string; data: FundNav }>();
 
   async fetchThreeYearFundNav(inputCodes: string[]): Promise<FundNavResponse> {
     const codes = normalizeFundCodes(inputCodes).slice(0, MAX_CODES);
-    const cacheKey = codes.slice().sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).join(',');
     const todayKey = getLocalDateKey(new Date());
-    const cached = this.cache.get(cacheKey);
-    if (cached?.dateKey === todayKey) return cached.data;
-
-    const results = await Promise.allSettled(codes.map(code => this.fetchFundNav(code)));
     const funds: FundNav[] = [];
+    const missingCodes: string[] = [];
     const failedCodes: string[] = [];
+
+    codes.forEach(code => {
+      const cached = this.cache.get(code);
+      if (cached?.dateKey === todayKey) {
+        funds.push(cached.data);
+        return;
+      }
+      missingCodes.push(code);
+    });
+
+    const results = await Promise.allSettled(missingCodes.map(code => this.fetchFundNav(code)));
 
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
         funds.push(result.value);
+        this.cache.set(result.value.code, { dateKey: todayKey, data: result.value });
       } else {
-        failedCodes.push(codes[index]);
+        failedCodes.push(missingCodes[index]);
       }
     });
 
@@ -34,7 +42,6 @@ export class FundNavService {
       funds,
       failedCodes
     };
-    if (funds.length > 0) this.cache.set(cacheKey, { dateKey: todayKey, data });
     return data;
   }
 
