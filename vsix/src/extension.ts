@@ -13,6 +13,12 @@ import { StockItem, StockMonitorTreeProvider } from './views/stockMonitorTreePro
 const STOCK_AUTO_REFRESH_CONFIG = 'finbox.stock.autoRefresh';
 const DEFAULT_STOCK_AUTO_REFRESH_MINUTES = 5;
 const MIN_STOCK_AUTO_REFRESH_MINUTES = 1;
+const MAX_FUND_COMPARE_CODES = 10;
+const PICK_ICON_SELECTED = '$(check)';
+const PICK_ICON_PARTIAL = '$(dash)';
+const PICK_ICON_UNSELECTED = '$(circle-large-outline)';
+
+type FundComparePickItem = vscode.QuickPickItem & { code?: string; groupName?: string; groupCodes?: string[] };
 
 export function activate(context: vscode.ExtensionContext): void {
   const storage = new StorageService(context);
@@ -39,6 +45,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let stockRefreshInFlight: Promise<void> | undefined;
   let stockAutoRefreshTimer: ReturnType<typeof setInterval> | undefined;
   let stockTreeVisible = stockTreeView.visible;
+  let fundCompareCodes = new Set<string>();
 
   async function refreshQuotes(): Promise<void> {
     const codes = store.getCodes();
@@ -151,6 +158,245 @@ export function activate(context: vscode.ExtensionContext): void {
     await refreshQuotes();
   }
 
+  async function promptOpenFundCompare(): Promise<void> {
+    const codes = store.getCodes();
+    if (codes.length < 2) {
+      vscode.window.showWarningMessage('至少需要监控 2 只基金才能进行对比。');
+      return;
+    }
+
+    const picked = await pickFundCompareCodes(codes);
+    if (!picked) return;
+    if (picked.length < 2) {
+      vscode.window.showWarningMessage('请选择至少 2 只基金进行对比。');
+      return;
+    }
+    if (picked.length > MAX_FUND_COMPARE_CODES) {
+      vscode.window.showWarningMessage(`基金对比最多支持 ${MAX_FUND_COMPARE_CODES} 只。`);
+      return;
+    }
+
+    fundCompareCodes = new Set(picked);
+    await promptFundCompareAction();
+  }
+
+  async function pickFundCompareCodes(codes: string[]): Promise<string[] | undefined> {
+    const quickPick = vscode.window.createQuickPick<FundComparePickItem>();
+    const doneButton: vscode.QuickInputButton = {
+      iconPath: new vscode.ThemeIcon('arrow-right'),
+      tooltip: '下一步：确认选择'
+    };
+    const selectedCodes = new Set(fundCompareCodes);
+    let settled = false;
+
+    quickPick.canSelectMany = false;
+    quickPick.matchOnDescription = true;
+    quickPick.matchOnDetail = true;
+    quickPick.keepScrollPosition = true;
+    quickPick.buttons = [doneButton];
+    quickPick.title = '基金对比 1/2 - 选择基金';
+
+    const clearActiveSelection = () => {
+      quickPick.activeItems = [];
+    };
+    const refreshItems = () => {
+      quickPick.placeholder = `已选 ${selectedCodes.size}/${MAX_FUND_COMPARE_CODES} · 点击或回车切换基金/分组`;
+      quickPick.items = buildFundComparePickItems(codes, selectedCodes);
+      clearActiveSelection();
+    };
+    refreshItems();
+
+    return new Promise(resolve => {
+      const disposables: vscode.Disposable[] = [];
+      const finish = (selectedCodes: string[] | undefined) => {
+        if (settled) return;
+        settled = true;
+        disposables.forEach(disposable => disposable.dispose());
+        quickPick.dispose();
+        resolve(selectedCodes);
+      };
+      const toggleItem = (item: FundComparePickItem | undefined) => {
+        if (!item) return;
+        if (item.groupCodes) {
+          const shouldClearGroup = item.groupCodes.length > 0 && item.groupCodes.every(code => selectedCodes.has(code));
+          if (shouldClearGroup) {
+            item.groupCodes.forEach(code => selectedCodes.delete(code));
+            refreshItems();
+            return;
+          }
+
+          let truncated = false;
+          item.groupCodes.forEach(code => {
+            if (selectedCodes.has(code)) return;
+            if (selectedCodes.size < MAX_FUND_COMPARE_CODES) {
+              selectedCodes.add(code);
+            } else {
+              truncated = true;
+            }
+          });
+          refreshItems();
+          if (truncated) vscode.window.showWarningMessage(`基金对比最多支持 ${MAX_FUND_COMPARE_CODES} 只，已选到上限。`);
+          return;
+        }
+
+        if (!item.code) return;
+        if (selectedCodes.has(item.code)) {
+          selectedCodes.delete(item.code);
+        } else if (selectedCodes.size < MAX_FUND_COMPARE_CODES) {
+          selectedCodes.add(item.code);
+        } else {
+          vscode.window.showWarningMessage(`基金对比最多支持 ${MAX_FUND_COMPARE_CODES} 只。`);
+        }
+        refreshItems();
+      };
+
+      disposables.push(
+        quickPick.onDidAccept(() => toggleItem(quickPick.activeItems[0])),
+        quickPick.onDidTriggerButton(button => {
+          if (button === doneButton) {
+            if (selectedCodes.size < 2) {
+              vscode.window.showWarningMessage('请选择至少 2 只基金进行对比。');
+              return;
+            }
+            finish([...selectedCodes]);
+            return;
+          }
+        }),
+        quickPick.onDidHide(() => finish(undefined))
+      );
+
+      quickPick.show();
+      clearActiveSelection();
+    });
+  }
+
+  async function promptFundCompareAction(): Promise<void> {
+    if (fundCompareCodes.size < 2) {
+      vscode.window.showWarningMessage('请选择至少 2 只基金进行对比。');
+      return;
+    }
+
+    const action = await vscode.window.showQuickPick(
+      [
+        { label: '$(git-compare) 打开对比', description: `${fundCompareCodes.size} 只基金` },
+        { label: '$(edit) 重新选择', description: '返回基金选择列表' }
+      ],
+      {
+        title: '基金对比 2/2 - 选择操作',
+        matchOnDescription: true
+      }
+    );
+    if (!action) return;
+    if (action.label.includes('打开对比')) {
+      await openFundCompare([...fundCompareCodes], true);
+      return;
+    }
+    if (action.label.includes('重新选择')) {
+      await promptOpenFundCompare();
+      return;
+    }
+  }
+
+  async function addFundToCompare(input?: string | FundItem): Promise<void> {
+    const code = input instanceof FundItem ? input.code : typeof input === 'string' ? input : '';
+    if (!code || !store.getCodes().includes(code)) return;
+    if (fundCompareCodes.has(code)) {
+      vscode.window.showInformationMessage(`基金 ${code} 已在对比中。当前 ${fundCompareCodes.size}/${MAX_FUND_COMPARE_CODES}`);
+      return;
+    }
+    if (fundCompareCodes.size >= MAX_FUND_COMPARE_CODES) {
+      vscode.window.showWarningMessage(`基金对比最多支持 ${MAX_FUND_COMPARE_CODES} 只。`);
+      return;
+    }
+
+    fundCompareCodes.add(code);
+    const label = store.getQuote(code)?.name || code;
+    const actions = fundCompareCodes.size >= 2 ? ['打开对比', '清空对比'] : ['清空对比'];
+    const action = await vscode.window.showInformationMessage(`已加入对比：${label} ${code}。当前 ${fundCompareCodes.size}/${MAX_FUND_COMPARE_CODES}`, ...actions);
+    if (action === '打开对比') await openFundCompare([...fundCompareCodes], true);
+    if (action === '清空对比') fundCompareCodes.clear();
+  }
+
+  async function openFundCompare(codes: string[], clearBasket: boolean): Promise<void> {
+    if (codes.length < 2) {
+      vscode.window.showWarningMessage('请选择至少 2 只基金进行对比。');
+      return;
+    }
+    if (codes.length > MAX_FUND_COMPARE_CODES) {
+      vscode.window.showWarningMessage(`基金对比最多支持 ${MAX_FUND_COMPARE_CODES} 只。`);
+      return;
+    }
+
+    await fundTrendPanel.openCompare(codes);
+    if (clearBasket) fundCompareCodes.clear();
+  }
+
+  function buildFundComparePickItems(codes: string[], selectedCodes: Set<string>): FundComparePickItem[] {
+    const snapshot = store.snapshot();
+    const itemsByGroup = new Map<string, Array<FundComparePickItem & { code: string }>>();
+    codes
+      .map(code => {
+        const quote = store.getQuote(code);
+        const group = store.getGroup(snapshot.fundGroups[code] || 'default');
+        const selected = selectedCodes.has(code);
+        return {
+          label: formatFundPickLabel(code, quote, selected),
+          description: formatFundPickDescription(quote),
+          groupName: group?.name || 'Default',
+          code
+        };
+      })
+      .sort((a, b) => a.groupName.localeCompare(b.groupName, 'zh-Hans-CN', { numeric: true })
+        || a.code.localeCompare(b.code, 'en', { numeric: true }))
+      .forEach(({ groupName, ...item }) => {
+        const groupItems = itemsByGroup.get(groupName) || [];
+        groupItems.push(item);
+        itemsByGroup.set(groupName, groupItems);
+      });
+
+    return [
+      ...[...itemsByGroup.entries()].flatMap(([groupName, items]) => [
+        {
+          label: formatGroupPickLabel(groupName, items, selectedCodes),
+          description: formatGroupPickDescription(items, selectedCodes),
+          groupName,
+          groupCodes: items.map(item => item.code)
+        },
+        ...items
+      ])
+    ];
+  }
+
+  function getGroupPickIcon(items: Array<FundComparePickItem & { code: string }>, selectedCodes: Set<string>): string {
+    const selectedCount = items.filter(item => selectedCodes.has(item.code)).length;
+    if (selectedCount === items.length && items.length > 0) return PICK_ICON_SELECTED;
+    if (selectedCount > 0) return PICK_ICON_PARTIAL;
+    return PICK_ICON_UNSELECTED;
+  }
+
+  function getFundPickIcon(selected: boolean): string {
+    return selected ? PICK_ICON_SELECTED : PICK_ICON_UNSELECTED;
+  }
+
+  function formatGroupPickLabel(groupName: string, items: Array<FundComparePickItem & { code: string }>, selectedCodes: Set<string>): string {
+    return `${getGroupPickIcon(items, selectedCodes)} ${groupName}`;
+  }
+
+  function formatFundPickLabel(code: string, quote: ReturnType<FinBoxStore['getQuote']>, selected: boolean): string {
+    return `$(blank)   ${getFundPickIcon(selected)} ${quote?.name ? `${quote.name} (${code})` : code}`;
+  }
+
+  function formatFundPickDescription(quote: ReturnType<FinBoxStore['getQuote']>): string | undefined {
+    return quote?.manager || undefined;
+  }
+
+  function formatGroupPickDescription(items: Array<FundComparePickItem & { code: string }>, selectedCodes: Set<string>): string {
+    const selectedCount = items.filter(item => selectedCodes.has(item.code)).length;
+    if (selectedCount === items.length && items.length > 0) return `已全选 ${selectedCount}/${items.length} · Enter 取消`;
+    if (selectedCount > 0) return `部分选中 ${selectedCount}/${items.length} · Enter 补全`;
+    return `未选中 0/${items.length} · Enter 全选`;
+  }
+
   async function promptCreateGroup(): Promise<void> {
     const name = await vscode.window.showInputBox({
       prompt: '输入分组名称',
@@ -258,6 +504,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('finbox.config.import', () => importConfig()),
     vscode.commands.registerCommand('finbox.fund.add', () => promptAddFund('default')),
     vscode.commands.registerCommand('finbox.stock.add', () => promptAddStock()),
+    vscode.commands.registerCommand('finbox.fund.openCompareTrend', () => promptOpenFundCompare()),
+    vscode.commands.registerCommand('finbox.fund.addToCompare', (item?: string | FundItem) => addFundToCompare(item)),
     vscode.commands.registerCommand('finbox.fund.addToGroup', (item?: FundGroupItem) => promptAddFund(item instanceof FundGroupItem ? item.group.id : 'default')),
     vscode.commands.registerCommand('finbox.fund.createGroup', () => promptCreateGroup()),
     vscode.commands.registerCommand('finbox.fund.renameGroup', (item?: FundGroupItem) => promptRenameGroup(item)),

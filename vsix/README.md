@@ -7,6 +7,7 @@ FinBox brings lightweight fund and A-share stock monitoring into VS Code. It is 
 - Monitor mutual funds in grouped watchlists.
 - Refresh real-time fund estimates from Eastmoney.
 - Open single-fund and group historical NAV trend views in editor panels, including by clicking a fund row.
+- Select monitored funds for custom historical comparison with a two-step comparison flow.
 - Review single-fund trend details with a chart/list switch, low/high/latest labels, max-drawdown marking, all-period metrics, and paginated NAV records.
 - Monitor A-share stocks under the `A Stock` group.
 - Refresh A-share quotes using Sina first and Eastmoney as fallback.
@@ -33,12 +34,16 @@ Available fund actions include:
 - Remove funds
 - Open single-fund trend views
 - Open group trend comparison views
+- Select funds for custom comparison
+- Add a fund row to the comparison basket from its context menu
 
 The reserved default fund group is displayed as `Default`. Deleting a custom fund group moves contained funds back to `Default`.
 
 Fund trend panels default to the recent three-month period unless `FinBox > Fund: Trend Default Period` is changed. Single-fund panels open on the historical NAV list first unless `FinBox > Fund: Trend Default View` is changed to `chart`. The editor tab uses the fund code, while the page title keeps the fund name and code when quote metadata is available. ECharts-powered trend charts remain available through the `曲线 / 列表` switch and provide a top legend, compact right-side value axis, bottom time-window slider, and an annualized 10% benchmark line. The slider keeps the full three-year history available while rebasing visible-window returns to the selected range start. When only one fund is displayed, the chart labels the visible window's lowest, highest, and latest cumulative return values, and marks the visible-window max-drawdown segment with a line. The chart tooltip shows cumulative return; when only one fund is displayed it also shows unit NAV and daily return. The list view shows date, unit NAV, accumulated NAV, and daily return in a compact paginated table with direct page jumps.
 
 Group trend panels focus on comparison. They show normalized return curves with the same zoomable ECharts controls and comparison metric cards, but do not show the historical NAV list switch. Clicking a comparison card filters the chart to that fund, showing the same low/high/latest labels and max-drawdown line used by single-fund charts.
+
+Custom fund comparison reuses the same trend panel and historical NAV service. Start `选择对比基金` from the `FUND` view, choose 2-10 monitored funds from the simulated grouped selector, then open the comparison from the second step. Group rows can select or clear all funds in that group, and individual fund rows remain selectable. Fund row context menus also provide `加入对比` for building a temporary comparison basket.
 
 ## Stock Monitor
 
@@ -103,6 +108,8 @@ Use view title buttons or item context menus for add, refresh, remove, trend, an
 - A-share stock trend views: Eastmoney quote pages embedded in VS Code editor panels.
 
 All quote requests are made from the VS Code extension host. The extension does not require FinBox Cloudflare Pages Functions at runtime.
+
+Historical NAV data is cached for the current day by individual fund code, so single-fund views, group comparisons, and custom comparisons can reuse already loaded fund history and only fetch missing funds.
 
 ## Persistence
 

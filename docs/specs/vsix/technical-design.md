@@ -204,9 +204,11 @@ Input validation:
 ### `fundTrendPanel.ts`
 
 - Creates and reveals a single reusable editor webview panel for fund trends.
-- Reuses the existing fund trend panel when another fund or group trend is opened, updating the tab title, webview content, and trend data instead of opening additional editor tabs.
+- Reuses the existing fund trend panel when another fund, group trend, or custom comparison is opened, updating the tab title, webview content, and trend data instead of opening additional editor tabs.
 - Loads bundled ECharts asset through `webview.asWebviewUri`.
 - Requests historical NAV data through `fundNavService` via extension host.
+- Supports custom comparison targets built from 2-10 locally monitored fund codes selected through the `finbox.fund.openCompareTrend` command; the selector uses self-managed selected/partial/unselected icons instead of native multi-select checkboxes, keeps the simulated tree list focused on selection only, puts the current step directly in the QuickPick title, uses placeholder text for secondary selection guidance and selected count, uses a right-arrow top button for advancing from selection, separates the follow-up comparison action into a second prompted step after selection is complete, visually indents fund rows and their selection-state icons under each group without extra decorative row icons, keeps the code in each fund label, shows the manager name in the fund description from existing store data, and introduces no additional data interface.
+- Supports adding individual fund rows to a transient compare basket through `finbox.fund.addToCompare`; when the basket has at least two funds, the notification action opens the comparison in the reusable trend panel and clears the basket.
 - Sends trend payloads to the webview.
 - Handles retry and refresh messages.
 - Uses VS Code theme CSS variables for editor background, foreground, widget surfaces, borders, button states, and chart colors.
@@ -220,8 +222,8 @@ Input validation:
 - Keeps the annualized 10% benchmark line visible in the chart but excluded from the legend; single-fund tooltips also show unit NAV and daily return details.
 - Single-fund trend charts use ECharts mark points to label the current visible window's lowest, highest, and latest cumulative return values; if the highest or lowest value matches the latest value, only the latest label is shown.
 - Calculates the current visible-window max-drawdown segment and overlays it only when one fund is displayed, including single-fund views and a selected fund inside group trend views.
-- Provides a single-fund-only chart/list radio switcher that defaults each opened single-fund target from the `finbox.fund.trend.defaultView` setting. The default setting value is `list`; users can switch it to `chart`. Group trend targets always open as charts. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
-- Renders group fund-comparison cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.
+- Provides a single-fund-only chart/list radio switcher that defaults each opened single-fund target from the `finbox.fund.trend.defaultView` setting. The default setting value is `list`; users can switch it to `chart`. Group and custom comparison targets always open as charts. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
+- Renders group and custom comparison fund cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.
 
 ### `stockTrendPanel.ts`
 
@@ -362,11 +364,13 @@ Import merge rules:
 - Imported stocks are appended after existing stock symbols and de-duplicated.
 - Runtime quote caches, failed refresh state, and historical trend cache are excluded from the file.
 
-Historical NAV data uses a service-scoped same-day cache keyed by the sorted fund code list:
+Historical NAV data uses a service-scoped same-day cache keyed by individual fund code. Group trend and custom comparison requests reuse cached single-fund NAV data and only fetch missing funds:
 
 ```text
 Open trend panel
   -> fundNavService.fetchThreeYearFundNav(codes)
+  -> Reuse same-day cached fund NAV by code
+  -> Fetch only missing fund codes
   -> Trend panel receives trendData
 ```
 

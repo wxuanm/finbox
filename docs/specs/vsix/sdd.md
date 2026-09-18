@@ -201,6 +201,8 @@ Group trend view should show:
 - Comparison cards for period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics
 - Clear message when the group has no valid fund data
 
+Custom fund comparison should reuse the same trend panel and historical NAV service. Users can run the fund comparison command from the FUND view, select 2-10 funds from the locally monitored fund list, and open a chart-only comparison target without adding any new data interface. The selector uses self-managed selection icons instead of native multi-select checkboxes, avoiding the built-in top-level select-all checkbox, and keeps the simulated tree list focused on selection only; the first screen puts step 1 in the title, keeps secondary selection guidance and selected count in placeholder text rather than as a list row, and after the user completes selection, a separate step 2 follow-up action opens comparison or returns to selection. It includes selectable group rows that toggle the group's funds: selecting a group auto-selects its funds, and selecting it again after all group funds are selected clears them; individual fund rows remain selectable and are visually indented under their group, including their selection-state icon. Each fund row keeps the code in the main label and shows the manager name in the description when available. Fund row context menus also provide `加入对比`, adding that fund to a transient compare basket; once at least two funds are selected, the notification action can open the comparison and clear the basket.
+
 ### Extension Data Model
 
 ```ts

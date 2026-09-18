@@ -4,6 +4,10 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 
 ## 0.1.2
 
+- Added a custom fund comparison flow that reuses the existing fund trend panel and supports selecting 2-10 monitored funds.
+- Added a simulated tree selector for fund comparison with group-level selection, individual fund selection, manager names, and a separate confirmation step before opening comparison.
+- Added fund-row context menu support for adding a fund to a transient comparison basket.
+- Changed historical NAV caching to reuse same-day single-fund data across single-fund, group, and custom comparison trend views.
 - Changed single-fund trend panels to open on the historical NAV list by default while keeping the chart available through the list or chart switch.
 - Added `FinBox > Fund: Trend Default View` so users can choose whether newly opened single-fund trend panels start on the list or chart.
 - Added `FinBox > Fund: Trend Default Period` so users can choose the default period for newly opened fund trend panels.
