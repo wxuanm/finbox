@@ -174,6 +174,8 @@ Trend webviews should use VS Code theme variables for background, foreground, bo
 
 Single-fund trend view should show:
 
+- A transaction information card at the bottom of the page with purchase status, redemption status, daily purchase limit, purchase-fee tiers, holding fees, and redemption-fee tiers. The user-facing card does not identify upstream data providers. Missing data remains explicit, and the card reminds users that the actual order page and fund-company announcements take precedence.
+
 - Fund name and code
 - Editor tab title as `<fund code> 趋势`, while the page title keeps the fund name and code when available
 - Manager names when available

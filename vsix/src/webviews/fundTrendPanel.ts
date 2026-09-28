@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { FundNavService } from '../services/fundNavService';
+import { FundTradingService } from '../services/fundTradingService';
 import { FinBoxStore } from '../state/finboxStore';
 import { buildNavMetrics } from '../utils/navMetrics';
 import { normalizeFundCodes } from '../utils/marketSymbols';
@@ -31,7 +32,8 @@ export class FundTrendPanel {
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly store: FinBoxStore,
-    private readonly navService: FundNavService
+    private readonly navService: FundNavService,
+    private readonly tradingService: FundTradingService
   ) {}
 
   async openFund(code: string): Promise<void> {
@@ -121,13 +123,19 @@ export class FundTrendPanel {
     }
 
     try {
-      const nav = await this.navService.fetchThreeYearFundNav(target.codes);
+      const [nav, tradingInfo] = await Promise.all([
+        this.navService.fetchThreeYearFundNav(target.codes),
+        target.kind === 'fund'
+          ? this.tradingService.fetchTradingInfo(target.codes[0]).catch(() => null)
+          : Promise.resolve(null)
+      ]);
       if (!this.isCurrentLoad(panel, target, sequence)) return;
       panel.webview.postMessage({
         type: 'trendData',
         payload: {
           target,
           nav,
+          tradingInfo,
           metrics: buildNavMetrics(nav.funds)
         }
       });
@@ -192,6 +200,7 @@ export class FundTrendPanel {
       <div id="navList" class="nav-list" hidden></div>
     </section>
     <section id="metrics" class="metrics-grid"></section>
+    <section id="tradingInfo" class="trading-info"></section>
   </main>
   <script nonce="${nonce}" src="${echartsUri}"></script>
   <script nonce="${nonce}" src="${jsUri}"></script>

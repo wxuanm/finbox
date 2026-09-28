@@ -5,12 +5,12 @@ FinBox brings lightweight fund and A-share stock monitoring into VS Code. It is 
 ## Features
 
 - Monitor mutual funds in grouped watchlists.
-- Refresh real-time fund estimates from Eastmoney.
+- Refresh real-time fund estimates.
 - Open single-fund and group historical NAV trend views in editor panels, including by clicking a fund row.
 - Select monitored funds for custom historical comparison with a two-step comparison flow.
 - Review single-fund trend details with a chart/list switch, low/high/latest labels, max-drawdown marking, all-period metrics, and paginated NAV records.
 - Monitor A-share stocks under the `A Stock` group.
-- Refresh A-share quotes using Sina first and Eastmoney as fallback.
+- Refresh A-share quotes with automatic fallback handling.
 - Open A-share stock real-time trend views in editor panels by clicking a stock row.
 - Show in-sidebar refresh indicators while fund or stock quotes are updating.
 - Keep stock rows in your add order, with context menu actions to move stocks up or down.
@@ -75,7 +75,7 @@ Available stock actions include:
 - Remove stocks
 - Move stocks up or down
 
-Clicking a stock row opens a VS Code editor tab titled `实时走势(<stock code>)`. The trend page uses the Eastmoney A-share trend view in a darkened embedded panel and refreshes when the tab becomes visible again.
+Clicking a stock row opens a VS Code editor tab titled `实时走势(<stock code>)`. The trend page uses a darkened embedded panel and refreshes when the tab becomes visible again.
 
 Optional automatic stock refresh can be enabled in FinBox settings. When enabled, stock refresh starts when the `STOCK` view is visible and can be limited to A-share trading windows.
 
@@ -100,13 +100,6 @@ Stock symbols: 600519, 000001
 
 Use view title buttons or item context menus for add, refresh, remove, trend, and ordering actions.
 
-## Data Sources
-
-- Fund real-time estimates: Eastmoney fund comparison data.
-- Fund historical NAV trends: Eastmoney fund historical script data.
-- A-share stock quotes: Sina quote data first, Eastmoney single-stock quote data as fallback.
-- A-share stock trend views: Eastmoney quote pages embedded in VS Code editor panels.
-
 All quote requests are made from the VS Code extension host. The extension does not require FinBox Cloudflare Pages Functions at runtime.
 
 Historical NAV data is cached for the current day by individual fund code, so single-fund views, group comparisons, and custom comparisons can reuse already loaded fund history and only fetch missing funds.
@@ -122,13 +115,13 @@ Persisted data includes:
 - A-share stock symbols and their order
 - Extension preferences
 
-Quote values are refreshed from data sources and are not treated as the canonical persisted watchlist.
+Quote values are refreshed from remote services and are not treated as the canonical persisted watchlist.
 
 ## Limitations
 
 - Fund and stock input currently accepts six-digit codes.
 - Historical trend comparison is limited to up to 10 fund codes.
-- Quote refresh depends on network access to Sina and Eastmoney.
+- Quote refresh depends on network access.
 - `SETTINGS` is reserved for future extension settings.
 
 ## Changelog

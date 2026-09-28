@@ -185,6 +185,120 @@ h1 {
   display: none;
 }
 
+.trading-info:empty {
+  display: none;
+}
+
+.trading-info {
+  margin-bottom: 12px;
+}
+
+.trading-card {
+  display: grid;
+  gap: 11px;
+}
+
+.trading-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trading-updated,
+.trading-note,
+.trading-unavailable {
+  color: var(--trend-muted);
+  font-size: 12px;
+}
+
+.trading-updated {
+  margin-top: 2px;
+}
+
+.trading-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.trading-field {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--trend-border) 72%, transparent);
+  border-radius: 6px;
+  background: var(--trend-soft-bg);
+}
+
+.trading-field span {
+  display: block;
+  color: var(--trend-muted);
+  font-size: 11px;
+}
+
+.trading-field strong {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fee-title {
+  font-weight: 600;
+}
+
+.trading-fee-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+.trading-fee-section {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--trend-border);
+  border-radius: 6px;
+}
+
+.trading-fee-section > .fee-title {
+  padding: 8px 9px;
+  border-bottom: 1px solid var(--trend-border);
+  background: var(--trend-soft-bg);
+}
+
+.fee-table-wrap {
+  overflow-x: auto;
+}
+
+.fee-table {
+  width: 100%;
+  border: 0;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.fee-table th,
+.fee-table td {
+  padding: 7px 9px;
+  border-right: 1px solid var(--trend-border);
+  border-bottom: 1px solid var(--trend-border);
+  text-align: left;
+}
+
+.fee-table th {
+  color: var(--trend-muted);
+  background: var(--trend-soft-bg);
+  font-weight: 500;
+}
+
+.trading-note {
+  padding-top: 1px;
+  line-height: 1.55;
+}
+
 .card,
 .chart-panel {
   border: 1px solid var(--trend-border);
@@ -646,6 +760,10 @@ h1 {
   .pager-actions {
     justify-content: flex-start;
   }
+
+  .trading-fee-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
@@ -664,6 +782,10 @@ h1 {
 
   .summary-grid,
   .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trading-fields {
     grid-template-columns: 1fr;
   }
 }

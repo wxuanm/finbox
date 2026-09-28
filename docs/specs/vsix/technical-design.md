@@ -53,9 +53,7 @@ Expected `package.json` contributions:
 ```json
 {
   "activationEvents": [
-    "onView:finbox.fund",
-    "onCommand:finbox.open",
-    "onCommand:finbox.fund.refresh"
+    "onStartupFinished"
   ],
   "contributes": {
     "viewsContainers": {
@@ -92,6 +90,8 @@ Expected `package.json` contributions:
   }
 }
 ```
+
+View and command activation events are generated automatically by VS Code from the corresponding `contributes.views` and `contributes.commands` declarations. `onStartupFinished` remains explicit so stock auto-refresh can initialize without requiring the user to open a contributed view first.
 
 ## Runtime Components
 
@@ -183,6 +183,12 @@ Input validation:
 - Returns the same normalized shape documented in the SDD.
 - Uses `Promise.allSettled` so partial results can render.
 
+### `fundTradingService.ts`
+
+- Fetches the public 天天基金（东方财富） fee page for a single six-digit fund code and caches the parsed result for the local day.
+- Extracts channel-specific purchase and redemption status, the daily purchase limit, purchase-fee tiers, holding fees, and redemption-fee tiers.
+- Trading-rule failure does not block historical NAV rendering; the single-fund trend card instead shows a clear unavailable state.
+
 ### `sidebarViewProvider.ts`
 
 - Implements `vscode.WebviewViewProvider`.
@@ -224,6 +230,7 @@ Input validation:
 - Calculates the current visible-window max-drawdown segment and overlays it only when one fund is displayed, including single-fund views and a selected fund inside group trend views.
 - Provides a single-fund-only chart/list radio switcher that defaults each opened single-fund target from the `finbox.fund.trend.defaultView` setting. The default setting value is `list`; users can switch it to `chart`. Group and custom comparison targets always open as charts. The list view uses the same cached historical NAV payload, paginates records in a compact two-column table, supports direct page jumps, and renders date, unit NAV, accumulated NAV, and daily return.
 - Renders group and custom comparison fund cards with return, maximum drawdown, annualized volatility, return-to-drawdown ratio, up-day ratio, scale, and latest NAV date. Single-fund views render one detail card containing all period rows and highlight the active period.
+- Renders the trading-rule card at the bottom of single-fund targets only, using the trend page's card/table styling and including the fetch time plus an actual-order-page/fund-announcement precedence note without exposing the upstream provider in user-facing text.
 
 ### `stockTrendPanel.ts`
 

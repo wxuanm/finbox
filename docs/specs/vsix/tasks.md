@@ -69,6 +69,7 @@
 - [x] Add single-fund historical NAV list with pagination.
 - [x] Add single-fund max-drawdown curve marker.
 - [x] Add single-fund all-period metric table.
+- [x] Add a bottom-of-page single-fund card for purchase/redemption status, daily limit, purchase fees, holding fees, and redemption fees without displaying upstream provider names.
 - [x] Add retry action for failed historical data requests.
 - [ ] Handle ECharts absence with readable fallback.
 

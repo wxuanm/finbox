@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { FundQuoteService } from './services/fundQuoteService';
 import { FundNavService } from './services/fundNavService';
+import { FundTradingService } from './services/fundTradingService';
 import { StockQuoteService } from './services/stockQuoteService';
 import { StorageService } from './services/storageService';
 import { FinBoxStore } from './state/finboxStore';
@@ -26,7 +27,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const quoteService = new FundQuoteService();
   const stockQuoteService = new StockQuoteService();
   const navService = new FundNavService();
-  const fundTrendPanel = new FundTrendPanel(context.extensionUri, store, navService);
+  const tradingService = new FundTradingService();
+  const fundTrendPanel = new FundTrendPanel(context.extensionUri, store, navService, tradingService);
   const stockTrendPanel = new StockTrendPanel(store);
   const treeProvider = new FundMonitorTreeProvider(store, context.extensionUri);
   const stockTreeProvider = new StockMonitorTreeProvider(store, context.extensionUri);

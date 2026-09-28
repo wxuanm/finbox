@@ -121,6 +121,22 @@ export interface NavMetricPeriod {
   upDayRatio: number | null;
 }
 
+export interface FundFeeTier {
+  range: string;
+  rate: string;
+}
+
+export interface FundTradingInfo {
+  code: string;
+  purchaseStatus: string | null;
+  redemptionStatus: string | null;
+  dailyPurchaseLimit: string | null;
+  purchaseFees: FundFeeTier[];
+  holdingFees: FundFeeTier[];
+  redemptionFees: FundFeeTier[];
+  updatedAt: string;
+}
+
 export interface NavMetric {
   code: string;
   name: string;

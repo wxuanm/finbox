@@ -77,6 +77,7 @@ window.addEventListener('message', event => {
   if (message.type === 'trendError') {
     setStatus(message.message || '历史趋势加载失败');
     document.getElementById('summary').innerHTML = '';
+    document.getElementById('tradingInfo').innerHTML = '';
     disposeChart();
     document.getElementById('chart').innerHTML = '<div class="card">暂无可展示数据</div>';
     document.getElementById('navList').innerHTML = '';
@@ -91,7 +92,7 @@ function renderTrend(payload) {
 
 function renderCurrentTrend() {
   if (!currentPayload) return;
-  const { target, nav, metrics } = currentPayload;
+  const { target, nav, metrics, tradingInfo } = currentPayload;
   document.getElementById('title').textContent = target.title;
   setStatus(nav.failedCodes.length ? `加载失败 ${nav.failedCodes.join(', ')}` : '');
   if (selectedFundCode && !metrics.some(metric => metric.code === selectedFundCode)) selectedFundCode = null;
@@ -99,6 +100,7 @@ function renderCurrentTrend() {
   updatePeriodTabs();
   updateViewTabs(target.kind === 'fund');
   renderSummary(metrics, currentPeriod);
+  renderTradingInfo(tradingInfo, target.kind);
   if (currentViewMode === 'list' && target.kind === 'fund') {
     renderNavList(metrics[0], currentPeriod);
   } else {
@@ -109,6 +111,72 @@ function renderCurrentTrend() {
 
 function renderSummary(metrics, period) {
   document.getElementById('summary').innerHTML = '';
+}
+
+function renderTradingInfo(info, targetKind) {
+  const container = document.getElementById('tradingInfo');
+  if (targetKind !== 'fund') {
+    container.innerHTML = '';
+    return;
+  }
+
+  if (!info) {
+    container.innerHTML = `<article class="card trading-card">
+      <div class="trading-header"><div class="card-title">交易信息</div></div>
+      <div class="trading-unavailable">交易信息暂不可用，请以基金公司公告及实际下单页为准。</div>
+    </article>`;
+    return;
+  }
+
+  const fields = [
+    ['申购状态', info.purchaseStatus],
+    ['赎回状态', info.redemptionStatus],
+    ['限额', info.dailyPurchaseLimit]
+  ];
+  container.innerHTML = `<article class="card trading-card">
+    <div class="trading-header">
+      <div>
+        <div class="card-title">交易信息</div>
+        <div class="trading-updated">更新于 ${escapeHtml(formatDateTime(info.updatedAt))}</div>
+      </div>
+    </div>
+    <div class="trading-fields">
+      ${fields.map(([label, value]) => `<div class="trading-field">
+        <span>${escapeHtml(label)}</span><strong>${escapeHtml(value || '暂无数据')}</strong>
+      </div>`).join('')}
+    </div>
+    <div class="trading-fee-grid">
+      ${renderTradingFeeSection('申购费率', info.purchaseFees, '适用金额', '原费率 | 优惠费率')}
+      ${renderTradingFeeSection('持有费率', info.holdingFees, '费用项目', '费率')}
+      ${renderTradingFeeSection('赎回费率', info.redemptionFees, '持有期限', '费率')}
+    </div>
+    <div class="trading-note">短期持有可能产生较高赎回费。交易规则可能变化，实际下单页及基金公司公告优先。</div>
+  </article>`;
+}
+
+function renderTradingFeeSection(title, rows, rangeLabel, rateLabel) {
+  const feeRows = Array.isArray(rows) ? rows : [];
+  return `<section class="trading-fee-section">
+    <div class="fee-title">${escapeHtml(title)}</div>
+    ${feeRows.length ? `<div class="fee-table-wrap"><table class="fee-table">
+      <thead><tr><th>${escapeHtml(rangeLabel)}</th><th>${escapeHtml(rateLabel)}</th></tr></thead>
+      <tbody>${feeRows.map(row => `<tr><td>${escapeHtml(row.range)}</td><td>${escapeHtml(row.rate)}</td></tr>`).join('')}</tbody>
+    </table></div>` : `<div class="trading-unavailable">${escapeHtml(title)}暂无数据</div>`}
+  </section>`;
+}
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date);
 }
 
 function updateViewTabs(visible) {

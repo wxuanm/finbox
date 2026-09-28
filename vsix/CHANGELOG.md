@@ -2,6 +2,14 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.3
+
+- Added a bottom-of-page transaction information card to single-fund trend views.
+- Added current purchase and redemption status, daily purchase limits, purchase-fee tiers, annual holding fees, and redemption-fee tiers.
+- Added same-day in-memory caching for transaction information so reopening a fund trend does not repeat the request.
+- Kept historical trend rendering available when transaction information cannot be loaded.
+- Removed redundant view and command activation declarations now generated automatically by VS Code.
+
 ## 0.1.2
 
 - Added a custom fund comparison flow that reuses the existing fund trend panel and supports selecting 2-10 monitored funds.
@@ -14,7 +22,7 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 
 ## 0.1.1
 
-- Added stock-row click behavior so clicking an A-share stock opens its Eastmoney real-time trend view in an editor panel.
+- Added stock-row click behavior so clicking an A-share stock opens its real-time trend view in an editor panel.
 - Added darkened stock trend panels that fill the editor area and refresh the embedded trend page when the tab becomes visible again.
 - Renamed internal VSIX modules and media folders for clearer fund trend, stock trend, store, and market symbol ownership.
 
@@ -51,7 +59,7 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 
 ## 0.0.6
 
-- Batched stock quote refresh through Sina first and Eastmoney batch fallback to reduce per-symbol requests.
+- Batched stock quote refresh with fallback requests to reduce per-symbol requests.
 - Added optional automatic stock quote refresh with configurable interval, trading-hours filtering, and an immediate silent refresh when active.
 - Replaced the placeholder settings view with a shortcut that opens native FinBox stock settings.
 - Adapted fund trend webviews to VS Code editor theming and compact panel layout.
@@ -83,7 +91,7 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 - Display stock percentage change, latest price, and stock name in the sidebar.
 - Display stock tooltip metrics for percentage change, price change, high, low, open, previous close, volume, and amount.
 - Preserve stock add order by default and add move up/down context menu actions.
-- Fetch stock quotes using the same source priority as `functions/api/quotes.js`: Sina first, Eastmoney fallback.
+- Added fallback handling for stock quote refresh.
 
 ## 0.0.3
 
@@ -92,7 +100,7 @@ All notable user-visible changes to the FinBox VSIX are documented here.
 ## 0.0.2
 
 - Bumped the package version for VSIX update installation.
-- Documented the source packaging and installation workflow.
+- Documented the packaging and installation workflow.
 
 ## 0.0.1
 
