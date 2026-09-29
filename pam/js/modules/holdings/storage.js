@@ -18,4 +18,5 @@ export function saveHoldings(holdings) {
         schemaVersion: SCHEMA_VERSION,
         data: Array.isArray(holdings) ? holdings : []
     }));
+    window.dispatchEvent(new CustomEvent('pam:local-data-change', { detail: { domain: 'holdings' } }));
 }

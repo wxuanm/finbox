@@ -54,7 +54,9 @@ The current implementation covers account performance and account-scoped data ma
 - The default account return period is `3M`; saved user preference takes precedence.
 - Show account metrics: latest value, net contribution, cumulative profit/loss, cumulative return, selected-period return, selected-period annualized return, max drawdown, annualized volatility, Calmar ratio, and latest date.
 - In the account comparison table, fund-style account performance columns include `区间收益`, `年化收益`, `最大回撤`, `年化波动`, and `卡玛比率`, all controlled by the active period switch.
-- Persist all user data in browser `localStorage`.
+- Persist authenticated user data in Cloudflare D1 through `/api/pam/data`, with browser `localStorage` retained as a cache and first-migration source.
+- Authenticate with operator-issued personal access keys and keep opaque sessions in HttpOnly cookies.
+- Isolate all D1 business rows by the user identity derived by the server from the validated session.
 - Support dark mode.
 - Provide empty, insufficient-data, and invalid-data states.
 - Support desktop and mobile layouts.
@@ -68,12 +70,11 @@ The current implementation covers account performance and account-scoped data ma
 
 - Brokerage or platform integrations.
 - CSV or Excel import/export.
-- Cloud sync.
-- Login or user accounts.
+- Self-service registration and password-based accounts.
 - Historical holdings and transaction-level position history.
 - Transaction ledger.
 - Multi-currency conversion.
-- Brokerage APIs or cloud sync APIs.
+- Brokerage APIs.
 - Reusing `fundmonitor` groups, state, storage, or UI modules.
 - Sharing Fund Monitor i18n runtime code or localStorage keys.
 
@@ -85,7 +86,7 @@ The current implementation covers account performance and account-scoped data ma
 - As a user, I want cash deposits and withdrawals excluded from return calculations so that account comparisons are fair.
 - As a user, I want to compare multiple account return curves in one chart so that I can see which account performs better.
 - As a user, I want to inspect return, drawdown, and volatility metrics so that I can compare both performance and risk.
-- As a user, I want my data stored locally so that no sensitive account data is uploaded.
+- As a user, I want my authenticated data synchronized to my isolated cloud space while retaining a local cache and portable JSON backup.
 - As a user, I want demo data available on demand so that I can understand the tool before entering real data.
 
 ## 2. Product Spec
@@ -313,6 +314,7 @@ pam/
    │  ├─ i18n.js
    │  └─ state.js
    ├─ core/
+   │  ├─ cloudSync.js
    │  └─ theme.js
    ├─ modules/
    │  ├─ accountPerformance/
@@ -347,10 +349,10 @@ Preferences include selected account, selected period, highlighted comparison ac
 
 - Native ES modules.
 - ECharts CDN for charts.
-- Browser `localStorage`.
+- Cloudflare D1 with browser `localStorage` as a local cache.
 - Cloudflare Pages static hosting.
 
-Account performance itself requires no backend API. Holdings quote refresh and holdings-generated snapshots use `/api/quotes` as a Cloudflare Pages Function for supported A-share and fund prices.
+Account performance data synchronizes through the session-authenticated `/api/pam/data` Pages Function. A personal high-entropy access key creates a D1-backed session in an HttpOnly cookie, and the server derives the row owner from that session. Holdings quote refresh and holdings-generated snapshots continue to use `/api/quotes` for supported A-share and fund prices.
 
 ## 5. Acceptance Criteria
 
@@ -377,6 +379,7 @@ Account performance itself requires no backend API. Holdings quote refresh and h
 - JSON backup import validates and normalizes data, then replaces local PAM data only after confirmation.
 - Holdings quote refresh updates supported A-share and fund positions without blocking manual unsupported holdings.
 - Snapshot generation from holdings previews date, account count, total value, overwrite warnings, and quote fallback warnings before writing snapshots.
+- Unauthenticated users cannot load PAM business data, and changing users in one browser cannot expose the previous user's cache.
 
 ### Data Acceptance
 
@@ -386,13 +389,14 @@ Account performance itself requires no backend API. Holdings quote refresh and h
 - A first snapshot with zero total value does not produce a performance series.
 - Snapshot sequences that create zero or negative shares show an error state.
 - Insufficient data shows a clear empty or guidance state.
+- Two authenticated users cannot read or overwrite each other's owner-scoped D1 rows through the PAM API.
 
 ### UI Acceptance
 
 - Desktop layout shows account performance, account management, holding entry, snapshot entry, chart, metrics, and tables clearly.
 - Mobile layout remains usable for account switching, snapshot entry, holding entry, quote refresh, chart viewing, and table review.
 - ECharts loading failure does not break the full page.
-- Sensitive-data messaging makes it clear that data is stored locally.
+- Sensitive-data messaging makes it clear that authenticated business data is stored in D1 and cached locally in the current browser.
 
 ## 6. Implementation Tasks
 
@@ -411,6 +415,7 @@ Account performance itself requires no backend API. Holdings quote refresh and h
 - Implement empty, invalid, and insufficient-data states.
 - Implement mobile responsive layout.
 - Implement holdings management and `/api/quotes` integration.
+- Implement per-user access-key authentication, D1-backed sessions and persistence, local-cache migration, and revision conflict protection.
 - Implement JSON backup import/export.
 - Implement snapshot generation from holdings.
 - Implement hide-amount and language preferences.

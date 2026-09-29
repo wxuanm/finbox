@@ -1,4 +1,6 @@
 .wrangler/
+.dev.vars*
+.pam-secrets*
 /bak
 vsix/node_modules/
 vsix/dist/

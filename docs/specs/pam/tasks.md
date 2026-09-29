@@ -62,6 +62,41 @@
 - [x] Render money amounts without a visible `CN`/currency prefix.
 - [x] Sync SDD, technical design, holdings spec, and task status with completed implementation.
 
+## Phase 8: Authenticated Cloud Persistence
+
+- [x] Add the normalized D1 schema and migration.
+- [x] Add per-user access-key login, D1-backed sessions, and HttpOnly session cookies.
+- [x] Scope every `/api/pam/data` query by the server-derived PAM user identity.
+- [x] Add operator-side user provisioning without storing raw access keys.
+- [x] Retain `localStorage` as a cache and add confirmed first-run migration.
+- [x] Add domain-level debounced synchronization and revision conflict protection.
+- [x] Add cloud status UI and deployment documentation.
+
+## Phase 9: Production Rollout And Credential Recovery
+
+Current checkpoint (2026-09-29):
+
+- [x] Configure the production Pages D1 binding as `PAM_DB` for database `finbox-pam` (`ae3d617e-42e4-4c32-8d07-f192e40244fc`).
+- [x] Configure `PAM_KEY_PEPPER` as an encrypted Pages production secret. Its value must not be written to this repository or repeated in task documentation.
+- [x] Apply and verify both migrations locally.
+- [x] Verify the local authentication flow: unauthenticated rejection, invalid-key rejection, valid login, session access, owner-scoped data access, logout, and post-logout rejection.
+- [x] Remove the temporary local `.dev.vars` and stop the local Wrangler verification server.
+- [x] Add operator commands to reissue and revoke credentials for an existing user without changing that user's ID or losing owner-scoped business data.
+- [x] Add an operator command or documented SQL procedure to disable a user and invalidate all of that user's sessions.
+- [x] Document `PAM_KEY_PEPPER` loss/rotation recovery, including that existing sessions can remain valid until expiry unless explicitly revoked.
+- [x] Apply migration `0002_pam_key_auth.sql` to production with `npx wrangler d1 migrations apply PAM_DB --remote`.
+- [x] Verify the production `pam_users`, `pam_credentials`, and `pam_sessions` tables exist.
+- [ ] Provision the first production administrator after obtaining the desired username and display name. The operator must set the already-configured pepper temporarily in the local `PAM_KEY_PEPPER` environment variable; never paste it into source files or task documents.
+- [ ] Redeploy Cloudflare Pages after the migration, secret, and first user are ready.
+- [ ] Run the production verification checklist in `docs/specs/pam/cloud-deployment.md`, including two-user row isolation and cache isolation.
+
+Next rollout steps:
+
+1. Obtain the first administrator's username and display name, and confirm the operator has the configured production pepper available locally.
+2. Apply and verify the production authentication migration.
+3. Provision the first production administrator without recording the pepper or access key in repository files.
+4. Redeploy and complete production authentication/data-isolation verification.
+
 ## Recommended Future Hardening
 
 - [ ] Add lightweight automated checks for account metrics, import normalization, quote parsing, and holdings-generated snapshots.

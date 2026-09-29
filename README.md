@@ -50,7 +50,8 @@ Key features:
 - Chinese and English UI.
 - Hide-amount display mode that masks money amounts without hiding latest prices, quantities, percentages, charts, form inputs, or backup data.
 - Optional demo data generated only by user action.
-- Dark mode and local-only persistence using `pam:v1:*` `localStorage` keys.
+- Per-user access-key login with D1-backed cloud persistence and a `pam:v1:*` browser cache.
+- Dark mode.
 
 ## Data Proxies
 
@@ -81,9 +82,15 @@ Notes:
 - `t=1` is used by the deep analysis modal and is kept as a single-code request path.
 - `/api/fundnav` supports up to 10 six-digit fund codes per request and returns JSON with normalized three-year NAV points plus `failedCodes` for partial failures.
 
-PAM uses a Cloudflare Pages Function at:
+PAM uses Cloudflare Pages Functions at:
 
-`/api/quotes`
+```text
+/api/pam/auth/login
+/api/pam/auth/logout
+/api/pam/auth/session
+/api/pam/data
+/api/quotes
+```
 
 Examples:
 
@@ -188,7 +195,7 @@ The monitor stores user data in browser `localStorage`:
 - Language preference.
 - Same-day NAV trend response cache for historical comparison.
 
-PAM stores user data in browser `localStorage`:
+PAM stores authenticated business data in Cloudflare D1 and keeps these browser `localStorage` cache entries:
 
 - `pam:v1:accounts`.
 - `pam:v1:snapshots`.
@@ -197,7 +204,7 @@ PAM stores user data in browser `localStorage`:
 
 PAM preferences include selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, theme, and language.
 
-No backend database is required.
+Each PAM user is isolated by a server-derived owner ID. The D1-backed authentication flow stores credential hashes and session-token hashes; raw access keys are shown once during operator provisioning, and raw session tokens remain in HttpOnly cookies.
 
 ## Browser Support
 

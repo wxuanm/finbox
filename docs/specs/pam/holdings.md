@@ -29,7 +29,7 @@ The current holdings capability lets users maintain current positions under each
 - Sort holdings table.
 - Calculate market value, cost amount, cumulative profit/loss, cumulative profit/loss percentage, and portfolio weight.
 - Keep account cards as the only asset and return overview. Holdings detail instead shows a lightweight count and valuation-quality status for the active filter.
-- Persist holdings in localStorage.
+- Persist holdings in D1 after authenticated synchronization, with `localStorage` as the browser cache.
 - Include holdings in JSON import/export.
 - Add demo holdings.
 - Refresh supported A-share and fund quotes through `/api/quotes`.

@@ -9,7 +9,7 @@
 
 ## Architecture
 
-PAM is a standalone static ES module application. It does not import `fundmonitor` code. Holdings quote refresh uses a dedicated Cloudflare Pages Function at `/api/quotes`.
+PAM is a standalone static ES module application. It does not import `fundmonitor` code. Authenticated PAM data uses `/api/pam/data` with D1-backed access keys and sessions; holdings quote refresh continues to use `/api/quotes`.
 
 ```text
 pam/
@@ -23,6 +23,7 @@ pam/
    │  ├─ i18n.js
    │  └─ state.js
    ├─ core/
+   │  ├─ cloudSync.js
    │  └─ theme.js
    ├─ modules/
    │  ├─ accountPerformance/
@@ -41,6 +42,8 @@ pam/
    └─ utils/
       └─ formatter.js
 ```
+
+Cloud resources are implemented in `functions/api/pam/[[path]].js`, `migrations/0001_pam_cloud_sync.sql`, and `migrations/0002_pam_key_auth.sql`. Operator-side user provisioning is implemented by `scripts/create-pam-user.mjs`.
 
 ## Runtime State
 
@@ -82,6 +85,14 @@ pam:v1:preferences
 ```
 
 Stored objects include `schemaVersion: 1`. Reads must tolerate missing or malformed data and return safe defaults.
+
+`localStorage` is a local cache, first-migration source, and offline safety net. D1 is the source of truth after the browser is linked to an authenticated PAM user. `pam:v1:cloud-sync` stores synchronization metadata: cloud revision, pending domains, and the last linked user identity. `pam:v1:cache-owner` prevents one user from seeing another user's cached PAM data in the same browser profile.
+
+Cloud storage uses authentication tables `pam_users`, `pam_credentials`, and `pam_sessions`, plus normalized business tables `pam_user_state`, `pam_accounts`, `pam_snapshots`, `pam_holdings`, and `pam_preferences`. D1 stores only HMAC-SHA-256 credential hashes and SHA-256 session-token hashes; raw access keys and session tokens are never stored there. The server validates the `pam_session` HttpOnly cookie and derives `owner_id` as `user:<uuid>` from the session. Client-supplied user identifiers are never accepted for authorization. `/api/pam/data` supports authenticated full reads and domain-level replacement writes. Writes claim the expected revision and a unique write token in one D1 batch, preventing a stale client from modifying data.
+
+Access keys use `pam_<key-id>_<secret>` format and are shown once when an operator provisions a user. Credential hashing uses the encrypted Pages secret `PAM_KEY_PEPPER`. A successful login creates a seven-day opaque session; the raw token exists only in a `HttpOnly; SameSite=Strict; Secure` production cookie. Login, logout, and data writes require a same-origin browser request. Logout revokes the server-side session, and disabling a user or increasing `auth_version` invalidates that user's sessions.
+
+The browser groups local writes by domain and debounces synchronization. An HTTP `409 revision_conflict` pauses synchronization and requires an explicit user decision; cloud data never silently overwrites pending local changes.
 
 `pam:v1:preferences` stores selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, theme, and language. `currentLang` supports `zh` and `en`; missing or invalid values fall back to `zh`.
 
@@ -161,14 +172,14 @@ calmarRatio = annualizedReturn / abs(maxDrawdown)
 
 `app.js` coordinates rendering:
 
-1. Load state from storage.
-2. Initialize theme and language.
-3. Render account list.
-4. Render snapshot form.
-5. Calculate metrics.
-6. Render overview cards, chart, account comparison table, holdings views, and snapshot table.
+1. Check the server-side session and keep the application shell hidden if unauthenticated.
+2. Isolate or clear the browser cache when the authenticated user changes.
+3. Load ECharts only after authentication, then load state from storage.
+4. Initialize theme and language.
+5. Render account list and snapshot form.
+6. Calculate metrics and render overview cards, chart, account comparison table, holdings views, and snapshot table.
 7. Keep the snapshot table account switch synchronized with the selected account.
-8. Bind global actions.
+8. Bind global actions and initialize D1 synchronization.
 9. Persist user preferences after view, period, privacy, sort, language, theme, and account-selection changes.
 
 UI modules render into fixed DOM containers and expose bind functions through global event handlers only where simple static HTML event binding is pragmatic.
@@ -222,7 +233,7 @@ Demo data is generated only through user action.
 
 ## Data Import And Export
 
-PAM supports JSON backup import and export for local-only data portability.
+PAM supports JSON backup import and export for portable recovery alongside cloud synchronization.
 
 Export payload:
 
@@ -248,7 +259,7 @@ Import behavior:
 - Drop holdings whose `accountId` does not exist in the imported accounts.
 - Older backups without holdings import with `holdings: []`.
 - Replace current local PAM data only after confirmation.
-- Preserve local-only design: no upload or backend API.
+- Cache imported data locally and queue it for authenticated cloud synchronization after confirmation.
 
 ## Quote API
 

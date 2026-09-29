@@ -48,4 +48,15 @@ function readPayload(key, fallback) {
 
 function writePayload(key, data) {
     localStorage.setItem(key, JSON.stringify({ schemaVersion: SCHEMA_VERSION, data }));
+    notifyLocalChange(key);
+}
+
+function notifyLocalChange(key) {
+    const domainByKey = {
+        [ACCOUNTS_KEY]: 'accounts',
+        [SNAPSHOTS_KEY]: 'snapshots',
+        [PREFERENCES_KEY]: 'preferences'
+    };
+    const domain = domainByKey[key];
+    if (domain) window.dispatchEvent(new CustomEvent('pam:local-data-change', { detail: { domain } }));
 }

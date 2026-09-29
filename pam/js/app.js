@@ -1,6 +1,7 @@
 import { state } from './config/state.js';
 import { i18n, t } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
+import { initializeCloudSync, replaceWithLatestCloud, retryCloudSync } from './core/cloudSync.js';
 import { loadAccounts, loadPreferences, loadSnapshots, saveAccounts, savePreferences, saveSnapshots } from './modules/accountPerformance/storage.js';
 import { buildAccountMetrics } from './modules/accountPerformance/metrics.js';
 import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
@@ -19,6 +20,17 @@ let snapshotGenerationInProgress = false;
 let pendingSnapshotGeneration = null;
 let pendingConfirmAction = null;
 let appMessageTimer = null;
+let cloudSyncStatus = { code: 'connecting', detail: '', pending: 0 };
+let pendingCloudMigration = null;
+let workspaceInitialized = false;
+const PAM_CACHE_KEYS = [
+    'pam:v1:accounts',
+    'pam:v1:snapshots',
+    'pam:v1:holdings',
+    'pam:v1:preferences',
+    'pam:v1:cloud-sync'
+];
+const PAM_CACHE_OWNER_KEY = 'pam:v1:cache-owner';
 
 const SNAPSHOT_DATE_REFERENCE_FUNDS = [
     { market: 'Fund', symbol: '110001', name: '易方达平稳增长混合' },
@@ -65,7 +77,20 @@ function toggleLang() {
     renderApp();
 }
 
-function init() {
+async function init() {
+    document.getElementById('pamLoginForm')?.addEventListener('submit', handleLogin);
+    document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
+    const session = await fetchAuthSession();
+    if (!session?.user) {
+        showAuthGate(session?.error || '请输入个人访问密钥。', Boolean(session?.error));
+        return;
+    }
+    await initializeWorkspace(session.user);
+}
+
+async function initializeWorkspace(user) {
+    prepareLocalCacheForUser(user.id);
+    await loadECharts();
     const preferences = loadPreferences();
     state.accounts = loadAccounts();
     state.snapshots = loadSnapshots();
@@ -85,7 +110,123 @@ function init() {
     applyTheme(state.theme);
     applyLanguage();
     bindEvents();
+    document.getElementById('pamAuthGate').hidden = true;
+    document.getElementById('pamAppShell').hidden = false;
     renderApp();
+    workspaceInitialized = true;
+    initializeCloudSync({
+        getLocalData: getCloudSyncData,
+        applyRemoteData: applyCloudData,
+        hasLocalBusinessData: () => state.accounts.length > 0 || state.snapshots.length > 0 || state.holdings.length > 0,
+        onStatus: updateCloudSyncStatus,
+        onMigrationRequired: migration => {
+            pendingCloudMigration = migration;
+            showCloudMigrationDialog();
+        },
+        onConflict: () => showAppMessage(t('cloudConflictMessage'), true, t('cloudConflictTitle'))
+    });
+}
+
+async function fetchAuthSession() {
+    try {
+        const response = await fetch('/api/pam/auth/session', { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) return { error: response.status >= 500 ? (payload.error || '认证服务暂时不可用。') : '' };
+        return payload;
+    } catch {
+        return { error: '无法连接认证服务，请稍后重试。' };
+    }
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const input = document.getElementById('pamAccessKey');
+    const button = document.getElementById('pamLoginBtn');
+    const accessKey = input?.value.trim() || '';
+    if (!accessKey) return;
+    button.disabled = true;
+    showAuthMessage('正在验证…');
+    try {
+        const response = await fetch('/api/pam/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ accessKey })
+        });
+        const payload = await response.json().catch(() => ({}));
+        input.value = '';
+        if (!response.ok) {
+            showAuthMessage(response.status === 429 ? '尝试次数过多，请稍后再试。' : '访问密钥无效。', true);
+            return;
+        }
+        if (workspaceInitialized) {
+            location.reload();
+            return;
+        }
+        await initializeWorkspace(payload.user);
+    } catch {
+        showAuthMessage('登录失败，请检查网络后重试。', true);
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function handleLogout() {
+    try {
+        await fetch('/api/pam/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: '{}'
+        });
+    } finally {
+        clearPamLocalCache();
+        location.reload();
+    }
+}
+
+function prepareLocalCacheForUser(userId) {
+    const currentOwner = localStorage.getItem(PAM_CACHE_OWNER_KEY);
+    if (currentOwner && currentOwner !== userId) clearPamLocalCache();
+    localStorage.setItem(PAM_CACHE_OWNER_KEY, userId);
+}
+
+function clearPamLocalCache() {
+    PAM_CACHE_KEYS.forEach(key => localStorage.removeItem(key));
+    localStorage.removeItem(PAM_CACHE_OWNER_KEY);
+}
+
+function showAuthGate(message, isError = false) {
+    document.getElementById('pamAppShell').hidden = true;
+    document.getElementById('pamAuthGate').hidden = false;
+    showAuthMessage(message, isError);
+    requestAnimationFrame(() => document.getElementById('pamAccessKey')?.focus());
+}
+
+function showAuthMessage(message, isError = false) {
+    const element = document.getElementById('pamAuthMessage');
+    if (!element) return;
+    element.textContent = message || '';
+    element.classList.toggle('error', Boolean(isError));
+}
+
+function loadECharts() {
+    if (globalThis.echarts) return Promise.resolve();
+    return new Promise(resolve => {
+        let settled = false;
+        const finish = () => {
+            if (settled) return;
+            settled = true;
+            resolve();
+        };
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js';
+        script.referrerPolicy = 'no-referrer';
+        script.onload = finish;
+        script.onerror = finish;
+        document.head.appendChild(script);
+        setTimeout(finish, 5000);
+    });
 }
 
 function bindEvents() {
@@ -99,6 +240,7 @@ function bindEvents() {
     document.getElementById('importDataBtn')?.addEventListener('click', openImportDataPicker);
     document.getElementById('mobileImportDataBtn')?.addEventListener('click', openImportDataPicker);
     document.getElementById('amountPrivacyBtn')?.addEventListener('click', toggleAmountPrivacy);
+    document.getElementById('cloudSyncStatus')?.addEventListener('click', handleCloudSyncStatusClick);
     document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleMobileActionMenu);
     document.getElementById('contextMenuBtn')?.addEventListener('click', toggleContextActionMenu);
     bindAccountFloatingActions();
@@ -348,6 +490,7 @@ function renderApp() {
     renderAccountComparison(metrics);
     renderSnapshotTable();
     renderHoldingsPanel(holdingsMetrics);
+    renderCloudSyncStatus();
 }
 
 function renderAppAndKeepSelectedAccountInView(behavior = 'smooth') {
@@ -539,7 +682,8 @@ function handleAddAccount(event) {
     state.assetDataMaintenanceOpen = false;
     input.value = '';
     closeAccountDialog();
-    persistAll();
+    saveAccounts(state.accounts);
+    persistPreferences();
     renderApp();
 }
 
@@ -571,7 +715,7 @@ function renameAccount(accountId) {
     if (!nextName) return;
     account.name = nextName;
     account.updatedAt = new Date().toISOString();
-    persistAll();
+    saveAccounts(state.accounts);
     showFormMessage(t('accountNameUpdated'));
     renderApp();
 }
@@ -653,7 +797,8 @@ function saveSnapshotPayload(payload, existing) {
     state.assetDataMaintenanceOpen = false;
     resetSnapshotForm();
     closeAssetDialog('snapshot');
-    persistAll();
+    saveSnapshots(state.snapshots);
+    persistPreferences();
     renderApp();
 }
 
@@ -686,7 +831,7 @@ function deleteSnapshot(snapshotId) {
 function deleteSnapshotNow(snapshotId) {
     state.snapshots = state.snapshots.filter(item => item.id !== snapshotId);
     if (state.editingSnapshotId === snapshotId) state.editingSnapshotId = '';
-    persistAll();
+    saveSnapshots(state.snapshots);
     showFormMessage(t('snapshotDeleted'));
     renderApp();
 }
@@ -946,7 +1091,8 @@ function normalizeImportedSnapshot(snapshot) {
         date,
         totalValue,
         netFlow,
-        note: String(snapshot.note || '').trim()
+        note: String(snapshot.note || '').trim(),
+        ...(snapshot.source === 'holdings' ? { source: 'holdings' } : {})
     };
 }
 
@@ -1014,7 +1160,8 @@ function saveHolding(payload) {
     state.assetDataMaintenanceOpen = false;
     resetHoldingForm();
     closeAssetDialog('holding');
-    persistAll();
+    saveHoldings(state.holdings);
+    persistPreferences();
     renderApp();
 }
 
@@ -1049,7 +1196,7 @@ function deleteHolding(holdingId) {
 function deleteHoldingNow(holdingId) {
     state.holdings = state.holdings.filter(item => item.id !== holdingId);
     if (state.editingHoldingId === holdingId) state.editingHoldingId = '';
-    persistAll();
+    saveHoldings(state.holdings);
     showHoldingMessage(t('holdingDeleted'));
     renderApp();
 }
@@ -1097,7 +1244,7 @@ async function refreshHoldingQuotes() {
                 asOfDate: todayKey()
             };
         });
-        persistAll();
+        saveHoldings(state.holdings);
         renderApp();
         const failedHoldings = supported.filter(holding => failedKeys.has(`${holding.market}:${holding.symbol}`));
         const message = formatQuoteRefreshMessage(updatedCount, failedHoldings);
@@ -1302,7 +1449,8 @@ function confirmSnapshotGeneration() {
     state.selectedAccountId = rows[0].accountId;
     state.activeView = 'assetData';
     state.assetDataAction = 'snapshot';
-    persistAll();
+    saveSnapshots(state.snapshots);
+    persistPreferences();
     renderApp();
     closeSnapshotGenerateDialog();
     showAppMessage(t('generatedSnapshots', { count: rows.length }));
@@ -1551,7 +1699,11 @@ function persistAll() {
 }
 
 function persistPreferences() {
-    savePreferences({
+    savePreferences(getCurrentPreferences());
+}
+
+function getCurrentPreferences() {
+    return {
         theme: state.theme,
         selectedAccountId: state.selectedAccountId,
         selectedPeriod: state.selectedPeriod,
@@ -1563,6 +1715,115 @@ function persistPreferences() {
         holdingSortKey: state.holdingSortKey,
         holdingSortOrder: state.holdingSortOrder,
         currentLang: state.currentLang
+    };
+}
+
+function getCloudSyncData() {
+    return {
+        accounts: state.accounts,
+        snapshots: state.snapshots,
+        holdings: state.holdings,
+        preferences: getCurrentPreferences()
+    };
+}
+
+function applyCloudData(data) {
+    const normalized = parseImportPayload({ app: 'pam', schemaVersion: 1, data });
+    if (!normalized) return;
+    state.accounts = normalized.accounts;
+    state.snapshots = normalized.snapshots;
+    state.holdings = normalized.holdings;
+    const preferences = normalized.preferences;
+    state.theme = preferences.theme || 'light';
+    state.selectedPeriod = preferences.selectedPeriod || '3M';
+    state.activeView = normalizeActiveView(preferences.activeView);
+    state.assetDataAction = normalizeAssetDataAction(preferences.assetDataAction);
+    state.assetDataMaintenanceOpen = false;
+    state.amountsHidden = Boolean(preferences.amountsHidden);
+    state.currentLang = normalizeLang(preferences.currentLang);
+    state.holdingFilters = preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
+    state.holdingSortKey = preferences.holdingSortKey || 'marketValue';
+    state.holdingSortOrder = Number(preferences.holdingSortOrder) || -1;
+    state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
+    state.selectedHighlightAccountId = '';
+    state.editingSnapshotId = '';
+    state.editingHoldingId = '';
+    applyTheme(state.theme);
+    persistAll();
+    renderApp();
+}
+
+function updateCloudSyncStatus(status) {
+    cloudSyncStatus = status;
+    if (status.code === 'unauthorized') {
+        showAuthGate('登录已过期，请重新输入个人访问密钥。', true);
+        return;
+    }
+    renderCloudSyncStatus();
+}
+
+function renderCloudSyncStatus() {
+    const button = document.getElementById('cloudSyncStatus');
+    if (!button) return;
+    const labels = {
+        connecting: t('cloudConnecting'),
+        syncing: t('cloudSyncing'),
+        pending: t('cloudPending'),
+        synced: t('cloudSynced'),
+        migration: t('cloudMigrationNeeded'),
+        conflict: t('cloudConflict'),
+        error: t('cloudSyncFailed'),
+        unauthorized: t('cloudUnauthorized'),
+        local: t('cloudLocalOnly')
+    };
+    const code = cloudSyncStatus.code || 'local';
+    const label = labels[code] || labels.local;
+    button.dataset.status = code;
+    button.querySelector('span').textContent = label;
+    button.title = cloudSyncStatus.detail || label;
+    button.setAttribute('aria-label', button.title);
+    button.setAttribute('aria-busy', String(code === 'connecting' || code === 'syncing'));
+}
+
+function handleCloudSyncStatusClick() {
+    if (cloudSyncStatus.code === 'migration') {
+        showCloudMigrationDialog();
+        return;
+    }
+    if (cloudSyncStatus.code === 'conflict') {
+        showCloudConflictDialog();
+        return;
+    }
+    if (['error', 'local', 'unauthorized'].includes(cloudSyncStatus.code)) retryCloudSync();
+}
+
+function showCloudMigrationDialog() {
+    if (!pendingCloudMigration) return;
+    const hasCloudData = pendingCloudMigration.cloudHasData;
+    showConfirmDialog({
+        eyebrow: 'Cloud Sync',
+        title: hasCloudData ? t('cloudDataFoundTitle') : t('cloudMigrationTitle'),
+        description: hasCloudData ? t('cloudDataFoundDesc') : t('cloudMigrationDesc'),
+        message: hasCloudData ? t('cloudUseCloudMessage') : t('cloudUploadLocalMessage'),
+        detail: t('cloudMigrationDetail'),
+        confirmLabel: hasCloudData ? t('cloudUseCloudConfirm') : t('cloudUploadConfirm'),
+        onConfirm: () => {
+            if (hasCloudData) pendingCloudMigration.useCloud();
+            else pendingCloudMigration.uploadLocal();
+            pendingCloudMigration = null;
+        }
+    });
+}
+
+function showCloudConflictDialog() {
+    showConfirmDialog({
+        eyebrow: 'Sync Conflict',
+        title: t('cloudConflictTitle'),
+        description: t('cloudConflictDesc'),
+        message: t('cloudConflictMessage'),
+        detail: t('cloudConflictDetail'),
+        confirmLabel: t('cloudLoadLatest'),
+        onConfirm: replaceWithLatestCloud
     });
 }
 
