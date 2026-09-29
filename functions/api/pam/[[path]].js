@@ -2,7 +2,7 @@ const MAX_BODY_BYTES = 1_000_000;
 const MAX_AUTH_BODY_BYTES = 4_096;
 const SESSION_COOKIE = 'pam_session';
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
-const PASSWORD_ITERATIONS = 310_000;
+const PASSWORD_ITERATIONS = 10_000;
 const PASSWORD_MIN_LENGTH = 12;
 const PASSWORD_MAX_LENGTH = 128;
 const MAX_COUNTS = Object.freeze({ accounts: 200, snapshots: 20_000, holdings: 10_000 });
@@ -284,9 +284,14 @@ async function login(request, env) {
     return jsonResponse({ error: 'Invalid credentials' }, 401, noStoreHeaders());
   }
 
-  const result = body.accessKey
-    ? await authenticateAccessKey(body.accessKey, env.PAM_DB, pepper)
-    : await authenticatePassword(body.username, body.password, env.PAM_DB, pepper);
+  let result;
+  try {
+    result = body.accessKey
+      ? await authenticateAccessKey(body.accessKey, env.PAM_DB, pepper)
+      : await authenticatePassword(body.username, body.password, env.PAM_DB, pepper);
+  } catch {
+    return jsonResponse({ error: 'Authentication service is unavailable' }, 503, noStoreHeaders());
+  }
   if (!result.identity) {
     recordLoginFailure(rateKey);
     return jsonResponse({ error: result.error }, 401, noStoreHeaders());
@@ -393,7 +398,12 @@ async function setPassword(request, env) {
   }
 
   const salt = encodeBase64Url(randomBytes(16));
-  const passwordHash = await derivePasswordHash(pepper, identity.username, password, salt, PASSWORD_ITERATIONS);
+  let passwordHash;
+  try {
+    passwordHash = await derivePasswordHash(pepper, identity.username, password, salt, PASSWORD_ITERATIONS);
+  } catch {
+    return jsonResponse({ error: 'Password service is unavailable' }, 503, noStoreHeaders());
+  }
   const now = new Date().toISOString();
   await env.PAM_DB.prepare(`UPDATE pam_users SET password_salt = ?, password_hash = ?,
       password_iterations = ?, password_updated_at = ?, updated_at = ? WHERE id = ?`)
@@ -514,7 +524,7 @@ function timingSafeEqual(leftValue, rightValue) {
 
 function validPasswordIterations(value) {
   const iterations = Number(value);
-  return Number.isInteger(iterations) && iterations >= 100_000 && iterations <= 2_000_000;
+  return Number.isInteger(iterations) && iterations >= 10_000 && iterations <= 2_000_000;
 }
 
 async function sha256Base64Url(value) {
