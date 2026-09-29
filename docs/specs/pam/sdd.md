@@ -70,7 +70,7 @@ The current implementation covers account performance and account-scoped data ma
 
 - Brokerage or platform integrations.
 - CSV or Excel import/export.
-- Self-service registration and password-based accounts.
+- Self-service registration, email verification, and self-service password recovery.
 - Historical holdings and transaction-level position history.
 - Transaction ledger.
 - Multi-currency conversion.

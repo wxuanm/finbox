@@ -50,7 +50,7 @@ Key features:
 - Chinese and English UI.
 - Hide-amount display mode that masks money amounts without hiding latest prices, quantities, percentages, charts, form inputs, or backup data.
 - Optional demo data generated only by user action.
-- Per-user access-key login with D1-backed cloud persistence and a `pam:v1:*` browser cache.
+- Username/password login with Access-key bootstrap and recovery, D1-backed cloud persistence, and a `pam:v1:*` browser cache.
 - Dark mode.
 
 ## Data Proxies

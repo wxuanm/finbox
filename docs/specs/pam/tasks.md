@@ -78,7 +78,7 @@ Current checkpoint (2026-09-29):
 
 - [x] Configure the production Pages D1 binding as `PAM_DB` for database `finbox-pam` (`ae3d617e-42e4-4c32-8d07-f192e40244fc`).
 - [x] Configure `PAM_KEY_PEPPER` as an encrypted Pages production secret. Its value must not be written to this repository or repeated in task documentation.
-- [x] Apply and verify both migrations locally.
+- [x] Apply and verify all three migrations locally.
 - [x] Verify the local authentication flow: unauthenticated rejection, invalid-key rejection, valid login, session access, owner-scoped data access, logout, and post-logout rejection.
 - [x] Remove the temporary local `.dev.vars` and stop the local Wrangler verification server.
 - [x] Add operator commands to reissue and revoke credentials for an existing user without changing that user's ID or losing owner-scoped business data.
@@ -88,7 +88,7 @@ Current checkpoint (2026-09-29):
 - [x] Verify the production `pam_users`, `pam_credentials`, and `pam_sessions` tables exist.
 - [x] Provision the first production administrator after obtaining the desired username and display name. The operator must set the already-configured pepper temporarily in the local `PAM_KEY_PEPPER` environment variable; never paste it into source files or task documents.
 - [x] Redeploy Cloudflare Pages after the migration, secret, and first user are ready.
-- [ ] Run the production verification checklist in `docs/specs/pam/cloud-deployment.md`, including two-user row isolation and cache isolation.
+- [ ] Complete the remaining production verification: two-user row and browser-cache isolation, plus concurrent-edit revision conflict handling. All other production checklist items were verified on 2026-09-29.
 
 ## Phase 10: Username And Password Login
 
@@ -97,7 +97,7 @@ Current checkpoint (2026-09-29):
 - [x] Add first-time password setup and Access-key password replacement flow.
 - [x] Verify locally: invalid password rejection, Access-key bootstrap, password setup, password login, session access, logout, and post-logout rejection.
 - [x] Apply and verify migration `0003_pam_password_auth.sql` in production.
-- [ ] Deploy and verify Access-key bootstrap plus username/password login for the production administrator.
+- [x] Deploy and verify Access-key bootstrap plus username/password login for the production administrator.
 
 ## Recommended Future Hardening
 
