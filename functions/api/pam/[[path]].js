@@ -2,6 +2,9 @@ const MAX_BODY_BYTES = 1_000_000;
 const MAX_AUTH_BODY_BYTES = 4_096;
 const SESSION_COOKIE = 'pam_session';
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
+const PASSWORD_ITERATIONS = 310_000;
+const PASSWORD_MIN_LENGTH = 12;
+const PASSWORD_MAX_LENGTH = 128;
 const MAX_COUNTS = Object.freeze({ accounts: 200, snapshots: 20_000, holdings: 10_000 });
 const ALLOWED_DOMAINS = new Set(['accounts', 'snapshots', 'holdings', 'preferences']);
 const encoder = new TextEncoder();
@@ -14,6 +17,7 @@ export async function onRequest(context) {
   if (!env.PAM_DB) return jsonResponse({ error: 'PAM database binding is not configured' }, 503);
 
   if (path === 'auth/login' && request.method === 'POST') return login(request, env);
+  if (path === 'auth/password' && request.method === 'POST') return setPassword(request, env);
   if (path === 'auth/logout' && request.method === 'POST') return logout(request, env.PAM_DB);
   if (path === 'auth/session' && request.method === 'GET') return getSession(request, env.PAM_DB);
   if (path !== 'data') return jsonResponse({ error: 'Not found' }, 404);
@@ -274,16 +278,31 @@ async function login(request, env) {
   } catch (error) {
     return jsonResponse({ error: error.message }, error.status || 400);
   }
-  const accessKey = String(body.accessKey || '').trim();
-  const parsed = parseAccessKey(accessKey);
   const pepper = String(env.PAM_KEY_PEPPER || '');
-  if (!parsed || pepper.length < 32) {
+  if (pepper.length < 32) {
     recordLoginFailure(rateKey);
-    return jsonResponse({ error: 'Invalid access key' }, 401, noStoreHeaders());
+    return jsonResponse({ error: 'Invalid credentials' }, 401, noStoreHeaders());
   }
 
-  const credential = await env.PAM_DB.prepare(`SELECT c.user_id, c.secret_hash, c.expires_at,
-      u.username, u.display_name, u.role, u.status, u.auth_version
+  const result = body.accessKey
+    ? await authenticateAccessKey(body.accessKey, env.PAM_DB, pepper)
+    : await authenticatePassword(body.username, body.password, env.PAM_DB, pepper);
+  if (!result.identity) {
+    recordLoginFailure(rateKey);
+    return jsonResponse({ error: result.error }, 401, noStoreHeaders());
+  }
+
+  clearLoginFailures(rateKey);
+  return createSession(request, env.PAM_DB, result.identity, result.keyId);
+}
+
+async function authenticateAccessKey(value, db, pepper) {
+  const parsed = parseAccessKey(String(value || '').trim());
+  if (!parsed) return { error: 'Invalid access key' };
+
+  const credential = await db.prepare(`SELECT c.user_id, c.secret_hash, c.expires_at,
+      u.username, u.display_name, u.role, u.status, u.auth_version,
+      CASE WHEN u.password_hash != '' THEN 1 ELSE 0 END AS has_password
     FROM pam_credentials c JOIN pam_users u ON u.id = c.user_id
     WHERE c.key_id = ? AND c.revoked_at = ''`).bind(parsed.keyId).first();
   const validHash = credential
@@ -292,30 +311,94 @@ async function login(request, env) {
   const now = new Date();
   const unexpired = !credential?.expires_at || credential.expires_at > now.toISOString();
   if (!credential || !validHash || !unexpired || credential.status !== 'active') {
-    recordLoginFailure(rateKey);
-    return jsonResponse({ error: 'Invalid access key' }, 401, noStoreHeaders());
+    return { error: 'Invalid access key' };
   }
+  return { identity: credential, keyId: parsed.keyId };
+}
 
-  clearLoginFailures(rateKey);
+async function authenticatePassword(usernameValue, passwordValue, db, pepper) {
+  const username = String(usernameValue || '').trim();
+  const password = String(passwordValue || '');
+  const validInput = /^[A-Za-z0-9._@-]{3,80}$/.test(username)
+    && password.length >= PASSWORD_MIN_LENGTH
+    && password.length <= PASSWORD_MAX_LENGTH;
+  const user = validInput
+    ? await db.prepare(`SELECT id AS user_id, username, display_name, role, status, auth_version,
+        password_salt, password_hash, password_iterations,
+        CASE WHEN password_hash != '' THEN 1 ELSE 0 END AS has_password
+      FROM pam_users WHERE username = ? COLLATE NOCASE LIMIT 1`).bind(username).first()
+    : null;
+  const salt = user?.password_salt || encodeBase64Url(new Uint8Array(16));
+  const iterations = validPasswordIterations(user?.password_iterations)
+    ? Number(user.password_iterations)
+    : PASSWORD_ITERATIONS;
+  const actualHash = await derivePasswordHash(pepper, user?.username || username || 'invalid-user', password, salt, iterations);
+  const validHash = Boolean(user?.password_hash) && timingSafeEqual(actualHash, user.password_hash);
+  if (!validInput || !user || !validHash || user.status !== 'active') {
+    return { error: 'Invalid username or password' };
+  }
+  return { identity: user };
+}
+
+async function createSession(request, db, identity, keyId = '') {
+  const now = new Date();
   const rawToken = randomToken(32);
   const tokenHash = await sha256Base64Url(rawToken);
   const createdAt = now.toISOString();
   const expiresAt = new Date(now.getTime() + SESSION_SECONDS * 1000).toISOString();
-  await env.PAM_DB.batch([
-    env.PAM_DB.prepare(`INSERT INTO pam_sessions
+  const statements = [
+    db.prepare(`INSERT INTO pam_sessions
       (token_hash, user_id, auth_version, created_at, expires_at, last_seen_at)
       VALUES (?, ?, ?, ?, ?, ?)`)
-      .bind(tokenHash, credential.user_id, credential.auth_version, createdAt, expiresAt, createdAt),
-    env.PAM_DB.prepare('UPDATE pam_credentials SET last_used_at = ? WHERE key_id = ?')
-      .bind(createdAt, parsed.keyId),
-    env.PAM_DB.prepare('DELETE FROM pam_sessions WHERE expires_at <= ? OR revoked_at != \'\'')
+      .bind(tokenHash, identity.user_id, identity.auth_version, createdAt, expiresAt, createdAt)
+  ];
+  if (keyId) {
+    statements.push(db.prepare('UPDATE pam_credentials SET last_used_at = ? WHERE key_id = ?')
+      .bind(createdAt, keyId));
+  }
+  statements.push(db.prepare('DELETE FROM pam_sessions WHERE expires_at <= ? OR revoked_at != \'\'')
       .bind(createdAt)
-  ]);
+  );
+  await db.batch(statements);
 
-  return jsonResponse({ user: publicUser(credential) }, 200, {
+  return jsonResponse({ user: publicUser(identity) }, 200, {
     ...noStoreHeaders(),
     'Set-Cookie': sessionCookie(request, rawToken, SESSION_SECONDS)
   });
+}
+
+async function setPassword(request, env) {
+  if (!hasSameOrigin(request)) return jsonResponse({ error: 'Cross-origin password changes are not allowed' }, 403);
+  let identity;
+  try {
+    identity = await authenticateSession(request, env.PAM_DB);
+  } catch (error) {
+    return jsonResponse({ error: 'Unauthorized' }, error.status || 401, noStoreHeaders());
+  }
+
+  let body;
+  try {
+    body = await readSmallJson(request);
+  } catch (error) {
+    return jsonResponse({ error: error.message }, error.status || 400, noStoreHeaders());
+  }
+  const password = String(body.password || '');
+  const pepper = String(env.PAM_KEY_PEPPER || '');
+  if (pepper.length < 32) return jsonResponse({ error: 'Password service is unavailable' }, 503, noStoreHeaders());
+  if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+    return jsonResponse({ error: `Password must contain ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} characters` }, 400, noStoreHeaders());
+  }
+  if (password.toLocaleLowerCase() === String(identity.username || '').toLocaleLowerCase()) {
+    return jsonResponse({ error: 'Password must not match the username' }, 400, noStoreHeaders());
+  }
+
+  const salt = encodeBase64Url(randomBytes(16));
+  const passwordHash = await derivePasswordHash(pepper, identity.username, password, salt, PASSWORD_ITERATIONS);
+  const now = new Date().toISOString();
+  await env.PAM_DB.prepare(`UPDATE pam_users SET password_salt = ?, password_hash = ?,
+      password_iterations = ?, password_updated_at = ?, updated_at = ? WHERE id = ?`)
+    .bind(salt, passwordHash, PASSWORD_ITERATIONS, now, now, identity.user_id).run();
+  return jsonResponse({ user: publicUser({ ...identity, has_password: 1 }) }, 200, noStoreHeaders());
 }
 
 async function logout(request, db) {
@@ -347,7 +430,7 @@ async function authenticateSession(request, db) {
   const tokenHash = await sha256Base64Url(rawToken);
   const now = new Date().toISOString();
   const session = await db.prepare(`SELECT s.user_id, u.username, u.display_name, u.role,
-      u.status, u.auth_version
+      u.status, u.auth_version, CASE WHEN u.password_hash != '' THEN 1 ELSE 0 END AS has_password
     FROM pam_sessions s JOIN pam_users u ON u.id = s.user_id
     WHERE s.token_hash = ? AND s.revoked_at = '' AND s.expires_at > ?
       AND s.auth_version = u.auth_version AND u.status = 'active'`)
@@ -365,7 +448,8 @@ function publicUser(identity) {
     id: identity.ownerId || `user:${identity.user_id}`,
     username: identity.username,
     displayName: identity.display_name,
-    role: identity.role
+    role: identity.role,
+    hasPassword: Boolean(identity.has_password)
   };
 }
 
@@ -395,6 +479,44 @@ async function verifyCredentialHash(pepper, value, expected) {
   }
 }
 
+async function derivePasswordHash(pepper, username, password, saltValue, iterations) {
+  const pepperKey = await crypto.subtle.importKey(
+    'raw', encoder.encode(pepper), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const normalizedUsername = String(username || '').trim().toLocaleLowerCase();
+  const passwordMaterial = await crypto.subtle.sign(
+    'HMAC', pepperKey, encoder.encode(`${normalizedUsername}\u0000${password}`)
+  );
+  const baseKey = await crypto.subtle.importKey('raw', passwordMaterial, 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({
+    name: 'PBKDF2',
+    hash: 'SHA-256',
+    salt: decodeBase64Url(saltValue),
+    iterations
+  }, baseKey, 256);
+  return encodeBase64Url(new Uint8Array(bits));
+}
+
+function timingSafeEqual(leftValue, rightValue) {
+  let left;
+  let right;
+  try {
+    left = decodeBase64Url(leftValue);
+    right = decodeBase64Url(rightValue);
+  } catch {
+    return false;
+  }
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) difference |= left[index] ^ right[index];
+  return difference === 0;
+}
+
+function validPasswordIterations(value) {
+  const iterations = Number(value);
+  return Number.isInteger(iterations) && iterations >= 100_000 && iterations <= 2_000_000;
+}
+
 async function sha256Base64Url(value) {
   const digest = await crypto.subtle.digest('SHA-256', encoder.encode(value));
   return encodeBase64Url(new Uint8Array(digest));
@@ -404,6 +526,12 @@ function randomToken(size) {
   const bytes = new Uint8Array(size);
   crypto.getRandomValues(bytes);
   return encodeBase64Url(bytes);
+}
+
+function randomBytes(size) {
+  const bytes = new Uint8Array(size);
+  crypto.getRandomValues(bytes);
+  return bytes;
 }
 
 function encodeBase64Url(bytes) {

@@ -86,6 +86,7 @@ PAM uses Cloudflare Pages Functions at:
 
 ```text
 /api/pam/auth/login
+/api/pam/auth/password
 /api/pam/auth/logout
 /api/pam/auth/session
 /api/pam/data
@@ -204,7 +205,7 @@ PAM stores authenticated business data in Cloudflare D1 and keeps these browser 
 
 PAM preferences include selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, theme, and language.
 
-Each PAM user is isolated by a server-derived owner ID. The D1-backed authentication flow stores credential hashes and session-token hashes; raw access keys are shown once during operator provisioning, and raw session tokens remain in HttpOnly cookies.
+Each PAM user is isolated by a server-derived owner ID. Daily sign-in uses a username and password. Passwords are protected with a per-user salt, PBKDF2-SHA-256, and the server-side pepper; D1 stores no raw password. Operator-issued access keys remain available for first-time password setup and account recovery, while raw session tokens remain in HttpOnly cookies.
 
 ## Browser Support
 

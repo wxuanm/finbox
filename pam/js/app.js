@@ -23,6 +23,7 @@ let appMessageTimer = null;
 let cloudSyncStatus = { code: 'connecting', detail: '', pending: 0 };
 let pendingCloudMigration = null;
 let workspaceInitialized = false;
+let pendingAuthenticatedUser = null;
 const PAM_CACHE_KEYS = [
     'pam:v1:accounts',
     'pam:v1:snapshots',
@@ -78,14 +79,18 @@ function toggleLang() {
 }
 
 async function init() {
-    document.getElementById('pamLoginForm')?.addEventListener('submit', handleLogin);
+    document.getElementById('pamLoginForm')?.addEventListener('submit', handlePasswordLogin);
+    document.getElementById('pamAccessKeyForm')?.addEventListener('submit', handleAccessKeyLogin);
+    document.getElementById('pamPasswordSetupForm')?.addEventListener('submit', handlePasswordSetup);
+    document.getElementById('pamUseAccessKeyBtn')?.addEventListener('click', () => showAuthMode('access-key'));
+    document.getElementById('pamUsePasswordBtn')?.addEventListener('click', () => showAuthMode('password'));
     document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
     const session = await fetchAuthSession();
     if (!session?.user) {
-        showAuthGate(session?.error || '请输入个人访问密钥。', Boolean(session?.error));
+        showAuthGate(session?.error || '请输入用户名和密码。', Boolean(session?.error));
         return;
     }
-    await initializeWorkspace(session.user);
+    await continueAfterAuthentication(session.user);
 }
 
 async function initializeWorkspace(user) {
@@ -138,10 +143,41 @@ async function fetchAuthSession() {
     }
 }
 
-async function handleLogin(event) {
+async function handlePasswordLogin(event) {
+    event.preventDefault();
+    const usernameInput = document.getElementById('pamUsername');
+    const passwordInput = document.getElementById('pamPassword');
+    const button = document.getElementById('pamLoginBtn');
+    const username = usernameInput?.value.trim() || '';
+    const password = passwordInput?.value || '';
+    if (!username || !password) return;
+    button.disabled = true;
+    showAuthMessage('正在验证…');
+    try {
+        const response = await fetch('/api/pam/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ username, password })
+        });
+        const payload = await response.json().catch(() => ({}));
+        passwordInput.value = '';
+        if (!response.ok) {
+            showAuthMessage(response.status === 429 ? '尝试次数过多，请稍后再试。' : '用户名或密码错误。', true);
+            return;
+        }
+        await continueAfterAuthentication(payload.user);
+    } catch {
+        showAuthMessage('登录失败，请检查网络后重试。', true);
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function handleAccessKeyLogin(event) {
     event.preventDefault();
     const input = document.getElementById('pamAccessKey');
-    const button = document.getElementById('pamLoginBtn');
+    const button = document.getElementById('pamAccessKeyLoginBtn');
     const accessKey = input?.value.trim() || '';
     if (!accessKey) return;
     button.disabled = true;
@@ -156,19 +192,92 @@ async function handleLogin(event) {
         const payload = await response.json().catch(() => ({}));
         input.value = '';
         if (!response.ok) {
-            showAuthMessage(response.status === 429 ? '尝试次数过多，请稍后再试。' : '访问密钥无效。', true);
+            showAuthMessage(response.status === 429 ? '尝试次数过多，请稍后再试。' : 'Access key 无效。', true);
             return;
         }
-        if (workspaceInitialized) {
-            location.reload();
-            return;
-        }
-        await initializeWorkspace(payload.user);
+        await continueAfterAuthentication(payload.user, true);
     } catch {
         showAuthMessage('登录失败，请检查网络后重试。', true);
     } finally {
         button.disabled = false;
     }
+}
+
+async function handlePasswordSetup(event) {
+    event.preventDefault();
+    const passwordInput = document.getElementById('pamNewPassword');
+    const confirmInput = document.getElementById('pamConfirmPassword');
+    const button = document.getElementById('pamPasswordSetupBtn');
+    const password = passwordInput?.value || '';
+    if (password.length < 12 || password.length > 128) {
+        showAuthMessage('密码长度须为 12–128 个字符。', true);
+        return;
+    }
+    if (password !== (confirmInput?.value || '')) {
+        showAuthMessage('两次输入的密码不一致。', true);
+        return;
+    }
+    button.disabled = true;
+    showAuthMessage('正在保存密码…');
+    try {
+        const response = await fetch('/api/pam/auth/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ password })
+        });
+        const payload = await response.json().catch(() => ({}));
+        passwordInput.value = '';
+        confirmInput.value = '';
+        if (!response.ok) {
+            showAuthMessage(response.status === 401 ? '登录已过期，请重新使用 Access key。' : '密码保存失败，请检查密码后重试。', true);
+            return;
+        }
+        await continueAfterAuthentication(payload.user);
+    } catch {
+        showAuthMessage('密码保存失败，请检查网络后重试。', true);
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function continueAfterAuthentication(user, forcePasswordSetup = false) {
+    if (workspaceInitialized) {
+        location.reload();
+        return;
+    }
+    if (!user?.hasPassword || forcePasswordSetup) {
+        pendingAuthenticatedUser = user;
+        showAuthMode('setup');
+        return;
+    }
+    pendingAuthenticatedUser = null;
+    await initializeWorkspace(user);
+}
+
+function showAuthMode(mode) {
+    const isPassword = mode === 'password';
+    const isAccessKey = mode === 'access-key';
+    document.getElementById('pamLoginForm').hidden = !isPassword;
+    document.getElementById('pamAccessKeyForm').hidden = !isAccessKey;
+    document.getElementById('pamPasswordSetupForm').hidden = mode !== 'setup';
+    const title = document.getElementById('pamAuthTitle');
+    const description = document.getElementById('pamAuthDescription');
+    if (isPassword) {
+        title.textContent = '访问投资组合';
+        description.textContent = '使用用户名和密码登录。Access key 仅用于首次启用或恢复访问。';
+        requestAnimationFrame(() => document.getElementById('pamUsername')?.focus());
+    } else if (isAccessKey) {
+        title.textContent = '使用 Access key';
+        description.textContent = 'Access key 不会保存在浏览器中，可用于首次设置密码或恢复访问。';
+        requestAnimationFrame(() => document.getElementById('pamAccessKey')?.focus());
+    } else {
+        title.textContent = '设置登录密码';
+        description.textContent = '首次启用需要设置一个 12–128 字符的密码，之后使用用户名和密码登录。';
+        document.getElementById('pamPasswordSetupUser').textContent = `用户名：${pendingAuthenticatedUser?.username || ''}`;
+        requestAnimationFrame(() => document.getElementById('pamNewPassword')?.focus());
+    }
+    showAuthMessage('');
 }
 
 async function handleLogout() {
@@ -199,8 +308,8 @@ function clearPamLocalCache() {
 function showAuthGate(message, isError = false) {
     document.getElementById('pamAppShell').hidden = true;
     document.getElementById('pamAuthGate').hidden = false;
+    showAuthMode('password');
     showAuthMessage(message, isError);
-    requestAnimationFrame(() => document.getElementById('pamAccessKey')?.focus());
 }
 
 function showAuthMessage(message, isError = false) {

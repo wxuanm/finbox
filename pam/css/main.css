@@ -87,6 +87,26 @@ body {
     margin-top: 4px;
 }
 
+.auth-switch-btn {
+    min-height: 38px;
+    padding: 6px 10px;
+    border: 0;
+    color: var(--primary-color);
+    background: transparent;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.auth-switch-btn:hover {
+    text-decoration: underline;
+}
+
+.auth-setup-user {
+    margin: 0 !important;
+    color: var(--heading-color) !important;
+    font-weight: 800;
+}
+
 .auth-message {
     min-height: 20px;
     margin: 0 !important;

@@ -90,12 +90,14 @@ Current checkpoint (2026-09-29):
 - [x] Redeploy Cloudflare Pages after the migration, secret, and first user are ready.
 - [ ] Run the production verification checklist in `docs/specs/pam/cloud-deployment.md`, including two-user row isolation and cache isolation.
 
-Next rollout steps:
+## Phase 10: Username And Password Login
 
-1. Obtain the first administrator's username and display name, and confirm the operator has the configured production pepper available locally.
-2. Apply and verify the production authentication migration.
-3. Provision the first production administrator without recording the pepper or access key in repository files.
-4. Redeploy and complete production authentication/data-isolation verification.
+- [x] Add per-user password salt, hash, iteration count, and update timestamp migration.
+- [x] Make username/password the default daily login while retaining Access key recovery.
+- [x] Add first-time password setup and Access-key password replacement flow.
+- [x] Verify locally: invalid password rejection, Access-key bootstrap, password setup, password login, session access, logout, and post-logout rejection.
+- [x] Apply and verify migration `0003_pam_password_auth.sql` in production.
+- [ ] Deploy and verify Access-key bootstrap plus username/password login for the production administrator.
 
 ## Recommended Future Hardening
 

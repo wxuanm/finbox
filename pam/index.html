@@ -20,12 +20,29 @@
             <div>
                 <span class="dialog-eyebrow">Private PAM</span>
                 <h1 id="pamAuthTitle">访问投资组合</h1>
-                <p>请输入管理员分配给你的个人访问密钥。密钥仅用于登录，不会保存在浏览器中。</p>
+                <p id="pamAuthDescription">使用用户名和密码登录。Access key 仅用于首次启用或恢复访问。</p>
             </div>
             <form id="pamLoginForm" class="auth-form">
+                <label for="pamUsername">用户名</label>
+                <input id="pamUsername" type="text" autocomplete="username" maxlength="80" spellcheck="false" required>
+                <label for="pamPassword">密码</label>
+                <input id="pamPassword" type="password" autocomplete="current-password" minlength="12" maxlength="128" required>
+                <button id="pamLoginBtn" class="primary-btn" type="submit">登录</button>
+                <button id="pamUseAccessKeyBtn" class="auth-switch-btn" type="button">使用 Access key</button>
+            </form>
+            <form id="pamAccessKeyForm" class="auth-form" hidden>
                 <label for="pamAccessKey">个人访问密钥</label>
                 <input id="pamAccessKey" type="password" autocomplete="current-password" spellcheck="false" required>
-                <button id="pamLoginBtn" class="primary-btn" type="submit">安全登录</button>
+                <button id="pamAccessKeyLoginBtn" class="primary-btn" type="submit">使用 Access key 登录</button>
+                <button id="pamUsePasswordBtn" class="auth-switch-btn" type="button">返回密码登录</button>
+            </form>
+            <form id="pamPasswordSetupForm" class="auth-form" hidden>
+                <p id="pamPasswordSetupUser" class="auth-setup-user"></p>
+                <label for="pamNewPassword">设置密码</label>
+                <input id="pamNewPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                <label for="pamConfirmPassword">确认密码</label>
+                <input id="pamConfirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                <button id="pamPasswordSetupBtn" class="primary-btn" type="submit">保存密码并继续</button>
             </form>
             <p id="pamAuthMessage" class="auth-message" role="status" aria-live="polite">正在检查登录状态…</p>
         </div>

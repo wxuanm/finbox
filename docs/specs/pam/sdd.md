@@ -55,7 +55,7 @@ The current implementation covers account performance and account-scoped data ma
 - Show account metrics: latest value, net contribution, cumulative profit/loss, cumulative return, selected-period return, selected-period annualized return, max drawdown, annualized volatility, Calmar ratio, and latest date.
 - In the account comparison table, fund-style account performance columns include `区间收益`, `年化收益`, `最大回撤`, `年化波动`, and `卡玛比率`, all controlled by the active period switch.
 - Persist authenticated user data in Cloudflare D1 through `/api/pam/data`, with browser `localStorage` retained as a cache and first-migration source.
-- Authenticate with operator-issued personal access keys and keep opaque sessions in HttpOnly cookies.
+- Authenticate daily with username and password, retain operator-issued personal access keys for first-time setup and recovery, and keep opaque sessions in HttpOnly cookies.
 - Isolate all D1 business rows by the user identity derived by the server from the validated session.
 - Support dark mode.
 - Provide empty, insufficient-data, and invalid-data states.
@@ -352,7 +352,7 @@ Preferences include selected account, selected period, highlighted comparison ac
 - Cloudflare D1 with browser `localStorage` as a local cache.
 - Cloudflare Pages static hosting.
 
-Account performance data synchronizes through the session-authenticated `/api/pam/data` Pages Function. A personal high-entropy access key creates a D1-backed session in an HttpOnly cookie, and the server derives the row owner from that session. Holdings quote refresh and holdings-generated snapshots continue to use `/api/quotes` for supported A-share and fund prices.
+Account performance data synchronizes through the session-authenticated `/api/pam/data` Pages Function. Username/password login is the default; a personal high-entropy access key remains the bootstrap and recovery path. Either successful method creates a D1-backed session in an HttpOnly cookie, and the server derives the row owner from that session. Holdings quote refresh and holdings-generated snapshots continue to use `/api/quotes` for supported A-share and fund prices.
 
 ## 5. Acceptance Criteria
 
