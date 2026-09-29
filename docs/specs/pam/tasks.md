@@ -86,8 +86,8 @@ Current checkpoint (2026-09-29):
 - [x] Document `PAM_KEY_PEPPER` loss/rotation recovery, including that existing sessions can remain valid until expiry unless explicitly revoked.
 - [x] Apply migration `0002_pam_key_auth.sql` to production with `npx wrangler d1 migrations apply PAM_DB --remote`.
 - [x] Verify the production `pam_users`, `pam_credentials`, and `pam_sessions` tables exist.
-- [ ] Provision the first production administrator after obtaining the desired username and display name. The operator must set the already-configured pepper temporarily in the local `PAM_KEY_PEPPER` environment variable; never paste it into source files or task documents.
-- [ ] Redeploy Cloudflare Pages after the migration, secret, and first user are ready.
+- [x] Provision the first production administrator after obtaining the desired username and display name. The operator must set the already-configured pepper temporarily in the local `PAM_KEY_PEPPER` environment variable; never paste it into source files or task documents.
+- [x] Redeploy Cloudflare Pages after the migration, secret, and first user are ready.
 - [ ] Run the production verification checklist in `docs/specs/pam/cloud-deployment.md`, including two-user row isolation and cache isolation.
 
 Next rollout steps:
