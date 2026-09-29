@@ -347,31 +347,6 @@
                     </div>
                 </dialog>
 
-                <dialog id="confirmDialog" class="asset-dialog narrow-dialog" aria-labelledby="confirmDialogTitle">
-                    <div class="asset-dialog-shell">
-                        <div class="asset-dialog-header">
-                            <div class="asset-dialog-heading">
-                                <span id="confirmDialogEyebrow" class="dialog-eyebrow" data-i18n="confirmEyebrow">Confirm</span>
-                                <h2 id="confirmDialogTitle" data-i18n="confirmTitle">确认操作</h2>
-                                <p id="confirmDialogDescription" data-i18n="confirmDesc">请确认是否继续。</p>
-                            </div>
-                            <button class="asset-dialog-close" type="button" data-confirm-cancel data-i18n-title="close" title="关闭" aria-label="关闭">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
-                            </button>
-                        </div>
-                        <div class="asset-dialog-body">
-                            <div class="confirm-dialog-copy">
-                                <strong id="confirmDialogMessage" data-i18n="confirmMessage">确认继续吗？</strong>
-                                <p id="confirmDialogDetail"></p>
-                            </div>
-                            <div class="form-actions confirm-dialog-actions">
-                                <button id="confirmDialogConfirmBtn" class="primary-btn" type="button" data-i18n="confirm">确认</button>
-                                <button class="ghost-btn" type="button" data-confirm-cancel data-i18n="cancel">取消</button>
-                            </div>
-                        </div>
-                    </div>
-                </dialog>
-
                 <section class="panel management-panel asset-holdings-panel">
                     <div class="panel-head split-head">
                         <div>
@@ -419,6 +394,31 @@
                 </dialog>
             </section>
         </main>
+
+        <dialog id="confirmDialog" class="asset-dialog narrow-dialog" aria-labelledby="confirmDialogTitle">
+            <div class="asset-dialog-shell">
+                <div class="asset-dialog-header">
+                    <div class="asset-dialog-heading">
+                        <span id="confirmDialogEyebrow" class="dialog-eyebrow" data-i18n="confirmEyebrow">Confirm</span>
+                        <h2 id="confirmDialogTitle" data-i18n="confirmTitle">确认操作</h2>
+                        <p id="confirmDialogDescription" data-i18n="confirmDesc">请确认是否继续。</p>
+                    </div>
+                    <button class="asset-dialog-close" type="button" data-confirm-cancel data-i18n-title="close" title="关闭" aria-label="关闭">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+                <div class="asset-dialog-body">
+                    <div class="confirm-dialog-copy">
+                        <strong id="confirmDialogMessage" data-i18n="confirmMessage">确认继续吗？</strong>
+                        <p id="confirmDialogDetail"></p>
+                    </div>
+                    <div class="form-actions confirm-dialog-actions">
+                        <button id="confirmDialogConfirmBtn" class="primary-btn" type="button" data-i18n="confirm">确认</button>
+                        <button class="ghost-btn" type="button" data-confirm-cancel data-i18n="cancel">取消</button>
+                    </div>
+                </div>
+            </div>
+        </dialog>
     </div>
 
     <div id="appMessage" class="app-message" role="status" aria-live="polite" hidden>
