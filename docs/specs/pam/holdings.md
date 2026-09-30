@@ -141,6 +141,7 @@ Response:
 - Cash holdings use amount mode: quantity is stored as 1, and cost/current price both represent the cash amount.
 - Holdings table supports filtering and sorting.
 - Cash holdings always render as the last rows of the holdings table, regardless of the active sort key or direction.
+- Holdings detail offers a table/treemap view switch (persisted in preferences, defaults to table). The treemap groups holdings by asset class, sizes tiles by market value (non-positive values are omitted), and colors tiles by cumulative profit/loss percentage (red for gains, green for losses, saturating at ±20%; cash and zero-return holdings are neutral). Tooltips respect amount privacy. If ECharts is unavailable, the treemap view shows a notice and the table remains usable.
 - Holdings detail provides a clear add-holding action and identifies manual, quoted, and stale (over three days old) valuations.
 - A-share quote refresh updates current price from the latest price, including Shanghai exchange-traded funds stored as stock/CN holdings such as `510300`. Fund quote refresh updates current price from the latest disclosed unit NAV, not the intraday estimated NAV. Refresh also updates name when available, price source, and price update time.
 - Quote refresh failure does not block manual holding maintenance.

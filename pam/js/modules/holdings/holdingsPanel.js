@@ -2,15 +2,50 @@ import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { currentLocale, escapeHtml, formatCurrency, formatPercent, formatPrice, formatWeight, signedClass, todayKey } from '../../utils/formatter.js';
 import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel } from './holdingsMetrics.js';
+import { disposeTreemap, renderHoldingTreemap } from './holdingsTreemap.js';
+
+const HOLDING_VIEWS = [
+    ['table', 'holdingViewTable'],
+    ['treemap', 'holdingViewTreemap']
+];
 
 export function renderHoldingsPanel(metrics) {
     renderHoldingFilters();
     renderHoldingForm();
     renderHoldingContext(metrics);
-    renderHoldingTable(metrics.rows);
+    renderHoldingViews(metrics.rows);
 }
 
-export function bindHoldingsPanel({ onFilter, onAdd, onSubmit, onCancelEdit, onEdit, onDelete, onSort, onRefreshQuotes, onGenerateSnapshots }) {
+function renderHoldingViews(rows) {
+    const switchEl = document.getElementById('holdingViewSwitch');
+    const tableEl = document.getElementById('holdingTable');
+    const treemapEl = document.getElementById('holdingTreemap');
+    // Empty states always render through the table so the treemap only shows real positions.
+    const hasRows = state.accounts.length > 0 && rows.length > 0;
+    const showTreemap = hasRows && state.holdingView === 'treemap';
+
+    if (switchEl) {
+        switchEl.classList.toggle('hidden', !hasRows);
+        switchEl.innerHTML = HOLDING_VIEWS.map(([key, label]) => `
+            <button class="period-chip${state.holdingView === key ? ' active' : ''}" type="button" data-holding-view="${key}" aria-pressed="${state.holdingView === key}">${t(label)}</button>
+        `).join('');
+    }
+    tableEl?.classList.toggle('hidden', showTreemap);
+    treemapEl?.classList.toggle('hidden', !showTreemap);
+
+    if (showTreemap) {
+        renderHoldingTreemap(rows);
+    } else {
+        disposeTreemap();
+        renderHoldingTable(rows);
+    }
+}
+
+export function bindHoldingsPanel({ onFilter, onAdd, onSubmit, onCancelEdit, onEdit, onDelete, onSort, onRefreshQuotes, onGenerateSnapshots, onViewChange }) {
+    document.getElementById('holdingViewSwitch')?.addEventListener('click', event => {
+        const button = event.target.closest('[data-holding-view]');
+        if (button) onViewChange(button.dataset.holdingView);
+    });
     document.getElementById('holdingFilterAssetClass')?.addEventListener('change', event => onFilter('assetClass', event.target.value));
     document.getElementById('holdingFilterMarket')?.addEventListener('change', event => onFilter('market', event.target.value));
     document.getElementById('holdingAssetClassSelect')?.addEventListener('change', updateCashMode);

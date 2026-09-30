@@ -13,6 +13,7 @@ import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
 import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
 import { bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
 import { fetchQuotes } from './modules/holdings/quoteApi.js';
+import { resizeHoldingTreemap } from './modules/holdings/holdingsTreemap.js';
 import { escapeHtml, formatCurrency, todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
@@ -110,6 +111,7 @@ async function initializeWorkspace(user) {
     state.holdingFilters = preferences.holdingFilters || state.holdingFilters;
     state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
     state.holdingSortOrder = preferences.holdingSortOrder || state.holdingSortOrder;
+    state.holdingView = normalizeHoldingView(preferences.holdingView);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
 
     applyTheme(state.theme);
@@ -451,9 +453,11 @@ function bindEvents() {
         onDelete: deleteHolding,
         onSort: sortHoldings,
         onRefreshQuotes: refreshHoldingQuotes,
-        onGenerateSnapshots: generateSnapshotsFromHoldings
+        onGenerateSnapshots: generateSnapshotsFromHoldings,
+        onViewChange: switchHoldingView
     });
     window.addEventListener('resize', resizeChart, { passive: true });
+    window.addEventListener('resize', resizeHoldingTreemap, { passive: true });
     window.addEventListener('resize', keepAccountFloatingActionsInView, { passive: true });
 }
 
@@ -636,7 +640,20 @@ function switchView(view) {
     state.activeView = normalizeActiveView(view);
     persistPreferences();
     renderApp();
-    requestAnimationFrame(resizeChart);
+    requestAnimationFrame(() => {
+        resizeChart();
+        resizeHoldingTreemap();
+    });
+}
+
+function switchHoldingView(view) {
+    state.holdingView = normalizeHoldingView(view);
+    persistPreferences();
+    renderApp();
+}
+
+function normalizeHoldingView(view) {
+    return view === 'treemap' ? 'treemap' : 'table';
 }
 
 function openSnapshotForAccount(accountId) {
@@ -1077,6 +1094,7 @@ function exportData() {
                 holdingFilters: state.holdingFilters,
                 holdingSortKey: state.holdingSortKey,
                 holdingSortOrder: state.holdingSortOrder,
+                holdingView: state.holdingView,
                 currentLang: state.currentLang
             }
         }
@@ -1147,6 +1165,7 @@ function applyImportedData(data) {
     state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
     state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
     state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
+    state.holdingView = normalizeHoldingView(data.preferences.holdingView);
     state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';
@@ -1823,6 +1842,7 @@ function getCurrentPreferences() {
         holdingFilters: state.holdingFilters,
         holdingSortKey: state.holdingSortKey,
         holdingSortOrder: state.holdingSortOrder,
+        holdingView: state.holdingView,
         currentLang: state.currentLang
     };
 }
@@ -1853,6 +1873,7 @@ function applyCloudData(data) {
     state.holdingFilters = preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
     state.holdingSortKey = preferences.holdingSortKey || 'marketValue';
     state.holdingSortOrder = Number(preferences.holdingSortOrder) || -1;
+    state.holdingView = normalizeHoldingView(preferences.holdingView);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';

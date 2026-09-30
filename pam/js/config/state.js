@@ -10,6 +10,7 @@ export const state = {
     holdingFilters: { accountId: 'all', assetClass: 'all', market: 'all' },
     holdingSortKey: 'marketValue',
     holdingSortOrder: -1,
+    holdingView: 'table',
     editingHoldingId: '',
     editingSnapshotId: '',
     activeView: 'analysis',

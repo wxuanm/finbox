@@ -5409,3 +5409,38 @@ select,
         border-radius: 12px;
     }
 }
+
+.holding-view-switch {
+    width: fit-content;
+    margin: 12px 0 0 auto;
+}
+
+.holding-treemap {
+    height: 420px;
+    margin-top: 12px;
+    padding: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 22px;
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.holding-treemap .empty-state {
+    height: 100%;
+}
+
+@media (max-width: 720px) {
+    .holding-view-switch,
+    .management-panel .holding-view-switch {
+        width: fit-content;
+        margin: 10px 10px 0 auto;
+    }
+
+    .holding-treemap {
+        height: 320px;
+        margin: 10px 10px 14px;
+        padding: 6px;
+        border-radius: 18px;
+    }
+}
