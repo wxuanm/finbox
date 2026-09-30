@@ -1,11 +1,15 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
-import { escapeHtml, formatCurrency, formatPercent, formatWeight } from '../../utils/formatter.js';
+import { escapeHtml, formatCurrency, formatPercent, formatWeight, signedClass } from '../../utils/formatter.js';
 import { ASSET_CLASSES, getAssetClassLabel } from './holdingsMetrics.js';
 
 let treemapInstance = null;
 // P/L percentage at which tile color reaches full intensity.
 const PNL_COLOR_SATURATION_PCT = 20;
+// Tiny positions get a floor tile share so they stay visible and hoverable; labels still show real weight.
+const MIN_TILE_SHARE = 0.015;
+// Holdings below this weight rarely fit a tile label, so they are also listed under the chart.
+const MINOR_HOLDING_WEIGHT = 3;
 
 export function renderHoldingTreemap(rows) {
     const el = document.getElementById('holdingTreemap');
@@ -23,8 +27,14 @@ export function renderHoldingTreemap(rows) {
         return;
     }
 
-    el.innerHTML = '';
-    treemapInstance = window.echarts.init(el);
+    const minorRows = rows
+        .filter(row => Number(row.marketValue) > 0 && Number(row.weight) < MINOR_HOLDING_WEIGHT)
+        .sort((a, b) => b.marketValue - a.marketValue);
+    el.innerHTML = `
+        <div class="holding-treemap-chart"></div>
+        ${minorRows.length > 0 ? renderMinorHoldings(minorRows) : ''}
+    `;
+    treemapInstance = window.echarts.init(el.querySelector('.holding-treemap-chart'));
     const textColor = getCssVar('--text-color') || '#0f172a';
     const borderColor = getCssVar('--surface-color') || '#ffffff';
     treemapInstance.setOption({
@@ -37,6 +47,7 @@ export function renderHoldingTreemap(rows) {
             top: 0,
             bottom: 0,
             roam: false,
+            visibleMin: 1,
             nodeClick: false,
             breadcrumb: { show: false },
             label: {
@@ -79,6 +90,8 @@ function buildTreemapData(rows) {
     const positiveColor = getCssVar('--positive-color') || '#ef4444';
     const negativeColor = getCssVar('--negative-color') || '#059669';
     const neutralColor = getCssVar('--border-strong') || '#cbd5e1';
+    const totalMarketValue = rows.reduce((sum, row) => sum + Math.max(Number(row.marketValue) || 0, 0), 0);
+    const minTileValue = totalMarketValue * MIN_TILE_SHARE;
     return ASSET_CLASSES
         .map(([assetClass]) => {
             const children = rows
@@ -86,7 +99,7 @@ function buildTreemapData(rows) {
                 .sort((a, b) => b.marketValue - a.marketValue)
                 .map(row => ({
                     name: row.name,
-                    value: row.marketValue,
+                    value: Math.max(row.marketValue, minTileValue),
                     row,
                     itemStyle: { color: pnlColor(row, positiveColor, negativeColor, neutralColor) }
                 }));
@@ -94,10 +107,30 @@ function buildTreemapData(rows) {
             return {
                 name: getAssetClassLabel(assetClass),
                 value: children.reduce((sum, child) => sum + child.value, 0),
+                marketValue: children.reduce((sum, child) => sum + child.row.marketValue, 0),
                 children
             };
         })
         .filter(Boolean);
+}
+
+function renderMinorHoldings(rows) {
+    const positiveColor = getCssVar('--positive-color') || '#ef4444';
+    const negativeColor = getCssVar('--negative-color') || '#059669';
+    const neutralColor = getCssVar('--border-strong') || '#cbd5e1';
+    return `
+        <div class="holding-treemap-minor">
+            <span class="holding-treemap-minor-title">${t('holdingTreemapMinor', { weight: MINOR_HOLDING_WEIGHT })}</span>
+            <ul>${rows.map(row => `
+                <li title="${escapeHtml(row.name)}">
+                    <i style="background:${pnlColor(row, positiveColor, negativeColor, neutralColor)}"></i>
+                    <span>${escapeHtml(row.name)}</span>
+                    <strong>${formatWeight(row.weight)}</strong>
+                    ${row.assetClass === 'cash' ? '' : `<small class="${signedClass(row.unrealizedPnl)}">${formatPercent(row.unrealizedPnlPct)}</small>`}
+                </li>
+            `).join('')}</ul>
+        </div>
+    `;
 }
 
 function pnlColor(row, positiveColor, negativeColor, neutralColor) {
@@ -127,7 +160,7 @@ function formatTreemapLabel(params) {
 function formatTreemapTooltip(params) {
     const row = params.data?.row;
     if (!row) {
-        return `<strong>${escapeHtml(params.name)}</strong><br>${t('marketValue')}: ${formatCurrency(params.value, state.amountsHidden)}`;
+        return `<strong>${escapeHtml(params.name)}</strong><br>${t('marketValue')}: ${formatCurrency(params.data?.marketValue, state.amountsHidden)}`;
     }
     const lines = [
         `<strong>${escapeHtml(row.name)}</strong>${row.symbol ? ` <small>${escapeHtml(row.symbol)}</small>` : ''}`,
