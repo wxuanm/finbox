@@ -335,6 +335,10 @@ function isStalePrice(row) {
 }
 
 function compareHoldings(a, b) {
+    // Cash always stays at the bottom regardless of sort key/direction.
+    const aCash = a.assetClass === 'cash';
+    const bCash = b.assetClass === 'cash';
+    if (aCash !== bCash) return aCash ? 1 : -1;
     const direction = state.holdingSortOrder || -1;
     const key = state.holdingSortKey || 'marketValue';
     if (['name', 'accountName', 'assetClass', 'priceUpdatedAt'].includes(key)) {
