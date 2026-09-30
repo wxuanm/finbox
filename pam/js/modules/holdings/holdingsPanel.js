@@ -220,21 +220,23 @@ function renderHoldingMobileCard(row, priceStatus) {
                     <strong>${escapeHtml(row.name)}</strong>
                     <small>${formatHoldingMeta(row)}</small>
                 </div>
-                <div class="holding-mobile-hero">
-                    <span>${t('marketValue')} / ${t('quantity')}</span>
-                    <strong>${formatCurrency(row.marketValue, state.amountsHidden)}</strong>
-                    <small>${formatQuantity(row.quantity)}</small>
-                    <small class="${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)} / ${formatPercent(row.unrealizedPnlPct)}</small>
-                </div>
             </div>
             <div class="holding-mobile-details">
                 <div>
-                    <span>${t('weight')}</span>
-                    <strong class="holding-weight mobile-weight"><span style="--weight:${formatWeightBar(row.weight)}"></span>${formatWeight(row.weight)}</strong>
+                    <span>${t('marketValue')} / ${t('quantity')}</span>
+                    <strong>${formatCurrency(row.marketValue, state.amountsHidden)} / ${formatQuantity(row.quantity)}</strong>
                 </div>
                 <div>
                     <span>${t('latestPrice')}</span>
                     <strong>${formatPrice(row.costPrice, row.assetClass)} / ${formatPrice(row.currentPrice, row.assetClass)}</strong>
+                </div>
+                <div>
+                    <span>${t('cumulativePnl')}</span>
+                    <strong class="${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)} / ${formatPercent(row.unrealizedPnlPct)}</strong>
+                </div>
+                <div>
+                    <span>${t('weight')}</span>
+                    <strong class="holding-weight mobile-weight"><span style="--weight:${formatWeightBar(row.weight)}"></span>${formatWeight(row.weight)}</strong>
                 </div>
                 <div>
                     <span>${t('priceTime')}</span>

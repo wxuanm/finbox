@@ -4044,48 +4044,6 @@ select,
         white-space: nowrap;
     }
 
-    .holding-mobile-hero {
-        min-width: 118px;
-        display: grid;
-        justify-items: end;
-        gap: 4px;
-        padding: 10px 11px;
-        border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
-        border-radius: 18px;
-        background:
-            radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary-color) 14%, transparent), transparent 58%),
-            color-mix(in srgb, var(--surface-elevated) 88%, transparent);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
-        text-align: right;
-    }
-
-    .holding-mobile-hero span {
-        color: var(--muted-text);
-        font-size: 10px;
-        font-weight: 850;
-    }
-
-    .holding-mobile-hero strong {
-        color: var(--heading-color);
-        font-size: 15px;
-        font-weight: 950;
-        letter-spacing: -0.025em;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .holding-mobile-hero small {
-        max-width: 132px;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-        font-size: 11px;
-        font-weight: 850;
-        text-align: right;
-        white-space: normal;
-    }
-
     .holding-mobile-card-head + .holding-mobile-details {
         margin-top: 2px;
     }
@@ -4368,8 +4326,7 @@ select,
         font-variant-numeric: tabular-nums;
     }
 
-    .holding-mobile-card .holding-mobile-details > div:first-child strong,
-    .holding-mobile-card .holding-mobile-hero strong {
+    .holding-mobile-card .holding-mobile-details > div:first-child strong {
         font-size: 13px !important;
         font-weight: 850 !important;
         letter-spacing: -0.01em !important;
@@ -5310,8 +5267,6 @@ select,
     .holding-mobile-details > div:first-child strong.negative,
     .holding-mobile-details > div:nth-child(2) strong.positive,
     .holding-mobile-details > div:nth-child(2) strong.negative,
-    .holding-mobile-hero strong,
-    .holding-mobile-hero small,
     .holding-mobile-card .holding-mobile-details > div:first-child strong {
         color: var(--heading-color) !important;
         font-size: 12px !important;
@@ -5322,14 +5277,12 @@ select,
     }
 
     .holding-mobile-details > div:nth-child(2) strong.positive,
-    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.positive,
-    .holding-mobile-hero small.positive {
+    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.positive {
         color: var(--positive-color) !important;
     }
 
     .holding-mobile-details > div:nth-child(2) strong.negative,
-    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.negative,
-    .holding-mobile-hero small.negative {
+    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.negative {
         color: var(--negative-color) !important;
     }
 
