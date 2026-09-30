@@ -3336,11 +3336,11 @@ select,
     }
 
     .desktop-action {
-        display: inline-flex;
+        display: none;
     }
 
     .mobile-more-actions {
-        display: none;
+        display: block;
     }
 
     .panel-actions {
@@ -5459,4 +5459,9 @@ select,
         padding: 6px;
         border-radius: 18px;
     }
+}
+
+.header-action-menu .menu-icon-svg {
+    display: inline-flex;
+    flex: 0 0 auto;
 }

@@ -86,6 +86,7 @@ async function init() {
     document.getElementById('pamUseAccessKeyBtn')?.addEventListener('click', () => showAuthMode('access-key'));
     document.getElementById('pamUsePasswordBtn')?.addEventListener('click', () => showAuthMode('password'));
     document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
+    document.getElementById('mobileLogoutBtn')?.addEventListener('click', handleLogout);
     const session = await fetchAuthSession();
     if (!session?.user) {
         showAuthGate(session?.error || '请输入用户名和密码。', Boolean(session?.error));
@@ -342,6 +343,7 @@ function loadECharts() {
 
 function bindEvents() {
     document.getElementById('themeBtn')?.addEventListener('click', toggleTheme);
+    document.getElementById('mobileThemeBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('langBtn')?.addEventListener('click', toggleLang);
     document.getElementById('mobileLangBtn')?.addEventListener('click', toggleLang);
     document.getElementById('demoDataBtn')?.addEventListener('click', handleDemoDataRequest);

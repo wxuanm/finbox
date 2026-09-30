@@ -38,5 +38,12 @@ export function updateThemeButton() {
         btn.title = title;
         btn.setAttribute('aria-label', title);
     }
+    const mobileIcon = document.getElementById('mobileThemeMenuIcon');
+    const mobileText = document.getElementById('mobileThemeMenuText');
+    if (mobileIcon) mobileIcon.innerHTML = icon.replaceAll('width="18" height="18"', 'width="16" height="16"');
+    if (mobileText) {
+        mobileText.dataset.i18n = isDark ? 'themeLight' : 'themeDark';
+        mobileText.textContent = title;
+    }
 
 }
