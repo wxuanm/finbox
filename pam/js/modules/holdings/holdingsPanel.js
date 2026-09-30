@@ -2,12 +2,23 @@ import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { currentLocale, escapeHtml, formatCurrency, formatPercent, formatPrice, formatWeight, signedClass, todayKey } from '../../utils/formatter.js';
 import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel } from './holdingsMetrics.js';
-import { disposeTreemap, renderHoldingTreemap } from './holdingsTreemap.js';
+import { disposeHoldingChart, getHoldingChartContainer } from './holdingsChartShared.js';
+import { renderHoldingTreemap } from './holdingsTreemap.js';
+import { renderHoldingBubble } from './holdingsBubble.js';
+import { renderHoldingContribution } from './holdingsContribution.js';
 
-const HOLDING_VIEWS = [
+export const HOLDING_VIEWS = [
     ['table', 'holdingViewTable'],
-    ['treemap', 'holdingViewTreemap']
+    ['treemap', 'holdingViewTreemap'],
+    ['bubble', 'holdingViewBubble'],
+    ['contribution', 'holdingViewContribution']
 ];
+
+const CHART_RENDERERS = {
+    treemap: renderHoldingTreemap,
+    bubble: renderHoldingBubble,
+    contribution: renderHoldingContribution
+};
 
 export function renderHoldingsPanel(metrics) {
     renderHoldingFilters();
@@ -19,10 +30,10 @@ export function renderHoldingsPanel(metrics) {
 function renderHoldingViews(rows) {
     const switchEl = document.getElementById('holdingViewSwitch');
     const tableEl = document.getElementById('holdingTable');
-    const treemapEl = document.getElementById('holdingTreemap');
-    // Empty states always render through the table so the treemap only shows real positions.
+    const chartEl = getHoldingChartContainer();
+    // Empty states always render through the table so charts only show real positions.
     const hasRows = state.accounts.length > 0 && rows.length > 0;
-    const showTreemap = hasRows && state.holdingView === 'treemap';
+    const renderChart = hasRows ? CHART_RENDERERS[state.holdingView] : null;
 
     if (switchEl) {
         switchEl.classList.toggle('hidden', !hasRows);
@@ -30,13 +41,14 @@ function renderHoldingViews(rows) {
             <button class="period-chip${state.holdingView === key ? ' active' : ''}" type="button" data-holding-view="${key}" aria-pressed="${state.holdingView === key}">${t(label)}</button>
         `).join('');
     }
-    tableEl?.classList.toggle('hidden', showTreemap);
-    treemapEl?.classList.toggle('hidden', !showTreemap);
+    tableEl?.classList.toggle('hidden', Boolean(renderChart));
+    chartEl?.classList.toggle('hidden', !renderChart);
+    chartEl?.setAttribute('data-holding-chart', renderChart ? state.holdingView : '');
 
-    if (showTreemap) {
-        renderHoldingTreemap(rows);
+    if (renderChart && chartEl) {
+        renderChart(chartEl, rows);
     } else {
-        disposeTreemap();
+        disposeHoldingChart();
         renderHoldingTable(rows);
     }
 }

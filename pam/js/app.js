@@ -11,9 +11,9 @@ import { bindAccountComparison, renderAccountComparison, renderOverviewCards } f
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
 import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
-import { bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
+import { HOLDING_VIEWS, bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
 import { fetchQuotes } from './modules/holdings/quoteApi.js';
-import { resizeHoldingTreemap } from './modules/holdings/holdingsTreemap.js';
+import { resizeHoldingChart } from './modules/holdings/holdingsChartShared.js';
 import { escapeHtml, formatCurrency, todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
@@ -459,7 +459,7 @@ function bindEvents() {
         onViewChange: switchHoldingView
     });
     window.addEventListener('resize', resizeChart, { passive: true });
-    window.addEventListener('resize', resizeHoldingTreemap, { passive: true });
+    window.addEventListener('resize', resizeHoldingChart, { passive: true });
     window.addEventListener('resize', keepAccountFloatingActionsInView, { passive: true });
 }
 
@@ -644,7 +644,7 @@ function switchView(view) {
     renderApp();
     requestAnimationFrame(() => {
         resizeChart();
-        resizeHoldingTreemap();
+        resizeHoldingChart();
     });
 }
 
@@ -655,7 +655,7 @@ function switchHoldingView(view) {
 }
 
 function normalizeHoldingView(view) {
-    return view === 'treemap' ? 'treemap' : 'table';
+    return HOLDING_VIEWS.some(([key]) => key === view) ? view : 'table';
 }
 
 function openSnapshotForAccount(accountId) {
