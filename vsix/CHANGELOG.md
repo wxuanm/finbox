@@ -2,6 +2,20 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.4
+
+- Changed fund trend line colors to a validated palette that avoids the red/green rise-and-fall colors and the yellow benchmark, keeps each fund's color when filtering, and adds matching color swatches to comparison cards and tooltips.
+- Added the annualized 10% benchmark and max drawdown to the chart legend so they can be identified and hidden.
+- Changed max-drawdown marking to a green gradient area under the curve from peak to trough, with the drawdown percentage always shown in the legend and in the chart.
+- Changed mouse-wheel zoom to require `Ctrl` (or trackpad pinch) so scrolling the page no longer zooms the chart.
+- Added the visible date range, a zoom hint, and a reset link after manual zooming to the chart header, plus a note when history is shorter than the selected period.
+- Kept hidden legend items and the zoom window when zooming or filtering by fund card, and fit the Y-axis to the visible curves with evenly spaced ticks and a highlighted `0%` baseline.
+- Changed X-axis date labels to follow the visible span, and fixed the zoom slider preview to show a fund curve instead of the benchmark.
+- Improved tooltips with return-sorted rows, benchmark values, excess return for single funds, and the label "区间收益".
+- Changed single-fund labels so highest, lowest, and latest each sit at their own point, the latest label always sits above the curve, and only the latest label shows when the highest or lowest value is essentially the same.
+- Marked funds whose history starts later than the visible window in comparison charts.
+- Refreshed chart colors when the VS Code theme changes and aligned the single-fund period table order with the period buttons.
+
 ## 0.1.3
 
 - Added a bottom-of-page transaction information card to single-fund trend views.

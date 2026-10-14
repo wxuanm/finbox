@@ -187,10 +187,13 @@ Single-fund trend view should show:
 - Chart/list radio switcher for single-fund views only
 - VS Code setting for the default single-fund trend view, supporting `list` and `chart`; group trend loads always default to chart
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
-- Interactive chart hover state with crosshair, highlighted points, date, cumulative return, and single-fund NAV/daily-return details
-- Chart Y-axis bounds based on the current visible returns with compact, evenly spaced ticks, allowing `0.2%` or `0.5%` steps for sub-1% moves and integer steps for larger moves to avoid excessive blank space on short periods such as one month
-- Single-fund chart labels for the current visible window's lowest, highest, and latest cumulative return values; if the highest or lowest value matches the latest value, only the latest label is shown
-- Max-drawdown curve marking for the active single-fund chart period or selected single fund in a group trend
+- Interactive chart hover state with crosshair, date, visible-window return, the annualized 10% benchmark value, and single-fund NAV, daily-return, and excess-over-benchmark details; multi-fund tooltips sort rows by return and prefix each row with the fund's line swatch
+- Mouse-wheel zoom requires Ctrl (or trackpad pinch) so normal wheel scrolling keeps scrolling the page; dragging pans the window, and the chart subtitle shows the visible date range plus this hint
+- After a manual zoom the chart title switches to a custom-range title with a reset link back to the selected period; the period tab keeps governing the metric cards. When history is shorter than the selected period, the subtitle says so
+- Chart Y-axis bounds based on the current visible, legend-enabled returns with compact, evenly spaced "nice" ticks (`0.2%`/`0.5%` for sub-1% moves, then 1/2/2.5/5 x 10^n steps) to avoid excessive blank space; the `0%` baseline is drawn stronger than the dashed grid
+- Single-fund chart labels for the current visible window's lowest (down triangle), highest (up triangle), and latest (dot) return values; when the highest or lowest value is essentially the latest value (within 0.1 percentage points) only the latest label is shown. Otherwise the high and low each keep their own label at their own point (high above, low below); when the high sits close to the latest point, its label is raised so the two labels stack instead of overlapping. The latest label always sits above the curve, even when the latest point is the low
+- Max-drawdown marking as a fading area under the curve from peak to trough, tinted with the theme's fall color (green under the red-up convention); the legend entry shows the drawdown value and can hide the area, and the bare value (without the 最大回撤 caption) is always labelled at the floor of the area, or just outside the area when the segment is too narrow to hold it. Applies to the active single-fund chart period or a selected single fund in a group trend
+- The annualized 10% benchmark is a dashed reference line listed in the legend so it can be identified and hidden
 - A single fund information card with all period return, drawdown, volatility, return-to-drawdown ratio, and up-day ratio rows; the active chart/list period row is highlighted
 - Source update time and failed state if data cannot be loaded
 
@@ -198,7 +201,8 @@ Group trend view should show:
 
 - Group name
 - Included fund codes
-- Multi-fund normalized return chart without NAV-list switching
+- Multi-fund normalized return chart without NAV-list switching. Fund line colors avoid red/green (rise/fall) and yellow (benchmark), stay attached to each fund when filtering, reuse five validated hues with dotted lines for the sixth fund onward, and match the swatch on each comparison card
+- Funds whose history starts after the visible window start are rebased from their first NAV date and marked with a start-date dot
 - Selecting one fund card filters the group chart to that fund and shows single-fund labels and max-drawdown marking
 - Comparison cards for period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics
 - Clear message when the group has no valid fund data

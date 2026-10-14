@@ -188,8 +188,13 @@ export class FundTrendPanel {
     <section id="summary" class="summary-grid"></section>
     <section class="chart-panel">
       <div class="chart-toolbar">
-        <div>
+        <div class="chart-heading">
           <div id="chartTitle" class="chart-title">历史收益走势</div>
+          <div class="chart-meta">
+            <span id="chartRange"></span>
+            <span id="chartHint" class="chart-hint" hidden>Ctrl + 滚轮缩放 · 拖动平移</span>
+            <button type="button" id="chartZoomReset" class="chart-reset" hidden></button>
+          </div>
         </div>
         <div id="viewTabs" class="view-tabs" role="radiogroup" aria-label="显示方式" hidden>
           <label><input type="radio" name="trendView" value="chart"${defaultView === 'chart' ? ' checked' : ''}><span>曲线</span></label>

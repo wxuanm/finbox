@@ -7,11 +7,24 @@ const PERIODS = {
   y1: '近1年',
   y3: '近3年'
 };
-const DETAIL_PERIODS = ['m1', 'm3', 'm6', 'ytd', 'y1', 'y3'];
+const DETAIL_PERIODS = ['ytd', 'm1', 'm3', 'm6', 'y1', 'y3'];
 const ANNUAL_BENCHMARK = 10;
 const NAV_LIST_PAGE_SIZE = 20;
 const CHART_Y_AXIS_TARGET_SPLITS = 5;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const SERIES_HUE_COUNT = 5;
+const BENCHMARK_NAME = `年化${ANNUAL_BENCHMARK}%`;
+const DRAWDOWN_NAME = '最大回撤';
+const BASELINE_NAME = '__baseline';
+const TOOLTIP_MATCH_TOLERANCE_MS = 5 * DAY_MS;
+const ZOOM_MATCH_TOLERANCE_MS = DAY_MS;
+const PRESET_CLAMP_TOLERANCE_MS = 7 * DAY_MS;
+const LATE_START_TOLERANCE_MS = 7 * DAY_MS;
+// High/low within this many percentage points of the latest value count as the same point.
+const MARK_SAME_VALUE_TOLERANCE = 0.1;
+const LEGEND_EVENTS = ['legendselectchanged', 'legendselected', 'legendunselected', 'legendselectall', 'legendinverseselect'];
 let currentPayload = null;
+let currentTargetKey = null;
 let currentPeriod = document.querySelector('#periodTabs button.active')?.dataset.period || 'm3';
 let currentViewMode = document.querySelector('input[name="trendView"]:checked')?.value || 'list';
 let currentListPage = 1;
@@ -19,18 +32,46 @@ let selectedFundCode = null;
 let trendChart = null;
 let currentChartContext = null;
 let isRebasingChart = false;
+let customZoomWindow = null;
+let legendSelected = {};
+let themeRefreshFrame = 0;
+const colorContext = document.createElement('canvas').getContext('2d');
 
-window.addEventListener('resize', () => {
+// Pixel-dependent label placement (e.g. the drawdown value) is recomputed after size or theme changes.
+function scheduleChartRefresh() {
+  cancelAnimationFrame(themeRefreshFrame);
+  themeRefreshFrame = requestAnimationFrame(() => applyChartOption());
+}
+
+function handleChartResize() {
   trendChart?.resize();
-});
+  scheduleChartRefresh();
+}
+
+if (typeof ResizeObserver === 'function') {
+  new ResizeObserver(handleChartResize).observe(document.getElementById('chart'));
+} else {
+  window.addEventListener('resize', handleChartResize);
+}
+
+const themeObserver = new MutationObserver(scheduleChartRefresh);
+themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
 
 document.getElementById('periodTabs').addEventListener('click', event => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
   const period = target.dataset.period;
-  if (!period || !PERIODS[period] || period === currentPeriod) return;
+  if (!period || !PERIODS[period]) return;
+  if (period === currentPeriod && !customZoomWindow) return;
   currentPeriod = period;
+  customZoomWindow = null;
   currentListPage = 1;
+  renderCurrentTrend();
+});
+
+document.getElementById('chartZoomReset').addEventListener('click', () => {
+  customZoomWindow = null;
   renderCurrentTrend();
 });
 
@@ -79,6 +120,7 @@ window.addEventListener('message', event => {
     document.getElementById('summary').innerHTML = '';
     document.getElementById('tradingInfo').innerHTML = '';
     disposeChart();
+    clearChartMeta();
     document.getElementById('chart').innerHTML = '<div class="card">暂无可展示数据</div>';
     document.getElementById('navList').innerHTML = '';
     document.getElementById('metrics').innerHTML = '';
@@ -86,6 +128,12 @@ window.addEventListener('message', event => {
 });
 
 function renderTrend(payload) {
+  const targetKey = payload?.target?.key ?? null;
+  if (targetKey !== currentTargetKey) {
+    currentTargetKey = targetKey;
+    legendSelected = {};
+    customZoomWindow = null;
+  }
   currentPayload = payload;
   renderCurrentTrend();
 }
@@ -192,26 +240,28 @@ function renderChart(metrics, period) {
   const listEl = document.getElementById('navList');
   chartEl.hidden = false;
   listEl.hidden = true;
+  document.getElementById('chartTitle').textContent = `${PERIODS[period]}收益走势`;
   if (!metrics.length) {
-    disposeChart();
-    chartEl.innerHTML = '<div class="card">暂无可展示数据</div>';
+    showChartEmptyState('<div class="card">暂无可展示数据</div>');
     return;
   }
 
-  document.getElementById('chartTitle').textContent = `${PERIODS[period]}累计收益走势`;
   const visibleMetrics = selectedFundCode ? metrics.filter(metric => metric.code === selectedFundCode) : metrics;
   const series = visibleMetrics
-    .map(metric => ({ metric, points: metric.chartSeries?.y3 || metric.chartSeries?.[period] || [] }))
+    .map(metric => ({
+      metric,
+      slot: metrics.indexOf(metric),
+      points: metric.chartSeries?.y3 || metric.chartSeries?.[period] || []
+    }))
     .filter(item => item.points.length > 1);
-  if (!series.length) {
-    disposeChart();
-    chartEl.innerHTML = '<div class="empty-state">当前周期暂无足够历史数据</div>';
+  const extent = getSeriesExtent(series);
+  if (!series.length || !extent) {
+    showChartEmptyState('<div class="empty-state">当前周期暂无足够历史数据</div>');
     return;
   }
 
   if (!window.echarts) {
-    disposeChart();
-    chartEl.innerHTML = '<div class="empty-state">ECharts 加载失败，无法展示趋势图</div>';
+    showChartEmptyState('<div class="empty-state">ECharts 加载失败，无法展示趋势图</div>');
     return;
   }
 
@@ -219,10 +269,18 @@ function renderChart(metrics, period) {
     chartEl.innerHTML = '';
     trendChart = echarts.init(chartEl, null, { renderer: 'canvas' });
   }
-  currentChartContext = { series, period, zoomRange: buildZoomRange(series, period) };
-  bindChartZoomRebase();
-  trendChart.setOption(buildChartOption(currentChartContext), true);
+  const preset = buildPresetWindow(extent, period);
+  const zoomWindow = customZoomWindow ? clampWindow(customZoomWindow, extent) : preset.window;
+  currentChartContext = { series, period, extent, preset, zoomWindow };
+  bindChartEvents();
+  applyChartOption();
   trendChart.resize();
+}
+
+function showChartEmptyState(html) {
+  disposeChart();
+  clearChartMeta();
+  document.getElementById('chart').innerHTML = html;
 }
 
 function disposeChart() {
@@ -232,74 +290,147 @@ function disposeChart() {
   currentChartContext = null;
 }
 
+function applyChartOption() {
+  if (!trendChart || trendChart.isDisposed() || !currentChartContext) return;
+  isRebasingChart = true;
+  trendChart.setOption(buildChartOption(currentChartContext), { replaceMerge: ['series'] });
+  isRebasingChart = false;
+  updateChartMeta(currentChartContext);
+}
+
+function bindChartEvents() {
+  if (!trendChart) return;
+  trendChart.off('datazoom');
+  trendChart.on('datazoom', handleChartZoom);
+  LEGEND_EVENTS.forEach(eventName => {
+    trendChart.off(eventName);
+    trendChart.on(eventName, event => {
+      legendSelected = { ...legendSelected, ...event.selected };
+      applyChartOption();
+    });
+  });
+}
+
+function handleChartZoom(event) {
+  if (!trendChart || !currentChartContext || isRebasingChart) return;
+  // The always-visible zero baseline spans the full extent, so axis percentages map onto it exactly.
+  const zoom = event?.batch?.[0] ?? event ?? {};
+  const { extent, preset, zoomWindow: previousWindow } = currentChartContext;
+  const span = extent.endTime - extent.startTime;
+  const startTime = Number.isFinite(zoom.startValue)
+    ? zoom.startValue
+    : Number.isFinite(zoom.start) ? extent.startTime + span * zoom.start / 100 : previousWindow.startTime;
+  const endTime = Number.isFinite(zoom.endValue)
+    ? zoom.endValue
+    : Number.isFinite(zoom.end) ? extent.startTime + span * zoom.end / 100 : previousWindow.endTime;
+  const zoomWindow = clampWindow({ startTime, endTime }, extent);
+  currentChartContext.zoomWindow = zoomWindow;
+  customZoomWindow = isSameWindow(zoomWindow, preset.window) ? null : zoomWindow;
+  applyChartOption();
+}
+
 function buildChartOption(context) {
-  const { series, period, zoomRange } = context;
-  const colors = getChartColors();
-  const zoomBounds = getZoomBounds(series, zoomRange);
-  const rebasedSeries = rebaseSeriesForZoom(series, zoomRange);
-  const benchmark = buildAnnualBenchmarkSeries(rebasedSeries, zoomBounds?.startTime ?? null);
-  const yAxisBounds = buildYAxisBounds(rebasedSeries, benchmark, zoomBounds);
-  const showReturnMarkers = rebasedSeries.length === 1;
+  const { series, extent, zoomWindow } = context;
+  const theme = getChartTheme();
+  const isSingle = series.length === 1;
+  const rebasedSeries = rebaseSeriesForZoom(series, zoomWindow);
+  const benchmark = buildAnnualBenchmarkSeries(rebasedSeries, zoomWindow.startTime);
+  const yAxisBounds = buildYAxisBounds(
+    rebasedSeries.filter(item => isSingle || isLegendItemSelected(seriesName(item))),
+    isLegendItemSelected(BENCHMARK_NAME) ? benchmark : [],
+    zoomWindow,
+    isSingle
+  );
+  const lineWidth = series.length > 4 ? 1.5 : 2;
   const lineSeries = rebasedSeries.map(item => {
+    const style = getSeriesStyle(item.slot, theme);
     const data = item.points.map(point => [parseDate(point[0]), point[1], point[0], point[2], point[3], point[4]]);
-    const markPointData = showReturnMarkers ? buildReturnMarkPoints(data, zoomBounds) : [];
+    const visibleData = filterEchartsSeriesByZoom(data, zoomWindow);
+    const markPointData = isSingle
+      ? buildReturnMarkPoints(visibleData, zoomWindow, yAxisBounds, style, theme)
+      : buildSeriesStartMarkPoints(visibleData, zoomWindow, style, theme);
     return {
-      name: `${item.metric.name} ${item.metric.code}`,
+      name: seriesName(item),
       type: 'line',
       showSymbol: false,
       smooth: false,
-      sampling: 'lttb',
-      emphasis: showReturnMarkers ? { focus: 'none' } : { focus: 'series' },
-      lineStyle: { width: 2 },
+      // The single-fund drawdown area traces the raw points, so keep the line unsampled to match its edge.
+      sampling: isSingle ? undefined : 'lttb',
+      z: 3,
+      emphasis: isSingle ? { focus: 'none' } : { focus: 'series' },
+      itemStyle: { color: style.color },
+      lineStyle: { width: lineWidth, type: style.type, color: style.color },
       data,
-      markPoint: markPointData.length > 0 ? {
-        symbol: 'circle',
-        symbolSize: 8,
-        itemStyle: { opacity: 1 },
-        label: {
-          formatter: params => formatPercent(Number(params.value)),
-          color: getCssVar('--vscode-foreground', '#cccccc'),
-          fontSize: 10,
-          fontWeight: 700
-        },
-        data: markPointData
-      } : undefined
+      markPoint: markPointData.length > 0 ? { animation: false, data: markPointData } : undefined
     };
   });
-  const drawdownSeries = rebasedSeries.length === 1 ? buildDrawdownEchartsSeries(rebasedSeries[0], zoomBounds) : null;
+  const drawdown = isSingle ? buildDrawdown(rebasedSeries[0], zoomWindow, yAxisBounds, theme) : null;
+  const drawdownSeries = drawdown?.series ?? null;
   const allSeries = [
+    ...lineSeries,
     {
-      name: '年化10%',
+      name: BENCHMARK_NAME,
       type: 'line',
       showSymbol: false,
       silent: true,
-      lineStyle: { width: 1.4, type: 'dashed', color: getCssVar('--vscode-charts-yellow', '#cca700') },
+      z: 2,
+      emphasis: { disabled: true },
+      blur: { lineStyle: { opacity: 0.5 } },
+      itemStyle: { color: theme.benchmark },
+      lineStyle: { width: 1.4, type: 'dashed', color: theme.benchmark },
       data: benchmark.map(point => [parseDate(point[0]), point[1], point[0]])
     },
-    ...lineSeries
+    {
+      name: BASELINE_NAME,
+      type: 'line',
+      showSymbol: false,
+      silent: true,
+      z: 1,
+      tooltip: { show: false },
+      emphasis: { disabled: true },
+      blur: { lineStyle: { opacity: 1 } },
+      lineStyle: { width: 1, color: theme.baseline },
+      data: [[extent.startTime, 0], [extent.endTime, 0]]
+    }
   ];
   if (drawdownSeries) allSeries.push(drawdownSeries);
 
+  const legendItems = [
+    ...(isSingle ? [] : lineSeries.map(item => ({ name: item.name }))),
+    { name: BENCHMARK_NAME },
+    ...(drawdownSeries ? [{ name: DRAWDOWN_NAME, icon: 'rect', itemStyle: { color: theme.drawdownLegend } }] : [])
+  ];
+  // Every named series gets an explicit state so stale hidden flags never leak into a single-fund view.
+  const legendState = Object.fromEntries(allSeries
+    .filter(item => item.name !== BASELINE_NAME)
+    .map(item => [item.name, (isSingle && item.name === lineSeries[0].name) || isLegendItemSelected(item.name)]));
+  const zoomSpan = zoomWindow.endTime - zoomWindow.startTime;
+
   return {
     animation: false,
-    color: colors,
     backgroundColor: 'transparent',
+    aria: {
+      enabled: true,
+      label: { description: buildChartAriaDescription(context, rebasedSeries) }
+    },
     textStyle: {
-      color: getCssVar('--vscode-foreground', '#cccccc'),
+      color: theme.foreground,
       fontFamily: getCssVar('--vscode-font-family', 'sans-serif'),
       fontSize: Number.parseInt(getCssVar('--vscode-font-size', '13'), 10) || 13
     },
-    grid: { left: 12, right: 18, top: 48, bottom: 64, containLabel: true },
+    grid: { left: 24, right: 18, top: 48, bottom: 64, containLabel: true },
     legend: {
       type: 'scroll',
-      data: lineSeries.map(item => item.name),
+      data: legendItems,
+      selected: legendState,
       top: 2,
       itemWidth: 16,
       itemHeight: 8,
-      textStyle: { color: getCssVar('--vscode-descriptionForeground', '#999999') },
+      formatter: name => (name === DRAWDOWN_NAME && drawdown ? `${DRAWDOWN_NAME} ${formatPercent(drawdown.value)}` : name),
+      textStyle: { color: theme.muted },
       pageIconColor: getCssVar('--vscode-button-background', '#0e639c'),
       pageIconInactiveColor: getCssVar('--vscode-disabledForeground', '#666666'),
-      pageTextStyle: { color: getCssVar('--vscode-descriptionForeground', '#999999') }
+      pageTextStyle: { color: theme.muted }
     },
     tooltip: {
       trigger: 'axis',
@@ -316,11 +447,14 @@ function buildChartOption(context) {
     },
     xAxis: {
       type: 'time',
-      axisLine: { lineStyle: { color: getCssVar('--trend-border', '#454545') } },
-      axisTick: { lineStyle: { color: getCssVar('--trend-border', '#454545') } },
+      axisLine: { lineStyle: { color: theme.border } },
+      axisTick: { lineStyle: { color: theme.border } },
       axisLabel: {
-        color: getCssVar('--vscode-descriptionForeground', '#999999'),
-        formatter: value => formatDateTick(new Date(value).toLocaleDateString('sv-SE'), period)
+        color: theme.muted,
+        hideOverlap: true,
+        alignMinLabel: 'left',
+        alignMaxLabel: 'right',
+        formatter: value => formatDateTick(value, zoomSpan)
       },
       splitLine: { show: false }
     },
@@ -329,71 +463,185 @@ function buildChartOption(context) {
       position: 'right',
       ...yAxisBounds,
       axisLabel: {
-        color: getCssVar('--vscode-descriptionForeground', '#999999'),
-        formatter: value => formatAxisPercent(value)
+        color: theme.muted,
+        formatter: value => formatAxisPercent(value, yAxisBounds.interval)
       },
-      splitLine: { lineStyle: { color: getCssVar('--trend-border', '#454545') } }
+      splitLine: { lineStyle: { color: theme.grid, type: 'dashed' } }
     },
     dataZoom: [
-      { type: 'inside', throttle: 60, ...zoomRange },
+      {
+        type: 'inside',
+        throttle: 60,
+        startValue: zoomWindow.startTime,
+        endValue: zoomWindow.endTime,
+        zoomOnMouseWheel: 'ctrl',
+        moveOnMouseWheel: false,
+        moveOnMouseMove: true
+      },
       {
         type: 'slider',
-        ...zoomRange,
+        startValue: zoomWindow.startTime,
+        endValue: zoomWindow.endTime,
         height: 26,
         bottom: 16,
-        borderColor: getCssVar('--trend-border', '#454545'),
-        backgroundColor: getCssVar('--trend-soft-bg', 'transparent'),
-        fillerColor: getCssVar('--trend-accent-soft', 'rgba(55, 148, 255, .18)'),
+        borderColor: theme.border,
+        backgroundColor: theme.sliderBackground,
+        fillerColor: theme.sliderFiller,
+        dataBackground: {
+          lineStyle: { color: theme.muted, opacity: 0.6 },
+          areaStyle: { color: theme.sliderShadow }
+        },
         handleStyle: { color: getCssVar('--vscode-button-background', '#0e639c') },
-        textStyle: { color: getCssVar('--vscode-descriptionForeground', '#999999') }
+        labelFormatter: value => formatTimeDate(value),
+        textStyle: { color: theme.muted }
       }
     ],
     series: allSeries
   };
 }
 
-function buildReturnMarkPoints(data, zoomBounds) {
-  const visibleData = filterEchartsSeriesByZoom(data, zoomBounds);
+function getChartTheme() {
+  const foreground = getCssVar('--vscode-foreground', '#cccccc');
+  const muted = getCssVar('--vscode-descriptionForeground', '#999999');
+  const surface = getCssVar('--vscode-editor-background', '#1e1e1e');
+  // Same "fall" color as .negative text, so the drawdown reads as a decline under the A-share red-up convention.
+  const down = getCssVar('--vscode-charts-green', '#89d185');
+  return {
+    foreground,
+    muted,
+    surface,
+    border: getCssVar('--trend-border', '#454545'),
+    grid: toRgba(muted, 0.22),
+    baseline: toRgba(muted, 0.7),
+    benchmark: getCssVar('--vscode-charts-yellow', '#cca700'),
+    down,
+    drawdownFillTop: toRgba(down, 0.32),
+    drawdownFillBottom: toRgba(down, 0.03),
+    drawdownLegend: toRgba(down, 0.55),
+    labelBackground: toRgba(surface, 0.86),
+    sliderBackground: toRgba(foreground, 0.04),
+    sliderFiller: toRgba(getCssVar('--vscode-button-background', '#0e639c'), 0.18),
+    sliderShadow: toRgba(muted, 0.16),
+    series: Array.from({ length: SERIES_HUE_COUNT }, (_, index) => getCssVar(`--series-${index + 1}`, '#3987e5'))
+  };
+}
+
+function getSeriesStyle(slot, theme) {
+  const index = Math.max(0, slot);
+  return {
+    color: theme.series[index % SERIES_HUE_COUNT],
+    type: index >= SERIES_HUE_COUNT ? 'dotted' : 'solid'
+  };
+}
+
+function seriesName(item) {
+  return `${item.metric.name} ${item.metric.code}`;
+}
+
+function isLegendItemSelected(name) {
+  return legendSelected[name] !== false;
+}
+
+function buildReturnMarkPoints(visibleData, zoomWindow, yAxisBounds, style, theme) {
   const lowPoint = getLowestSeriesPoint(visibleData);
   const highPoint = getHighestSeriesPoint(visibleData);
   const lastPoint = getLastSeriesPoint(visibleData);
+  if (!lastPoint) return [];
+
+  // Returns are floats, so "same as latest" uses a tolerance instead of strict equality.
+  const isSameAsLatest = point => Math.abs(point[1] - lastPoint[1]) < MARK_SAME_VALUE_TOLERANCE;
   const markPointData = [];
 
-  if (lowPoint && (!lastPoint || lowPoint[1] !== lastPoint[1])) {
-    markPointData.push({
-      name: 'Low',
-      coord: lowPoint,
-      value: lowPoint[1],
-      label: { position: 'bottom' }
-    });
+  // High and low each keep their own label at their own point, unless they are essentially the latest value.
+  if (highPoint && !isSameAsLatest(highPoint)) {
+    const highMark = buildMarkPoint(highPoint, `最高 ${formatPercent(highPoint[1])}`, 'top', 0, zoomWindow, style, theme);
+    highMark.label.distance += getHighLabelLift(highPoint, lastPoint, zoomWindow, yAxisBounds);
+    markPointData.push(highMark);
   }
 
-  if (highPoint && (!lastPoint || highPoint[1] !== lastPoint[1])) {
-    markPointData.push({
-      name: 'High',
-      coord: highPoint,
-      value: highPoint[1],
-      label: { position: 'top' }
-    });
+  if (lowPoint && !isSameAsLatest(lowPoint)) {
+    markPointData.push(buildMarkPoint(lowPoint, `最低 ${formatPercent(lowPoint[1])}`, 'bottom', 180, zoomWindow, style, theme));
   }
 
-  if (lastPoint) {
-    markPointData.push({
-      name: 'Latest',
-      coord: lastPoint,
-      value: lastPoint[1],
-      label: { position: 'top' }
-    });
-  }
-
+  // "最新" always sits above the curve so it never stacks beside a "最低" label below it.
+  markPointData.push({
+    ...buildMarkPoint(lastPoint, `最新 ${formatPercent(lastPoint[1])}`, 'top', 0, zoomWindow, style, theme),
+    symbol: 'circle',
+    symbolSize: 8
+  });
   return markPointData;
 }
 
-function filterEchartsSeriesByZoom(data, zoomBounds) {
-  if (!zoomBounds) return data || [];
+// Both "最高" and "最新" sit above their points; when they are close on screen, lift the high label clear of the latest one.
+function getHighLabelLift(highPoint, lastPoint, zoomWindow, yAxisBounds) {
+  const labelWidth = 90;
+  const labelHeight = 22;
+  const plotWidth = Math.max(200, (trendChart?.getWidth() || 800) - 90);
+  const plotHeight = Math.max(120, (trendChart?.getHeight() || 420) - 132);
+  const dx = Math.abs(highPoint[0] - lastPoint[0]) * plotWidth / Math.max(1, zoomWindow.endTime - zoomWindow.startTime);
+  const dy = (highPoint[1] - lastPoint[1]) * plotHeight / Math.max(1e-6, (yAxisBounds.max ?? 0) - (yAxisBounds.min ?? 0));
+  return dx < labelWidth && dy < labelHeight ? Math.ceil(labelHeight - dy) : 0;
+}
+
+function buildMarkPoint(point, text, position, rotate, zoomWindow, style, theme) {
+  return {
+    coord: point,
+    value: point[1],
+    symbol: 'triangle',
+    symbolSize: 9,
+    symbolRotate: rotate,
+    itemStyle: { color: style.color, borderColor: theme.surface, borderWidth: 1.5 },
+    label: {
+      show: true,
+      position,
+      distance: 6,
+      align: getMarkLabelAlign(point[0], zoomWindow),
+      formatter: () => text,
+      color: theme.foreground,
+      fontSize: 11,
+      fontWeight: 600,
+      lineHeight: 15,
+      backgroundColor: theme.labelBackground,
+      padding: [2, 5],
+      borderRadius: 3
+    }
+  };
+}
+
+function getMarkLabelAlign(time, zoomWindow) {
+  const span = Math.max(1, zoomWindow.endTime - zoomWindow.startTime);
+  if (time - zoomWindow.startTime < span * 0.12) return 'left';
+  if (zoomWindow.endTime - time < span * 0.12) return 'right';
+  return 'center';
+}
+
+function buildSeriesStartMarkPoints(visibleData, zoomWindow, style, theme) {
+  const firstPoint = visibleData[0];
+  if (!firstPoint || firstPoint[0] - zoomWindow.startTime <= LATE_START_TOLERANCE_MS) return [];
+  return [{
+    coord: [firstPoint[0], firstPoint[1]],
+    value: firstPoint[1],
+    symbol: 'circle',
+    symbolSize: 7,
+    itemStyle: { color: theme.surface, borderColor: style.color, borderWidth: 2 },
+    label: {
+      show: true,
+      position: 'top',
+      formatter: () => `${formatShortDate(firstPoint[2])}起`,
+      color: theme.foreground,
+      fontSize: 10,
+      backgroundColor: theme.labelBackground,
+      padding: [1, 4],
+      borderRadius: 3
+    }
+  }];
+}
+
+function filterEchartsSeriesByZoom(data, zoomWindow) {
+  if (!zoomWindow) return data || [];
   return (data || []).filter(point => {
     const time = Number(point?.[0]);
-    return Number.isFinite(time) && time >= zoomBounds.startTime && time <= zoomBounds.endTime;
+    return Number.isFinite(time) && time >= zoomWindow.startTime && time <= zoomWindow.endTime;
   });
 }
 
@@ -425,71 +673,100 @@ function getLastSeriesPoint(data) {
   return null;
 }
 
-function bindChartZoomRebase() {
-  if (!trendChart) return;
-  trendChart.off('datazoom');
-  trendChart.on('datazoom', () => {
-    if (!trendChart || !currentChartContext || isRebasingChart) return;
-    const option = trendChart.getOption();
-    const zoom = Array.isArray(option.dataZoom) ? option.dataZoom[0] : null;
-    const start = Number.isFinite(zoom?.start) ? zoom.start : currentChartContext.zoomRange.start;
-    const end = Number.isFinite(zoom?.end) ? zoom.end : currentChartContext.zoomRange.end;
-    currentChartContext.zoomRange = { start, end };
-    isRebasingChart = true;
-    trendChart.setOption(buildChartOption(currentChartContext), true);
-    isRebasingChart = false;
+function getSeriesExtent(series) {
+  let startTime = Infinity;
+  let endTime = -Infinity;
+  series.forEach(item => {
+    const firstTime = parseDate(item.points[0]?.[0]);
+    const lastTime = parseDate(item.points[item.points.length - 1]?.[0]);
+    if (firstTime !== null) startTime = Math.min(startTime, firstTime);
+    if (lastTime !== null) endTime = Math.max(endTime, lastTime);
   });
+  return Number.isFinite(startTime) && Number.isFinite(endTime) && startTime < endTime ? { startTime, endTime } : null;
 }
 
-function buildYAxisBounds(series, benchmark, zoomBounds) {
+function buildPresetWindow(extent, period) {
+  const targetStart = period === 'ytd'
+    ? new Date(new Date(extent.endTime).getFullYear(), 0, 1).getTime()
+    : extent.endTime - periodDays(period) * DAY_MS;
+  return {
+    window: { startTime: Math.max(extent.startTime, targetStart), endTime: extent.endTime },
+    isClamped: targetStart < extent.startTime - PRESET_CLAMP_TOLERANCE_MS
+  };
+}
+
+function clampWindow(zoomWindow, extent) {
+  const startTime = Math.min(Math.max(zoomWindow.startTime, extent.startTime), extent.endTime);
+  const endTime = Math.min(Math.max(zoomWindow.endTime, startTime), extent.endTime);
+  return endTime > startTime ? { startTime, endTime } : { ...extent };
+}
+
+function isSameWindow(a, b) {
+  return Math.abs(a.startTime - b.startTime) <= ZOOM_MATCH_TOLERANCE_MS
+    && Math.abs(a.endTime - b.endTime) <= ZOOM_MATCH_TOLERANCE_MS;
+}
+
+function buildYAxisBounds(series, benchmark, zoomWindow, reserveLabelRoom = false) {
   const values = [
     ...series.flatMap(item => item.points || []),
     ...(benchmark || [])
   ]
-    .filter(point => isPointInZoom(point, zoomBounds))
+    .filter(point => isPointInZoom(point, zoomWindow))
     .map(point => Number(point?.[1]))
     .filter(value => Number.isFinite(value));
 
-  if (!values.length) return {};
-
-  return calculateIntegerYAxisBounds(values);
+  const bounds = calculateYAxisBounds(values);
+  if (!reserveLabelRoom) return bounds;
+  // Leave a tick of headroom when the extremes touch the axis so high/low labels clear the plot edge.
+  const dataMin = Math.min(...values);
+  const dataMax = Math.max(...values);
+  const margin = (bounds.max - bounds.min) * 0.08;
+  return {
+    ...bounds,
+    min: dataMin - bounds.min < margin ? bounds.min - bounds.interval : bounds.min,
+    max: bounds.max - dataMax < margin ? bounds.max + bounds.interval : bounds.max
+  };
 }
 
-function calculateIntegerYAxisBounds(values) {
+function calculateYAxisBounds(values) {
   values.push(0);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min;
-  const interval = getChartYAxisInterval(span / CHART_Y_AXIS_TARGET_SPLITS);
-  const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
-  const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
+  if (!(span > 0)) return { min: min - 0.2, max: max + 0.2, interval: 0.2 };
 
-  return {
-    min: axisMin,
-    max: axisMax > axisMin ? axisMax : axisMin + interval,
-    interval
-  };
+  // Pick the finest "nice" step that keeps the split count readable, so the axis hugs the data.
+  const candidates = getNiceYAxisSteps(span / CHART_Y_AXIS_TARGET_SPLITS);
+  for (const interval of candidates) {
+    const axisMin = Math.floor(min / interval) * interval;
+    const axisMax = Math.ceil(max / interval) * interval;
+    if ((axisMax - axisMin) / interval <= CHART_Y_AXIS_TARGET_SPLITS + 2) {
+      return { min: axisMin, max: axisMax > axisMin ? axisMax : axisMin + interval, interval };
+    }
+  }
+  const interval = candidates[candidates.length - 1];
+  return { min: Math.floor(min / interval) * interval, max: Math.ceil(max / interval) * interval, interval };
 }
 
-function getChartYAxisInterval(rawInterval) {
-  if (!Number.isFinite(rawInterval) || rawInterval <= 0.2) return 0.2;
-  if (rawInterval <= 0.5) return 0.5;
-  if (rawInterval <= 1) return 1;
-
-  return Math.max(1, Math.ceil(rawInterval));
+function getNiceYAxisSteps(rawInterval) {
+  if (!Number.isFinite(rawInterval) || rawInterval <= 0.2) return [0.2, 0.5, 1];
+  const magnitude = 10 ** Math.floor(Math.log10(rawInterval));
+  return [magnitude / 10, magnitude, magnitude * 10]
+    // 2.5 only from 1% up so sub-1% ticks keep one decimal place.
+    .flatMap(base => (base < 1 ? [1, 2, 5] : [1, 2, 2.5, 5]).map(step => Number((step * base).toPrecision(6))))
+    .filter(step => step >= 0.2 && step >= rawInterval * 0.5)
+    .sort((a, b) => a - b);
 }
 
-function isPointInZoom(point, zoomBounds) {
-  if (!zoomBounds) return true;
+function isPointInZoom(point, zoomWindow) {
+  if (!zoomWindow) return true;
   const time = parseDate(point?.[0]);
-  return time !== null && time >= zoomBounds.startTime && time <= zoomBounds.endTime;
+  return time !== null && time >= zoomWindow.startTime && time <= zoomWindow.endTime;
 }
 
-function rebaseSeriesForZoom(series, zoomRange) {
-  const bounds = getZoomBounds(series, zoomRange);
-  if (!bounds) return series;
+function rebaseSeriesForZoom(series, zoomWindow) {
   return series.map(item => {
-    const basePoint = findBasePoint(item.points, bounds.startTime);
+    const basePoint = findBasePoint(item.points, zoomWindow.startTime);
     if (!basePoint) return item;
     const baseValue = returnToValue(basePoint[1]);
     return {
@@ -503,19 +780,6 @@ function rebaseSeriesForZoom(series, zoomRange) {
       ])
     };
   });
-}
-
-function getZoomBounds(series, zoomRange) {
-  const points = series[0]?.points || [];
-  const firstTime = parseDate(points[0]?.[0]);
-  const lastTime = parseDate(points[points.length - 1]?.[0]);
-  if (firstTime === null || lastTime === null || firstTime >= lastTime) return null;
-  const start = Number.isFinite(zoomRange?.start) ? zoomRange.start : 0;
-  const end = Number.isFinite(zoomRange?.end) ? zoomRange.end : 100;
-  return {
-    startTime: firstTime + (lastTime - firstTime) * Math.max(0, Math.min(100, start)) / 100,
-    endTime: firstTime + (lastTime - firstTime) * Math.max(0, Math.min(100, end)) / 100
-  };
 }
 
 function findBasePoint(points, startTime) {
@@ -533,25 +797,86 @@ function returnToValue(returnValue) {
   return 1 + (Number(returnValue) || 0) / 100;
 }
 
-function buildDrawdownEchartsSeries(item, zoomBounds) {
-  const segment = getMaxDrawdownSegment(filterPointsByZoom(item.points, zoomBounds));
+function buildDrawdown(item, zoomWindow, yAxisBounds, theme) {
+  const segment = getMaxDrawdownSegment(filterPointsByZoom(item.points, zoomWindow));
   if (!segment.points.length) return null;
+  const startTime = parseDate(segment.points[0][0]);
+  const endTime = parseDate(segment.points[segment.points.length - 1][0]);
+  const labelText = formatPercent(segment.maxDrawdown);
+  const labelPlacement = getDrawdownLabelPlacement(startTime, endTime, zoomWindow, labelText);
   return {
-    name: '最大回撤区间',
-    type: 'line',
-    showSymbol: false,
-    silent: true,
-    lineStyle: { width: 2, color: getCssVar('--vscode-charts-green', '#89d185') },
-    emphasis: { disabled: true },
-    blur: { lineStyle: { opacity: 1 } },
-    z: 12,
-    data: segment.points.map(point => [parseDate(point[0]), point[1], point[0]])
+    value: segment.maxDrawdown,
+    series: {
+      name: DRAWDOWN_NAME,
+      type: 'line',
+      showSymbol: false,
+      silent: true,
+      z: 2,
+      tooltip: { show: false },
+      emphasis: { disabled: true },
+      itemStyle: { color: theme.drawdownLegend },
+      lineStyle: { opacity: 0 },
+      // Fill from the curve down to the plot floor, fading so the line above stays the focus.
+      areaStyle: {
+        origin: 'start',
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: theme.drawdownFillTop },
+            { offset: 1, color: theme.drawdownFillBottom }
+          ]
+        }
+      },
+      data: segment.points.map(point => [parseDate(point[0]), point[1], point[0]]),
+      markPoint: {
+        animation: false,
+        data: [{
+          coord: [labelPlacement.time, yAxisBounds.min],
+          symbol: 'circle',
+          symbolSize: 1,
+          itemStyle: { color: 'transparent' },
+          label: {
+            show: true,
+            position: 'top',
+            distance: 8,
+            align: labelPlacement.align,
+            offset: labelPlacement.offset,
+            formatter: () => labelText,
+            color: theme.down,
+            fontSize: 11,
+            fontWeight: 600,
+            backgroundColor: theme.labelBackground,
+            padding: [2, 5],
+            borderRadius: 3
+          }
+        }]
+      }
+    }
   };
 }
 
-function filterPointsByZoom(points, zoomBounds) {
-  if (!zoomBounds) return points || [];
-  return (points || []).filter(point => isPointInZoom(point, zoomBounds));
+function getDrawdownLabelPlacement(startTime, endTime, zoomWindow, labelText) {
+  // Estimate the plot width (chart width minus right-side axis labels and grid padding) to size the label in pixels.
+  const plotWidth = Math.max(200, (trendChart?.getWidth() || 800) - 90);
+  const pxPerMs = plotWidth / Math.max(1, zoomWindow.endTime - zoomWindow.startTime);
+  const labelWidth = labelText.length * 6.6 + 12;
+  if ((endTime - startTime) * pxPerMs >= labelWidth + 8) {
+    return { time: (startTime + endTime) / 2, align: 'center', offset: [0, 0] };
+  }
+  // Too narrow to hold the value: sit just outside the band, preferring the side away from the trough's low label.
+  if ((startTime - zoomWindow.startTime) * pxPerMs >= labelWidth + 4) {
+    return { time: startTime, align: 'right', offset: [-4, 0] };
+  }
+  return { time: endTime, align: 'left', offset: [4, 0] };
+}
+
+function filterPointsByZoom(points, zoomWindow) {
+  if (!zoomWindow) return points || [];
+  return (points || []).filter(point => isPointInZoom(point, zoomWindow));
 }
 
 function getMaxDrawdownSegment(points) {
@@ -590,22 +915,6 @@ function getMaxDrawdownSegment(points) {
   };
 }
 
-function buildZoomRange(series, period) {
-  const points = series[0]?.points || [];
-  const firstTime = parseDate(points[0]?.[0]);
-  const lastTime = parseDate(points[points.length - 1]?.[0]);
-  if (firstTime === null || lastTime === null || firstTime >= lastTime) return {};
-
-  const startTime = period === 'ytd'
-    ? new Date(new Date(lastTime).getFullYear(), 0, 1).getTime()
-    : lastTime - periodDays(period) * 24 * 60 * 60 * 1000;
-  const clampedStart = Math.max(firstTime, startTime);
-  return {
-    start: Math.max(0, Math.min(100, (clampedStart - firstTime) / (lastTime - firstTime) * 100)),
-    end: 100
-  };
-}
-
 function periodDays(period) {
   if (period === 'm1') return 30;
   if (period === 'm3') return 90;
@@ -614,65 +923,125 @@ function periodDays(period) {
   return 365 * 3;
 }
 
-function formatChartTooltip(params) {
-  const visibleParams = params.filter(item => item.seriesName !== '最大回撤区间' && item.seriesName !== '年化10%');
-  const first = visibleParams.find(item => Array.isArray(item.value) && item.value[2]);
-  const date = first?.value?.[2] || '';
-  if (!visibleParams.length) return '';
+function getChartHeading(context) {
+  const { period, preset, zoomWindow } = context;
+  const isCustom = Boolean(customZoomWindow);
+  const notes = [`${formatTimeDate(zoomWindow.startTime)} 至 ${formatTimeDate(zoomWindow.endTime)}`];
+  if (!isCustom && preset.isClamped) notes.push(`可用历史不足${PERIODS[period]}`);
+  return {
+    isCustom,
+    title: isCustom ? '自定义区间收益走势' : `${PERIODS[period]}收益走势`,
+    range: notes.join(' · ')
+  };
+}
 
-  const showDetails = visibleParams.length === 1;
-  const rows = visibleParams.map(item => {
-    const value = Array.isArray(item.value) ? item.value : [];
-    const returnClass = classFor(value[1]);
-    const dailyClass = classFor(value[5]);
-    if (showDetails) {
-      return `<div class="tooltip-single">
-        <div class="tooltip-name tooltip-single-name">${escapeHtml(item.seriesName)}</div>
+function updateChartMeta(context) {
+  const heading = getChartHeading(context);
+  document.getElementById('chartTitle').textContent = heading.title;
+  document.getElementById('chartRange').textContent = heading.range;
+  document.getElementById('chartHint').hidden = false;
+  const reset = document.getElementById('chartZoomReset');
+  reset.hidden = !heading.isCustom;
+  reset.textContent = `复位到${PERIODS[context.period]}`;
+}
+
+function clearChartMeta() {
+  document.getElementById('chartRange').textContent = '';
+  document.getElementById('chartHint').hidden = true;
+  document.getElementById('chartZoomReset').hidden = true;
+}
+
+function buildChartAriaDescription(context, rebasedSeries) {
+  const heading = getChartHeading(context);
+  const returns = rebasedSeries.map(item => {
+    const lastPoint = getLastSeriesPoint(filterPointsByZoom(item.points, context.zoomWindow));
+    return `${seriesName(item)} 区间收益 ${formatPercent(lastPoint?.[1])}`;
+  });
+  return `${heading.title}，${heading.range}。${returns.join('；')}。`;
+}
+
+function formatChartTooltip(params) {
+  const context = currentChartContext;
+  if (!context) return '';
+  const fundCount = context.series.length;
+  const referenceTime = Number(params[0]?.axisValue);
+  const fundParams = params.filter(item => item.seriesIndex < fundCount
+    && Array.isArray(item.value)
+    && (!Number.isFinite(referenceTime) || Math.abs(Number(item.value[0]) - referenceTime) <= TOOLTIP_MATCH_TOLERANCE_MS));
+  if (!fundParams.length) return '';
+
+  const benchmarkParam = params.find(item => item.seriesName === BENCHMARK_NAME);
+  const benchmarkValue = Array.isArray(benchmarkParam?.value) ? benchmarkParam.value[1] : null;
+  const date = fundParams[0].value[2] || '';
+
+  if (fundCount === 1) {
+    const value = fundParams[0].value;
+    const excess = Number.isFinite(benchmarkValue) && Number.isFinite(value[1]) ? value[1] - benchmarkValue : null;
+    return `<div class="trend-tooltip">
+      <div class="tooltip-single">
+        <div class="tooltip-name tooltip-single-name">${escapeHtml(fundParams[0].seriesName)}</div>
         <div class="tooltip-detail-lines">
-          <div><span>净值日期</span><strong>${escapeHtml(date)}</strong><span>日涨幅</span><strong class="${dailyClass}">${formatPercent(value[5])}</strong></div>
-          <div><span>累计收益</span><strong class="${returnClass}">${formatPercent(value[1])}</strong><span>单位净值</span><strong>${formatNav(value[3])}</strong></div>
+          <div><span>净值日期</span><strong>${escapeHtml(date)}</strong><span>日涨幅</span><strong class="${classFor(value[5])}">${formatPercent(value[5])}</strong></div>
+          <div><span>区间收益</span><strong class="${classFor(value[1])}">${formatPercent(value[1])}</strong><span>单位净值</span><strong>${formatNav(value[3])}</strong></div>
+          ${Number.isFinite(benchmarkValue) ? `<div><span>${escapeHtml(BENCHMARK_NAME)}</span><strong>${formatPercent(benchmarkValue)}</strong><span>超额</span><strong class="${classFor(excess)}">${formatPercent(excess)}</strong></div>` : ''}
         </div>
-      </div>`;
-    }
-    return `<div class="tooltip-row">
-      <div class="tooltip-main">
-        <span class="tooltip-name">${escapeHtml(item.seriesName)}</span>
-        <strong class="tooltip-value ${returnClass}">${formatPercent(value[1])}</strong>
       </div>
     </div>`;
-  }).join('');
+  }
 
-  if (showDetails) return `<div class="trend-tooltip">${rows}</div>`;
+  const rows = fundParams
+    .slice()
+    .sort((a, b) => (Number(b.value[1]) || 0) - (Number(a.value[1]) || 0))
+    .map(item => {
+      const slot = context.series[item.seriesIndex]?.slot ?? 0;
+      return `<div class="tooltip-row">
+        <div class="tooltip-main">
+          <span class="tooltip-name"><span class="series-swatch" data-slot="${slot}"></span>${escapeHtml(item.seriesName)}</span>
+          <strong class="tooltip-value ${classFor(item.value[1])}">${formatPercent(item.value[1])}</strong>
+        </div>
+      </div>`;
+    })
+    .join('');
 
   return `<div class="trend-tooltip">
     <div class="tooltip-date"><span>净值日期</span><strong>${escapeHtml(date)}</strong></div>
     ${rows}
+    ${Number.isFinite(benchmarkValue) ? `<div class="tooltip-row tooltip-benchmark">
+      <div class="tooltip-main">
+        <span class="tooltip-name"><span class="series-swatch benchmark-swatch"></span>${escapeHtml(BENCHMARK_NAME)}基准</span>
+        <strong class="tooltip-value">${formatPercent(benchmarkValue)}</strong>
+      </div>
+    </div>` : ''}
   </div>`;
 }
 
-function getChartColors() {
-  return [
-    getCssVar('--vscode-charts-blue', '#3794ff'),
-    getCssVar('--vscode-charts-red', '#f14c4c'),
-    getCssVar('--vscode-charts-green', '#89d185'),
-    getCssVar('--vscode-charts-yellow', '#cca700'),
-    getCssVar('--vscode-charts-purple', '#b180d7'),
-    getCssVar('--vscode-charts-foreground', '#cccccc'),
-    getCssVar('--vscode-charts-orange', '#d18616'),
-    getCssVar('--vscode-terminal-ansiBrightGreen', '#b5cea8'),
-    getCssVar('--vscode-terminal-ansiMagenta', '#c586c0'),
-    getCssVar('--vscode-terminal-ansiCyan', '#4ec9b0')
-  ];
+function getCssVar(name, fallback) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback;
 }
 
-function getCssVar(name, fallback) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+function toRgba(color, alpha) {
+  if (!colorContext) return color;
+  colorContext.fillStyle = '#000000';
+  colorContext.fillStyle = color;
+  const normalized = String(colorContext.fillStyle);
+  const hex = /^#([0-9a-f]{6})$/i.exec(normalized);
+  if (hex) {
+    const value = Number.parseInt(hex[1], 16);
+    return `rgba(${value >> 16}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+  }
+  const rgba = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/.exec(normalized);
+  if (rgba) {
+    const baseAlpha = rgba[4] === undefined ? 1 : Number(rgba[4]);
+    return `rgba(${rgba[1]}, ${rgba[2]}, ${rgba[3]}, ${baseAlpha * alpha})`;
+  }
+  return color;
 }
 
 function renderNavList(metric, period) {
   const chartEl = document.getElementById('chart');
   const listEl = document.getElementById('navList');
   disposeChart();
+  clearChartMeta();
   chartEl.hidden = true;
   listEl.hidden = false;
   document.getElementById('chartTitle').textContent = `${PERIODS[period]}历史净值列表`;
@@ -758,14 +1127,16 @@ function renderMetrics(metrics, period) {
   }
 
   const rankings = buildMetricRankings(metrics, period);
-  document.getElementById('metrics').innerHTML = metrics.map(metric => {
+  const showSwatch = metrics.length > 1;
+  document.getElementById('metrics').innerHTML = metrics.map((metric, index) => {
     const current = metric.periods?.[period] || {};
     const highlights = buildMetricHighlights(metric, rankings);
     const selectedClass = selectedFundCode === metric.code ? ' selected' : '';
+    const swatch = showSwatch ? `<span class="series-swatch" data-slot="${index}"></span>` : '';
     return `<article class="card fund-metric-card${selectedClass}" data-code="${escapeHtml(metric.code)}" role="button" tabindex="0" title="点击仅显示此基金曲线，再次点击恢复全部曲线">
       <div class="fund-card-header">
         <div class="fund-card-title-block">
-          <div class="card-title">${escapeHtml(metric.name)}</div>
+          <div class="card-title">${swatch}${escapeHtml(metric.name)}</div>
           <div class="fund-code">${escapeHtml(metric.code)} · ${escapeHtml(PERIODS[period])}</div>
         </div>
         <div class="card-value ${classFor(current.returnValue)} ${highlights.returnValue}">${formatPercent(current.returnValue)}</div>
@@ -833,6 +1204,7 @@ function bindMetricCardSelection() {
       const code = card.dataset.code;
       if (!code) return;
       selectedFundCode = selectedFundCode === code ? null : code;
+      legendSelected = Object.fromEntries(Object.entries(legendSelected).filter(([name]) => !name.endsWith(` ${code}`)));
       renderCurrentTrend();
     };
     card.onclick = select;
@@ -878,24 +1250,32 @@ function buildMetricHighlights(metric, rankings) {
   };
 }
 
-function buildAnnualBenchmarkSeries(series, startTime = null) {
-  const points = series[0]?.points || [];
-  const firstDate = startTime === null ? points[0]?.[0] : new Date(startTime).toLocaleDateString('sv-SE');
-  const start = startTime === null ? parseDate(firstDate) : startTime;
-  if (points.length < 2 || start === null) return [];
-  return points.map(point => {
-    const current = parseDate(point[0]);
-    const days = current === null ? 0 : Math.max(0, (current - start) / (24 * 60 * 60 * 1000));
+function buildAnnualBenchmarkSeries(series, startTime) {
+  const dates = [...new Set(series.flatMap(item => item.points.map(point => point[0])))].sort();
+  if (dates.length < 2) return [];
+  return dates.map(date => {
+    const current = parseDate(date);
+    const days = current === null ? 0 : Math.max(0, (current - startTime) / DAY_MS);
     const value = ((1 + ANNUAL_BENCHMARK / 100) ** (days / 365) - 1) * 100;
-    return [point[0], value];
+    return [date, value];
   });
 }
 
-function formatDateTick(date, period) {
-  const parts = String(date || '').split('-');
-  if (parts.length < 3) return date || '';
-  if (period === 'm1' || period === 'm3') return `${parts[1]}/${parts[2]}`;
+function formatDateTick(value, spanMs) {
+  const parts = formatTimeDate(value).split('-');
+  if (parts.length < 3) return '';
+  if (spanMs <= 150 * DAY_MS) return `${parts[1]}/${parts[2]}`;
   return `${parts[0].slice(2)}/${parts[1]}`;
+}
+
+function formatTimeDate(value) {
+  const date = new Date(Number(value));
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('sv-SE');
+}
+
+function formatShortDate(date) {
+  const parts = String(date || '').split('-');
+  return parts.length < 3 ? String(date || '') : `${parts[0].slice(2)}/${parts[1]}/${parts[2]}`;
 }
 
 function parseDate(date) {
@@ -917,10 +1297,10 @@ function formatPercent(value) {
   return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '-';
 }
 
-function formatAxisPercent(value) {
+function formatAxisPercent(value, interval) {
   if (!Number.isFinite(value)) return '-';
   if (Math.abs(value) < 1e-10) return '0%';
-  const digits = Number.isInteger(value) ? 0 : 1;
+  const digits = Number.isFinite(interval) && !Number.isInteger(interval) ? 1 : 0;
   return `${value > 0 ? '+' : ''}${value.toFixed(digits)}%`;
 }
 
