@@ -11,6 +11,13 @@
     --negative-color: #059669;
     --negative-bg: rgba(5, 150, 105, 0.1);
     --warning-color: #f59e0b;
+    /* Account trend series: no red/green hues, which are reserved for rise/fall. */
+    --chart-series-1: #2a78d6;
+    --chart-series-2: #c08000;
+    --chart-series-3: #d55181;
+    --chart-series-4: #0e8fae;
+    --chart-series-5: #6250d6;
+    --chart-series-6: #9a5b2e;
     --background-color: #f1f4ff;
     --surface-color: #ffffff;
     --surface-muted: #f7f8ff;
@@ -43,6 +50,12 @@
     --negative-color: #34d399;
     --negative-bg: rgba(52, 211, 153, 0.14);
     --warning-color: #fbbf24;
+    --chart-series-1: #3987e5;
+    --chart-series-2: #c98500;
+    --chart-series-3: #d55181;
+    --chart-series-4: #1a8cab;
+    --chart-series-5: #9085e9;
+    --chart-series-6: #b07040;
     --background-color: #070817;
     --surface-color: #11142a;
     --surface-muted: #0d1026;

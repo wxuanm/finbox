@@ -342,8 +342,13 @@ function loadECharts() {
 }
 
 function bindEvents() {
-    document.getElementById('themeBtn')?.addEventListener('click', toggleTheme);
-    document.getElementById('mobileThemeBtn')?.addEventListener('click', toggleTheme);
+    // Charts read CSS variables at render time, so re-render after the theme flips.
+    const toggleThemeAndRender = () => {
+        toggleTheme();
+        renderApp();
+    };
+    document.getElementById('themeBtn')?.addEventListener('click', toggleThemeAndRender);
+    document.getElementById('mobileThemeBtn')?.addEventListener('click', toggleThemeAndRender);
     document.getElementById('langBtn')?.addEventListener('click', toggleLang);
     document.getElementById('mobileLangBtn')?.addEventListener('click', toggleLang);
     document.getElementById('demoDataBtn')?.addEventListener('click', handleDemoDataRequest);
