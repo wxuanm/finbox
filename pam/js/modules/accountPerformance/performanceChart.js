@@ -14,7 +14,6 @@ const ANNUALIZED_BENCHMARK_RATE = 0.10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const INTERNAL_SERIES_PREFIX = '__';
 const BENCHMARK_SERIES_ID = '__benchmark__';
-const ZERO_LINE_SERIES_ID = '__zero_line__';
 const MAX_DRAWDOWN_SERIES_NAME = '__max_drawdown__';
 const CHART_LINE_WIDTH = 2.4;
 const CHART_FOCUSED_LINE_WIDTH = 3.6;
@@ -212,7 +211,15 @@ function buildChartOption(chartParts) {
             type: 'value',
             position: 'right',
             ...chartParts.yAxisBounds,
-            axisLabel: { color: theme.muted, formatter: value => formatChartAxisPercent(value) },
+            axisLabel: {
+                color: theme.muted,
+                formatter: value => Math.abs(Number(value)) < 1e-9
+                    ? `{zero|${formatChartAxisPercent(value)}}`
+                    : formatChartAxisPercent(value),
+                rich: {
+                    zero: { color: theme.text, fontWeight: 800 }
+                }
+            },
             splitLine: { lineStyle: { color: theme.border } }
         },
         dataZoom: [
@@ -720,7 +727,6 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const hasSparseSeries = visibleAccountSeries.some(series => series.visiblePointCount < 2);
     const selectedMetric = context.metrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
     const maxDrawdownMetric = selectedMetric || (context.metrics.length === 1 ? context.metrics[0] : null);
-    const zeroLineSeries = buildZeroLineSeries(benchmarkSeries.data, theme);
     const visibleBenchmarkSeries = legendSelected[BENCHMARK_SERIES_ID] === false ? [] : [benchmarkSeries];
     const yAxisBounds = buildYAxisBounds([...visibleAccountSeries, ...visibleBenchmarkSeries], zoomBounds);
     const pxPerMs = getPlotPxPerMs(context.metrics, zoomBounds);
@@ -730,7 +736,7 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
         delete series.visiblePointCount;
     });
     const maxDrawdownSeries = (maxDrawdownMetric && isAccountVisible(maxDrawdownMetric)
-        && buildAccountMaxDrawdownSeries(maxDrawdownMetric, context, zoomBounds, theme))
+        && buildAccountMaxDrawdownSeries(maxDrawdownMetric, context, zoomBounds, yAxisBounds, theme))
         || buildEmptyMaxDrawdownSeries();
     const extent = getPerformanceTimeExtent(context.metrics);
     const isVisibleRangeScaled = Boolean(extent && zoomBounds
@@ -744,7 +750,7 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
         // Fewer date ticks on phones so day labels do not run together.
         xAxisDensity: (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH ? { splitNumber: 4 } : { splitNumber: 8 },
         ariaDescription: buildChartAriaDescription(context.metrics, visibleAccountSeries, zoomBounds),
-        series: [...accountSeries, benchmarkSeries, zeroLineSeries, maxDrawdownSeries]
+        series: [...accountSeries, benchmarkSeries, maxDrawdownSeries]
     };
 }
 
@@ -768,30 +774,6 @@ function findMetricBySeriesName(metrics, seriesName) {
     return (metrics || []).find(metric => metric.account.name === seriesName);
 }
 
-function buildZeroLineSeries(data, theme) {
-    return {
-        id: ZERO_LINE_SERIES_ID,
-        name: ZERO_LINE_SERIES_ID,
-        type: 'line',
-        data,
-        showSymbol: false,
-        silent: true,
-        tooltip: { show: false },
-        lineStyle: { opacity: 0 },
-        itemStyle: { opacity: 0 },
-        // Solid and thin, so it reads differently from the dashed benchmark.
-        markLine: {
-            symbol: 'none',
-            silent: true,
-            label: { show: false },
-            lineStyle: { color: theme.borderStrong, type: 'solid', width: 1 },
-            data: [{ yAxis: 0 }]
-        },
-        emphasis: { disabled: true },
-        z: 0
-    };
-}
-
 // Always emit the drawdown series so merge-mode updates (zoom, hover) replace a previous fill instead of leaving it behind.
 function buildEmptyMaxDrawdownSeries() {
     return {
@@ -807,7 +789,7 @@ function buildEmptyMaxDrawdownSeries() {
     };
 }
 
-function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme = getChartTheme()) {
+function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, yAxisBounds = {}, theme = getChartTheme()) {
     const points = metric.points || metric.periodPoints;
     const basePoint = getMetricBasePoint(metric, context, zoomBounds);
     const baseUnitNav = basePoint?.unitNav;
@@ -827,6 +809,16 @@ function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme
     const peakPoint = segmentData[0];
     const troughPoint = segmentData[segmentData.length - 1];
     const labelText = formatPercent(maxDrawdown, 2);
+    const peakTime = parseDate(peakPoint.value[0])?.getTime();
+    const troughTime = parseDate(troughPoint.value[0])?.getTime();
+    const labelTime = Number.isFinite(peakTime) && Number.isFinite(troughTime)
+        ? (peakTime + troughTime) / 2
+        : peakPoint.value[0];
+    const curveValueAtLabel = interpolateSeriesValueAtTime(segmentData, labelTime);
+    const axisFloor = Number(yAxisBounds.min);
+    const labelValue = Number.isFinite(curveValueAtLabel) && Number.isFinite(axisFloor)
+        ? axisFloor + (curveValueAtLabel - axisFloor) * 0.32
+        : curveValueAtLabel;
 
     const drawdownColor = theme.negative;
     return {
@@ -880,14 +872,23 @@ function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme
                 symbolSize: 7,
                 itemStyle: { color: drawdownColor, borderColor: theme.surface, borderWidth: 2 },
                 label: {
+                    show: false
+                }
+            }, {
+                name: 'drawdown-value',
+                coord: [labelTime, labelValue],
+                value: maxDrawdown,
+                symbol: 'circle',
+                symbolSize: 1,
+                itemStyle: { color: 'transparent' },
+                label: {
                     show: true,
-                    position: 'bottom',
-                    distance: 5,
+                    position: 'inside',
                     formatter: () => labelText,
                     color: drawdownColor,
                     fontSize: 11,
                     fontWeight: 700,
-                    backgroundColor: withAlpha(theme.surface, 0.9),
+                    backgroundColor: withAlpha(theme.surface, 0.86),
                     padding: [2, 5],
                     borderRadius: 3
                 }
@@ -895,6 +896,25 @@ function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme
         },
         z: 2
     };
+}
+
+function interpolateSeriesValueAtTime(data, targetTime) {
+    if (!Array.isArray(data) || data.length === 0 || !Number.isFinite(targetTime)) return NaN;
+    for (let index = 1; index < data.length; index += 1) {
+        const previous = data[index - 1];
+        const current = data[index];
+        const previousTime = parseDate(previous?.value?.[0])?.getTime();
+        const currentTime = parseDate(current?.value?.[0])?.getTime();
+        if (![previousTime, currentTime].every(Number.isFinite)) continue;
+        if (targetTime < previousTime || targetTime > currentTime) continue;
+        const previousValue = Number(previous?.value?.[1]);
+        const currentValue = Number(current?.value?.[1]);
+        if (![previousValue, currentValue].every(Number.isFinite)) return NaN;
+        if (currentTime === previousTime) return currentValue;
+        const progress = (targetTime - previousTime) / (currentTime - previousTime);
+        return previousValue + (currentValue - previousValue) * progress;
+    }
+    return Number(data[data.length - 1]?.value?.[1]);
 }
 
 function getMaxDrawdownSegment(data) {
