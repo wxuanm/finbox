@@ -16,11 +16,11 @@ const INTERNAL_SERIES_PREFIX = '__';
 const BENCHMARK_SERIES_ID = '__benchmark__';
 const ZERO_LINE_SERIES_ID = '__zero_line__';
 const MAX_DRAWDOWN_SERIES_NAME = '__max_drawdown__';
-const CHART_LINE_WIDTH = 1.8;
-const CHART_FOCUSED_LINE_WIDTH = 3.2;
+const CHART_LINE_WIDTH = 2.4;
+const CHART_FOCUSED_LINE_WIDTH = 3.6;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
-const CHART_GRID_LEFT = 54;
-const CHART_GRID_RIGHT = 64;
+const CHART_GRID_LEFT = 24;
+const CHART_GRID_RIGHT = 70;
 const CHART_GRID_HORIZONTAL_PADDING = CHART_GRID_LEFT + CHART_GRID_RIGHT;
 const CHART_Y_AXIS_TARGET_SPLITS = 5;
 const CHART_SERIES_HUE_COUNT = 6;
@@ -190,8 +190,9 @@ function buildChartOption(chartParts) {
         legend: {
             type: 'scroll',
             top: 0,
-            data: chartParts.accountSeries.map(item => item.name),
-            selected: Object.fromEntries(chartParts.accountSeries.map(item => [item.name, legendSelected[item.name] !== false])),
+            data: chartParts.legendData,
+            selected: Object.fromEntries(chartParts.legendData.map(name => [name, legendSelected[name] !== false])),
+            formatter: name => name === BENCHMARK_SERIES_ID ? t('benchmarkShort') : name,
             textStyle: { color: theme.text },
             pageIconColor: theme.primary,
             pageIconInactiveColor: theme.borderStrong,
@@ -209,6 +210,7 @@ function buildChartOption(chartParts) {
         },
         yAxis: {
             type: 'value',
+            position: 'right',
             ...chartParts.yAxisBounds,
             axisLabel: { color: theme.muted, formatter: value => formatChartAxisPercent(value) },
             splitLine: { lineStyle: { color: theme.border } }
@@ -450,7 +452,7 @@ function buildBenchmarkSeries(metrics, zoomBounds, theme) {
 
     return {
         id: BENCHMARK_SERIES_ID,
-        name: t('annualizedBenchmark10'),
+        name: BENCHMARK_SERIES_ID,
         type: 'line',
         showSymbol: false,
         smooth: false,
@@ -461,15 +463,6 @@ function buildBenchmarkSeries(metrics, zoomBounds, theme) {
             type: 'dashed',
             width: CHART_BENCHMARK_LINE_WIDTH,
             opacity: 0.58
-        },
-        // The benchmark stays out of the legend and tooltip, so name it at the line's end instead.
-        endLabel: {
-            show: true,
-            formatter: () => t('benchmarkShort'),
-            color: theme.muted,
-            fontSize: 10,
-            fontWeight: 700,
-            distance: 4
         },
         data
     };
@@ -692,12 +685,9 @@ function calculateYAxisBounds(values) {
     const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
     const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
 
-    // Keep tick origins aligned while reserving a full label-safe interval at both plot edges.
-    const paddedMin = axisMin - interval;
-    const paddedMax = (axisMax > axisMin ? axisMax : axisMin + interval) + interval;
     return {
-        min: Number(paddedMin.toPrecision(10)),
-        max: Number(paddedMax.toPrecision(10)),
+        min: Number(axisMin.toPrecision(10)),
+        max: Number((axisMax > axisMin ? axisMax : axisMin + interval).toPrecision(10)),
         interval
     };
 }
@@ -731,7 +721,8 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const selectedMetric = context.metrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
     const maxDrawdownMetric = selectedMetric || (context.metrics.length === 1 ? context.metrics[0] : null);
     const zeroLineSeries = buildZeroLineSeries(benchmarkSeries.data, theme);
-    const yAxisBounds = buildYAxisBounds([...visibleAccountSeries, benchmarkSeries], zoomBounds);
+    const visibleBenchmarkSeries = legendSelected[BENCHMARK_SERIES_ID] === false ? [] : [benchmarkSeries];
+    const yAxisBounds = buildYAxisBounds([...visibleAccountSeries, ...visibleBenchmarkSeries], zoomBounds);
     const pxPerMs = getPlotPxPerMs(context.metrics, zoomBounds);
     accountSeries.forEach(series => {
         if (series.markerInput) series.markPoint.data = buildReturnMarkPoints(series.markerInput, pxPerMs, yAxisBounds, theme);
@@ -746,6 +737,7 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
         && (zoomBounds.startTime > extent.startTime + DAY_MS || zoomBounds.endTime < extent.endTime - DAY_MS));
     return {
         accountSeries,
+        legendData: [...accountSeries.map(series => series.name), BENCHMARK_SERIES_ID],
         yAxisBounds,
         hasSparseSeries,
         isVisibleRangeScaled,
@@ -810,7 +802,8 @@ function buildEmptyMaxDrawdownSeries() {
         silent: true,
         tooltip: { show: false },
         markPoint: { data: [] },
-        markArea: { data: [] }
+        markArea: { data: [] },
+        areaStyle: { opacity: 0 }
     };
 }
 
@@ -833,7 +826,7 @@ function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme
     const maxDrawdown = (troughValue / peakValue - 1) * 100;
     const peakPoint = segmentData[0];
     const troughPoint = segmentData[segmentData.length - 1];
-    const labelText = `${t('maxDrawdown')} ${formatPercent(maxDrawdown, 2)}`;
+    const labelText = formatPercent(maxDrawdown, 2);
 
     const drawdownColor = theme.negative;
     return {
@@ -847,41 +840,40 @@ function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme
         tooltip: { show: false },
         lineStyle: { opacity: 0 },
         itemStyle: { color: drawdownColor },
-        // A light time band communicates the drawdown event without looking like negative area under the return line.
-        markArea: {
-            silent: true,
-            label: { show: false },
-            itemStyle: { color: withAlpha(drawdownColor, 0.08) },
-            data: [[
-                { xAxis: peakPoint.value[0] },
-                { xAxis: troughPoint.value[0] }
-            ]]
+        // Follow the peak-to-trough curve and fade toward the plot floor instead of drawing a rectangular time band.
+        areaStyle: {
+            origin: 'start',
+            opacity: 1,
+            color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                    { offset: 0, color: withAlpha(drawdownColor, 0.2) },
+                    { offset: 1, color: withAlpha(drawdownColor, 0.02) }
+                ]
+            }
         },
+        // Clear the previous rectangular markArea when updating an existing chart instance.
+        markArea: { data: [] },
         emphasis: { disabled: true },
         markPoint: {
             animation: false,
             silent: true,
             data: [{
-                name: t('drawdownPeak'),
+                name: 'peak',
                 coord: peakPoint.value,
                 value: peakPoint.value[1],
                 symbol: 'circle',
                 symbolSize: 7,
                 itemStyle: { color: theme.surface, borderColor: drawdownColor, borderWidth: 2 },
                 label: {
-                    show: true,
-                    position: 'top',
-                    distance: 5,
-                    formatter: () => t('drawdownPeak'),
-                    color: theme.muted,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    backgroundColor: withAlpha(theme.surface, 0.9),
-                    padding: [2, 5],
-                    borderRadius: 3
+                    show: false
                 }
             }, {
-                name: t('drawdownTrough'),
+                name: 'trough',
                 coord: troughPoint.value,
                 value: troughPoint.value[1],
                 symbol: 'circle',
@@ -891,7 +883,7 @@ function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme
                     show: true,
                     position: 'bottom',
                     distance: 5,
-                    formatter: () => `${t('drawdownTrough')} · ${labelText}`,
+                    formatter: () => labelText,
                     color: drawdownColor,
                     fontSize: 11,
                     fontWeight: 700,
