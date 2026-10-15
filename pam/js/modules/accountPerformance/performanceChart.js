@@ -23,7 +23,8 @@ const CHART_GRID_RIGHT = 70;
 const CHART_GRID_HORIZONTAL_PADDING = CHART_GRID_LEFT + CHART_GRID_RIGHT;
 const CHART_Y_AXIS_TARGET_SPLITS = 5;
 const CHART_SERIES_HUE_COUNT = 6;
-// Manual snapshots are sparse; show where the real points are until the line gets dense.
+// Only genuinely sparse ranges show every snapshot; daily 1M data should still read as a continuous line.
+const CHART_MAX_VISIBLE_SYMBOLS = 12;
 const CHART_MIN_SYMBOL_GAP_PX = 16;
 const CHART_MARKER_COLLISION_PX = 64;
 const CHART_GRID_TOP = 46;
@@ -342,6 +343,7 @@ function buildAccountChartSeries(context, markerAccountId, focusAccountId, zoomB
 
 function shouldShowSnapshotSymbols(visibleData, zoomBounds, metrics) {
     if (!Array.isArray(visibleData) || visibleData.length < 2) return false;
+    if (visibleData.length > CHART_MAX_VISIBLE_SYMBOLS) return false;
     const pxPerMs = getPlotPxPerMs(metrics, zoomBounds);
     if (!pxPerMs) return false;
     let minimumGap = Infinity;
