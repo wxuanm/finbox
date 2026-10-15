@@ -16,8 +16,8 @@ const INTERNAL_SERIES_PREFIX = '__';
 const BENCHMARK_SERIES_ID = '__benchmark__';
 const ZERO_LINE_SERIES_ID = '__zero_line__';
 const MAX_DRAWDOWN_SERIES_NAME = '__max_drawdown__';
-const CHART_LINE_WIDTH = 2;
-const CHART_FOCUSED_LINE_WIDTH = 3;
+const CHART_LINE_WIDTH = 1.8;
+const CHART_FOCUSED_LINE_WIDTH = 3.2;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
 const CHART_GRID_LEFT = 54;
 const CHART_GRID_RIGHT = 64;
@@ -25,7 +25,7 @@ const CHART_GRID_HORIZONTAL_PADDING = CHART_GRID_LEFT + CHART_GRID_RIGHT;
 const CHART_Y_AXIS_TARGET_SPLITS = 5;
 const CHART_SERIES_HUE_COUNT = 6;
 // Manual snapshots are sparse; show where the real points are until the line gets dense.
-const CHART_SPARSE_SYMBOL_LIMIT = 40;
+const CHART_MIN_SYMBOL_GAP_PX = 16;
 const CHART_MARKER_COLLISION_PX = 64;
 const CHART_GRID_TOP = 46;
 const CHART_GRID_BOTTOM = 64;
@@ -69,6 +69,7 @@ export function renderPerformanceChart(metrics) {
         messageEl.textContent = t('chartLibraryFailed');
         messageEl.classList.add('error');
         chartEl.innerHTML = '';
+        renderChartHints();
         return;
     }
 
@@ -78,6 +79,7 @@ export function renderPerformanceChart(metrics) {
         disposeChart();
         chartEl.innerHTML = '';
         customZoomWindow = null;
+        renderChartHints();
         renderPeriodSwitch();
         return;
     }
@@ -94,22 +96,35 @@ export function renderPerformanceChart(metrics) {
 
     // Color slots follow the account's position in the full list, so accounts keep their color as others become valid.
     const slotById = new Map(metrics.map((metric, index) => [metric.account.id, index]));
-    const customZoomRange = customZoomWindow ? buildZoomRangeFromWindow(validMetrics, customZoomWindow) : null;
-    if (!customZoomRange) customZoomWindow = null;
-    chartContext = { metrics: validMetrics, slotById, zoomRange: customZoomRange || buildPerformanceZoomRange(validMetrics) };
+    const customZoom = customZoomWindow ? buildZoomRangeFromWindow(validMetrics, customZoomWindow) : null;
+    if (customZoom) customZoomWindow = customZoom.window;
+    else customZoomWindow = null;
+    chartContext = {
+        metrics: validMetrics,
+        slotById,
+        isCustomRange: Boolean(customZoom),
+        zoomRange: customZoom?.range || buildPerformanceZoomRange(validMetrics)
+    };
 
     const chartParts = buildPerformanceChartParts(chartContext);
-    chartInstance.setOption(buildChartOption(chartParts), { replaceMerge: ['series'] });
+    rebasingChart = true;
+    try {
+        chartInstance.setOption(buildChartOption(chartParts), { replaceMerge: ['series'] });
+    } finally {
+        rebasingChart = false;
+    }
+    renderChartHints(chartParts);
     renderPeriodSwitch();
 }
 
 export function resizeChart() {
     if (!chartInstance || chartInstance.isDisposed()) return;
     chartInstance.resize();
-    // Drawdown label and marker placement depend on plot width, so rebuild series after the size changes.
+    // Snapshot density and marker placement depend on plot width, so rebuild series after the size changes.
     if (!chartContext) return;
     const chartParts = buildPerformanceChartParts(chartContext);
     chartInstance.setOption({ xAxis: chartParts.xAxisDensity, yAxis: chartParts.yAxisBounds, series: chartParts.series }, false);
+    renderChartHints(chartParts);
 }
 
 // ECharts' inside dataZoom swallows every wheel event over the plot, even when zoomOnMouseWheel is 'ctrl'.
@@ -149,6 +164,7 @@ function getChartTheme() {
 
 function buildChartOption(chartParts) {
     const theme = getChartTheme();
+    const coarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches === true;
     return {
         aria: {
             enabled: true,
@@ -156,6 +172,10 @@ function buildChartOption(chartParts) {
         },
         tooltip: {
             trigger: 'axis',
+            triggerOn: coarsePointer ? 'click' : 'mousemove|click',
+            alwaysShowContent: coarsePointer,
+            enterable: true,
+            hideDelay: coarsePointer ? 0 : 120,
             confine: true,
             backgroundColor: theme.elevated,
             borderColor: theme.border,
@@ -238,6 +258,14 @@ function buildReturnSeries(points, baseUnitNav, accountName) {
     }));
 }
 
+function getMetricBasePoint(metric, context, zoomBounds) {
+    if (context.isCustomRange && zoomBounds) {
+        return findPerformanceAnchorPoint(metric.points || metric.periodPoints, zoomBounds.startTime);
+    }
+    // Preset periods use exactly the same anchor as the overview cards and comparison table.
+    return metric.periodPoints[0];
+}
+
 function getSeriesStyle(slot, theme) {
     const index = Math.max(0, slot);
     return {
@@ -255,19 +283,22 @@ function buildAccountChartSeries(context, markerAccountId, focusAccountId, zoomB
         const showReturnMarkers = metrics.length === 1 || markerAccountId === metric.account.id;
         const style = getSeriesStyle(slotById?.get(metric.account.id) ?? 0, theme);
         const points = metric.points || metric.periodPoints;
-        const basePoint = zoomBounds ? findPerformanceBasePoint(points, zoomBounds.startTime) : metric.periodPoints[0];
+        const basePoint = getMetricBasePoint(metric, context, zoomBounds);
         const baseUnitNav = basePoint?.unitNav;
-        const data = buildReturnSeries(points, baseUnitNav, metric.account.name);
+        const data = buildReturnSeries(points, baseUnitNav, metric.account.name)
+            .map(point => ({ ...point, accountId: metric.account.id }));
         const visibleData = filterPerformanceSeriesByZoom(data, zoomBounds);
-        const opacity = dimmed ? 0.18 : 1;
+        const hasTrend = visibleData.length >= 2;
+        const showSnapshotSymbols = shouldShowSnapshotSymbols(visibleData, zoomBounds, metrics);
+        const opacity = dimmed ? 0.28 : 1;
 
         return {
             id: `account:${metric.account.id}`,
             name: metric.account.name,
             type: 'line',
-            showSymbol: visibleData.length <= CHART_SPARSE_SYMBOL_LIMIT,
+            showSymbol: showSnapshotSymbols || visibleData.length === 1,
             symbol: 'circle',
-            symbolSize: focused ? 6 : 5,
+            symbolSize: focused ? 5 : 4,
             smooth: false,
             z: 3,
             emphasis: { focus: 'none' },
@@ -276,9 +307,9 @@ function buildAccountChartSeries(context, markerAccountId, focusAccountId, zoomB
                 width: focused ? CHART_FOCUSED_LINE_WIDTH : CHART_LINE_WIDTH,
                 color: style.color,
                 type: style.type,
-                opacity
+                opacity: hasTrend ? opacity : 0
             },
-            itemStyle: { color: style.color, borderColor: theme.surface, borderWidth: 1, opacity },
+            itemStyle: { color: style.color, borderColor: theme.surface, borderWidth: 1, opacity: Math.min(opacity, 0.72) },
             data,
             markPoint: {
                 symbol: 'circle',
@@ -294,9 +325,25 @@ function buildAccountChartSeries(context, markerAccountId, focusAccountId, zoomB
                 },
                 data: []
             },
-            markerInput: showReturnMarkers ? visibleData : null
+            markerInput: showReturnMarkers ? visibleData : null,
+            visiblePointCount: visibleData.length
         };
     });
+}
+
+function shouldShowSnapshotSymbols(visibleData, zoomBounds, metrics) {
+    if (!Array.isArray(visibleData) || visibleData.length < 2) return false;
+    const pxPerMs = getPlotPxPerMs(metrics, zoomBounds);
+    if (!pxPerMs) return false;
+    let minimumGap = Infinity;
+    let previousTime = null;
+    visibleData.forEach(point => {
+        const time = parseDate(point?.value?.[0])?.getTime();
+        if (!Number.isFinite(time)) return;
+        if (previousTime !== null) minimumGap = Math.min(minimumGap, (time - previousTime) * pxPerMs);
+        previousTime = time;
+    });
+    return minimumGap >= CHART_MIN_SYMBOL_GAP_PX;
 }
 
 function buildReturnMarkPoints(visibleData, pxPerMs, yAxisBounds, theme) {
@@ -413,7 +460,7 @@ function buildBenchmarkSeries(metrics, zoomBounds, theme) {
             color: theme.muted,
             type: 'dashed',
             width: CHART_BENCHMARK_LINE_WIDTH,
-            opacity: 0.9
+            opacity: 0.58
         },
         // The benchmark stays out of the legend and tooltip, so name it at the line's end instead.
         endLabel: {
@@ -476,6 +523,7 @@ function bindChartEvents() {
             start: Number.isFinite(zoom?.start) ? zoom.start : 0,
             end: Number.isFinite(zoom?.end) ? zoom.end : 100
         };
+        chartContext.isCustomRange = true;
         customZoomWindow = getPerformanceZoomBounds(chartContext.metrics, chartContext.zoomRange);
         rebaseChart();
         renderPeriodSwitch();
@@ -486,12 +534,32 @@ function rebaseChart() {
     if (!chartInstance || !chartContext) return;
     const chartParts = buildPerformanceChartParts(chartContext);
     rebasingChart = true;
-    chartInstance.setOption({
-        aria: { label: { description: chartParts.ariaDescription } },
-        yAxis: chartParts.yAxisBounds,
-        series: chartParts.series
-    }, false);
-    rebasingChart = false;
+    try {
+        chartInstance.setOption({
+            aria: { label: { description: chartParts.ariaDescription } },
+            yAxis: chartParts.yAxisBounds,
+            series: chartParts.series
+        }, false);
+    } finally {
+        rebasingChart = false;
+    }
+    renderChartHints(chartParts);
+}
+
+function renderChartHints(chartParts = null) {
+    const wrap = document.getElementById('chartHints');
+    const scale = document.getElementById('chartScaleHint');
+    const sparse = document.getElementById('chartSparseHint');
+    if (!wrap || !scale || !sparse) return;
+    const showScale = Boolean(chartParts?.isVisibleRangeScaled);
+    const showSparse = Boolean(chartParts?.hasSparseSeries);
+    scale.hidden = !showScale;
+    sparse.hidden = !showSparse;
+    const scaleText = t('chartAxisScaled');
+    const sparseText = t('chartSparsePoints');
+    if (showScale && scale.textContent !== scaleText) scale.textContent = scaleText;
+    if (showSparse && sparse.textContent !== sparseText) sparse.textContent = sparseText;
+    wrap.hidden = !showScale && !showSparse;
 }
 
 function renderChartRangeNote() {
@@ -544,11 +612,17 @@ function buildZoomRangeFromWindow(metrics, zoomWindow) {
     const extent = getPerformanceTimeExtent(metrics);
     if (!extent || !Number.isFinite(zoomWindow?.startTime) || !Number.isFinite(zoomWindow?.endTime)) return null;
 
+    const startTime = Math.max(extent.startTime, zoomWindow.startTime);
+    const endTime = Math.min(extent.endTime, zoomWindow.endTime);
+    if (endTime <= startTime) return null;
     const span = extent.endTime - extent.startTime;
-    const start = Math.max(0, Math.min(100, (zoomWindow.startTime - extent.startTime) / span * 100));
-    const end = Math.max(0, Math.min(100, (zoomWindow.endTime - extent.startTime) / span * 100));
-    // A window that no longer overlaps the data (e.g. after an import) falls back to the period range.
-    return end - start >= 0.5 ? { start, end } : null;
+    return {
+        range: {
+            start: (startTime - extent.startTime) / span * 100,
+            end: (endTime - extent.startTime) / span * 100
+        },
+        window: { startTime, endTime }
+    };
 }
 
 function buildPerformanceZoomRange(metrics) {
@@ -575,15 +649,20 @@ function getPerformancePeriodDays(periodKey) {
     return Infinity;
 }
 
-function findPerformanceBasePoint(points, startTime) {
-    let fallback = null;
+function findPerformanceAnchorPoint(points, startTime) {
+    let firstPoint = null;
+    let anchor = null;
     for (const point of points || []) {
         const time = parseDate(point.date)?.getTime();
         if (!Number.isFinite(time)) continue;
-        if (time >= startTime) return point;
-        fallback = point;
+        if (!firstPoint) firstPoint = point;
+        if (time <= startTime) {
+            anchor = point;
+            continue;
+        }
+        break;
     }
-    return fallback;
+    return anchor || firstPoint;
 }
 
 function filterPerformanceSeriesByZoom(data, zoomBounds) {
@@ -613,9 +692,12 @@ function calculateYAxisBounds(values) {
     const axisMin = span > 0 ? Math.floor(min / interval) * interval : min - interval;
     const axisMax = span > 0 ? Math.ceil(max / interval) * interval : max + interval;
 
+    // Keep tick origins aligned while reserving a full label-safe interval at both plot edges.
+    const paddedMin = axisMin - interval;
+    const paddedMax = (axisMax > axisMin ? axisMax : axisMin + interval) + interval;
     return {
-        min: axisMin,
-        max: axisMax > axisMin ? axisMax : axisMin + interval,
+        min: Number(paddedMin.toPrecision(10)),
+        max: Number(paddedMax.toPrecision(10)),
         interval
     };
 }
@@ -645,6 +727,7 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const accountSeries = buildAccountChartSeries(context, markerAccountId, focusAccountId, zoomBounds, theme);
     const benchmarkSeries = buildBenchmarkSeries(context.metrics, zoomBounds, theme);
     const visibleAccountSeries = accountSeries.filter((_, index) => isAccountVisible(context.metrics[index]));
+    const hasSparseSeries = visibleAccountSeries.some(series => series.visiblePointCount < 2);
     const selectedMetric = context.metrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
     const maxDrawdownMetric = selectedMetric || (context.metrics.length === 1 ? context.metrics[0] : null);
     const zeroLineSeries = buildZeroLineSeries(benchmarkSeries.data, theme);
@@ -653,13 +736,19 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     accountSeries.forEach(series => {
         if (series.markerInput) series.markPoint.data = buildReturnMarkPoints(series.markerInput, pxPerMs, yAxisBounds, theme);
         delete series.markerInput;
+        delete series.visiblePointCount;
     });
     const maxDrawdownSeries = (maxDrawdownMetric && isAccountVisible(maxDrawdownMetric)
-        && buildAccountMaxDrawdownSeries(maxDrawdownMetric, zoomBounds, yAxisBounds))
+        && buildAccountMaxDrawdownSeries(maxDrawdownMetric, context, zoomBounds, theme))
         || buildEmptyMaxDrawdownSeries();
+    const extent = getPerformanceTimeExtent(context.metrics);
+    const isVisibleRangeScaled = Boolean(extent && zoomBounds
+        && (zoomBounds.startTime > extent.startTime + DAY_MS || zoomBounds.endTime < extent.endTime - DAY_MS));
     return {
         accountSeries,
         yAxisBounds,
+        hasSparseSeries,
+        isVisibleRangeScaled,
         // Fewer date ticks on phones so day labels do not run together.
         xAxisDensity: (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH ? { splitNumber: 4 } : { splitNumber: 8 },
         ariaDescription: buildChartAriaDescription(context.metrics, visibleAccountSeries, zoomBounds),
@@ -720,13 +809,14 @@ function buildEmptyMaxDrawdownSeries() {
         data: [],
         silent: true,
         tooltip: { show: false },
-        markPoint: { data: [] }
+        markPoint: { data: [] },
+        markArea: { data: [] }
     };
 }
 
-function buildAccountMaxDrawdownSeries(metric, zoomBounds = null, yAxisBounds = {}) {
+function buildAccountMaxDrawdownSeries(metric, context, zoomBounds = null, theme = getChartTheme()) {
     const points = metric.points || metric.periodPoints;
-    const basePoint = zoomBounds ? findPerformanceBasePoint(points, zoomBounds.startTime) : metric.periodPoints[0];
+    const basePoint = getMetricBasePoint(metric, context, zoomBounds);
     const baseUnitNav = basePoint?.unitNav;
     if (!Number.isFinite(baseUnitNav) || baseUnitNav <= 0) return null;
 
@@ -736,22 +826,16 @@ function buildAccountMaxDrawdownSeries(metric, zoomBounds = null, yAxisBounds = 
     }));
     const visibleData = filterPerformanceSeriesByZoom(data, zoomBounds);
     const segmentData = getMaxDrawdownSegment(visibleData);
-    if (segmentData.length < 2 || !Number.isFinite(yAxisBounds.min)) return null;
+    if (segmentData.length < 2) return null;
 
     const peakValue = 1 + Number(segmentData[0].value[1]) / 100;
     const troughValue = 1 + Number(segmentData[segmentData.length - 1].value[1]) / 100;
     const maxDrawdown = (troughValue / peakValue - 1) * 100;
-    const startTime = parseDate(segmentData[0].value[0])?.getTime();
-    const endTime = parseDate(segmentData[segmentData.length - 1].value[0])?.getTime();
-    const viewWindow = zoomBounds || {
-        startTime: parseDate(visibleData[0]?.value?.[0])?.getTime(),
-        endTime: parseDate(visibleData[visibleData.length - 1]?.value?.[0])?.getTime()
-    };
+    const peakPoint = segmentData[0];
+    const troughPoint = segmentData[segmentData.length - 1];
     const labelText = `${t('maxDrawdown')} ${formatPercent(maxDrawdown, 2)}`;
-    const labelPlacement = getDrawdownLabelPlacement(startTime, endTime, viewWindow, labelText);
 
-    // Same "fall" color as negative values, so the drawdown reads as a decline under the A-share red-up convention.
-    const drawdownColor = getCssVar('--negative-color') || '#059669';
+    const drawdownColor = theme.negative;
     return {
         id: MAX_DRAWDOWN_SERIES_NAME,
         name: MAX_DRAWDOWN_SERIES_NAME,
@@ -763,41 +847,55 @@ function buildAccountMaxDrawdownSeries(metric, zoomBounds = null, yAxisBounds = 
         tooltip: { show: false },
         lineStyle: { opacity: 0 },
         itemStyle: { color: drawdownColor },
-        // Fill from the curve down to the plot floor, fading so the account line above stays the focus.
-        areaStyle: {
-            origin: 'start',
-            color: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [
-                    { offset: 0, color: withAlpha(drawdownColor, 0.32) },
-                    { offset: 1, color: withAlpha(drawdownColor, 0.03) }
-                ]
-            }
+        // A light time band communicates the drawdown event without looking like negative area under the return line.
+        markArea: {
+            silent: true,
+            label: { show: false },
+            itemStyle: { color: withAlpha(drawdownColor, 0.08) },
+            data: [[
+                { xAxis: peakPoint.value[0] },
+                { xAxis: troughPoint.value[0] }
+            ]]
         },
         emphasis: { disabled: true },
         markPoint: {
             animation: false,
             silent: true,
             data: [{
-                coord: [labelPlacement.time, yAxisBounds.min],
+                name: t('drawdownPeak'),
+                coord: peakPoint.value,
+                value: peakPoint.value[1],
                 symbol: 'circle',
-                symbolSize: 1,
-                itemStyle: { color: 'transparent' },
+                symbolSize: 7,
+                itemStyle: { color: theme.surface, borderColor: drawdownColor, borderWidth: 2 },
                 label: {
                     show: true,
                     position: 'top',
-                    distance: 8,
-                    align: labelPlacement.align,
-                    offset: labelPlacement.offset,
-                    formatter: () => labelText,
+                    distance: 5,
+                    formatter: () => t('drawdownPeak'),
+                    color: theme.muted,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    backgroundColor: withAlpha(theme.surface, 0.9),
+                    padding: [2, 5],
+                    borderRadius: 3
+                }
+            }, {
+                name: t('drawdownTrough'),
+                coord: troughPoint.value,
+                value: troughPoint.value[1],
+                symbol: 'circle',
+                symbolSize: 7,
+                itemStyle: { color: drawdownColor, borderColor: theme.surface, borderWidth: 2 },
+                label: {
+                    show: true,
+                    position: 'bottom',
+                    distance: 5,
+                    formatter: () => `${t('drawdownTrough')} · ${labelText}`,
                     color: drawdownColor,
                     fontSize: 11,
                     fontWeight: 700,
-                    backgroundColor: withAlpha(getCssVar('--surface-color') || '#ffffff', 0.86),
+                    backgroundColor: withAlpha(theme.surface, 0.9),
                     padding: [2, 5],
                     borderRadius: 3
                 }
@@ -805,25 +903,6 @@ function buildAccountMaxDrawdownSeries(metric, zoomBounds = null, yAxisBounds = 
         },
         z: 2
     };
-}
-
-function getDrawdownLabelPlacement(startTime, endTime, viewWindow, labelText) {
-    const plotWidth = Math.max(200, (chartInstance?.getWidth() || 800) - CHART_GRID_HORIZONTAL_PADDING);
-    const viewSpan = Math.max(1, (viewWindow?.endTime ?? endTime) - (viewWindow?.startTime ?? startTime));
-    const pxPerMs = plotWidth / viewSpan;
-    const labelWidth = estimateLabelWidth(labelText) + 10;
-    if ((endTime - startTime) * pxPerMs >= labelWidth + 8) {
-        return { time: (startTime + endTime) / 2, align: 'center', offset: [0, 0] };
-    }
-    // Too narrow to hold the value: sit just outside the band, on whichever side has room.
-    if ((startTime - (viewWindow?.startTime ?? startTime)) * pxPerMs >= labelWidth + 4) {
-        return { time: startTime, align: 'right', offset: [-4, 0] };
-    }
-    return { time: endTime, align: 'left', offset: [4, 0] };
-}
-
-function estimateLabelWidth(text) {
-    return [...String(text)].reduce((width, char) => width + (/[^\x00-\xff]/.test(char) ? 11 : 6.6), 0);
 }
 
 function getMaxDrawdownSegment(data) {
@@ -862,10 +941,18 @@ function getMaxDrawdownSegment(data) {
 function formatChartTooltip(params) {
     const items = (Array.isArray(params) ? params : [params])
         .filter(item => !String(item.seriesName || '').startsWith(INTERNAL_SERIES_PREFIX))
-        .filter(item => item.seriesName !== t('annualizedBenchmark10'));
+        .filter(item => item.seriesName !== t('annualizedBenchmark10'))
+        .sort((left, right) => {
+            const leftSelected = left.data?.accountId === state.selectedHighlightAccountId ? 1 : 0;
+            const rightSelected = right.data?.accountId === state.selectedHighlightAccountId ? 1 : 0;
+            if (leftSelected !== rightSelected) return rightSelected - leftSelected;
+            const leftValue = Number(Array.isArray(left.value) ? left.value[1] : left.value);
+            const rightValue = Number(Array.isArray(right.value) ? right.value[1] : right.value);
+            return (Number.isFinite(rightValue) ? rightValue : -Infinity) - (Number.isFinite(leftValue) ? leftValue : -Infinity);
+        });
     if (items.length === 0) return '';
 
-    const title = formatTooltipDate(items[0].value?.[0] || items[0].axisValue || items[0].axisValueLabel || '');
+    const title = formatTooltipDate(items[0].axisValue ?? items[0].axisValueLabel ?? items[0].value?.[0] ?? '');
     const rows = items.map(item => {
         const value = Array.isArray(item.value) ? item.value[1] : item.value;
         // Snapshots are recorded on different days per account; flag rows whose nearest point is not the title date.
@@ -873,11 +960,12 @@ function formatChartTooltip(params) {
         const dateNote = rowDate && rowDate !== title
             ? `<span style="margin-left:4px;opacity:0.62;font-size:11px;font-variant-numeric:tabular-nums;">${rowDate}</span>`
             : '';
+        const selected = item.data?.accountId === state.selectedHighlightAccountId;
         return `
             <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;min-width:180px;line-height:1.35;">
                 <span>${item.marker || ''}</span>
-                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(item.data?.accountName || item.seriesName)}${dateNote}</span>
-                <span style="font-variant-numeric:tabular-nums;text-align:right;">${formatPercent(Number(value))}</span>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${selected ? 'font-weight:800;' : ''}">${escapeHtml(item.data?.accountName || item.seriesName)}${dateNote}</span>
+                <span style="font-variant-numeric:tabular-nums;text-align:right;${selected ? 'font-weight:800;' : ''}">${formatPercent(Number(value))}</span>
             </div>
         `;
     }).join('');

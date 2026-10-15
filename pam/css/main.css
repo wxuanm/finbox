@@ -4802,6 +4802,37 @@ select,
     line-height: 1.4;
 }
 
+.chart-hints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 16px 8px;
+}
+
+.chart-hints[hidden],
+.chart-hint[hidden] {
+    display: none;
+}
+
+.chart-hint {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 9px;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
+    border-radius: 999px;
+    color: var(--muted-text);
+    background: color-mix(in srgb, var(--primary-soft) 72%, var(--surface-color));
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.chart-hint-warning {
+    border-color: color-mix(in srgb, var(--warning-color) 24%, var(--border-color));
+    background: color-mix(in srgb, var(--warning-color) 8%, var(--surface-color));
+}
+
 .chart-range-note[hidden] {
     display: none;
 }
@@ -4974,6 +5005,10 @@ select,
     .chart-range-note {
         justify-content: flex-start;
         margin: 0 10px -2px;
+    }
+
+    .chart-hints {
+        margin: 0 10px 2px;
     }
 
     .asset-tool-bar,
