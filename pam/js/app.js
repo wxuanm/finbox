@@ -1531,6 +1531,8 @@ async function handleSnapshotGeneratePreview(event) {
     try {
         snapshotGenerationInProgress = true;
         setSnapshotGenerationState(true);
+        const previousDate = pendingSnapshotGeneration?.date || '';
+        const previousFlows = readTypedSnapshotGenerateFlows();
         pendingSnapshotGeneration = null;
         setSnapshotGenerateConfirmVisible(false);
 
@@ -1565,10 +1567,11 @@ async function handleSnapshotGeneratePreview(event) {
         }
 
         const date = valuation.date;
+        const typedFlows = date === previousDate ? previousFlows : new Map();
         const dateLabel = normalizedOption === '1' ? t('previousTradingDay') : t('today');
         const existingCount = rows.filter(row => state.snapshots.some(snapshot => snapshot.accountId === row.accountId && snapshot.date === date)).length;
 
-        pendingSnapshotGeneration = { date, dateLabel, rows, valuation, existingCount };
+        pendingSnapshotGeneration = { date, dateLabel, rows, valuation, existingCount, typedFlows };
         renderSnapshotGeneratePreview(pendingSnapshotGeneration);
         showSnapshotGenerateMessage(t('snapshotPreviewGenerated'));
         setSnapshotGenerateConfirmVisible(true);
@@ -1581,18 +1584,23 @@ async function handleSnapshotGeneratePreview(event) {
 function confirmSnapshotGeneration() {
     if (!pendingSnapshotGeneration || snapshotGenerationInProgress) return;
     const { date, rows } = pendingSnapshotGeneration;
+    const netFlowByAccountId = readSnapshotGenerateFlows(rows);
+    if (!netFlowByAccountId) {
+        showSnapshotGenerateMessage(t('netFlowNumber'), true);
+        return;
+    }
 
     rows.forEach(row => {
+        const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
         const snapshot = {
             id: createId('snapshot'),
             accountId: row.accountId,
             date,
             totalValue: Number(row.totalValue.toFixed(2)),
-            netFlow: 0,
-            note: t('generatedByHoldings'),
+            netFlow: netFlowByAccountId.get(row.accountId),
+            note: existing?.note || t('generatedByHoldings'),
             source: 'holdings'
         };
-        const existing = state.snapshots.find(item => item.accountId === row.accountId && item.date === date);
         if (existing) {
             Object.assign(existing, { ...snapshot, id: existing.id });
         } else {
@@ -1608,6 +1616,24 @@ function confirmSnapshotGeneration() {
     renderApp();
     closeSnapshotGenerateDialog();
     showAppMessage(t('generatedSnapshots', { count: rows.length }));
+}
+
+function readSnapshotGenerateFlows(rows) {
+    const netFlowByAccountId = new Map();
+    const inputs = [...document.querySelectorAll('[data-generate-flow-account]')];
+    for (const row of rows) {
+        const input = inputs.find(item => item.dataset.generateFlowAccount === row.accountId);
+        const netFlow = Number(input?.value || 0);
+        if (!Number.isFinite(netFlow)) return null;
+        netFlowByAccountId.set(row.accountId, Number(netFlow.toFixed(2)));
+    }
+    return netFlowByAccountId;
+}
+
+// Recalculating rebuilds the preview, so carry over flows the user already typed.
+function readTypedSnapshotGenerateFlows() {
+    return new Map([...document.querySelectorAll('[data-generate-flow-account]')]
+        .map(input => [input.dataset.generateFlowAccount, input.value]));
 }
 
 function getSelectedSnapshotDateOption() {
@@ -1635,7 +1661,7 @@ function renderSnapshotGeneratePreview(generation = null) {
         return;
     }
 
-    const { date, dateLabel, rows, valuation, existingCount } = generation;
+    const { date, dateLabel, rows, valuation, existingCount, typedFlows = new Map() } = generation;
     const totalValue = rows.reduce((sum, row) => sum + row.totalValue, 0);
     const warnings = [];
     if (existingCount > 0) warnings.push(t('sameDayOverwriteWarning', { count: existingCount }));
@@ -1645,16 +1671,32 @@ function renderSnapshotGeneratePreview(generation = null) {
     wrap.innerHTML = `
         <div class="snapshot-preview-hero">
             <div><span>${t('snapshotDateLabel')}</span><strong>${date}</strong><small>${dateLabel} · ${valuation.description}</small></div>
-            <div><span>${t('accountScope')}</span><strong>${t('accountsCount', { count: rows.length })}</strong><small>${t('netFlowDefaultsZero')}</small></div>
+            <div><span>${t('accountScope')}</span><strong>${t('accountsCount', { count: rows.length })}</strong><small>${t('generateNetFlowHint')}</small></div>
             <div><span>${t('totalMarketValue')}</span><strong>${formatPreviewCurrency(totalValue)}</strong><small>${t('basedOnHoldingQuantity')}</small></div>
         </div>
         <div class="snapshot-preview-warning${warnings.length === 0 ? ' ready' : ''}">
             ${warnings.length === 0 ? t('valuationReady') : warnings.join('; ')}
         </div>
         <div class="snapshot-preview-accounts">
-            ${rows.map(row => `<div><span>${escapePreviewText(row.account.name)}</span><strong>${formatPreviewCurrency(row.totalValue)}</strong></div>`).join('')}
+            ${rows.map(row => `
+                <div>
+                    <span>${escapePreviewText(row.account.name)}</span>
+                    <strong>${formatPreviewCurrency(row.totalValue)}</strong>
+                    <label class="snapshot-preview-flow">
+                        <small>${t('netFlow')}</small>
+                        <input type="number" inputmode="decimal" step="0.01" value="${escapePreviewText(typedFlows.get(row.accountId) ?? getSameDaySnapshotFlow(row.accountId, date))}" data-generate-flow-account="${escapePreviewText(row.accountId)}" placeholder="${escapePreviewText(t('netFlowPlaceholder'))}">
+                    </label>
+                </div>
+            `).join('')}
         </div>
     `;
+}
+
+// Regenerating over a same-day snapshot keeps its recorded flow unless the user edits it here.
+function getSameDaySnapshotFlow(accountId, date) {
+    const existing = state.snapshots.find(snapshot => snapshot.accountId === accountId && snapshot.date === date);
+    const netFlow = Number(existing?.netFlow);
+    return Number.isFinite(netFlow) ? netFlow : 0;
 }
 
 function formatPreviewCurrency(value) {

@@ -1759,10 +1759,28 @@ button:disabled {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
-    max-height: 180px;
+    max-height: 260px;
     margin-top: 10px;
     overflow-y: auto;
     padding-right: 2px;
+}
+
+.snapshot-preview-flow {
+    display: grid;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.snapshot-preview-flow small {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.snapshot-preview-flow input {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-variant-numeric: tabular-nums;
 }
 
 .snapshot-generate-message {

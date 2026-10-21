@@ -61,26 +61,29 @@ export function shouldAdjustLaterSnapshots() {
 }
 
 // Total assets are stored per snapshot, so a flow added or corrected on a past date never reaches
-// the totals recorded after it. Each later snapshot shifts by the change in cumulative net flow up
-// to its date; a moved date or a replaced same-day snapshot is covered by the same rule.
+// the totals recorded after it. Each later snapshot shifts by the change in counted cumulative net
+// flow up to its date. The earliest snapshot's flow is ignored by the unit NAV baseline, so it is
+// excluded on both sides; moved dates and replaced same-day snapshots fall out of the same rule.
 export function getLaterSnapshotAdjustments(payload) {
     if (!payload.accountId || !payload.date || !Number.isFinite(payload.netFlow)) return [];
-    const editing = state.snapshots.find(snapshot => snapshot.id === state.editingSnapshotId);
-    const replaced = state.snapshots.find(snapshot => {
-        return snapshot.accountId === payload.accountId && snapshot.date === payload.date && snapshot.id !== state.editingSnapshotId;
-    });
-    const removedIds = new Set([editing?.id, replaced?.id].filter(Boolean));
+    const before = state.snapshots.filter(snapshot => snapshot.accountId === payload.accountId);
+    const kept = before.filter(snapshot => snapshot.id !== state.editingSnapshotId && snapshot.date !== payload.date);
+    const after = [...kept, payload];
 
-    return state.snapshots
-        .filter(snapshot => snapshot.accountId === payload.accountId && !removedIds.has(snapshot.id))
+    return kept
         .map(snapshot => {
-            let delta = payload.date <= snapshot.date ? payload.netFlow : 0;
-            if (editing && editing.date <= snapshot.date) delta -= Number(editing.netFlow) || 0;
-            if (replaced && replaced.date <= snapshot.date) delta -= Number(replaced.netFlow) || 0;
+            const delta = countedFlowUntil(after, snapshot.date) - countedFlowUntil(before, snapshot.date);
             return { snapshot, delta: Math.round(delta * 100) / 100 };
         })
         .filter(item => item.delta !== 0)
         .sort((a, b) => a.snapshot.date.localeCompare(b.snapshot.date));
+}
+
+function countedFlowUntil(snapshots, date) {
+    const earliestDate = snapshots.reduce((min, snapshot) => (snapshot.date < min ? snapshot.date : min), snapshots[0]?.date);
+    return snapshots
+        .filter(snapshot => snapshot.date !== earliestDate && snapshot.date <= date)
+        .reduce((sum, snapshot) => sum + (Number(snapshot.netFlow) || 0), 0);
 }
 
 export function syncSnapshotAdjustLater() {
