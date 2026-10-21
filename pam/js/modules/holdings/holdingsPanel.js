@@ -2,7 +2,7 @@ import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { currentLocale, escapeHtml, formatCurrency, formatPercent, formatPrice, formatWeight, signedClass, todayKey } from '../../utils/formatter.js';
 import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel, getPriceStatusParts, isStalePrice } from './holdingsMetrics.js';
-import { disposeHoldingChart, getHoldingChartContainer, setHoldingChartClickHandler } from './holdingsChartShared.js';
+import { disposeHoldingChart, getHoldingChartContainer, setHoldingChartClickHandler, trackHoldingChartLayout } from './holdingsChartShared.js';
 import { renderHoldingAllocation } from './holdingsAllocation.js';
 import { renderHoldingContribution } from './holdingsContribution.js';
 
@@ -26,7 +26,7 @@ export function renderHoldingsPanel(metrics) {
     renderHoldingViews(metrics.rows);
 }
 
-// One summary strip shared by every view, so filtered totals don't depend on which view is open.
+// Filtered totals shared by every view, shown in the panel header so they don't depend on the open view.
 function renderHoldingSummary(metrics) {
     const el = document.getElementById('holdingSummary');
     if (!el) return;
@@ -39,16 +39,16 @@ function renderHoldingSummary(metrics) {
     }
     el.innerHTML = `
         <div>
-            <span>${t('totalMarketValue')}</span>
-            <strong>${formatCurrency(totalMarketValue, state.amountsHidden)}</strong>
+            <dt>${t('totalMarketValue')}</dt>
+            <dd>${formatCurrency(totalMarketValue, state.amountsHidden)}</dd>
         </div>
         <div>
-            <span>${t('holdingPnl')}</span>
-            <strong class="${signedClass(totalPnl)}">${formatSignedCurrency(totalPnl)}</strong>
+            <dt>${t('holdingPnl')}</dt>
+            <dd class="${signedClass(totalPnl)}">${formatSignedCurrency(totalPnl)}</dd>
         </div>
         <div title="${escapeHtml(t('holdingUnrealizedReturnHint'))}">
-            <span>${t('holdingUnrealizedReturn')}</span>
-            <strong class="${signedClass(totalPnlPct)}">${formatPercent(totalPnlPct)}</strong>
+            <dt>${t('holdingUnrealizedReturn')}</dt>
+            <dd class="${signedClass(totalPnlPct)}">${formatPercent(totalPnlPct)}</dd>
         </div>
     `;
 }
@@ -79,8 +79,10 @@ function renderHoldingViews(rows) {
 
     if (renderChart && chartEl) {
         renderChart(chartEl, rows);
+        trackHoldingChartLayout(() => renderChart(chartEl, rows));
     } else {
         disposeHoldingChart();
+        trackHoldingChartLayout(null);
         renderHoldingTable(rows);
     }
 }

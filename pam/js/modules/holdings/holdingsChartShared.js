@@ -5,12 +5,19 @@ import { getAssetClassLabel, getMarketLabel, getPriceStatusParts, isStalePrice }
 
 // Holdings detail shows one chart view at a time, so all chart views share one ECharts instance.
 let chartInstance = null;
-// Clicking a holding in any chart opens it for editing, so a spotted problem can be fixed directly.
+// Selecting a holding in any chart opens it for editing, so a spotted problem can be fixed directly.
 let holdingClickHandler = null;
+// Views pick a phone or desktop layout at render time, so crossing the breakpoint needs a re-render.
+let layoutRerender = null;
+let renderedStacked = null;
 // Horizontal bar charts grow with the holding count so every name keeps a readable row.
 const BAR_ROW_HEIGHT = 34;
-const BAR_CHART_PADDING = 56;
-const MIN_BAR_CHART_HEIGHT = 220;
+// On phones the name sits on its own line above the bar, so each row is taller.
+const STACKED_BAR_ROW_HEIGHT = 44;
+const BAR_CHART_PADDING = 24;
+const MIN_BAR_CHART_HEIGHT = 120;
+// Below this chart width names move above their bars instead of sharing the row.
+const STACKED_LABEL_MAX_WIDTH = 480;
 
 export function getHoldingChartContainer() {
     return document.getElementById('holdingChartView');
@@ -18,16 +25,40 @@ export function getHoldingChartContainer() {
 
 export function setHoldingChartClickHandler(handler) {
     holdingClickHandler = handler;
+    // Touch tooltips carry an edit button because a tap must first reveal details, not open the editor.
+    getHoldingChartContainer()?.addEventListener('click', event => {
+        const button = event.target.closest('[data-holding-chart-edit]');
+        if (button) holdingClickHandler?.(button.dataset.holdingChartEdit);
+    });
+}
+
+// Touch has no hover, so a tap shows the tooltip and editing moves to a button inside it.
+export function isTouchChart() {
+    return window.matchMedia?.('(hover: none)').matches ?? false;
+}
+
+// Shared tooltip behavior; touch tooltips stay open and accept taps so their edit button works.
+export function holdingTooltipOption(formatter) {
+    const touch = isTouchChart();
+    return {
+        trigger: 'item',
+        confine: true,
+        enterable: touch,
+        triggerOn: touch ? 'click' : 'mousemove|click',
+        formatter
+    };
 }
 
 // getRow maps a clicked bar or axis label to its holding row; anything else is ignored.
 export function initHoldingChart(el, getRow) {
     disposeHoldingChart();
     chartInstance = window.echarts.init(el);
-    chartInstance.on('click', params => {
-        const row = getRow(params);
-        if (row?.id) holdingClickHandler?.(row.id);
-    });
+    if (!isTouchChart()) {
+        chartInstance.on('click', params => {
+            const row = getRow(params);
+            if (row?.id) holdingClickHandler?.(row.id);
+        });
+    }
     return chartInstance;
 }
 
@@ -37,7 +68,20 @@ export function disposeHoldingChart() {
 }
 
 export function resizeHoldingChart() {
+    const container = getHoldingChartContainer();
+    const stacked = container ? isStackedBarLayout(container) : null;
+    if (layoutRerender && stacked !== renderedStacked) {
+        renderedStacked = stacked;
+        layoutRerender();
+        return;
+    }
     if (chartInstance) chartInstance.resize();
+}
+
+export function trackHoldingChartLayout(rerender) {
+    const container = getHoldingChartContainer();
+    layoutRerender = rerender;
+    renderedStacked = rerender && container ? isStackedBarLayout(container) : null;
 }
 
 export function renderChartNotice(el, message) {
@@ -78,6 +122,18 @@ export function withAlpha(color, alpha) {
 }
 
 export function formatHoldingTooltip(row, extraLines = []) {
+    const action = isTouchChart()
+        ? renderHoldingEditButton(row)
+        : `<small>${t('holdingChartClickToEdit')}</small>`;
+    return [...holdingDetailLines(row, extraLines), action].join('<br>');
+}
+
+export function renderHoldingEditButton(row) {
+    return `<button type="button" class="holding-tooltip-edit" data-holding-chart-edit="${escapeHtml(row.id)}">${t('edit')}</button>`;
+}
+
+// Detail lines shared by chart tooltips and the phone list's expanded rows.
+export function holdingDetailLines(row, extraLines = []) {
     const lines = [
         `<strong>${escapeHtml(row.name)}</strong>${row.symbol ? ` <small>${escapeHtml(row.symbol)}</small>` : ''}`,
         `${t('marketValue')}: ${formatCurrency(row.marketValue, state.amountsHidden)}`,
@@ -89,16 +145,49 @@ export function formatHoldingTooltip(row, extraLines = []) {
     const priceStatus = getPriceStatusParts(row);
     const statusText = `${t('priceTime')}: ${priceStatus.label} · ${priceStatus.date}`;
     lines.push(isStalePrice(row) ? `<span style="color:${getChartColors().warning}">⚠ ${statusText}</span>` : statusText);
-    return [...lines, ...extraLines, `<small>${t('holdingChartClickToEdit')}</small>`].join('<br>');
+    return [...lines, ...extraLines];
 }
 
-export function barChartHeight(count) {
-    return Math.max(MIN_BAR_CHART_HEIGHT, count * BAR_ROW_HEIGHT + BAR_CHART_PADDING);
+export function isStackedBarLayout(el) {
+    return (el.clientWidth || 0) < STACKED_LABEL_MAX_WIDTH;
 }
 
-// Long names truncate sooner on phones so bars keep enough room.
-export function barNameLabelWidth(el) {
-    return (el.clientWidth || 0) < 480 ? 96 : 128;
+export function barChartHeight(count, stacked = false) {
+    return Math.max(MIN_BAR_CHART_HEIGHT, count * (stacked ? STACKED_BAR_ROW_HEIGHT : BAR_ROW_HEIGHT) + BAR_CHART_PADDING);
+}
+
+// Side labels size to the longest name, capped so bars keep most of the width.
+export function barNameLabelWidth(el, names) {
+    const longest = Math.max(...names.map(name => measureLabel(name)), 0);
+    return Math.min(Math.ceil(longest) + 4, Math.max(120, (el.clientWidth || 0) * 0.32));
+}
+
+let measureContext = null;
+function measureLabel(text) {
+    measureContext ||= document.createElement('canvas').getContext('2d');
+    if (!measureContext) return String(text).length * 12;
+    measureContext.font = '700 12px sans-serif';
+    return measureContext.measureText(String(text)).width;
+}
+
+// Category axis labels for horizontal bar charts. Stacked: drawn inside the plot and lifted above
+// each bar so names get the full width; side-by-side: sized to the longest name.
+export function barCategoryAxisLabel(el, names, colors) {
+    const base = { color: colors.text, fontSize: 12, fontWeight: 700, overflow: 'truncate' };
+    if (!isStackedBarLayout(el)) return { ...base, width: barNameLabelWidth(el, names) };
+    return {
+        ...base,
+        inside: true,
+        margin: 0,
+        align: 'left',
+        verticalAlign: 'bottom',
+        padding: [0, 0, 9, 0],
+        width: Math.max((el.clientWidth || 0) - 24, 120)
+    };
+}
+
+export function barThickness(el) {
+    return isStackedBarLayout(el) ? 12 : 14;
 }
 
 // Stale prices make P/L unreliable, so charts prefix those holdings' names with a warning mark.

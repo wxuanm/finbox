@@ -386,6 +386,7 @@
                             <h2 data-i18n="holdingsTitle">持仓明细 <span id="holdingAccountBadge" class="title-account-badge"></span></h2>
                             <p id="holdingContext" data-i18n="holdingsDesc">当前账户的持仓、市值占比和持仓盈亏。</p>
                         </div>
+                        <dl id="holdingSummary" class="holding-summary hidden" aria-live="polite"></dl>
                     </div>
                     <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
                     <div class="holding-toolbar">
@@ -395,7 +396,6 @@
                             <label><span data-i18n="market">市场</span><select id="holdingFilterMarket"></select></label>
                         </div>
                     </div>
-                    <div id="holdingSummary" class="holding-summary hidden" aria-live="polite"></div>
                     <div id="holdingTable" class="holding-table-wrap"></div>
                     <div id="holdingChartView" class="holding-chart-view hidden"></div>
                 </section>

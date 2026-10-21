@@ -5463,24 +5463,25 @@ select,
     margin-left: auto;
 }
 
+/* Filtered totals shared by every view sit in the panel header, opposite the title. */
 .holding-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin: 10px 12px 0;
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px 24px;
+    min-width: 0;
+    margin: 2px 0 0;
 }
 
 .holding-summary > div {
     display: grid;
     gap: 2px;
     min-width: 0;
-    padding: 9px 12px;
-    border: 1px solid color-mix(in srgb, var(--border-color) 76%, transparent);
-    border-radius: 14px;
-    background: var(--surface-elevated);
+    text-align: right;
 }
 
-.holding-summary span {
+.holding-summary dt {
     overflow: hidden;
     color: var(--muted-text);
     font-size: 11px;
@@ -5489,21 +5490,21 @@ select,
     white-space: nowrap;
 }
 
-.holding-summary strong {
+.holding-summary dd {
     overflow: hidden;
+    margin: 0;
     color: var(--heading-color);
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 900;
-    font-variant-numeric: tabular-nums;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.holding-summary strong.positive {
+.holding-summary dd.positive {
     color: var(--positive-color);
 }
 
-.holding-summary strong.negative {
+.holding-summary dd.negative {
     color: var(--negative-color);
 }
 
@@ -5521,6 +5522,182 @@ select,
     height: 404px;
 }
 
+/* Long bars push the value far from its name on wide screens, so bar charts stop at a readable width. */
+.holding-bar-canvas {
+    max-width: 760px;
+}
+
+.holding-chart-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    margin: 0;
+    padding: 6px 8px 12px;
+}
+
+.holding-chart-stats div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.holding-chart-stats dt {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.holding-chart-stats dd {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+}
+
+.holding-chart-stats strong {
+    color: var(--heading-color);
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.holding-chart-stats small {
+    overflow: hidden;
+    max-width: 14em;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.holding-chart-stats + .empty-state {
+    margin-top: 0;
+}
+
+/* Phone layout for P/L sources: a list instead of a chart, so names and amounts never collide. */
+.holding-contribution-list {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.holding-contribution-list summary {
+    display: grid;
+    gap: 6px;
+    padding: 8px 4px;
+    border-radius: 10px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.holding-contribution-list summary::-webkit-details-marker {
+    display: none;
+}
+
+.holding-contribution-list details[open] summary {
+    background: color-mix(in srgb, var(--primary-color) 6%, transparent);
+}
+
+.holding-contribution-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.holding-contribution-name {
+    min-width: 0;
+    color: var(--text-color);
+    font-size: 13px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.holding-contribution-name small {
+    margin-left: 6px;
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.holding-contribution-head strong {
+    flex: 0 0 auto;
+    color: var(--heading-color);
+    font-size: 13px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.holding-contribution-head strong.positive {
+    color: var(--positive-color);
+}
+
+.holding-contribution-head strong.negative {
+    color: var(--negative-color);
+}
+
+/* Bars grow from the center line: gains to the right, losses to the left. */
+.holding-contribution-track {
+    position: relative;
+    display: block;
+    height: 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--border-color) 55%, transparent);
+}
+
+.holding-contribution-track::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    left: 50%;
+    width: 1px;
+    background: var(--border-strong);
+}
+
+.holding-contribution-track i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 2px;
+}
+
+.holding-contribution-list .gain .holding-contribution-track i {
+    left: 50%;
+    border-radius: 0 999px 999px 0;
+    background: color-mix(in srgb, var(--positive-color) 82%, transparent);
+}
+
+.holding-contribution-list .loss .holding-contribution-track i {
+    right: 50%;
+    border-radius: 999px 0 0 999px;
+    background: color-mix(in srgb, var(--negative-color) 82%, transparent);
+}
+
+.holding-contribution-detail {
+    padding: 6px 4px 10px;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.7;
+}
+
+.holding-tooltip-edit {
+    margin-top: 6px;
+    padding: 5px 14px;
+    border: 0;
+    border-radius: 999px;
+    color: #ffffff;
+    background: var(--primary-color);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+}
+
 .holding-chart-footnote {
     margin: 8px 0 0;
     padding: 8px 6px 2px;
@@ -5535,45 +5712,75 @@ select,
         margin: 10px 10px 0;
     }
 
+    /* Phones: the view switch becomes a full-width segmented control, filters split the next row. */
     .holding-toolbar .holding-view-switch,
     .management-panel .holding-toolbar .holding-view-switch {
-        width: fit-content;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: 100%;
         padding: 4px;
     }
 
     .holding-toolbar .period-chip {
-        min-height: 32px;
-        padding-right: 9px;
-        padding-left: 9px;
-        font-size: 11px;
+        min-height: 34px;
+        padding-right: 6px;
+        padding-left: 6px;
+        font-size: 12px;
+    }
+
+    .holding-toolbar .asset-tool-bar,
+    .management-panel .asset-holdings-panel .holding-toolbar .asset-tool-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        margin-left: 0;
+    }
+
+    /* Phones: three figures don't fit beside the title, so they drop under it as an even row. */
+    .asset-holdings-panel .split-head:has(.holding-summary:not(.hidden)) {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .holding-summary {
-        gap: 6px;
-        margin: 8px 10px 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin: 4px 0 0;
     }
 
     .holding-summary > div {
-        padding: 8px 9px;
-        border-radius: 12px;
+        text-align: left;
     }
 
-    .holding-summary span {
+    .holding-summary dt {
         font-size: 10px;
     }
 
-    .holding-summary strong {
-        font-size: 13px;
+    .holding-summary dd {
+        font-size: 14px;
     }
 
     .holding-chart-canvas {
         height: 308px;
     }
 
+    /* Phones: the panel already frames the chart, so a second card would only cost width. */
     .holding-chart-view {
-        margin: 10px 10px 14px;
-        padding: 6px;
-        border-radius: 18px;
+        margin: 10px 4px 14px;
+        padding: 4px 6px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .holding-chart-stats {
+        gap: 8px 20px;
+        padding: 4px 4px 10px;
+    }
+
+    .holding-chart-stats strong {
+        font-size: 18px;
     }
 }
 
