@@ -97,7 +97,7 @@ Username/password is the default daily login. Access keys use `pam_<key-id>_<sec
 
 The browser groups local writes by domain and debounces synchronization. An HTTP `409 revision_conflict` pauses synchronization and requires an explicit user decision; cloud data never silently overwrites pending local changes.
 
-`pam:v1:preferences` stores selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, holdings view (`table`, `treemap`, or `contribution`; invalid values, including the removed `bubble`, fall back to `table`), theme, and language. `currentLang` supports `zh` and `en`; missing or invalid values fall back to `zh`.
+`pam:v1:preferences` stores selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, holdings view (`table`, `allocation`, or `contribution`; the retired `treemap` maps to `allocation`, and other invalid values, including the removed `bubble`, fall back to `table`), theme, and language. `currentLang` supports `zh` and `en`; missing or invalid values fall back to `zh`.
 
 ## Data Rules
 

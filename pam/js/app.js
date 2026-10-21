@@ -659,8 +659,12 @@ function switchHoldingView(view) {
     renderApp();
 }
 
+// Retired view keys that map onto a current view instead of falling back to the table.
+const LEGACY_HOLDING_VIEWS = { treemap: 'allocation' };
+
 function normalizeHoldingView(view) {
-    return HOLDING_VIEWS.some(([key]) => key === view) ? view : 'table';
+    const key = LEGACY_HOLDING_VIEWS[view] || view;
+    return HOLDING_VIEWS.some(([viewKey]) => viewKey === key) ? key : 'table';
 }
 
 function openSnapshotForAccount(accountId) {

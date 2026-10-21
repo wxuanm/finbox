@@ -1,7 +1,9 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
-import { formatCurrency, formatNumber, formatPercent, formatWeight, signedClass } from '../../utils/formatter.js';
+import { formatCurrency, formatNumber, formatWeight } from '../../utils/formatter.js';
 import {
+    barChartHeight,
+    barNameLabelWidth,
     chartHoldingName,
     countStaleRows,
     formatHoldingTooltip,
@@ -14,10 +16,6 @@ import {
     splitCashRows,
     withAlpha
 } from './holdingsChartShared.js';
-
-const BAR_ROW_HEIGHT = 34;
-const CHART_VERTICAL_PADDING = 56;
-const MIN_CHART_HEIGHT = 220;
 
 export function renderHoldingContribution(el, rows) {
     if (!hasECharts()) {
@@ -37,24 +35,15 @@ export function renderHoldingContribution(el, rows) {
     const items = investedRows
         .map(row => ({ row, contribution: (Number(row.unrealizedPnl) || 0) / totalCost * 100 }))
         .sort((a, b) => b.contribution - a.contribution);
-    const totalContribution = items.reduce((sum, item) => sum + item.contribution, 0);
-    const totalPnl = items.reduce((sum, item) => sum + (Number(item.row.unrealizedPnl) || 0), 0);
     const staleCount = countStaleRows(investedRows);
-    const height = Math.max(MIN_CHART_HEIGHT, items.length * BAR_ROW_HEIGHT + CHART_VERTICAL_PADDING);
     // Bar length is proportional to the P/L amount (shared denominator), so the amount can lead when visible.
     const formatBarLabel = state.amountsHidden
         ? value => formatPoints(value)
         : (value, index) => formatSignedCurrency(items[index]?.row.unrealizedPnl);
 
+    // The panel summary strip above the views already shows the total these bars add up to.
     el.innerHTML = `
-        <div class="holding-chart-summary">
-            <span>${t('holdingContributionTotal')}</span>
-            <span class="holding-chart-summary-value">
-                <strong class="${signedClass(totalContribution)}">${formatPercent(totalContribution)}</strong>
-                ${state.amountsHidden ? '' : `<small class="${signedClass(totalPnl)}">${formatSignedCurrency(totalPnl)}</small>`}
-            </span>
-        </div>
-        <div class="holding-chart-canvas" style="height:${height}px"></div>
+        <div class="holding-chart-canvas" style="height:${barChartHeight(items.length)}px"></div>
         ${renderChartFootnote([
             t('holdingContributionHint'),
             staleCount > 0 ? t('holdingChartStaleNote', { count: staleCount }) : '',
@@ -96,7 +85,7 @@ export function renderHoldingContribution(el, rows) {
             axisTick: { show: false },
             axisLine: { lineStyle: { color: colors.neutral } },
             axisLabel: {
-                width: 128,
+                width: barNameLabelWidth(el),
                 overflow: 'truncate',
                 formatter: (name, index) => `{name|${name}} {weight|${formatWeight(items[index]?.row.weight)}}`,
                 rich: {

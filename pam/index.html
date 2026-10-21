@@ -384,15 +384,18 @@
                     <div class="panel-head split-head">
                         <div>
                             <h2 data-i18n="holdingsTitle">持仓明细 <span id="holdingAccountBadge" class="title-account-badge"></span></h2>
-                            <p id="holdingContext" data-i18n="holdingsDesc">当前账户的持仓、市值占比和浮动盈亏。</p>
+                            <p id="holdingContext" data-i18n="holdingsDesc">当前账户的持仓、市值占比和持仓盈亏。</p>
                         </div>
+                    </div>
+                    <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
+                    <div class="holding-toolbar">
+                        <div id="holdingViewSwitch" class="period-switch holding-view-switch hidden" role="group" data-i18n-aria-label="holdingViewLabel" aria-label="持仓展示方式"></div>
                         <div class="asset-tool-bar">
                             <label><span data-i18n="assetClass">类别</span><select id="holdingFilterAssetClass"></select></label>
                             <label><span data-i18n="market">市场</span><select id="holdingFilterMarket"></select></label>
                         </div>
                     </div>
-                    <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
-                    <div id="holdingViewSwitch" class="period-switch holding-view-switch hidden" role="group" data-i18n-aria-label="holdingViewLabel" aria-label="持仓展示方式"></div>
+                    <div id="holdingSummary" class="holding-summary hidden" aria-live="polite"></div>
                     <div id="holdingTable" class="holding-table-wrap"></div>
                     <div id="holdingChartView" class="holding-chart-view hidden"></div>
                 </section>

@@ -3,18 +3,18 @@ import { t } from '../../config/i18n.js';
 import { currentLocale, escapeHtml, formatCurrency, formatPercent, formatPrice, formatWeight, signedClass, todayKey } from '../../utils/formatter.js';
 import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel, getPriceStatusParts, isStalePrice } from './holdingsMetrics.js';
 import { disposeHoldingChart, getHoldingChartContainer, setHoldingChartClickHandler } from './holdingsChartShared.js';
-import { renderHoldingTreemap } from './holdingsTreemap.js';
+import { renderHoldingAllocation } from './holdingsAllocation.js';
 import { renderHoldingContribution } from './holdingsContribution.js';
 
 // Labels name the question each view answers rather than the chart type.
 export const HOLDING_VIEWS = [
     ['table', 'holdingViewTable'],
-    ['treemap', 'holdingViewTreemap'],
+    ['allocation', 'holdingViewAllocation'],
     ['contribution', 'holdingViewContribution']
 ];
 
 const CHART_RENDERERS = {
-    treemap: renderHoldingTreemap,
+    allocation: renderHoldingAllocation,
     contribution: renderHoldingContribution
 };
 
@@ -22,7 +22,41 @@ export function renderHoldingsPanel(metrics) {
     renderHoldingFilters();
     renderHoldingForm();
     renderHoldingContext(metrics);
+    renderHoldingSummary(metrics);
     renderHoldingViews(metrics.rows);
+}
+
+// One summary strip shared by every view, so filtered totals don't depend on which view is open.
+function renderHoldingSummary(metrics) {
+    const el = document.getElementById('holdingSummary');
+    if (!el) return;
+    const { totalMarketValue, totalPnl, totalPnlPct, count } = metrics.summary;
+    const hasRows = state.accounts.length > 0 && count > 0;
+    el.classList.toggle('hidden', !hasRows);
+    if (!hasRows) {
+        el.innerHTML = '';
+        return;
+    }
+    el.innerHTML = `
+        <div>
+            <span>${t('totalMarketValue')}</span>
+            <strong>${formatCurrency(totalMarketValue, state.amountsHidden)}</strong>
+        </div>
+        <div>
+            <span>${t('holdingPnl')}</span>
+            <strong class="${signedClass(totalPnl)}">${formatSignedCurrency(totalPnl)}</strong>
+        </div>
+        <div title="${escapeHtml(t('holdingUnrealizedReturnHint'))}">
+            <span>${t('holdingUnrealizedReturn')}</span>
+            <strong class="${signedClass(totalPnlPct)}">${formatPercent(totalPnlPct)}</strong>
+        </div>
+    `;
+}
+
+function formatSignedCurrency(value) {
+    const num = Number(value);
+    if (state.amountsHidden || !Number.isFinite(num)) return formatCurrency(num, state.amountsHidden);
+    return `${num > 0 ? '+' : ''}${formatCurrency(num)}`;
 }
 
 function renderHoldingViews(rows) {
