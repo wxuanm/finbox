@@ -1,6 +1,6 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
-import { escapeHtml, todayKey } from '../../utils/formatter.js';
+import { escapeHtml, formatCurrency, todayKey } from '../../utils/formatter.js';
 
 export function renderSnapshotForm() {
     const select = document.getElementById('snapshotAccountSelect');
@@ -32,6 +32,7 @@ export function renderSnapshotForm() {
         document.getElementById('snapshotFlowInput').value = editing.netFlow;
         document.getElementById('snapshotNoteInput').value = editing.note || '';
     }
+    syncSnapshotAdjustLater();
 }
 
 export function readSnapshotForm() {
@@ -50,6 +51,55 @@ export function resetSnapshotForm() {
     document.getElementById('snapshotValueInput').value = '';
     document.getElementById('snapshotFlowInput').value = '0';
     document.getElementById('snapshotNoteInput').value = '';
+    const adjustInput = document.getElementById('snapshotAdjustLaterInput');
+    if (adjustInput) adjustInput.checked = false;
+    syncSnapshotAdjustLater();
+}
+
+export function shouldAdjustLaterSnapshots() {
+    return Boolean(document.getElementById('snapshotAdjustLaterInput')?.checked);
+}
+
+// Total assets are stored per snapshot, so a flow added or corrected on a past date never reaches
+// the totals recorded after it. Each later snapshot shifts by the change in cumulative net flow up
+// to its date; a moved date or a replaced same-day snapshot is covered by the same rule.
+export function getLaterSnapshotAdjustments(payload) {
+    if (!payload.accountId || !payload.date || !Number.isFinite(payload.netFlow)) return [];
+    const editing = state.snapshots.find(snapshot => snapshot.id === state.editingSnapshotId);
+    const replaced = state.snapshots.find(snapshot => {
+        return snapshot.accountId === payload.accountId && snapshot.date === payload.date && snapshot.id !== state.editingSnapshotId;
+    });
+    const removedIds = new Set([editing?.id, replaced?.id].filter(Boolean));
+
+    return state.snapshots
+        .filter(snapshot => snapshot.accountId === payload.accountId && !removedIds.has(snapshot.id))
+        .map(snapshot => {
+            let delta = payload.date <= snapshot.date ? payload.netFlow : 0;
+            if (editing && editing.date <= snapshot.date) delta -= Number(editing.netFlow) || 0;
+            if (replaced && replaced.date <= snapshot.date) delta -= Number(replaced.netFlow) || 0;
+            return { snapshot, delta: Math.round(delta * 100) / 100 };
+        })
+        .filter(item => item.delta !== 0)
+        .sort((a, b) => a.snapshot.date.localeCompare(b.snapshot.date));
+}
+
+export function syncSnapshotAdjustLater() {
+    const field = document.getElementById('snapshotAdjustLaterField');
+    const hint = document.getElementById('snapshotAdjustLaterHint');
+    if (!field || !hint || !document.getElementById('snapshotDateInput')) return;
+
+    const adjustments = getLaterSnapshotAdjustments(readSnapshotForm());
+    field.classList.toggle('hidden', adjustments.length === 0);
+    if (adjustments.length === 0) return;
+
+    const deltas = new Set(adjustments.map(item => item.delta));
+    const delta = adjustments[0].delta;
+    hint.textContent = deltas.size === 1
+        ? t('adjustLaterSnapshotsHint', {
+            count: adjustments.length,
+            amount: `${delta > 0 ? '+' : ''}${formatCurrency(delta, state.amountsHidden)}`
+        })
+        : t('adjustLaterSnapshotsMixedHint', { count: adjustments.length });
 }
 
 export function showFormMessage(message, isError = false) {

@@ -259,6 +259,13 @@
                                         <label class="metric-input"><span data-i18n="periodNetFlow">本期净流入</span><input id="snapshotFlowInput" type="number" inputmode="decimal" step="0.01" data-i18n-placeholder="netFlowPlaceholder" placeholder="入金为正，出金为负" value="0" required><small data-i18n="netFlowHelp">没有资金变动时填写 0。</small></label>
                                     </div>
                                     <p class="form-guide" data-i18n="snapshotGuide">收益计算会剔除净流入影响；请勿把投资盈亏填入净流入。</p>
+                                    <label id="snapshotAdjustLaterField" class="snapshot-adjust-later hidden">
+                                        <input id="snapshotAdjustLaterInput" type="checkbox">
+                                        <span>
+                                            <strong data-i18n="adjustLaterSnapshots">同步调整后续快照总资产</strong>
+                                            <small id="snapshotAdjustLaterHint"></small>
+                                        </span>
+                                    </label>
                                 </div>
                                 <label class="form-note-field"><span data-i18n="note">备注</span><input id="snapshotNoteInput" type="text" maxlength="60" data-i18n-placeholder="snapshotNotePlaceholder" placeholder="可选，例如月末核对、季度复盘"></label>
                                 <div class="form-actions">

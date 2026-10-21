@@ -5,7 +5,7 @@ import { initializeCloudSync, replaceWithLatestCloud, retryCloudSync } from './c
 import { loadAccounts, loadPreferences, loadSnapshots, saveAccounts, savePreferences, saveSnapshots } from './modules/accountPerformance/storage.js';
 import { buildAccountMetrics } from './modules/accountPerformance/metrics.js';
 import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
-import { readSnapshotForm, renderSnapshotForm, resetSnapshotForm, showFormMessage } from './modules/accountPerformance/snapshotForm.js';
+import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
@@ -366,6 +366,9 @@ function bindEvents() {
     document.addEventListener('click', closeMobileActionMenu);
     document.getElementById('accountForm')?.addEventListener('submit', handleAddAccount);
     document.getElementById('snapshotForm')?.addEventListener('submit', handleSaveSnapshot);
+    ['snapshotDateInput', 'snapshotFlowInput'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', syncSnapshotAdjustLater);
+    });
     document.getElementById('addAccountToolbarBtn')?.addEventListener('click', openAccountDialog);
     document.getElementById('addSnapshotBtn')?.addEventListener('click', () => openSnapshotForAccount(state.selectedAccountId));
     document.querySelectorAll('[data-dialog-close]').forEach(button => {
@@ -893,6 +896,13 @@ function handleSaveSnapshot(event) {
         return;
     }
 
+    const adjustments = shouldAdjustLaterSnapshots() ? getLaterSnapshotAdjustments(payload) : [];
+    const invalidAdjustment = adjustments.find(({ snapshot, delta }) => Number(snapshot.totalValue) + delta < 0);
+    if (invalidAdjustment) {
+        showFormMessage(t('adjustLaterSnapshotsNegative', { date: invalidAdjustment.snapshot.date }), true);
+        return;
+    }
+
     const existing = state.snapshots.find(snapshot => {
         return snapshot.accountId === payload.accountId && snapshot.date === payload.date && snapshot.id !== state.editingSnapshotId;
     });
@@ -904,15 +914,19 @@ function handleSaveSnapshot(event) {
             message: t('overwriteSnapshotMessage'),
             detail: t('overwriteSnapshotDetail'),
             confirmLabel: t('overwriteSnapshotConfirm'),
-            onConfirm: () => saveSnapshotPayload(payload, existing)
+            onConfirm: () => saveSnapshotPayload(payload, existing, adjustments)
         });
         return;
     }
 
-    saveSnapshotPayload(payload, existing);
+    saveSnapshotPayload(payload, existing, adjustments);
 }
 
-function saveSnapshotPayload(payload, existing) {
+function saveSnapshotPayload(payload, existing, adjustments = []) {
+    adjustments.forEach(({ snapshot, delta }) => {
+        snapshot.totalValue = Number((Number(snapshot.totalValue) + delta).toFixed(2));
+    });
+
     if (state.editingSnapshotId) {
         state.snapshots = state.snapshots.map(snapshot => {
             if (snapshot.id !== state.editingSnapshotId) return snapshot;
@@ -927,6 +941,7 @@ function saveSnapshotPayload(payload, existing) {
         state.snapshots.push({ id: createId('snapshot'), ...payload });
         showFormMessage(t('snapshotSaved'));
     }
+    if (adjustments.length > 0) showFormMessage(t('laterSnapshotsAdjusted', { count: adjustments.length }));
 
     state.selectedAccountId = payload.accountId;
     state.activeView = 'assetData';
