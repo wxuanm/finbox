@@ -159,7 +159,9 @@ export function barChartHeight(count, stacked = false) {
 // Side labels size to the longest name, capped so bars keep most of the width.
 export function barNameLabelWidth(el, names) {
     const longest = Math.max(...names.map(name => measureLabel(name)), 0);
-    return Math.min(Math.ceil(longest) + 4, Math.max(120, (el.clientWidth || 0) * 0.32));
+    // Measure the canvas itself: on wide screens it shares the row with the stats column.
+    const box = el.querySelector?.('.holding-chart-canvas') || el;
+    return Math.min(Math.ceil(longest) + 4, Math.max(120, (box.clientWidth || 0) * 0.32));
 }
 
 let measureContext = null;
@@ -222,4 +224,24 @@ export function getFilterScopeNote() {
 
 export function renderChartFootnote(text) {
     return text ? `<p class="holding-chart-footnote">${text}</p>` : '';
+}
+
+// Bar charts stop at a readable width, so wide screens put the stats in a column beside the chart
+// instead of leaving the rest of the row empty. Narrower screens stack the stats above the chart;
+// `wideOnly` drops them there instead.
+export function renderChartLayout(main, side, { wideOnly = false } = {}) {
+    const aside = side ? `<aside class="holding-chart-side${wideOnly ? ' wide-only' : ''}">${side}</aside>` : '';
+    return `<div class="holding-chart-layout">${aside}<div class="holding-chart-main">${main}</div></div>`;
+}
+
+// stats: [label, value, detail, valueClass] tuples; empty entries are skipped.
+export function renderChartStats(stats) {
+    return `
+        <dl class="holding-chart-stats">${stats.filter(Boolean).map(([label, value, detail, valueClass]) => `
+            <div>
+                <dt>${label}</dt>
+                <dd><strong${valueClass ? ` class="${valueClass}"` : ''}>${value}</strong>${detail ? `<small title="${escapeHtml(detail)}">${escapeHtml(detail)}</small>` : ''}</dd>
+            </div>
+        `).join('')}</dl>
+    `;
 }

@@ -5516,6 +5516,7 @@ select,
     background: var(--surface-elevated);
     box-shadow: var(--shadow-md);
     overflow: hidden;
+    container-type: inline-size;
 }
 
 .holding-chart-canvas {
@@ -5573,6 +5574,67 @@ select,
 
 .holding-chart-stats + .empty-state {
     margin-top: 0;
+}
+
+.holding-chart-main {
+    min-width: 0;
+}
+
+.holding-chart-side.wide-only {
+    display: none;
+}
+
+/* Wide cards: stats move to a column on the right so the capped chart doesn't leave the row empty. */
+@container (min-width: 900px) {
+    .holding-chart-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+        gap: 24px;
+        align-items: start;
+    }
+
+    .holding-chart-side,
+    .holding-chart-side.wide-only {
+        display: block;
+        grid-column: 2;
+        grid-row: 1;
+        padding: 6px 0 6px 20px;
+        border-left: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    }
+
+    .holding-chart-main {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .holding-chart-main .holding-bar-canvas {
+        max-width: 960px;
+    }
+
+    .holding-chart-side .holding-chart-stats {
+        display: grid;
+        gap: 16px;
+        padding: 0;
+    }
+
+    .holding-chart-side .holding-chart-stats dd {
+        display: grid;
+        gap: 2px;
+    }
+
+    .holding-chart-side .holding-chart-stats small {
+        max-width: none;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+}
+
+.holding-chart-stats strong.positive {
+    color: var(--positive-color);
+}
+
+.holding-chart-stats strong.negative {
+    color: var(--negative-color);
 }
 
 /* Phone layout for P/L sources: a list instead of a chart, so names and amounts never collide. */

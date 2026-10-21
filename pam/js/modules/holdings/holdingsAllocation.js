@@ -14,7 +14,9 @@ import {
     initHoldingChart,
     isStackedBarLayout,
     renderChartFootnote,
+    renderChartLayout,
     renderChartNotice,
+    renderChartStats,
     splitCashRows,
     withAlpha
 } from './holdingsChartShared.js';
@@ -55,11 +57,10 @@ export function renderHoldingAllocation(el, rows) {
     const colors = getChartColors();
     const names = items.map(chartHoldingName);
     const stacked = isStackedBarLayout(el);
-    el.innerHTML = `
-        ${stats}
+    el.innerHTML = renderChartLayout(`
         <div class="holding-chart-canvas holding-bar-canvas" style="height:${barChartHeight(items.length, stacked)}px"></div>
         ${notes}
-    `;
+    `, stats);
     const chart = initHoldingChart(el.querySelector('.holding-chart-canvas'), params => (
         Number.isInteger(params.dataIndex)
             ? items[params.dataIndex]
@@ -108,17 +109,9 @@ export function renderHoldingAllocation(el, rows) {
 function renderAllocationStats(items, cashWeight) {
     const top = items[0];
     const topWeight = items.slice(0, TOP_HOLDING_COUNT).reduce((sum, row) => sum + (Number(row.weight) || 0), 0);
-    const stats = [
+    return renderChartStats([
         [t('holdingAllocationLargest'), formatWeight(top.weight), top.name],
         items.length > TOP_HOLDING_COUNT ? [t('holdingAllocationTopShare', { count: TOP_HOLDING_COUNT }), formatWeight(topWeight), ''] : null,
         cashWeight > 0 ? [t('holdingAllocationCash'), formatWeight(cashWeight), ''] : null
-    ].filter(Boolean);
-    return `
-        <dl class="holding-chart-stats">${stats.map(([label, value, detail]) => `
-            <div>
-                <dt>${label}</dt>
-                <dd><strong>${value}</strong>${detail ? `<small title="${escapeHtml(detail)}">${escapeHtml(detail)}</small>` : ''}</dd>
-            </div>
-        `).join('')}</dl>
-    `;
+    ]);
 }

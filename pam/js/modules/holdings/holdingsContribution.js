@@ -16,8 +16,10 @@ import {
     initHoldingChart,
     isStackedBarLayout,
     renderChartFootnote,
+    renderChartLayout,
     renderHoldingEditButton,
     renderChartNotice,
+    renderChartStats,
     splitCashRows,
     withAlpha
 } from './holdingsChartShared.js';
@@ -59,11 +61,12 @@ export function renderHoldingContribution(el, rows) {
     }
 
     const colors = getChartColors();
-    // The panel header already shows the total these bars add up to.
-    el.innerHTML = `
+    // The panel header already shows the total these bars add up to. Phones keep the list alone; the
+    // stats only fill the column wide screens would otherwise leave empty.
+    el.innerHTML = renderChartLayout(`
         <div class="holding-chart-canvas holding-bar-canvas" style="height:${barChartHeight(items.length)}px"></div>
         ${footnote}
-    `;
+    `, renderContributionStats(items), { wideOnly: true });
     // Bars and name labels are both clickable; label events may only carry the category value.
     const chart = initHoldingChart(el.querySelector('.holding-chart-canvas'), params => (
         Number.isInteger(params.dataIndex)
@@ -127,6 +130,28 @@ export function renderHoldingContribution(el, rows) {
     });
 }
 
+// Gains and losses are summed separately so a small net return can't hide large offsetting moves.
+function renderContributionStats(items) {
+    const gains = items.filter(item => item.contribution > 0);
+    const losses = items.filter(item => item.contribution < 0);
+    const total = list => ({
+        contribution: list.reduce((sum, item) => sum + item.contribution, 0),
+        pnl: list.reduce((sum, item) => sum + (Number(item.row.unrealizedPnl) || 0), 0)
+    });
+    const gainTotal = total(gains);
+    const lossTotal = total(losses);
+    const amount = value => (state.amountsHidden ? '' : formatSignedCurrency(value));
+    // With a single gain or loss its extreme would only repeat the total.
+    const top = gains.length > 1 ? gains[0] : null;
+    const drag = losses.length > 1 ? losses[losses.length - 1] : null;
+    return renderChartStats([
+        gains.length > 0 ? [t('holdingContributionGains'), formatPoints(gainTotal.contribution), amount(gainTotal.pnl), 'positive'] : null,
+        losses.length > 0 ? [t('holdingContributionLosses'), formatPoints(lossTotal.contribution), amount(lossTotal.pnl), 'negative'] : null,
+        top ? [t('holdingContributionTop'), formatPoints(top.contribution), top.row.name, 'positive'] : null,
+        drag ? [t('holdingContributionDrag'), formatPoints(drag.contribution), drag.row.name, 'negative'] : null
+    ]);
+}
+
 // Each row: name, weight and amount on one line, then a full-width bar centered on zero. Tapping a
 // row expands its details (minus the name line, already in the row) with an edit button, matching
 // the touch tooltip in chart views.
@@ -157,7 +182,7 @@ function renderContributionList(items, formatItemValue) {
     `;
 }
 
-// Contributions are percentage points of the filtered holdings return, not a holding's own return.
+// Contributions are shares of the filtered holdings return (in %), not a holding's own return.
 function formatPoints(value) {
     const num = Number(value);
     if (!Number.isFinite(num)) return '-';
