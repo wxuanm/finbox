@@ -1,22 +1,20 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { currentLocale, escapeHtml, formatCurrency, formatPercent, formatPrice, formatWeight, signedClass, todayKey } from '../../utils/formatter.js';
-import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel } from './holdingsMetrics.js';
-import { disposeHoldingChart, getHoldingChartContainer } from './holdingsChartShared.js';
+import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel, getPriceStatusParts, isStalePrice } from './holdingsMetrics.js';
+import { disposeHoldingChart, getHoldingChartContainer, setHoldingChartClickHandler } from './holdingsChartShared.js';
 import { renderHoldingTreemap } from './holdingsTreemap.js';
-import { renderHoldingBubble } from './holdingsBubble.js';
 import { renderHoldingContribution } from './holdingsContribution.js';
 
+// Labels name the question each view answers rather than the chart type.
 export const HOLDING_VIEWS = [
     ['table', 'holdingViewTable'],
     ['treemap', 'holdingViewTreemap'],
-    ['bubble', 'holdingViewBubble'],
     ['contribution', 'holdingViewContribution']
 ];
 
 const CHART_RENDERERS = {
     treemap: renderHoldingTreemap,
-    bubble: renderHoldingBubble,
     contribution: renderHoldingContribution
 };
 
@@ -58,6 +56,7 @@ export function bindHoldingsPanel({ onFilter, onAdd, onSubmit, onCancelEdit, onE
         const button = event.target.closest('[data-holding-view]');
         if (button) onViewChange(button.dataset.holdingView);
     });
+    setHoldingChartClickHandler(onEdit);
     document.getElementById('holdingFilterAssetClass')?.addEventListener('change', event => onFilter('assetClass', event.target.value));
     document.getElementById('holdingFilterMarket')?.addEventListener('change', event => onFilter('market', event.target.value));
     document.getElementById('holdingAssetClassSelect')?.addEventListener('change', updateCashMode);
@@ -187,7 +186,7 @@ function renderHoldingTable(rows) {
         ['name', t('name')],
         ['marketValue', `${t('marketValue')} / ${t('quantity')}`],
         ['currentPrice', t('latestPrice')],
-        ['unrealizedPnl', t('cumulativePnl')],
+        ['unrealizedPnl', t('holdingPnl')],
         ['weight', t('weight')],
         ['priceUpdatedAt', t('priceTime')]
     ];
@@ -243,7 +242,7 @@ function renderHoldingMobileCard(row, priceStatus) {
                     <strong>${formatPrice(row.costPrice, row.assetClass)} / ${formatPrice(row.currentPrice, row.assetClass)}</strong>
                 </div>
                 <div>
-                    <span>${t('cumulativePnl')}</span>
+                    <span>${t('holdingPnl')}</span>
                     <strong class="${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)} / ${formatPercent(row.unrealizedPnlPct)}</strong>
                 </div>
                 <div>
@@ -366,21 +365,6 @@ function syncCashAmountFields() {
     if (!assetSelect || assetSelect.value !== 'cash' || !quantityInput || !costInput || !currentInput) return;
     quantityInput.value = '1';
     costInput.value = currentInput.value || '0';
-}
-
-function getPriceStatusParts(row) {
-    const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
-    if (!date) return { label: t('notRecorded'), date: '-' };
-    if (row.priceSource !== 'quote') return { label: t('manual'), date };
-    return { label: isStalePrice(row) ? t('stale') : t('quote'), date };
-}
-
-function isStalePrice(row) {
-    const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return true;
-    const updatedAt = new Date(`${date}T00:00:00`).getTime();
-    const today = new Date(`${todayKey()}T00:00:00`).getTime();
-    return !Number.isFinite(updatedAt) || (today - updatedAt) / 86400000 > 3;
 }
 
 function compareHoldings(a, b) {

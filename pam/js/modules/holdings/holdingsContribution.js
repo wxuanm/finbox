@@ -1,8 +1,12 @@
+import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
-import { formatPercent, formatWeight } from '../../utils/formatter.js';
+import { formatCurrency, formatNumber, formatPercent, formatWeight, signedClass } from '../../utils/formatter.js';
 import {
+    chartHoldingName,
+    countStaleRows,
     formatHoldingTooltip,
     getChartColors,
+    getFilterScopeNote,
     hasECharts,
     initHoldingChart,
     renderChartFootnote,
@@ -22,7 +26,7 @@ export function renderHoldingContribution(el, rows) {
     }
 
     const { investedRows, cashWeight } = splitCashRows(rows);
-    // Contribution uses the whole filtered portfolio cost, so bars sum to the filtered portfolio return.
+    // Contribution uses the whole filtered portfolio cost, so bars sum to the filtered holdings return.
     const totalCost = rows.reduce((sum, row) => sum + Math.max(Number(row.costAmount) || 0, 0), 0);
     if (investedRows.length === 0 || totalCost <= 0) {
         renderChartNotice(el, t('holdingPnlChartEmpty'));
@@ -34,40 +38,61 @@ export function renderHoldingContribution(el, rows) {
         .map(row => ({ row, contribution: (Number(row.unrealizedPnl) || 0) / totalCost * 100 }))
         .sort((a, b) => b.contribution - a.contribution);
     const totalContribution = items.reduce((sum, item) => sum + item.contribution, 0);
+    const totalPnl = items.reduce((sum, item) => sum + (Number(item.row.unrealizedPnl) || 0), 0);
+    const staleCount = countStaleRows(investedRows);
     const height = Math.max(MIN_CHART_HEIGHT, items.length * BAR_ROW_HEIGHT + CHART_VERTICAL_PADDING);
+    // Bar length is proportional to the P/L amount (shared denominator), so the amount can lead when visible.
+    const formatBarLabel = state.amountsHidden
+        ? value => formatPoints(value)
+        : (value, index) => formatSignedCurrency(items[index]?.row.unrealizedPnl);
 
     el.innerHTML = `
         <div class="holding-chart-summary">
             <span>${t('holdingContributionTotal')}</span>
-            <strong class="${totalContribution > 0 ? 'positive' : totalContribution < 0 ? 'negative' : ''}">${formatPercent(totalContribution)}</strong>
+            <span class="holding-chart-summary-value">
+                <strong class="${signedClass(totalContribution)}">${formatPercent(totalContribution)}</strong>
+                ${state.amountsHidden ? '' : `<small class="${signedClass(totalPnl)}">${formatSignedCurrency(totalPnl)}</small>`}
+            </span>
         </div>
         <div class="holding-chart-canvas" style="height:${height}px"></div>
         ${renderChartFootnote([
             t('holdingContributionHint'),
-            cashWeight > 0 ? t('holdingChartCashExcluded', { weight: formatWeight(cashWeight) }) : ''
+            staleCount > 0 ? t('holdingChartStaleNote', { count: staleCount }) : '',
+            cashWeight > 0 ? t('holdingChartCashInCost', { weight: formatWeight(cashWeight) }) : '',
+            getFilterScopeNote()
         ].filter(Boolean).join(' '))}
     `;
-    const chart = initHoldingChart(el.querySelector('.holding-chart-canvas'));
+    // Bars and name labels are both clickable; label events may only carry the category value.
+    const chart = initHoldingChart(el.querySelector('.holding-chart-canvas'), params => (
+        Number.isInteger(params.dataIndex)
+            ? items[params.dataIndex]?.row
+            : items.find(item => chartHoldingName(item.row) === params.value)?.row
+    ));
     chart.setOption({
-        grid: { top: 8, right: 16, bottom: 28, left: 8, containLabel: true },
+        grid: { top: 8, right: 16, bottom: 44, left: 8, containLabel: true },
         tooltip: {
             trigger: 'item',
             formatter: params => {
                 const item = items[params.dataIndex];
-                return item ? formatHoldingTooltip(item.row, [`${t('holdingContributionLabel')}: ${formatPercent(item.contribution)}`]) : '';
+                return item ? formatHoldingTooltip(item.row, [`${t('holdingContributionLabel')}: ${formatPoints(item.contribution)}`]) : '';
             }
         },
         xAxis: {
             type: 'value',
+            name: t('holdingContributionAxis'),
+            nameLocation: 'middle',
+            nameGap: 26,
+            nameTextStyle: { color: colors.muted, fontSize: 11, fontWeight: 700 },
             // Leave room on both sides for the value labels at bar ends.
-            boundaryGap: ['18%', '18%'],
-            axisLabel: { color: colors.muted, formatter: value => `${value}%` },
+            boundaryGap: ['22%', '22%'],
+            axisLabel: { color: colors.muted, formatter: value => formatNumber(value) },
             splitLine: { lineStyle: { color: colors.border } }
         },
         yAxis: {
             type: 'category',
             inverse: true,
-            data: items.map(item => item.row.name),
+            data: items.map(item => chartHoldingName(item.row)),
+            triggerEvent: true,
             axisTick: { show: false },
             axisLine: { lineStyle: { color: colors.neutral } },
             axisLabel: {
@@ -97,8 +122,20 @@ export function renderHoldingContribution(el, rows) {
                 color: colors.text,
                 fontSize: 11,
                 fontWeight: 700,
-                formatter: params => formatPercent(params.value)
+                formatter: params => formatBarLabel(params.value, params.dataIndex)
             }
         }]
     });
+}
+
+// Contributions are percentage points of the filtered holdings return, not a holding's own return.
+function formatPoints(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    return t('holdingContributionPoints', { value: `${num > 0 ? '+' : ''}${formatNumber(num)}` });
+}
+
+function formatSignedCurrency(value) {
+    const num = Number(value);
+    return `${num > 0 ? '+' : ''}${formatCurrency(num)}`;
 }

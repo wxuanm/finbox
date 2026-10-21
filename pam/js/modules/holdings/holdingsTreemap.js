@@ -1,13 +1,28 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency, formatPercent, formatWeight, signedClass } from '../../utils/formatter.js';
-import { ASSET_CLASSES, getAssetClassLabel } from './holdingsMetrics.js';
-import { formatHoldingTooltip, getChartColors, hasECharts, initHoldingChart, pnlColor, renderChartNotice } from './holdingsChartShared.js';
+import { ASSET_CLASSES, getAssetClassLabel, isStalePrice } from './holdingsMetrics.js';
+import {
+    PNL_COLOR_SATURATION_PCT,
+    chartHoldingName,
+    countStaleRows,
+    formatHoldingTooltip,
+    getChartColors,
+    getFilterScopeNote,
+    hasECharts,
+    initHoldingChart,
+    pnlColor,
+    pnlScaleGradient,
+    renderChartFootnote,
+    renderChartNotice
+} from './holdingsChartShared.js';
 
 // Tiny positions get a floor tile share so they stay visible and hoverable; labels still show real weight.
 const MIN_TILE_SHARE = 0.015;
 // Holdings below this weight rarely fit a tile label, so they are also listed under the chart.
 const MINOR_HOLDING_WEIGHT = 3;
+// Long minor lists push the chart notes far down, so only the largest ones stay expanded.
+const MINOR_VISIBLE_COUNT = 8;
 
 export function renderHoldingTreemap(el, rows) {
     if (!hasECharts()) {
@@ -25,9 +40,16 @@ export function renderHoldingTreemap(el, rows) {
     const minorRows = rows
         .filter(row => Number(row.marketValue) > 0 && Number(row.weight) < MINOR_HOLDING_WEIGHT)
         .sort((a, b) => b.marketValue - a.marketValue);
+    const staleCount = countStaleRows(rows);
     el.innerHTML = `
         <div class="holding-chart-canvas"></div>
+        ${renderPnlLegend(colors)}
         ${minorRows.length > 0 ? renderMinorHoldings(minorRows, colors) : ''}
+        ${renderChartFootnote([
+            t('holdingTreemapHint'),
+            staleCount > 0 ? t('holdingChartStaleNote', { count: staleCount }) : '',
+            getFilterScopeNote()
+        ].filter(Boolean).join(' '))}
     `;
     const chart = initHoldingChart(el.querySelector('.holding-chart-canvas'));
     chart.setOption({
@@ -56,7 +78,8 @@ export function renderHoldingTreemap(el, rows) {
                 height: 22,
                 color: colors.muted,
                 fontSize: 11,
-                fontWeight: 800
+                fontWeight: 800,
+                formatter: params => `${params.name}  ${formatWeight(params.data?.weight)}`
             },
             levels: [
                 { itemStyle: { borderWidth: 0, gapWidth: 4 } },
@@ -79,35 +102,66 @@ function buildTreemapData(rows, colors) {
                 .filter(row => row.assetClass === assetClass && Number(row.marketValue) > 0)
                 .sort((a, b) => b.marketValue - a.marketValue)
                 .map(row => ({
-                    name: row.name,
+                    name: chartHoldingName(row),
                     value: Math.max(row.marketValue, minTileValue),
                     row,
-                    itemStyle: { color: pnlColor(row, colors) }
+                    itemStyle: {
+                        color: pnlColor(row, colors),
+                        ...(isStalePrice(row) ? { borderColor: colors.warning, borderWidth: 2 } : {})
+                    }
                 }));
             if (children.length === 0) return null;
             return {
                 name: getAssetClassLabel(assetClass),
                 value: children.reduce((sum, child) => sum + child.value, 0),
                 marketValue: children.reduce((sum, child) => sum + child.row.marketValue, 0),
+                weight: children.reduce((sum, child) => sum + (Number(child.row.weight) || 0), 0),
                 children
             };
         })
         .filter(Boolean);
 }
 
+function renderPnlLegend(colors) {
+    return `
+        <div class="holding-pnl-legend">
+            <span>${t('holdingLegendLoss')} ${formatPercent(-PNL_COLOR_SATURATION_PCT, 0)}</span>
+            <i style="background:${pnlScaleGradient(colors)}"></i>
+            <span>${formatPercent(PNL_COLOR_SATURATION_PCT, 0)} ${t('holdingLegendGain')}</span>
+            <small>${t('holdingLegendNeutral')}</small>
+        </div>
+    `;
+}
+
 function renderMinorHoldings(rows, colors) {
+    const visibleRows = rows.slice(0, MINOR_VISIBLE_COUNT);
+    const hiddenRows = rows.slice(MINOR_VISIBLE_COUNT);
+    const renderChips = items => items.map(row => renderMinorChip(row, colors)).join('');
     return `
         <div class="holding-treemap-minor">
             <span class="holding-treemap-minor-title">${t('holdingTreemapMinor', { weight: MINOR_HOLDING_WEIGHT })}</span>
-            <ul>${rows.map(row => `
-                <li title="${escapeHtml(row.name)}">
-                    <i style="background:${pnlColor(row, colors)}"></i>
-                    <span>${escapeHtml(row.name)}</span>
-                    <strong>${formatWeight(row.weight)}</strong>
-                    ${row.assetClass === 'cash' ? '' : `<small class="${signedClass(row.unrealizedPnl)}">${formatPercent(row.unrealizedPnlPct)}</small>`}
-                </li>
-            `).join('')}</ul>
+            <ul>${renderChips(visibleRows)}</ul>
+            ${hiddenRows.length > 0 ? `
+                <details class="holding-treemap-minor-more">
+                    <summary>${t('holdingTreemapMinorMore', { count: hiddenRows.length })}</summary>
+                    <ul>${renderChips(hiddenRows)}</ul>
+                </details>
+            ` : ''}
         </div>
+    `;
+}
+
+function renderMinorChip(row, colors) {
+    const stale = isStalePrice(row);
+    return `
+        <li>
+            <button type="button" class="${stale ? 'stale' : ''}" data-holding-chart-id="${escapeHtml(row.id)}" title="${escapeHtml(`${row.name} · ${t('holdingChartClickToEdit')}`)}">
+                <i style="background:${pnlColor(row, colors)}"></i>
+                <span>${escapeHtml(chartHoldingName(row))}</span>
+                <strong>${formatWeight(row.weight)}</strong>
+                ${row.assetClass === 'cash' ? '' : `<small class="${signedClass(row.unrealizedPnl)}">${formatPercent(row.unrealizedPnlPct)}</small>`}
+            </button>
+        </li>
     `;
 }
 
@@ -123,5 +177,5 @@ function formatTreemapLabel(params) {
 function formatTreemapTooltip(params) {
     const row = params.data?.row;
     if (row) return formatHoldingTooltip(row);
-    return `<strong>${escapeHtml(params.name)}</strong><br>${t('marketValue')}: ${formatCurrency(params.data?.marketValue, state.amountsHidden)}`;
+    return `<strong>${escapeHtml(params.name)}</strong><br>${t('marketValue')}: ${formatCurrency(params.data?.marketValue, state.amountsHidden)}<br>${t('weight')}: ${formatWeight(params.data?.weight)}`;
 }

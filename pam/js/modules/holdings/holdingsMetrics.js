@@ -1,4 +1,8 @@
 import { t } from '../../config/i18n.js';
+import { todayKey } from '../../utils/formatter.js';
+
+// Prices older than this many days are flagged because P/L built on them may mislead.
+const STALE_PRICE_DAYS = 3;
 
 export const ASSET_CLASSES = [
     ['stock', 'assetStock'],
@@ -54,6 +58,21 @@ export function getAssetClassLabel(value) {
 
 export function getMarketLabel(value) {
     return t(MARKETS.find(([key]) => key === value)?.[1] || 'marketOther');
+}
+
+export function getPriceStatusParts(row) {
+    const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
+    if (!date) return { label: t('notRecorded'), date: '-' };
+    if (row.priceSource !== 'quote') return { label: t('manual'), date };
+    return { label: isStalePrice(row) ? t('stale') : t('quote'), date };
+}
+
+export function isStalePrice(row) {
+    const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return true;
+    const updatedAt = new Date(`${date}T00:00:00`).getTime();
+    const today = new Date(`${todayKey()}T00:00:00`).getTime();
+    return !Number.isFinite(updatedAt) || (today - updatedAt) / 86400000 > STALE_PRICE_DAYS;
 }
 
 function normalizeHolding(holding, account) {

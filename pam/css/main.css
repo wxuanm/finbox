@@ -3727,7 +3727,7 @@ select,
 
     .holding-table td:nth-child(2)::before { content: "市值"; }
     .holding-table td:nth-child(3)::before { content: "成本/现价"; }
-    .holding-table td:nth-child(4)::before { content: "累计盈亏"; }
+    .holding-table td:nth-child(4)::before { content: "持仓盈亏"; }
     .holding-table td:nth-child(5)::before { content: "仓位"; }
     .holding-table td:nth-child(6)::before { content: "估值状态"; }
     .holding-table td:nth-child(7)::before { content: "操作"; }
@@ -5484,6 +5484,41 @@ select,
     font-variant-numeric: tabular-nums;
 }
 
+.holding-chart-summary-value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.holding-chart-summary-value small {
+    font-size: 12px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.holding-pnl-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 8px 6px 0;
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.holding-pnl-legend i {
+    width: 120px;
+    height: 8px;
+    border-radius: 999px;
+}
+
+.holding-pnl-legend small {
+    margin-left: 4px;
+    font-size: 11px;
+}
+
 .holding-chart-footnote {
     margin: 8px 0 0;
     padding: 8px 6px 2px;
@@ -5517,6 +5552,10 @@ select,
 }
 
 .holding-treemap-minor li {
+    max-width: 100%;
+}
+
+.holding-treemap-minor li button {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -5525,8 +5564,32 @@ select,
     border: 1px solid var(--border-color);
     border-radius: 999px;
     background: var(--surface-color);
+    color: inherit;
+    font: inherit;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.holding-treemap-minor li button:hover,
+.holding-treemap-minor li button:focus-visible {
+    border-color: var(--border-strong);
+}
+
+.holding-treemap-minor li button.stale {
+    border-color: color-mix(in srgb, var(--warning-color) 48%, var(--border-color));
+}
+
+.holding-treemap-minor-more summary {
+    width: fit-content;
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.holding-treemap-minor-more[open] summary {
+    margin-bottom: 6px;
 }
 
 .holding-treemap-minor li i {
@@ -5563,10 +5626,6 @@ select,
 
     .holding-chart-canvas {
         height: 308px;
-    }
-
-    .holding-chart-view[data-holding-chart="bubble"] .holding-chart-canvas {
-        height: 340px;
     }
 
     .holding-chart-view {
