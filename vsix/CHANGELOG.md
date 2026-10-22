@@ -2,6 +2,14 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.5
+
+- Extended fund trend history to the current year plus the previous five full calendar years, and added a five-year period tab and `y5` option for `FinBox > Fund: Trend Default Period`; the chart zoom slider now covers the full fetched history.
+- Added an annual performance table to the single-fund information card with return and max-drawdown rows for year-to-date and each of the previous five years, with measured date ranges and drawdown dates in tooltips and partial years marked with `*`.
+- Added an annual comparison table to group and custom comparison pages, switchable between return and max drawdown, with the best value in each year underlined and rows that filter the chart to that fund.
+- Changed return calculations to use a dividend-reinvested NAV index so dividend-paying funds are no longer understated and yearly returns match Eastmoney.
+- Changed year-to-date returns to start from the previous year's last NAV so the first trading day of the year is included.
+
 ## 0.1.4
 
 - Changed fund trend line colors to a validated palette that avoids the red/green rise-and-fall colors and the yellow benchmark, keeps each fund's color when filtering, and adds matching color swatches to comparison cards and tooltips.
