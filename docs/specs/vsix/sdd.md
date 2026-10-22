@@ -59,7 +59,7 @@ The extension should feel like a VSCode-native tool rather than a full browser d
 - Parse Eastmoney `fundinfo` JavaScript responses into structured data before sending to webviews.
 - Open a single-fund historical trend view in the editor area.
 - Open a group historical trend comparison view in the editor area.
-- Fetch and normalize three-year historical NAV data in the extension host.
+- Fetch and normalize historical NAV data covering the current year plus the previous five full calendar years in the extension host.
 - Cache same-day historical NAV responses in extension-managed storage or memory.
 - Use message passing between extension host and webviews.
 - Show loading, empty, error, positive, negative, and neutral states.
@@ -182,8 +182,8 @@ Single-fund trend view should show:
 - Fund scale when available
 - Fund trend loads defaulting to the three-month period, with a VS Code setting to choose the initial period when a fund or group trend target is opened
 - Single-fund trend loads defaulting to the historical NAV list, with a VS Code setting to choose list or chart when a single-fund target is opened
-- Period switcher for YTD, one month, three months, six months, one year, and three years
-- VS Code setting for the default fund trend period, supporting `ytd`, `m1`, `m3`, `m6`, `y1`, and `y3`
+- Period switcher for YTD, one month, three months, six months, one year, three years, and five years
+- VS Code setting for the default fund trend period, supporting `ytd`, `m1`, `m3`, `m6`, `y1`, `y3`, and `y5`
 - Chart/list radio switcher for single-fund views only
 - VS Code setting for the default single-fund trend view, supporting `list` and `chart`; group trend loads always default to chart
 - Paginated historical NAV list for the selected period, showing date, unit NAV, accumulated NAV, and daily return in a compact two-column table with direct page jumps
@@ -195,6 +195,8 @@ Single-fund trend view should show:
 - Max-drawdown marking as a fading area under the curve from peak to trough, tinted with the theme's fall color (green under the red-up convention); the legend entry shows the drawdown value and can hide the area, and the bare value (without the 最大回撤 caption) is always labelled at the floor of the area, or just outside the area when the segment is too narrow to hold it. Applies to the active single-fund chart period or a selected single fund in a group trend
 - The annualized 10% benchmark is a dashed reference line listed in the legend so it can be identified and hidden
 - A single fund information card with all period return, drawdown, volatility, return-to-drawdown ratio, and up-day ratio rows; the active chart/list period row is highlighted
+- An annual performance table inside the single fund information card with return and max-drawdown rows for year-to-date plus each of the previous five calendar years; each year is measured from the previous year's last NAV, and a year whose history starts mid-year is marked with `*`
+- Returns use a dividend-reinvested NAV index (compounded daily returns), so funds that pay dividends are not understated by accumulated NAV
 - Source update time and failed state if data cannot be loaded
 
 Group trend view should show:
@@ -205,6 +207,7 @@ Group trend view should show:
 - Funds whose history starts after the visible window start are rebased from their first NAV date and marked with a start-date dot
 - Selecting one fund card filters the group chart to that fund and shows single-fund labels and max-drawdown marking
 - Comparison cards for period return, drawdown, volatility, return-to-drawdown ratio, up-day ratio, scale, and latest-date metrics
+- An annual comparison table below the cards with one row per fund and columns for year-to-date plus the previous five calendar years, switchable between return and max drawdown; the best value in each column (highest return or shallowest drawdown) is underlined, partial years are marked with `*`, and clicking a row filters the chart to that fund like a comparison card
 - Clear message when the group has no valid fund data
 
 Custom fund comparison should reuse the same trend panel and historical NAV service. Users can run the fund comparison command from the FUND view, select 2-10 funds from the locally monitored fund list, and open a chart-only comparison target without adding any new data interface. The selector uses self-managed selection icons instead of native multi-select checkboxes, avoiding the built-in top-level select-all checkbox, and keeps the simulated tree list focused on selection only; the first screen puts step 1 in the title, keeps secondary selection guidance and selected count in placeholder text rather than as a list row, and after the user completes selection, a separate step 2 follow-up action opens comparison or returns to selection. It includes selectable group rows that toggle the group's funds: selecting a group auto-selects its funds, and selecting it again after all group funds are selected clears them; individual fund rows remain selectable and are visually indented under their group, including their selection-state icon. Each fund row keeps the code in the main label and shows the manager name in the description when available. Fund row context menus also provide `加入对比`, adding that fund to a transient compare basket; once at least two funds are selected, the notification action can open the comparison and clear the basket.
@@ -274,7 +277,7 @@ The extension should preserve the browser Fund Monitor normalized NAV response s
 
 ```ts
 interface FundNavResponse {
-  range: '3y';
+  range: 'ytd+5y';
   source: 'eastmoney';
   updatedAt: string;
   funds: FundNav[];

@@ -8,11 +8,11 @@ import { getNonce, mediaUri } from '../utils/webview';
 
 type TrendKind = 'fund' | 'group' | 'compare';
 type TrendViewMode = 'chart' | 'list';
-type TrendPeriod = 'ytd' | 'm1' | 'm3' | 'm6' | 'y1' | 'y3';
+type TrendPeriod = 'ytd' | 'm1' | 'm3' | 'm6' | 'y1' | 'y3' | 'y5';
 
 const DEFAULT_FUND_TREND_VIEW_CONFIG = 'finbox.fund.trend.defaultView';
 const DEFAULT_FUND_TREND_PERIOD_CONFIG = 'finbox.fund.trend.defaultPeriod';
-const TREND_PERIODS: TrendPeriod[] = ['ytd', 'm1', 'm3', 'm6', 'y1', 'y3'];
+const TREND_PERIODS: TrendPeriod[] = ['ytd', 'm1', 'm3', 'm6', 'y1', 'y3', 'y5'];
 
 interface TrendTarget {
   key: string;
@@ -124,7 +124,7 @@ export class FundTrendPanel {
 
     try {
       const [nav, tradingInfo] = await Promise.all([
-        this.navService.fetchThreeYearFundNav(target.codes),
+        this.navService.fetchFundNavHistory(target.codes),
         target.kind === 'fund'
           ? this.tradingService.fetchTradingInfo(target.codes[0]).catch(() => null)
           : Promise.resolve(null)
@@ -184,6 +184,7 @@ export class FundTrendPanel {
       <button type="button" data-period="m6"${defaultPeriod === 'm6' ? ' class="active"' : ''}>6月</button>
       <button type="button" data-period="y1"${defaultPeriod === 'y1' ? ' class="active"' : ''}>1年</button>
       <button type="button" data-period="y3"${defaultPeriod === 'y3' ? ' class="active"' : ''}>3年</button>
+      <button type="button" data-period="y5"${defaultPeriod === 'y5' ? ' class="active"' : ''}>5年</button>
     </nav>
     <section id="summary" class="summary-grid"></section>
     <section class="chart-panel">
@@ -205,6 +206,7 @@ export class FundTrendPanel {
       <div id="navList" class="nav-list" hidden></div>
     </section>
     <section id="metrics" class="metrics-grid"></section>
+    <section id="annualCompare" class="annual-compare"></section>
     <section id="tradingInfo" class="trading-info"></section>
   </main>
   <script nonce="${nonce}" src="${echartsUri}"></script>

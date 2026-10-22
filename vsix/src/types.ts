@@ -89,7 +89,7 @@ export interface FundNav {
 }
 
 export interface FundNavResponse {
-  range: '3y';
+  range: 'ytd+5y';
   source: 'eastmoney';
   updatedAt: string;
   funds: FundNav[];
@@ -121,6 +121,18 @@ export interface NavMetricPeriod {
   upDayRatio: number | null;
 }
 
+export interface NavAnnualReturn {
+  year: number;
+  returnValue: number | null;
+  maxDrawdown: number | null;
+  maxDrawdownStartDate: string | null;
+  maxDrawdownEndDate: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  isYearToDate: boolean;
+  startsMidYear: boolean;
+}
+
 export interface FundFeeTier {
   range: string;
   rate: string;
@@ -148,4 +160,5 @@ export interface NavMetric {
   maxDrawdown: number;
   series: Array<[string, number]>;
   chartSeries: Record<string, Array<[string, number, number | null, number | null, number | null]>>;
+  annualReturns: NavAnnualReturn[];
 }

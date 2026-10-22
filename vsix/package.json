@@ -295,7 +295,8 @@
             "m3",
             "m6",
             "y1",
-            "y3"
+            "y3",
+            "y5"
           ],
           "enumDescriptions": [
             "Year to date",
@@ -303,7 +304,8 @@
             "Three months",
             "Six months",
             "One year",
-            "Three years"
+            "Three years",
+            "Five years"
           ],
           "default": "m3",
           "description": "Default period for newly opened fund trend panels."

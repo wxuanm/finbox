@@ -885,3 +885,118 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+.annual-return-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.annual-return-title {
+  color: var(--trend-muted);
+  font-size: 12px;
+}
+
+.annual-return-table th,
+.annual-return-table td {
+  text-align: center;
+}
+
+.annual-return-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--trend-soft-bg);
+  text-align: left;
+}
+
+.annual-compare-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.annual-compare:empty {
+  display: none;
+}
+
+.annual-compare {
+  margin-bottom: 12px;
+}
+
+.annual-compare-card {
+  display: grid;
+  gap: 10px;
+}
+
+.annual-compare-table th:not(:first-child),
+.annual-compare-table td:not(:first-child) {
+  text-align: center;
+}
+
+.annual-compare-table tbody tr {
+  cursor: pointer;
+}
+
+.annual-compare-table tbody tr:hover,
+.annual-compare-table tbody tr:focus-visible {
+  background: var(--trend-hover-bg);
+  outline: none;
+}
+
+.annual-compare-table tbody tr.selected {
+  background: var(--trend-accent-soft);
+}
+
+.annual-compare-table td.metric-highlight {
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.annual-compare-table th:first-child,
+.annual-compare-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--trend-card-bg);
+}
+
+.annual-compare-table th:first-child {
+  background: var(--trend-soft-bg);
+}
+
+.annual-compare-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 720px) {
+  .annual-compare-table td:first-child {
+    min-width: 128px;
+    max-width: 150px;
+    white-space: normal;
+  }
+
+  .annual-compare-name {
+    display: block;
+  }
+
+  .annual-compare-name .fund-code {
+    display: block;
+  }
+}
+
+.annual-compare-name .fund-code {
+  margin-top: 0;
+}
+
+.annual-compare-note {
+  color: var(--trend-muted);
+  font-size: 12px;
+}

@@ -2,13 +2,13 @@ import { FundNav, FundNavResponse } from '../types';
 import { normalizeFundCodes } from '../utils/marketSymbols';
 
 const MAX_CODES = 10;
-const THREE_YEARS_MS = 365 * 3 * 24 * 60 * 60 * 1000;
+const HISTORY_FULL_YEARS = 5;
 const REQUEST_TIMEOUT_MS = 15000;
 
 export class FundNavService {
   private readonly cache = new Map<string, { dateKey: string; data: FundNav }>();
 
-  async fetchThreeYearFundNav(inputCodes: string[]): Promise<FundNavResponse> {
+  async fetchFundNavHistory(inputCodes: string[]): Promise<FundNavResponse> {
     const codes = normalizeFundCodes(inputCodes).slice(0, MAX_CODES);
     const todayKey = getLocalDateKey(new Date());
     const funds: FundNav[] = [];
@@ -36,7 +36,7 @@ export class FundNavService {
     });
 
     const data: FundNavResponse = {
-      range: '3y',
+      range: 'ytd+5y',
       source: 'eastmoney',
       updatedAt: new Date().toISOString(),
       funds,
@@ -73,12 +73,9 @@ export class FundNavService {
       const unitItems = unitTrend.map(normalizeUnitPoint).filter(isTrendItem);
       const accItems = Array.isArray(accTrend) ? accTrend.map(normalizeAccPoint).filter(isTrendItem) : [];
       const allItems = [...unitItems, ...accItems];
-      const latestTimestamp = allItems.reduce((latest, item) => Math.max(latest, item.timestamp), 0);
-      const cutoff = latestTimestamp ? latestTimestamp - THREE_YEARS_MS : Date.now() - THREE_YEARS_MS;
       const itemByDate = new Map<string, TrendItem>();
 
       allItems.forEach(item => {
-        if (item.timestamp < cutoff) return;
         const current = itemByDate.get(item.date) || { timestamp: item.timestamp, date: item.date, unitNav: null, accNav: null, dailyReturn: null };
         current.timestamp = Math.max(current.timestamp, item.timestamp);
         if (item.unitNav !== null) current.unitNav = item.unitNav;
@@ -87,11 +84,11 @@ export class FundNavService {
         itemByDate.set(item.date, current);
       });
 
-      const items = [...itemByDate.values()]
+      const items = sliceHistoryWindow([...itemByDate.values()]
         .sort((a, b) => a.timestamp - b.timestamp)
-        .map(({ timestamp, ...item }) => item);
+        .map(({ timestamp, ...item }) => item));
 
-      if (items.length === 0) throw new Error('No three-year nav data');
+      if (items.length === 0) throw new Error('No historical nav data');
       return { code, name, manager, scale, items };
     } finally {
       clearTimeout(timeout);
@@ -109,6 +106,15 @@ interface TrendItem {
 
 function isTrendItem(item: TrendItem | null): item is TrendItem {
   return item !== null;
+}
+
+// Keep the current year plus five full years, plus the last NAV before them as the base for the earliest annual return.
+function sliceHistoryWindow<T extends { date: string }>(items: T[]): T[] {
+  const latestYear = Number(items[items.length - 1]?.date.slice(0, 4));
+  if (!Number.isInteger(latestYear)) return items;
+  const firstDate = `${latestYear - HISTORY_FULL_YEARS}-01-01`;
+  const startIndex = items.findIndex(item => item.date >= firstDate);
+  return startIndex > 0 ? items.slice(startIndex - 1) : items;
 }
 
 function extractFundManager(script: string): string {

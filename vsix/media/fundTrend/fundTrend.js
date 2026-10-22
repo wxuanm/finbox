@@ -5,9 +5,10 @@ const PERIODS = {
   m3: '近3月',
   m6: '近6月',
   y1: '近1年',
-  y3: '近3年'
+  y3: '近3年',
+  y5: '近5年'
 };
-const DETAIL_PERIODS = ['ytd', 'm1', 'm3', 'm6', 'y1', 'y3'];
+const DETAIL_PERIODS = ['ytd', 'm1', 'm3', 'm6', 'y1', 'y3', 'y5'];
 const ANNUAL_BENCHMARK = 10;
 const NAV_LIST_PAGE_SIZE = 20;
 const CHART_Y_AXIS_TARGET_SPLITS = 5;
@@ -28,6 +29,7 @@ let currentTargetKey = null;
 let currentPeriod = document.querySelector('#periodTabs button.active')?.dataset.period || 'm3';
 let currentViewMode = document.querySelector('input[name="trendView"]:checked')?.value || 'list';
 let currentListPage = 1;
+let annualCompareMetric = 'returnValue';
 let selectedFundCode = null;
 let trendChart = null;
 let currentChartContext = null;
@@ -124,6 +126,7 @@ window.addEventListener('message', event => {
     document.getElementById('chart').innerHTML = '<div class="card">暂无可展示数据</div>';
     document.getElementById('navList').innerHTML = '';
     document.getElementById('metrics').innerHTML = '';
+    document.getElementById('annualCompare').innerHTML = '';
   }
 });
 
@@ -155,6 +158,7 @@ function renderCurrentTrend() {
     renderChart(metrics, currentPeriod);
   }
   renderMetrics(metrics, currentPeriod);
+  renderAnnualCompare(metrics, target.kind);
 }
 
 function renderSummary(metrics, period) {
@@ -251,7 +255,7 @@ function renderChart(metrics, period) {
     .map(metric => ({
       metric,
       slot: metrics.indexOf(metric),
-      points: metric.chartSeries?.y3 || metric.chartSeries?.[period] || []
+      points: metric.chartSeries?.all || metric.chartSeries?.[period] || []
     }))
     .filter(item => item.points.length > 1);
   const extent = getSeriesExtent(series);
@@ -269,7 +273,7 @@ function renderChart(metrics, period) {
     chartEl.innerHTML = '';
     trendChart = echarts.init(chartEl, null, { renderer: 'canvas' });
   }
-  const preset = buildPresetWindow(extent, period);
+  const preset = buildPresetWindow(extent, period, series);
   const zoomWindow = customZoomWindow ? clampWindow(customZoomWindow, extent) : preset.window;
   currentChartContext = { series, period, extent, preset, zoomWindow };
   bindChartEvents();
@@ -685,14 +689,34 @@ function getSeriesExtent(series) {
   return Number.isFinite(startTime) && Number.isFinite(endTime) && startTime < endTime ? { startTime, endTime } : null;
 }
 
-function buildPresetWindow(extent, period) {
+function buildPresetWindow(extent, period, series) {
   const targetStart = period === 'ytd'
-    ? new Date(new Date(extent.endTime).getFullYear(), 0, 1).getTime()
+    ? getYtdWindowStart(extent, series)
     : extent.endTime - periodDays(period) * DAY_MS;
   return {
     window: { startTime: Math.max(extent.startTime, targetStart), endTime: extent.endTime },
     isClamped: targetStart < extent.startTime - PRESET_CLAMP_TOLERANCE_MS
   };
+}
+
+// YTD starts at the previous year's last NAV so the chart matches the "今年" and annual return values.
+function getYtdWindowStart(extent, series) {
+  const yearStart = new Date(new Date(extent.endTime).getFullYear(), 0, 1).getTime();
+  const baseTimes = series
+    .map(item => findLastTimeBefore(item.points, yearStart))
+    .filter(time => time !== null);
+  return baseTimes.length ? Math.max(...baseTimes) : yearStart;
+}
+
+function findLastTimeBefore(points, time) {
+  let found = null;
+  for (const point of points) {
+    const pointTime = parseDate(point[0]);
+    if (pointTime === null) continue;
+    if (pointTime >= time) break;
+    found = pointTime;
+  }
+  return found;
 }
 
 function clampWindow(zoomWindow, extent) {
@@ -920,7 +944,8 @@ function periodDays(period) {
   if (period === 'm3') return 90;
   if (period === 'm6') return 180;
   if (period === 'y1') return 365;
-  return 365 * 3;
+  if (period === 'y3') return 365 * 3;
+  return 365 * 5;
 }
 
 function getChartHeading(context) {
@@ -1046,7 +1071,7 @@ function renderNavList(metric, period) {
   listEl.hidden = false;
   document.getElementById('chartTitle').textContent = `${PERIODS[period]}历史净值列表`;
 
-  const points = metric?.chartSeries?.[period] || [];
+  const points = filterListPoints(metric?.chartSeries?.[period] || [], period);
   if (!points.length) {
     listEl.innerHTML = '<div class="empty-state">当前周期暂无历史净值数据</div>';
     return;
@@ -1097,6 +1122,13 @@ function renderNavList(metric, period) {
       <button type="submit">跳转</button>
     </form>
   </div>`;
+}
+
+// The YTD series carries the previous year's closing NAV as its return base; the list only shows this year's rows.
+function filterListPoints(points, period) {
+  if (period !== 'ytd' || !points.length) return points;
+  const year = String(points[points.length - 1][0]).slice(0, 4);
+  return points.filter(point => String(point[0]).startsWith(year));
 }
 
 function renderPageButtons(currentPage, pageCount) {
@@ -1195,18 +1227,128 @@ function renderSingleFundMetrics(metric) {
         </tbody>
       </table>
     </div>
+    ${renderAnnualReturns(metric.annualReturns)}
   </article>`;
+}
+
+function renderAnnualReturns(annualReturns) {
+  const rows = Array.isArray(annualReturns) ? annualReturns : [];
+  if (!rows.length) return '';
+  return `<div class="annual-return-section">
+    <div class="annual-return-title">年度表现</div>
+    <div class="period-metric-table-wrap">
+      <table class="period-metric-table annual-return-table">
+        <thead>
+          <tr><th>年度</th>${rows.map(row => `<th>${escapeHtml(formatAnnualLabel(row))}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">收益</th>${rows.map(row => `<td class="${classFor(row.returnValue)}" title="${escapeHtml(formatAnnualRange(row))}">${formatPercent(row.returnValue)}</td>`).join('')}</tr>
+          <tr><th scope="row">最大回撤</th>${rows.map(row => `<td class="${classFor(row.maxDrawdown)}" title="${escapeHtml(formatDrawdownRange(row))}">${formatPercent(row.maxDrawdown)}</td>`).join('')}</tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderAnnualCompare(metrics, targetKind) {
+  const container = document.getElementById('annualCompare');
+  const years = [...new Set(metrics.flatMap(metric => (metric.annualReturns || []).map(row => row.year)))].sort((a, b) => b - a);
+  if (targetKind === 'fund' || !years.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const latestYear = years[0];
+  const field = annualCompareMetric;
+  // Drawdowns are negative, so the largest value is also the shallowest drawdown.
+  const bestByYear = new Map(years.map(year => {
+    const values = metrics
+      .map(metric => findAnnualReturn(metric, year)?.[field])
+      .filter(value => Number.isFinite(value));
+    return [year, values.length > 1 ? Math.max(...values) : null];
+  }));
+
+  container.innerHTML = `<article class="card annual-compare-card">
+    <div class="annual-compare-header">
+      <div class="card-title">年度${field === 'maxDrawdown' ? '最大回撤' : '收益'}对比</div>
+      <div class="view-tabs annual-compare-tabs" role="radiogroup" aria-label="年度指标">
+        <label><input type="radio" name="annualCompareMetric" value="returnValue"${field === 'returnValue' ? ' checked' : ''}><span>收益</span></label>
+        <label><input type="radio" name="annualCompareMetric" value="maxDrawdown"${field === 'maxDrawdown' ? ' checked' : ''}><span>最大回撤</span></label>
+      </div>
+    </div>
+    <div class="period-metric-table-wrap">
+      <table class="period-metric-table annual-compare-table">
+        <thead>
+          <tr>
+            <th>基金</th>
+            ${years.map(year => `<th>${year === latestYear ? '今年以来' : year}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${metrics.map((metric, index) => {
+            const selectedClass = selectedFundCode === metric.code ? ' class="selected"' : '';
+            return `<tr${selectedClass} data-code="${escapeHtml(metric.code)}" tabindex="0" title="点击仅显示此基金曲线，再次点击恢复全部曲线">
+              <td><span class="annual-compare-name"><span class="series-swatch" data-slot="${index}"></span>${escapeHtml(metric.name)} <span class="fund-code">${escapeHtml(metric.code)}</span></span></td>
+              ${years.map(year => renderAnnualCompareCell(findAnnualReturn(metric, year), field, bestByYear.get(year))).join('')}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="annual-compare-note">每列${field === 'maxDrawdown' ? '回撤最小' : '收益最高'}加下划线；* 表示当年数据不足整年。</div>
+  </article>`;
+  bindAnnualCompareSelection(container);
+}
+
+function findAnnualReturn(metric, year) {
+  return (metric.annualReturns || []).find(row => row.year === year) || null;
+}
+
+function renderAnnualCompareCell(row, field, bestValue) {
+  if (!row) return '<td class="neutral">-</td>';
+  const value = row[field];
+  const highlight = Number.isFinite(bestValue) && value === bestValue ? ' metric-highlight' : '';
+  const suffix = row.startsMidYear && !row.isYearToDate ? '*' : '';
+  const title = field === 'maxDrawdown' ? formatDrawdownRange(row) : formatAnnualRange(row);
+  return `<td class="${classFor(value)}${highlight}" title="${escapeHtml(title)}">${formatPercent(value)}${suffix}</td>`;
+}
+
+function bindAnnualCompareSelection(container) {
+  container.querySelector('.annual-compare-tabs')?.addEventListener('change', event => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || input.name !== 'annualCompareMetric') return;
+    annualCompareMetric = input.value === 'maxDrawdown' ? 'maxDrawdown' : 'returnValue';
+    renderAnnualCompare(currentPayload?.metrics || [], currentPayload?.target?.kind);
+  });
+  container.querySelectorAll('tr[data-code]').forEach(row => {
+    const select = () => toggleSelectedFund(row.dataset.code);
+    row.onclick = select;
+    row.onkeydown = event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      select();
+    };
+  });
+}
+
+function formatDrawdownRange(row) {
+  if (!Number.isFinite(row.maxDrawdown) || !row.maxDrawdownStartDate) return `${formatAnnualRange(row)}，期间无回撤`;
+  return `回撤区间 ${row.maxDrawdownStartDate} 至 ${row.maxDrawdownEndDate || '-'}`;
+}
+
+function formatAnnualLabel(row) {
+  if (row.isYearToDate) return '今年以来';
+  return row.startsMidYear ? `${row.year}*` : String(row.year);
+}
+
+function formatAnnualRange(row) {
+  const range = `${row.startDate || '-'} 至 ${row.endDate || '-'}`;
+  return row.startsMidYear ? `${range}（区间内数据不足整年）` : range;
 }
 
 function bindMetricCardSelection() {
   document.querySelectorAll('.fund-metric-card').forEach(card => {
-    const select = () => {
-      const code = card.dataset.code;
-      if (!code) return;
-      selectedFundCode = selectedFundCode === code ? null : code;
-      legendSelected = Object.fromEntries(Object.entries(legendSelected).filter(([name]) => !name.endsWith(` ${code}`)));
-      renderCurrentTrend();
-    };
+    const select = () => toggleSelectedFund(card.dataset.code);
     card.onclick = select;
     card.onkeydown = event => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -1214,6 +1356,13 @@ function bindMetricCardSelection() {
       select();
     };
   });
+}
+
+function toggleSelectedFund(code) {
+  if (!code) return;
+  selectedFundCode = selectedFundCode === code ? null : code;
+  legendSelected = Object.fromEntries(Object.entries(legendSelected).filter(([name]) => !name.endsWith(` ${code}`)));
+  renderCurrentTrend();
 }
 
 function metricValue(metric, period, field) {
