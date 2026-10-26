@@ -38,12 +38,15 @@ pam/
    │     ├─ holdingsMetrics.js
    │     ├─ holdingsPanel.js
    │     ├─ quoteApi.js
+   │     ├─ snapshotValuation.js
    │     └─ storage.js
    └─ utils/
       └─ formatter.js
 ```
 
 Cloud resources are implemented in `functions/api/pam/[[path]].js` and the numbered D1 migrations under `migrations/`. Operator-side user provisioning is implemented by `scripts/create-pam-user.mjs`.
+
+Daily auto snapshots are produced by `POST /api/pam/jobs/auto-snapshot`, implemented in `functions/api/pam/_autoSnapshot.js` and called by the minimal Cron Worker in `workers/pam-auto-snapshot/`. Pure valuation rules live in `pam/js/modules/holdings/snapshotValuation.js` and are imported by both the browser and the Pages Function, so manual and scheduled snapshots value holdings the same way. That module must not import `state.js`, `i18n.js`, `formatter.js`, or any DOM or local-timezone helper. Shared quote fetching lives in `functions/api/_lib/quoteSources.js`; the underscore folder keeps it out of Pages routing.
 
 ## Runtime State
 
@@ -118,6 +121,7 @@ Snapshots:
 - `netFlow` must be numeric and can be positive, negative, or 0.
 - `netFlow` remains manually maintained by the user and represents the net cash flow between snapshots.
 - `totalValue` is stored independently per snapshot, so adding or correcting a past snapshot's `netFlow` does not change later snapshots by default. When saving would change the cumulative net flow up to any later same-account snapshot, the snapshot form shows an unchecked "adjust later snapshot totals" option. If checked, each later snapshot's `totalValue` shifts by its cumulative net-flow difference (counted flow on or before its date after saving minus before saving), which also covers moved dates and same-day overwrites. The account's earliest snapshot is excluded from counted flow on both sides because the unit-NAV baseline ignores its `netFlow`, so editing the earliest snapshot's flow never shifts later totals. Saving is blocked if any adjusted total would become negative. Use it only when later totals were recorded without the cash movement.
+- `source` is omitted for manual snapshots, `holdings` for snapshots generated in the browser dialog, and `auto` for snapshots written by the scheduled job. Server validation and client normalization both accept exactly these values.
 - In holdings management, users can generate account snapshots from current holdings market value for either the previous trading day or the current day. For previous-trading-day snapshots, A-shares use the close of the snapshot date (the quote's `latestPrice` when the quote's `tradeDate` equals the snapshot date, such as weekends and holidays; otherwise `previousClose`), funds use latest disclosed unit NAV, and the snapshot date is resolved before writing snapshots from built-in ordinary-fund NAV disclosure references: `110001` 易方达平稳增长混合, `000001` 华夏成长混合, and `270002` 广发稳健增长混合A. If the built-in reference disclosure date cannot be obtained, the confirmation prompt states that the date has fallen back to the local previous trading day. For current-day snapshots, A-shares use latest price and fall back to previous close when latest price is unavailable, while funds use latest disclosed unit NAV. Generated snapshots use `source = 'holdings'`. The preview shows an editable net-flow input per account, defaulting to the same-day snapshot's `netFlow` when one exists and `0` otherwise; values typed in the preview survive recalculation when the resolved date is unchanged. Confirming may overwrite same-account same-date snapshots: `totalValue` is replaced, while the existing note is kept and `netFlow` comes from the preview input.
 - Same-account same-date overwrite requires confirmation.
 
@@ -270,6 +274,32 @@ Import behavior:
 - Replace current local PAM data only after confirmation.
 - Cache imported data locally and queue it for authenticated cloud synchronization after confirmation.
 
+## Auto Snapshots
+
+The Cron Worker `workers/pam-auto-snapshot/` fires at `30 23 * * *` UTC (07:30 Beijing, phase `early`) and `30 1 * * *` UTC (09:30 Beijing, phase `final`). It has no D1 binding and no business logic: it only POSTs `{ "phase": "early" | "final" }` to `/api/pam/jobs/auto-snapshot` with `Authorization: Bearer <PAM_JOB_SECRET>`, logs the returned summary, and throws on a non-2xx response so the run shows as failed.
+
+The endpoint accepts only `POST` (`405` otherwise) and only the bearer secret, compared through fixed-length digests. Session cookies are ignored so a signed-in browser can never trigger it cross-site. It returns `503` when `PAM_JOB_SECRET` is missing or shorter than 32 characters, `401` for a wrong or missing secret, and `400` for an invalid phase. Responses use `Cache-Control: no-store`.
+
+Each run:
+
+1. Resolves D as the latest `navDate` of the built-in reference funds. D must be before today in Beijing time and no older than 10 days; otherwise the run ends without writes. There is no weekend-only fallback.
+2. Reads active users' revisions, accounts, latest snapshot source per account, whether a snapshot on or after D exists, and holdings in one D1 batch, so the revision used later matches the valued data.
+3. Keeps only accounts that are holdings-valued (at least one `CN`/`Fund` holding with a symbol, and the latest snapshot is `holdings` or `auto`, or there is none yet), have no snapshot on or after D, and were created no later than the end of D in Beijing time. Runs with no such account end before fetching holding quotes, which is the normal weekend and holiday path.
+4. Fetches de-duplicated holding quotes once and values accounts with the shared rules. Fund NAVs whose `navDate` is not D are stale; quotable holdings that fall back to the manual price are fallbacks. Phase `early` defers accounts with any stale or fallback price to `final`; `final` writes them and reports the counts. Non-finite or non-positive totals are skipped; totals are rounded to 2 decimals.
+5. Writes all users in one batch. For each user it claims `revision = revision + 1` with a new `write_token` only if the revision still equals the value read in step 2, then inserts `{ netFlow: 0, note: '', source: 'auto' }` rows gated by that token with `ON CONFLICT DO NOTHING`. A lost claim skips that user until the next run. Users with nothing to insert keep their revision. The job never updates or deletes an existing snapshot.
+6. Returns `{ phase, date, users, accounts, inserted, deferred, stalePrices, fallbackPrices, conflicts, skipped, reason, durationMs }`. The summary contains no amounts.
+
+There is no history backfill: a missed day is not filled later. While D is unchanged, a deleted auto snapshot is regenerated by the next run; entering a manual snapshot for that date keeps it out.
+
+## Sync Conflict Handling
+
+Snapshot sync is full replace, so a stale browser must never PATCH over rows another writer added.
+
+- The cloud wins whenever its revision has moved. A `409` on PATCH, or a page load with pending edits whose base revision differs from the cloud, loads the latest cloud data and discards the unsynced local edits. The client never uploads on a stale base revision, so another writer's rows (including `auto` snapshots) are never full-replaced away.
+- When the discarded edits include accounts, snapshots, or holdings, the app shows a message asking the user to review and re-enter them. Preference-only losses (view, period, filters) are silent.
+- If loading the cloud data fails after a `409`, sync pauses with the stale base revision kept. The next reload or `online` retry sees the moved cloud revision and loads it, never uploading.
+- When a tab becomes visible with nothing pending, the client GETs `/api/pam/data` and silently applies it if the revision changed, so tabs left open overnight pick up auto snapshots before the next edit.
+
 ## Quote API
 
 `/api/quotes` normalizes supported quote responses into JSON.
@@ -281,6 +311,8 @@ Import behavior:
 - `CN` uses batched Sina A-share quote data first and batched Eastmoney stock quote data as fallback. Shanghai exchange-traded funds such as `510300` are treated as Shanghai `CN` instruments when they are stored as stock holdings.
 - `Fund` uses Eastmoney fund comparison data and normalizes the refresh price to the latest disclosed unit NAV, not the intraday estimated NAV.
 - Unsupported markets are returned in `failedItems`.
+- A-share quotes include `tradeDate` in China time; fund quotes include `navDate` and `snapshotUnitNav`.
+- Fetching and parsing live in `functions/api/_lib/quoteSources.js` (`fetchQuotes(items)`), shared with the auto-snapshot job; `functions/api/quotes.js` only parses the request and builds the response.
 - Quote refresh updates only current price, name when available, price source, and price update time.
 - The endpoint accepts up to 40 unique `market:symbol` items and returns `Cache-Control: no-store`.
 
@@ -292,6 +324,8 @@ Minimum verification:
 - ES modules load without syntax errors.
 - Account and snapshot CRUD work locally.
 - Holding CRUD, quote refresh, and snapshot generation from holdings work locally.
+- The auto-snapshot endpoint rejects missing, wrong, and cookie-only credentials, inserts `auto` snapshots once per account and D, and leaves revisions unchanged on a no-op rerun.
+- A `409` loads the latest cloud data without uploading, and a reload with pending edits on a moved cloud does the same.
 - JSON backup export/import round-trips accounts, snapshots, holdings, and preferences.
 - Refresh persists data.
 - Deposits and withdrawals do not create artificial performance jumps.

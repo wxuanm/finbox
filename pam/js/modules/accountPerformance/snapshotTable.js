@@ -48,7 +48,7 @@ export function renderSnapshotTable() {
             <tbody>
                 ${visibleRows.map(row => `
                     <tr>
-                        <td><span class="snapshot-date-text">${row.date}</span>${renderSnapshotMobileCard(row)}</td>
+                        <td><span class="snapshot-date-text">${row.date}${renderSourceBadge(row)}</span>${renderSnapshotMobileCard(row)}</td>
                         <td class="number-cell">${formatCurrency(row.totalValue, state.amountsHidden)}</td>
                         <td class="number-cell">${formatCurrency(row.netFlow, state.amountsHidden)}</td>
                         <td>${escapeHtml(row.note || '-')}</td>
@@ -78,7 +78,7 @@ function renderSnapshotMobileCard(row) {
             <div class="snapshot-mobile-card-head">
                 <div>
                     <span>${t('date')}</span>
-                    <strong>${row.date}</strong>
+                    <strong>${row.date}${renderSourceBadge(row)}</strong>
                 </div>
             </div>
             <div class="snapshot-mobile-details">
@@ -101,6 +101,12 @@ function renderSnapshotMobileCard(row) {
             </div>
         </div>
     `;
+}
+
+// Snapshots written by the scheduled job carry no note, so the source badge is the only localized hint.
+function renderSourceBadge(row) {
+    if (row.source !== 'auto') return '';
+    return ` <span class="snapshot-source-badge" title="${escapeHtml(t('autoSnapshotHint'))}">${escapeHtml(t('autoSnapshotBadge'))}</span>`;
 }
 
 export function bindSnapshotTable({ onEdit, onDelete }) {

@@ -13,6 +13,7 @@ import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
 import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
 import { HOLDING_VIEWS, bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
 import { fetchQuotes } from './modules/holdings/quoteApi.js';
+import { SNAPSHOT_DATE_REFERENCE_FUNDS, getAccountHoldingMarketValue, resolveReferenceNavDate, resolveSnapshotPrice } from './modules/holdings/snapshotValuation.js';
 import { resizeHoldingChart } from './modules/holdings/holdingsChartShared.js';
 import { escapeHtml, formatCurrency, todayKey } from './utils/formatter.js';
 
@@ -33,12 +34,6 @@ const PAM_CACHE_KEYS = [
     'pam:v1:cloud-sync'
 ];
 const PAM_CACHE_OWNER_KEY = 'pam:v1:cache-owner';
-
-const SNAPSHOT_DATE_REFERENCE_FUNDS = [
-    { market: 'Fund', symbol: '110001', name: '易方达平稳增长混合' },
-    { market: 'Fund', symbol: '000001', name: '华夏成长混合' },
-    { market: 'Fund', symbol: '270002', name: '广发稳健增长混合A' }
-];
 
 function applyLanguage() {
     document.documentElement.lang = state.currentLang === 'en' ? 'en' : 'zh-CN';
@@ -131,7 +126,13 @@ async function initializeWorkspace(user) {
             pendingCloudMigration = migration;
             showCloudMigrationDialog();
         },
-        onConflict: () => showAppMessage(t('cloudConflictMessage'), true, t('cloudConflictTitle'))
+        onConflict: () => showAppMessage(t('cloudConflictMessage'), true, t('cloudConflictTitle')),
+        // Preference-only losses (view, period, filters) are not worth interrupting the user for.
+        onRemoteReplaced: ({ discardedDomains }) => {
+            if (discardedDomains.some(domain => domain !== 'preferences')) {
+                showAppMessage(t('cloudReplacedMessage'), true, t('cloudReplacedTitle'));
+            }
+        }
     });
 }
 
@@ -1246,7 +1247,7 @@ function normalizeImportedSnapshot(snapshot) {
         totalValue,
         netFlow,
         note: String(snapshot.note || '').trim(),
-        ...(snapshot.source === 'holdings' ? { source: 'holdings' } : {})
+        ...(['holdings', 'auto'].includes(snapshot.source) ? { source: snapshot.source } : {})
     };
 }
 
@@ -1554,7 +1555,7 @@ async function handleSnapshotGeneratePreview(event) {
         const rows = accountIds
             .map(accountId => {
                 const account = state.accounts.find(item => item.id === accountId);
-                const totalValue = getAccountHoldingMarketValue(accountId, valuation.priceByHoldingId);
+                const totalValue = getAccountHoldingMarketValue(state.holdings, accountId, valuation.priceByHoldingId);
                 return { account, accountId, totalValue };
             })
             .filter(row => row.account && row.totalValue > 0);
@@ -1764,45 +1765,10 @@ async function buildSnapshotValuation(dateOption) {
 function resolveSnapshotDate(dateOption, quoteByKey) {
     if (dateOption !== '1') return { date: todayKey(), source: 'today', isFallback: false };
 
-    const referenceFundNavDates = SNAPSHOT_DATE_REFERENCE_FUNDS
-        .map(fund => quoteByKey.get(`${fund.market}:${fund.symbol}`)?.navDate)
-        .filter(Boolean)
-        .sort();
-
-    const referenceDate = referenceFundNavDates[referenceFundNavDates.length - 1];
+    const referenceDate = resolveReferenceNavDate(quoteByKey);
     if (referenceDate) return { date: referenceDate, source: 'reference-fund-nav-date', isFallback: false };
 
     return { date: previousTradingDayKey(), source: 'local-previous-trading-day', isFallback: true };
-}
-
-function resolveSnapshotPrice(holding, quote, dateOption, snapshotDate) {
-    if (holding.market === 'CN') {
-        const quotePrice = resolveAshareSnapshotPrice(quote, dateOption, snapshotDate);
-        if (Number.isFinite(quotePrice) && quotePrice > 0) return { price: quotePrice, isFallback: false };
-        return { price: manualHoldingPrice(holding), isFallback: true };
-    }
-
-    if (holding.market === 'Fund') {
-        const unitNav = Number(quote?.snapshotUnitNav);
-        if (Number.isFinite(unitNav) && unitNav > 0) return { price: unitNav, isFallback: false };
-        return { price: manualHoldingPrice(holding), isFallback: true };
-    }
-
-    return { price: manualHoldingPrice(holding), isFallback: true };
-}
-
-// Previous-trading-day snapshots value A-shares at the close of the snapshot date. When the latest
-// quote's trade date is the snapshot date (weekends, holidays), latestPrice is that close. Otherwise
-// previousClose is the close of the snapshot date.
-function resolveAshareSnapshotPrice(quote, dateOption, snapshotDate) {
-    if (dateOption !== '1') return Number(quote?.latestPrice ?? quote?.previousClose);
-    if (quote?.tradeDate && quote.tradeDate === snapshotDate) return Number(quote?.latestPrice);
-    return Number(quote?.previousClose);
-}
-
-function manualHoldingPrice(holding) {
-    const price = Number(holding.currentPrice);
-    return Number.isFinite(price) ? price : null;
 }
 
 function previousTradingDayKey() {
@@ -1819,17 +1785,6 @@ function formatDateKey(date) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-}
-
-function getAccountHoldingMarketValue(accountId, priceByHoldingId = new Map()) {
-    return state.holdings
-        .filter(holding => holding.accountId === accountId)
-        .reduce((sum, holding) => {
-            const quantity = Number(holding.quantity);
-            const currentPrice = Number(priceByHoldingId.get(holding.id) ?? holding.currentPrice);
-            if (!Number.isFinite(quantity) || !Number.isFinite(currentPrice)) return sum;
-            return sum + quantity * currentPrice;
-        }, 0);
 }
 
 function resolveSelectedAccount(accountId) {

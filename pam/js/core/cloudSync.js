@@ -22,6 +22,7 @@ export async function initializeCloudSync(syncOptions) {
     if (!initialized) {
         window.addEventListener(CHANGE_EVENT, handleLocalChange);
         window.addEventListener('online', retryCloudSync);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
         initialized = true;
     }
 
@@ -60,12 +61,12 @@ export async function initializeCloudSync(syncOptions) {
         }
 
         if (dirtyDomains.size > 0 && previouslyConnected) {
+            // The cloud moved since these edits were made (another device or the auto-snapshot job):
+            // the cloud wins. Uploading would full-replace rows the other writer added.
             if (meta.revision !== remoteRevision) {
-                revision = remoteRevision;
-                pauseForConflict();
+                replaceLocalWithCloud(payload, remoteUserId);
                 return;
             }
-            revision = remoteRevision;
             ready = true;
             persistSyncMeta({ connected: true, userId: remoteUserId, userEmail: payload.user?.email || meta.userEmail });
             scheduleSync(0);
@@ -95,6 +96,42 @@ export async function initializeCloudSync(syncOptions) {
         paused = false;
         emitStatus(error.status === 401 ? 'unauthorized' : 'local', error.message);
     }
+}
+
+// A tab left open overnight would otherwise hold a stale revision and conflict on its first edit
+// after the auto-snapshot job runs. With nothing pending, quietly pick up the latest cloud data.
+async function handleVisibilityChange() {
+    if (document.visibilityState !== 'visible') return;
+    if (!options || !ready || paused || requestInProgress || syncTimer) return;
+    if (dirtyDomains.size > 0 || sendingDomains.size > 0) return;
+
+    requestInProgress = true;
+    try {
+        const payload = await fetchCloudPayload();
+        const remoteRevision = Number(payload.revision || 0);
+        if (remoteRevision === revision || dirtyDomains.size > 0) return;
+        remoteData = normalizeCloudData(payload.data);
+        remoteUpdatedAt = String(payload.updatedAt || '');
+        revision = remoteRevision;
+        applyRemoteData(remoteData);
+        persistSyncMeta({ connected: true });
+        emitStatus('synced');
+    } catch {
+        // Best effort only; the next edit still syncs and reports errors normally.
+    } finally {
+        requestInProgress = false;
+        if (ready && !paused && dirtyDomains.size > 0 && !syncTimer) scheduleSync();
+    }
+}
+
+async function fetchCloudPayload() {
+    const response = await fetch('/api/pam/data', {
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin'
+    });
+    const payload = await readResponseJson(response);
+    if (!response.ok) throw createSyncError(payload.error || `HTTP ${response.status}`, response.status);
+    return payload;
 }
 
 export function retryCloudSync() {
@@ -207,8 +244,7 @@ async function flushChanges() {
         if (response.status === 409) {
             sendingDomains.forEach(domain => dirtyDomains.add(domain));
             sendingDomains.clear();
-            revision = Number(payload.currentRevision || revision);
-            pauseForConflict();
+            await adoptLatestCloud();
             return;
         }
         if (!response.ok) throw createSyncError(payload.error || `HTTP ${response.status}`, response.status);
@@ -236,6 +272,32 @@ async function flushChanges() {
             scheduleSync(nextDelay);
         }
     }
+}
+
+// The cloud changed since our base revision. The cloud wins: load it and report which unsynced
+// domains were discarded. If loading fails, stay paused rather than uploading over the cloud.
+async function adoptLatestCloud() {
+    try {
+        const payload = await fetchCloudPayload();
+        replaceLocalWithCloud(payload, String(payload.user?.id || ''));
+    } catch (error) {
+        pauseForConflict();
+    }
+}
+
+function replaceLocalWithCloud(payload, userId) {
+    const discarded = [...new Set([...dirtyDomains, ...sendingDomains])];
+    remoteData = normalizeCloudData(payload.data);
+    remoteUpdatedAt = String(payload.updatedAt || '');
+    revision = Number(payload.revision || 0);
+    dirtyDomains.clear();
+    sendingDomains.clear();
+    applyRemoteData(remoteData);
+    paused = false;
+    ready = true;
+    persistSyncMeta({ connected: true, ...(userId ? { userId } : {}) });
+    emitStatus('synced');
+    if (discarded.length > 0) options.onRemoteReplaced?.({ discardedDomains: discarded });
 }
 
 function pauseForConflict() {

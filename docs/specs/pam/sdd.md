@@ -63,6 +63,7 @@ The current implementation covers account performance and account-scoped data ma
 - Manage current holdings bound to accounts.
 - Refresh supported A-share and fund prices through `/api/quotes`.
 - Generate previous-trading-day or current-day account snapshots from current holdings after preview and confirmation.
+- Automatically add a previous-trading-day snapshot every morning for holdings-valued accounts, without overwriting any existing snapshot.
 - Export and import all PAM local data as JSON backup files.
 - Hide displayed money amounts through a global header toggle.
 
@@ -164,7 +165,7 @@ UI direction:
 | Field | Meaning | Rule |
 | --- | --- | --- |
 | Date | Snapshot date | Required |
-| Total value | Manual account total value in account data; generated from holdings only through holdings management action for the previous trading day or current day. Previous-trading-day snapshots use the A-share close of the snapshot date and fund latest disclosed unit NAV; current-day snapshots use A-share latest price and fund latest disclosed unit NAV. | Required, must be greater than 0 for new snapshots |
+| Total value | Manual account total value in account data; generated from holdings through the holdings management action for the previous trading day or current day, or by the daily auto-snapshot job for the previous trading day. Previous-trading-day snapshots use the A-share close of the snapshot date and fund latest disclosed unit NAV; current-day snapshots use A-share latest price and fund latest disclosed unit NAV. | Required, must be greater than 0 for new snapshots |
 | Net flow | Net deposit or withdrawal between snapshots | Required, deposit is positive, withdrawal is negative, no cash flow is 0 |
 | Note | Optional user note | Optional |
 
@@ -335,6 +336,7 @@ pam/
    │     ├─ holdingsMetrics.js
    │     ├─ holdingsPanel.js
    │     ├─ quoteApi.js
+   │     ├─ snapshotValuation.js
    │     └─ storage.js
    └─ utils/
       └─ formatter.js
@@ -359,6 +361,11 @@ Preferences include selected account, selected period, highlighted comparison ac
 - Cloudflare Pages static hosting.
 
 Account performance data synchronizes through the session-authenticated `/api/pam/data` Pages Function. Username/password login is the default; a personal high-entropy access key remains the bootstrap and recovery path. Either successful method creates a D1-backed session in an HttpOnly cookie, and the server derives the row owner from that session. Holdings quote refresh and holdings-generated snapshots continue to use `/api/quotes` for supported A-share and fund prices.
+
+Daily auto snapshots run without a browser. A minimal Cron Worker (`workers/pam-auto-snapshot/`) calls the secret-protected `POST /api/pam/jobs/auto-snapshot` Pages Function at 07:30 and 09:30 Beijing time.
+- It applies to every active user's holdings-valued accounts: at least one A-share or fund holding with a symbol, and the latest snapshot was generated from holdings or by the job, or there is none yet. Purely manual accounts are skipped.
+- It only adds the snapshot for the previous trading day D, taken from the reference-fund NAV date. It skips any account that already has a snapshot on or after D, never updates or deletes a snapshot, and does not backfill missed days.
+- Auto snapshots store `source: 'auto'`, `netFlow: 0`, and an empty note; the snapshot table shows a localized "自动 / Auto" badge, and users edit the net flow afterwards when there was a deposit or withdrawal.
 
 ## 5. Acceptance Criteria
 
@@ -385,6 +392,7 @@ Account performance data synchronizes through the session-authenticated `/api/pa
 - JSON backup import validates and normalizes data, then replaces local PAM data only after confirmation.
 - Holdings quote refresh updates supported A-share and fund positions without blocking manual unsupported holdings.
 - Snapshot generation from holdings previews date, account count, total value, overwrite warnings, and quote fallback warnings before writing snapshots.
+- The daily job adds at most one `auto` snapshot per holdings-valued account and previous trading day, never overwrites or precedes an existing snapshot, and a tab left open overnight picks it up without a conflict prompt.
 - Unauthenticated users cannot load PAM business data, and changing users in one browser cannot expose the previous user's cache.
 
 ### Data Acceptance

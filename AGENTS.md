@@ -4,7 +4,8 @@
 
 - FinBox is a static ES-module app with Cloudflare Pages Functions; there is no root `package.json`, lockfile, CI workflow, or configured lint/test script in the repo.
 - Run locally with `npx wrangler pages dev .`, then open `/fundmonitor/` or `/pam/` from the URL Wrangler prints so `/api/*` Pages Functions are available.
-- `wrangler.toml` only sets `compatibility_date = "2026-07-29"`.
+- Root `wrangler.toml` sets `compatibility_date = "2026-07-29"` and the `PAM_DB` D1 binding (`migrations_dir = "migrations"`).
+- `workers/pam-auto-snapshot/` is a separate Cron Worker with its own `wrangler.toml`; it only POSTs to the PAM auto-snapshot endpoint and has no D1 binding or business logic.
 
 ## App Boundaries
 
@@ -12,7 +13,7 @@
 - Fund Monitor entrypoints: `fundmonitor/index.html`, `fundmonitor/css/main.css`, `fundmonitor/css/variables.css`, `fundmonitor/js/app.js`.
 - PAM entrypoints: `pam/index.html`, `pam/css/main.css`, `pam/css/variables.css`, `pam/js/app.js`.
 - VSIX entrypoints: `vsix/package.json`, `vsix/src/extension.ts`, `vsix/src/views/`, `vsix/src/services/`, `vsix/src/state/`, and `vsix/media/`.
-- Cloudflare Pages Functions live under `functions/api/`: `fundgz.js`, `fundnav.js`, and `quotes.js`.
+- Cloudflare Pages Functions live under `functions/api/`: `fundgz.js`, `fundnav.js`, `quotes.js`, and `pam/[[path]].js`. Underscore-prefixed files and folders (`functions/api/_lib/`, `functions/api/pam/_autoSnapshot.js`) are shared modules that Pages does not route.
 
 ## SDD Workflow
 
@@ -37,6 +38,8 @@
 - PAM storage wraps data as `{ schemaVersion: 1, data }` under `pam:v1:accounts`, `pam:v1:snapshots`, `pam:v1:holdings`, and `pam:v1:preferences`; preserve migration safety when changing shapes.
 - Account return calculations are cash-flow adjusted: net flows change shares at the previous unit NAV, and chart lines connect manual snapshots without smoothing.
 - Holdings quote refresh only supports `CN` and `Fund` markets through `/api/quotes`; cash and unsupported markets remain manually priced.
+- Snapshot `source` is omitted (manual), `holdings` (browser dialog), or `auto` (daily job). Valuation rules shared by the browser and the job live in `pam/js/modules/holdings/snapshotValuation.js`; keep it free of DOM, `state`, i18n, and local-timezone helpers because a Pages Function imports it.
+- Snapshot sync is full replace guarded by `revision`. Anything else that writes snapshots must bump `revision` the same way, or a stale browser will delete its rows. When the cloud revision has moved, the browser always loads the latest cloud data and discards its unsynced edits, telling the user when snapshots, holdings, or accounts were lost.
 - PAM imports ECharts from CDN in `pam/index.html`; handle ECharts absence without blocking account/holding management.
 
 ## VSIX Notes
@@ -54,7 +57,8 @@
 
 - `/api/fundgz` proxies Eastmoney fund comparison scripts. For `t=0` and more than 10 codes, it chunks requests by 10 and merges `fundinfo`; `t=1` stays a single request path.
 - `/api/fundnav` accepts up to 10 valid six-digit codes and returns `{ range, source, updatedAt, funds, failedCodes }` with cache headers.
-- `/api/quotes` accepts up to 40 `market:symbol` items and currently supports A-share `CN` and funds `Fund`.
+- `/api/quotes` accepts up to 40 `market:symbol` items and currently supports A-share `CN` and funds `Fund`. Fetching lives in `functions/api/_lib/quoteSources.js`.
+- `POST /api/pam/jobs/auto-snapshot` accepts only `Authorization: Bearer <PAM_JOB_SECRET>` (session cookies are ignored) and a `{ "phase": "early" | "final" }` body. Deploy Pages before the Worker: `npx wrangler deploy -c workers/pam-auto-snapshot/wrangler.toml`. See `docs/specs/pam/cloud-deployment.md`.
 
 ## Verification
 

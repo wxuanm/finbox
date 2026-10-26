@@ -99,7 +99,21 @@ Current checkpoint (2026-09-29):
 - [x] Apply and verify migration `0003_pam_password_auth.sql` in production.
 - [x] Deploy and verify Access-key bootstrap plus username/password login for the production administrator.
 
+## Phase 11: Daily Auto Snapshots
+
+- [x] Accept `source: 'auto'` in server snapshot validation and client normalization.
+- [x] When the cloud revision has moved (409, or a reload with pending edits), load the latest cloud data instead of prompting; warn when snapshots, holdings, or accounts were discarded.
+- [x] Refresh silently when a tab becomes visible with nothing pending, so tabs left open overnight pick up auto snapshots before the next edit.
+- [x] Extract shared valuation rules to `pam/js/modules/holdings/snapshotValuation.js` and quote fetching to `functions/api/_lib/quoteSources.js`.
+- [x] Add `POST /api/pam/jobs/auto-snapshot` (bearer secret) and the `workers/pam-auto-snapshot/` Cron Worker.
+- [x] Show a localized auto badge in the snapshot table.
+- [x] Verify locally: job rules on SQLite with the real migrations, sync conflict scenarios, endpoint auth and live-quote run through `wrangler pages dev`, Cron Worker `--test-scheduled`, and desktop/mobile snapshot table.
+- [ ] Production: set `PAM_JOB_SECRET` in Pages and the Worker, deploy Pages, then deploy the Worker with the real `PAM_JOB_URL`.
+- [ ] Confirm on the Cloudflare limits page that the free plan's Cron Trigger count and per-invocation subrequest limit cover this job.
+
 ## Recommended Future Hardening
+
+- [ ] Replace full-replace snapshot sync with a row diff and drop the redundant `idx_pam_snapshots_owner_account_date` index. Daily auto snapshots grow the table, and each full replace rewrites every snapshot row; with several accounts the 1 MB PATCH body limit is reached in a few years and heavy editing can approach the D1 free daily write quota.
 
 - [ ] Add lightweight automated checks for account metrics, import normalization, quote parsing, and holdings-generated snapshots.
 - [ ] Add optional CSV import/export for account snapshots if batch entry becomes important.

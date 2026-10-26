@@ -103,12 +103,52 @@ Redeploy the Pages project after these items exist:
 
 No Cloudflare Access Team Domain or Audience Tag is required for this design.
 
+## Daily Auto Snapshots
+
+The Cron Worker `workers/pam-auto-snapshot/` calls `POST /api/pam/jobs/auto-snapshot` at 07:30 (`early`) and 09:30 (`final`) Beijing time. All valuation and D1 writes run in the Pages Function; the Worker holds only the URL and the shared secret.
+
+Deploy in this order. No database migration is needed. The Pages release must go first, because an older server rejects `auto` snapshots and older clients would turn them into manual ones.
+
+1. Generate a random secret of at least 32 bytes and add it to the Pages project as the encrypted secret `PAM_JOB_SECRET`, then redeploy Pages.
+2. Set `PAM_JOB_URL` in `workers/pam-auto-snapshot/wrangler.toml` to the production `/api/pam/jobs/auto-snapshot` URL.
+3. Store the same secret for the Worker: `npx wrangler secret put PAM_JOB_SECRET -c workers/pam-auto-snapshot/wrangler.toml`.
+4. Deploy the Worker last: `npx wrangler deploy -c workers/pam-auto-snapshot/wrangler.toml`.
+
+Business-logic changes, including `functions/api/_lib/quoteSources.js` and `pam/js/modules/holdings/snapshotValuation.js`, ship with the Pages deployment only. Redeploy the Worker only when the schedule or `PAM_JOB_URL` changes.
+
+To rotate the secret, set the new value in both Pages and the Worker, then redeploy Pages. Runs between the two updates fail with `401` and write nothing.
+
+Trigger a run manually and inspect logs:
+
+```powershell
+curl.exe -X POST -H "Authorization: Bearer <PAM_JOB_SECRET>" -H "Content-Type: application/json" -d '{\"phase\":\"final\"}' https://<pages-domain>/api/pam/jobs/auto-snapshot
+npx wrangler tail finbox-pam-auto-snapshot
+```
+
+The response is a summary of counts and the resolved date D, with no amounts. `reason` is one of:
+- `ok`
+- `no-pending-accounts`
+- `deferred-to-final`
+- `no-valued-accounts`
+- `reference-date-unavailable`
+- `reference-date-out-of-range`
+
+Weekend and holiday runs normally return `no-pending-accounts`.
+
 ## Local Development
 
-Use an ignored `.dev.vars` file with a development-only pepper:
+Use an ignored `.dev.vars` file with a development-only pepper and job secret:
 
 ```text
 PAM_KEY_PEPPER=<development secret of at least 32 characters>
+PAM_JOB_SECRET=<development secret of at least 32 characters>
+```
+
+To exercise the Cron Worker locally against `wrangler pages dev`:
+
+```powershell
+npx wrangler dev -c workers/pam-auto-snapshot/wrangler.toml --test-scheduled --var PAM_JOB_URL:http://127.0.0.1:8788/api/pam/jobs/auto-snapshot --var PAM_JOB_SECRET:<same development secret>
+curl.exe "http://localhost:8787/__scheduled?cron=30+23+*+*+*"
 ```
 
 Never reuse the production pepper locally. Apply migrations and create a local-only user:
@@ -150,3 +190,5 @@ This protects against unauthenticated database reads and cross-user reads throug
 7. Concurrent edits produce a visible revision conflict instead of last-write-wins replacement.
 8. Logout revokes the server session, clears the cookie and local PAM cache, and returns to the login gate.
 9. Quote refresh and generated snapshots still work through `/api/quotes`.
+10. `/api/pam/jobs/auto-snapshot` returns `401` without the bearer secret, and a manual `final` run returns a summary with the expected D.
+11. After the first scheduled run, an open tab picks up the `auto` snapshot when it becomes visible.

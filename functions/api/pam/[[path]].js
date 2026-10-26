@@ -1,4 +1,7 @@
+import { runAutoSnapshot } from './_autoSnapshot.js';
+
 const MAX_BODY_BYTES = 1_000_000;
+const MIN_JOB_SECRET_LENGTH = 32;
 const MAX_AUTH_BODY_BYTES = 4_096;
 const SESSION_COOKIE = 'pam_session';
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
@@ -20,6 +23,7 @@ export async function onRequest(context) {
   if (path === 'auth/password' && request.method === 'POST') return setPassword(request, env);
   if (path === 'auth/logout' && request.method === 'POST') return logout(request, env.PAM_DB);
   if (path === 'auth/session' && request.method === 'GET') return getSession(request, env.PAM_DB);
+  if (path === 'jobs/auto-snapshot') return handleAutoSnapshotJob(request, env);
   if (path !== 'data') return jsonResponse({ error: 'Not found' }, 404);
 
   let identity;
@@ -35,6 +39,41 @@ export async function onRequest(context) {
     return saveData(request, env.PAM_DB, identity);
   }
   return jsonResponse({ error: 'Method not allowed' }, 405, { Allow: 'GET, PATCH' });
+}
+
+// Machine-to-machine endpoint for the Cron Worker. Bearer secret only: session cookies are ignored
+// so a logged-in browser can never trigger it cross-site.
+async function handleAutoSnapshotJob(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405, { ...noStoreHeaders(), Allow: 'POST' });
+  const secret = String(env.PAM_JOB_SECRET || '');
+  if (secret.length < MIN_JOB_SECRET_LENGTH) return jsonResponse({ error: 'Auto snapshot job is not configured' }, 503, noStoreHeaders());
+
+  const authorization = request.headers.get('Authorization') || '';
+  const provided = authorization.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : '';
+  if (!(await secretsMatch(provided, secret))) return jsonResponse({ error: 'Unauthorized' }, 401, noStoreHeaders());
+
+  let body;
+  try {
+    body = await readSmallJson(request);
+  } catch (error) {
+    return jsonResponse({ error: error.message }, error.status || 400, noStoreHeaders());
+  }
+  const phase = body?.phase;
+  if (phase !== 'early' && phase !== 'final') return jsonResponse({ error: 'Invalid phase' }, 400, noStoreHeaders());
+
+  try {
+    return jsonResponse(await runAutoSnapshot(env.PAM_DB, { phase }), 200, noStoreHeaders());
+  } catch (error) {
+    console.error('auto-snapshot failed', error?.message || error);
+    return jsonResponse({ error: 'Auto snapshot job failed' }, 500, noStoreHeaders());
+  }
+}
+
+// Compare fixed-length digests so the check takes the same time whatever the input.
+async function secretsMatch(provided, expected) {
+  if (!provided) return false;
+  const [left, right] = await Promise.all([sha256Base64Url(provided), sha256Base64Url(expected)]);
+  return timingSafeEqual(left, right);
 }
 
 async function loadData(db, identity) {
@@ -248,7 +287,7 @@ function isSnapshot(item) {
     && isFiniteNumber(item.totalValue, 0)
     && isFiniteNumber(item.netFlow)
     && isBoundedString(item.note, 500)
-    && (item.source === undefined || ['manual', 'holdings'].includes(item.source));
+    && (item.source === undefined || ['manual', 'holdings', 'auto'].includes(item.source));
 }
 
 function isHolding(item) {
