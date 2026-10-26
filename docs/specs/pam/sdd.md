@@ -164,7 +164,7 @@ UI direction:
 | Field | Meaning | Rule |
 | --- | --- | --- |
 | Date | Snapshot date | Required |
-| Total value | Manual account total value in account data; generated from holdings only through holdings management action for the previous trading day or current day. Previous-trading-day snapshots use A-share previous close and fund latest disclosed unit NAV; current-day snapshots use A-share latest price and fund latest disclosed unit NAV. | Required, must be greater than 0 for new snapshots |
+| Total value | Manual account total value in account data; generated from holdings only through holdings management action for the previous trading day or current day. Previous-trading-day snapshots use the A-share close of the snapshot date and fund latest disclosed unit NAV; current-day snapshots use A-share latest price and fund latest disclosed unit NAV. | Required, must be greater than 0 for new snapshots |
 | Net flow | Net deposit or withdrawal between snapshots | Required, deposit is positive, withdrawal is negative, no cash flow is 0 |
 | Note | Optional user note | Optional |
 

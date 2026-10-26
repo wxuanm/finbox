@@ -1743,7 +1743,7 @@ async function buildSnapshotValuation(dateOption) {
     let fallbackCount = 0;
     state.holdings.forEach(holding => {
         const quote = quoteByKey.get(`${holding.market}:${holding.symbol}`);
-        const valuationPrice = resolveSnapshotPrice(holding, quote, dateOption);
+        const valuationPrice = resolveSnapshotPrice(holding, quote, dateOption, dateResult.date);
         if (valuationPrice.price === null) return;
         priceByHoldingId.set(holding.id, valuationPrice.price);
         if (valuationPrice.isFallback) fallbackCount += 1;
@@ -1775,9 +1775,9 @@ function resolveSnapshotDate(dateOption, quoteByKey) {
     return { date: previousTradingDayKey(), source: 'local-previous-trading-day', isFallback: true };
 }
 
-function resolveSnapshotPrice(holding, quote, dateOption) {
+function resolveSnapshotPrice(holding, quote, dateOption, snapshotDate) {
     if (holding.market === 'CN') {
-        const quotePrice = dateOption === '1' ? Number(quote?.previousClose) : Number(quote?.latestPrice ?? quote?.previousClose);
+        const quotePrice = resolveAshareSnapshotPrice(quote, dateOption, snapshotDate);
         if (Number.isFinite(quotePrice) && quotePrice > 0) return { price: quotePrice, isFallback: false };
         return { price: manualHoldingPrice(holding), isFallback: true };
     }
@@ -1789,6 +1789,15 @@ function resolveSnapshotPrice(holding, quote, dateOption) {
     }
 
     return { price: manualHoldingPrice(holding), isFallback: true };
+}
+
+// Previous-trading-day snapshots value A-shares at the close of the snapshot date. When the latest
+// quote's trade date is the snapshot date (weekends, holidays), latestPrice is that close. Otherwise
+// previousClose is the close of the snapshot date.
+function resolveAshareSnapshotPrice(quote, dateOption, snapshotDate) {
+    if (dateOption !== '1') return Number(quote?.latestPrice ?? quote?.previousClose);
+    if (quote?.tradeDate && quote.tradeDate === snapshotDate) return Number(quote?.latestPrice);
+    return Number(quote?.previousClose);
 }
 
 function manualHoldingPrice(holding) {

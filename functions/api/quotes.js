@@ -153,6 +153,7 @@ function normalizeSinaAshareFields(item, fields) {
     changePct: previousClose ? (price - previousClose) / previousClose * 100 : null,
     currency: 'CNY',
     quoteTime: formatSinaTimestamp(fields[30], fields[31]),
+    tradeDate: normalizeDateKey(fields[30]) || null,
     source: 'sina'
   };
 }
@@ -174,6 +175,7 @@ function normalizeEastmoneyAshareRow(row, itemBySymbol) {
     changePct: toNumber(row.f3),
     currency: 'CNY',
     quoteTime: formatEastmoneyTimestamp(row.f124),
+    tradeDate: formatEastmoneyTradeDate(row.f124),
     source: 'eastmoney'
   };
 }
@@ -277,6 +279,13 @@ function formatEastmoneyTimestamp(value) {
   const seconds = Number(value);
   if (!Number.isFinite(seconds) || seconds <= 0) return new Date().toISOString();
   return new Date(seconds * 1000).toISOString();
+}
+
+// Trade date in China time (UTC+8), so late-evening quotes do not roll to the previous day.
+function formatEastmoneyTradeDate(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  return new Date((seconds + 8 * 3600) * 1000).toISOString().slice(0, 10);
 }
 
 function normalizeDateKey(value) {
