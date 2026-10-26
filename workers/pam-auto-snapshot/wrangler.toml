@@ -1,0 +1,19 @@
+# Cron trigger for PAM daily auto snapshots. This Worker holds no business logic and no D1 binding:
+# it only POSTs to the PAM Pages endpoint, which owns valuation and writes.
+name = "finbox-pam-auto-snapshot"
+main = "src/index.js"
+compatibility_date = "2026-07-29"
+workers_dev = false
+
+[observability]
+enabled = true
+
+# 23:30 UTC = 07:30 Beijing ("early"); 01:30 UTC = 09:30 Beijing ("final").
+[triggers]
+crons = ["30 23 * * *", "30 1 * * *"]
+
+[vars]
+# Production endpoint. For local testing, override with `--var PAM_JOB_URL:http://localhost:8788/api/pam/jobs/auto-snapshot`.
+PAM_JOB_URL = "https://finbox.pages.dev/api/pam/jobs/auto-snapshot"
+
+# Secret (not committed): npx wrangler secret put PAM_JOB_SECRET -c workers/pam-auto-snapshot/wrangler.toml
