@@ -18,6 +18,8 @@ const MAX_FUND_COMPARE_CODES = 10;
 const PICK_ICON_SELECTED = '$(check)';
 const PICK_ICON_PARTIAL = '$(dash)';
 const PICK_ICON_UNSELECTED = '$(circle-large-outline)';
+// VS Code's built-in collapse-all for the FUND view. It has no public API, so the command id is used directly.
+const NATIVE_COLLAPSE_ALL_FUND_GROUPS_COMMAND = 'workbench.actions.treeView.finbox.fund.collapseAll';
 
 type FundComparePickItem = vscode.QuickPickItem & { code?: string; groupName?: string; groupCodes?: string[] };
 
@@ -139,6 +141,11 @@ export function activate(context: vscode.ExtensionContext): void {
     const config = vscode.workspace.getConfiguration(STOCK_AUTO_REFRESH_CONFIG);
     if (!config.get<boolean>('tradingHoursOnly', true)) return true;
     return isAshareTradingWindow(new Date());
+  }
+
+  async function collapseAllGroups(): Promise<void> {
+    await vscode.commands.executeCommand(NATIVE_COLLAPSE_ALL_FUND_GROUPS_COMMAND);
+    treeProvider.setAllGroupsCollapsed(true);
   }
 
   async function openFinBoxSettings(settingId = '@ext:finx.finbox'): Promise<void> {
@@ -500,6 +507,10 @@ export function activate(context: vscode.ExtensionContext): void {
     settingsTreeView,
     vscode.commands.registerCommand('finbox.open', () => vscode.commands.executeCommand('workbench.view.extension.finbox')),
     vscode.commands.registerCommand('finbox.fund.refresh', () => refreshQuotes()),
+    vscode.commands.registerCommand('finbox.fund.expandAllGroups', () => treeProvider.expandAllGroups(fundTreeView)),
+    vscode.commands.registerCommand('finbox.fund.collapseAllGroups', () => collapseAllGroups()),
+    fundTreeView.onDidExpandElement(event => treeProvider.setGroupCollapsed(event.element, false)),
+    fundTreeView.onDidCollapseElement(event => treeProvider.setGroupCollapsed(event.element, true)),
     vscode.commands.registerCommand('finbox.stock.refresh', () => refreshStockQuotes()),
     vscode.commands.registerCommand('finbox.settings.open', (settingId?: string) => openFinBoxSettings(settingId)),
     vscode.commands.registerCommand('finbox.config.export', () => exportConfig()),

@@ -2,6 +2,11 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.6
+
+- Added a single fund-group toggle button to the FUND view title that collapses all groups while any group is expanded and expands them all once every group is collapsed; the button tracks manual expand and collapse of groups.
+- Reordered the FUND view title buttons to refresh, compare, new group, and then the group toggle.
+
 ## 0.1.5
 
 - Extended fund trend history to the current year plus the previous five full calendar years, and added a five-year period tab and `y5` option for `FinBox > Fund: Trend Default Period`; the chart zoom slider now covers the full fetched history.

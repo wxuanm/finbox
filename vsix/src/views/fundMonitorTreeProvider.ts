@@ -4,9 +4,14 @@ import { FundGroup, FundQuote } from '../types';
 
 export type FundMonitorTreeItem = FundGroupItem | FundItem | EmptyItem;
 
+const ALL_GROUPS_COLLAPSED_CONTEXT = 'finbox.fund.allGroupsCollapsed';
+
 export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMonitorTreeItem> {
   private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<FundMonitorTreeItem | undefined | null | void>();
   private refreshing = false;
+  private groupItems: FundGroupItem[] = [];
+  private collapsedGroupIds = new Set<string>();
+  private allGroupsCollapsed = false;
   readonly onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
 
   constructor(
@@ -30,6 +35,12 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
     return element;
   }
 
+  getParent(element: FundMonitorTreeItem): FundGroupItem | undefined {
+    if (!(element instanceof FundItem)) return undefined;
+    const groupId = this.store.snapshot().fundGroups[element.code] || 'default';
+    return this.groupItems.find(item => item.group.id === groupId);
+  }
+
   getChildren(element?: FundMonitorTreeItem): FundMonitorTreeItem[] {
     if (!element) {
       const snapshot = this.store.snapshot();
@@ -38,6 +49,8 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
       const groups = snapshot.groups
         .filter(group => group.id !== 'default' || snapshot.groups.length === 1 || this.store.getCodesForGroup('default').length > 0)
         .map(group => new FundGroupItem(group, this.store.getCodesForGroup(group.id).length, this.refreshing));
+      this.groupItems = groups;
+      this.syncCollapseState();
 
       return groups.length > 0 ? groups : [new EmptyItem(codes.length === 0 ? '还没有监控基金。' : '没有可显示的基金分组。')];
     }
@@ -49,6 +62,39 @@ export class FundMonitorTreeProvider implements vscode.TreeDataProvider<FundMoni
     }
 
     return [];
+  }
+
+  async expandAllGroups(treeView: vscode.TreeView<FundMonitorTreeItem>): Promise<void> {
+    // Reveal bottom-up so the view finishes scrolled to the first group.
+    for (const item of [...this.groupItems].reverse()) {
+      await treeView.reveal(item, { expand: true, select: false, focus: false });
+    }
+    this.setAllGroupsCollapsed(false);
+  }
+
+  setGroupCollapsed(item: FundMonitorTreeItem, collapsed: boolean): void {
+    if (!(item instanceof FundGroupItem)) return;
+    if (collapsed) {
+      this.collapsedGroupIds.add(item.group.id);
+    } else {
+      this.collapsedGroupIds.delete(item.group.id);
+    }
+    this.syncCollapseState();
+  }
+
+  setAllGroupsCollapsed(collapsed: boolean): void {
+    this.collapsedGroupIds = new Set(collapsed ? this.groupItems.map(item => item.group.id) : []);
+    this.syncCollapseState();
+  }
+
+  private syncCollapseState(): void {
+    const groupIds = this.groupItems.map(item => item.group.id);
+    this.collapsedGroupIds = new Set([...this.collapsedGroupIds].filter(id => groupIds.includes(id)));
+
+    const allGroupsCollapsed = groupIds.length > 0 && groupIds.every(id => this.collapsedGroupIds.has(id));
+    if (allGroupsCollapsed === this.allGroupsCollapsed) return;
+    this.allGroupsCollapsed = allGroupsCollapsed;
+    void vscode.commands.executeCommand('setContext', ALL_GROUPS_COLLAPSED_CONTEXT, allGroupsCollapsed);
   }
 
   dispose(): void {

@@ -125,7 +125,7 @@ FinBox VSIX
 
 The sidebar is optimized for compact monitoring and future expansion. The view title is `FINBOX`; product modules are grouped under root tree nodes `FUND`, `STOCK`, and `SETTINGS`.
 
-MVP fund actions are exposed from the `FUND` node context or inline menu instead of the view title bar, keeping the plugin title clean and leaving room for future product areas.
+MVP fund actions are exposed from the `FUND` node context or inline menu instead of the view title bar, keeping the plugin title clean and leaving room for future product areas. The `FUND` view title orders its actions by use: refresh, compare, new group, then one group toggle at the far end, matching where VS Code's native collapse-all sits: it shows collapse-all while any group is expanded and expand-all once every group is collapsed. The toggle drives VS Code's built-in FUND collapse-all command and tracks group expansion through TreeView events.
 
 Each fund row should show:
 

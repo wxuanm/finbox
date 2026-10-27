@@ -2,7 +2,7 @@
   "name": "finbox",
   "displayName": "FinBox",
   "description": "Monitor mutual fund estimates, fund trends, and A-share stock quotes inside VS Code.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "finx",
   "icon": "media/extension-icon.png",
   "license": "MIT",
@@ -59,14 +59,24 @@
           "group": "navigation@1"
         },
         {
-          "command": "finbox.fund.createGroup",
+          "command": "finbox.fund.openCompareTrend",
           "when": "view == finbox.fund",
           "group": "navigation@2"
         },
         {
-          "command": "finbox.fund.openCompareTrend",
+          "command": "finbox.fund.createGroup",
           "when": "view == finbox.fund",
           "group": "navigation@3"
+        },
+        {
+          "command": "finbox.fund.collapseAllGroups",
+          "when": "view == finbox.fund && !finbox.fund.allGroupsCollapsed",
+          "group": "navigation@4"
+        },
+        {
+          "command": "finbox.fund.expandAllGroups",
+          "when": "view == finbox.fund && finbox.fund.allGroupsCollapsed",
+          "group": "navigation@4"
         },
         {
           "command": "finbox.stock.refresh",
@@ -162,6 +172,16 @@
         "command": "finbox.fund.refresh",
         "title": "刷新基金",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "finbox.fund.collapseAllGroups",
+        "title": "折叠全部分组",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "finbox.fund.expandAllGroups",
+        "title": "展开全部分组",
+        "icon": "$(expand-all)"
       },
       {
         "command": "finbox.stock.refresh",
