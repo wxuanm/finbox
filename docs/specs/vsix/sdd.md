@@ -152,6 +152,8 @@ Stock input requires `sh`/`sz` prefixed symbols. Stock rows keep the user's add 
 
 Each stock tooltip should show stock identity, including the exchange-prefixed symbol, on the first line, then two-column metric rows for percentage change, price change, high, low, open, previous close, volume, and amount. Source and update time stay hidden from the tooltip.
 
+Price fields use two decimals for A-share stocks and three decimals for exchange-traded funds and LOFs, matching their 0.001 quote step. A symbol counts as a fund when its code is `sh501xxx`, `sh510xxx`–`sh518xxx`, `sh588xxx`, `sz159xxx`, or `sz16xxxx`, or when its quote name contains `ETF` or `LOF`. Percentage change keeps two decimals for all symbols.
+
 Clicking a stock row opens an editor webview with the stock's Eastmoney A-share trend page. The editor tab title uses `实时走势(<stock code>)`. The extension stores stock symbols as `sh`/`sz` prefixed codes and converts them to Eastmoney `mcid` values only when building the trend URL.
 
 A-share quote data is fetched in the extension host using the same source priority as `functions/api/quotes.js`: batched Sina quote data first, then batched Eastmoney quote data as fallback.

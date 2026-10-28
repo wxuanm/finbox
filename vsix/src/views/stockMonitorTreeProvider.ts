@@ -88,19 +88,21 @@ class StockEmptyItem extends vscode.TreeItem {
 }
 
 function buildStockLabel(symbol: string, quote: StockQuote | undefined, failed: boolean): string {
-  if (failed) return `失败    ${formatPriceColumn(null)}    ${symbol}[刷新失败]`;
-  if (!quote) return `--    ${formatPriceColumn(null)}    ${symbol}[等待刷新]`;
-  return `${formatChange(quote.changePct)}    ${formatPriceColumn(quote.price)}    [${quote.name || symbol}]`;
+  const decimals = getPriceDecimals(symbol, quote?.name);
+  if (failed) return `失败    ${formatPriceColumn(null, decimals)}    ${symbol}[刷新失败]`;
+  if (!quote) return `--    ${formatPriceColumn(null, decimals)}    ${symbol}[等待刷新]`;
+  return `${formatChange(quote.changePct)}    ${formatPriceColumn(quote.price, decimals)}    [${quote.name || symbol}]`;
 }
 
 function buildStockTooltip(symbol: string, quote: StockQuote | undefined, failed: boolean): string {
   if (failed) return `${symbol}\n行情刷新失败`;
   if (!quote) return `${symbol}\n等待刷新`;
+  const decimals = getPriceDecimals(symbol, quote.name);
   return [
     `${quote.name || symbol} (${symbol})`,
-    `涨幅: ${formatChange(quote.changePct)}    涨跌: ${formatSignedPrice(quote.changeAmount)}`,
-    `最高: ${formatPrice(quote.highPrice)}    最低: ${formatPrice(quote.lowPrice)}`,
-    `今开: ${formatPrice(quote.openPrice)}    昨收: ${formatPrice(quote.previousClose)}`,
+    `涨幅: ${formatChange(quote.changePct)}    涨跌: ${formatSignedPrice(quote.changeAmount, decimals)}`,
+    `最高: ${formatPrice(quote.highPrice, decimals)}    最低: ${formatPrice(quote.lowPrice, decimals)}`,
+    `今开: ${formatPrice(quote.openPrice, decimals)}    昨收: ${formatPrice(quote.previousClose, decimals)}`,
     `成交量: ${formatVolume(quote.volume)}    成交额: ${formatAmount(quote.amount)}`
   ].join('\n');
 }
@@ -134,19 +136,29 @@ function formatChange(value: number | null | undefined): string {
   return `${numericValue >= 0 ? '+' : ''}${numericValue.toFixed(2)}%`;
 }
 
-function formatPrice(value: number | null | undefined): string {
+// Exchange-traded funds and LOFs quote in 0.001 steps; A-share stocks quote in 0.01 steps.
+// Codes cover SSE LOFs (501), ETFs (510-518, 588) and SZ ETFs (159) and LOFs (16x); names catch the rest.
+const FUND_LIKE_SYMBOL_PATTERN = /^(sh(?:501|51[0-8]|588)\d{3}|sz(?:159\d{3}|16\d{4}))$/;
+const FUND_LIKE_NAME_PATTERN = /ETF|LOF/i;
+
+function getPriceDecimals(symbol: string, name?: string): number {
+  const fundLike = FUND_LIKE_SYMBOL_PATTERN.test(symbol.toLowerCase()) || FUND_LIKE_NAME_PATTERN.test(name ?? '');
+  return fundLike ? 3 : 2;
+}
+
+function formatPrice(value: number | null | undefined, decimals: number): string {
   if (!Number.isFinite(value)) return '--';
-  return (value as number).toFixed(2);
+  return (value as number).toFixed(decimals);
 }
 
-function formatPriceColumn(value: number | null | undefined): string {
-  return formatPrice(value).padEnd(7, ' ');
+function formatPriceColumn(value: number | null | undefined, decimals: number): string {
+  return formatPrice(value, decimals).padEnd(7, ' ');
 }
 
-function formatSignedPrice(value: number | null | undefined): string {
+function formatSignedPrice(value: number | null | undefined, decimals: number): string {
   if (!Number.isFinite(value)) return '--';
   const numericValue = value as number;
-  return `${numericValue >= 0 ? '+' : ''}${numericValue.toFixed(2)}`;
+  return `${numericValue >= 0 ? '+' : ''}${numericValue.toFixed(decimals)}`;
 }
 
 function formatVolume(value: number | null | undefined): string {
