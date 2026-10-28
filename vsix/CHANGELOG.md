@@ -2,6 +2,10 @@
 
 All notable user-visible changes to the FinBox VSIX are documented here.
 
+## 0.1.7
+
+- Changed stock prices for ETFs and LOFs to show three decimals, matching their 0.001 quote step, while A-share stocks keep two decimals. Funds are recognized by code range or by an `ETF` or `LOF` name.
+
 ## 0.1.6
 
 - Added a single fund-group toggle button to the FUND view title that collapses all groups while any group is expanded and expands them all once every group is collapsed; the button tracks manual expand and collapse of groups.
