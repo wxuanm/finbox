@@ -981,7 +981,7 @@ function formatChartTooltip(params) {
                 <span>${item.marker || ''}</span>
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${selected ? 'font-weight:800;' : ''}">${escapeHtml(item.data?.accountName || item.seriesName)}${dateNote}</span>
                 <span style="font-variant-numeric:tabular-nums;text-align:right;${selected ? 'font-weight:800;' : ''}">${formatPercent(Number(value))}</span>
-                <span style="font-variant-numeric:tabular-nums;text-align:right;opacity:0.72;font-size:11px;">${t('chartUnitNav')} ${formatNumber(item.data?.unitNav, 4)}</span>
+                <span style="font-variant-numeric:tabular-nums;text-align:right;opacity:0.72;font-size:11px;">${formatNumber(item.data?.unitNav, 4)}</span>
             </div>
         `;
     }).join('');
