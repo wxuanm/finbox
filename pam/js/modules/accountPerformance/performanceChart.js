@@ -1,6 +1,6 @@
 import { state, PERIODS } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
-import { escapeHtml, formatChartAxisPercent, formatPercent } from '../../utils/formatter.js';
+import { escapeHtml, formatChartAxisPercent, formatNumber, formatPercent } from '../../utils/formatter.js';
 import { withAlpha } from '../holdings/holdingsChartShared.js';
 
 let chartInstance = null;
@@ -264,7 +264,8 @@ function buildReturnSeries(points, baseUnitNav, accountName) {
     if (!Number.isFinite(baseUnitNav) || baseUnitNav <= 0) return [];
     return points.map(point => ({
         value: [point.date, (point.unitNav / baseUnitNav - 1) * 100],
-        accountName
+        accountName,
+        unitNav: point.unitNav
     }));
 }
 
@@ -976,10 +977,11 @@ function formatChartTooltip(params) {
             : '';
         const selected = item.data?.accountId === state.selectedHighlightAccountId;
         return `
-            <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;min-width:180px;line-height:1.35;">
+            <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center;min-width:240px;line-height:1.35;">
                 <span>${item.marker || ''}</span>
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${selected ? 'font-weight:800;' : ''}">${escapeHtml(item.data?.accountName || item.seriesName)}${dateNote}</span>
                 <span style="font-variant-numeric:tabular-nums;text-align:right;${selected ? 'font-weight:800;' : ''}">${formatPercent(Number(value))}</span>
+                <span style="font-variant-numeric:tabular-nums;text-align:right;opacity:0.72;font-size:11px;">${t('chartUnitNav')} ${formatNumber(item.data?.unitNav, 4)}</span>
             </div>
         `;
     }).join('');
