@@ -5919,15 +5919,25 @@ select,
 }
 
 /* Account trend: one account's curve or paged NAV list, mirroring the single-fund trend view. */
+/* Period and view switches stay together; when they no longer fit beside the title, the whole toolbar moves
+   to its own row instead of the view switch wrapping away from the period chips. */
+.account-trend-panel .split-head {
+    flex-wrap: wrap;
+}
+
+.account-trend-panel .split-head > div:first-child {
+    flex: 1 1 260px;
+}
+
 .account-trend-toolbar {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
-    margin: 12px 12px 0;
+    gap: 8px;
 }
 
 .account-trend-toolbar .account-trend-view-switch {
     flex-wrap: nowrap;
-    justify-content: flex-start;
     width: fit-content;
     margin: 0;
 }
@@ -5939,11 +5949,22 @@ select,
 .account-trend-chart {
     width: auto;
     height: 320px;
-    margin: 8px 12px 18px;
+    margin: 12px 12px 18px;
 }
 
 .account-trend-list {
     margin: 12px 12px 18px;
+}
+
+.account-trend-columns {
+    display: grid;
+    gap: 12px;
+}
+
+/* Two side-by-side columns, like the VSIX NAV list; the rows of a short right column stay top-aligned. */
+.account-trend-columns.two-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
 }
 
 .account-trend-table-wrap {
@@ -6033,7 +6054,17 @@ select,
         align-items: stretch;
     }
 
-    .account-trend-panel .period-switch:not(.account-trend-view-switch) {
+    .account-trend-panel .split-head > div:first-child {
+        flex: 0 0 auto;
+    }
+
+    .account-trend-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .account-trend-panel .account-trend-period-switch {
         flex-wrap: nowrap;
         justify-content: flex-start;
         overflow-x: auto;
@@ -6052,10 +6083,6 @@ select,
         font-size: 11px;
     }
 
-    .account-trend-toolbar {
-        margin: 10px 10px 0;
-    }
-
     /* Phones: the chart/list switch becomes a full-width segmented control, like the holdings view switch. */
     .account-trend-toolbar .account-trend-view-switch {
         display: grid;
@@ -6063,7 +6090,7 @@ select,
         width: 100%;
     }
 
-    .account-trend-toolbar .period-chip {
+    .account-trend-toolbar .account-trend-view-switch .period-chip {
         min-height: 34px;
         font-size: 12px;
     }

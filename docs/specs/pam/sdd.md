@@ -134,7 +134,7 @@ UI direction:
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 - Keep holdings focused on current positions, valuation, unrealized profit/loss, and portfolio weight.
 - Keep the `账户管理` layout mobile-first: account cards first, current account summary, dialog-based snapshot/holding forms, account trend, holdings detail, and asset records. On web, account cards support drag reordering and persist the user-defined order.
-- Show a single-account trend above holdings in `账户管理`, mirroring the VSIX single-fund trend: a `曲线` view plots the selected account's cash-flow-adjusted period return, and a `列表` view pages the snapshots (date, unit NAV, cumulative return, change since the previous snapshot). Its period chips share `selectedPeriod` with `账户收益`.
+- Show a single-account trend above holdings in `账户管理`, mirroring the VSIX single-fund trend: a `曲线` view plots the selected account's cash-flow-adjusted period return, and a `列表` view pages the snapshots (date, unit NAV, cumulative return, change since the previous snapshot) in two side-by-side columns on desktop and one column on phones. Its period chips share `selectedPeriod` with `账户收益`.
 
 ### Account Data Model
 

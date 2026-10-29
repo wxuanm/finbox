@@ -10,7 +10,9 @@ export const ACCOUNT_TREND_VIEWS = [
     ['list', 'accountTrendViewList']
 ];
 
-const LIST_PAGE_SIZE = 10;
+// Like the VSIX NAV list, a page holds two columns of rows side by side; phones show a single column.
+const LIST_COLUMN_SIZE = 10;
+const LIST_SINGLE_COLUMN_QUERY = '(max-width: 720px)';
 const CHART_MAX_VISIBLE_SYMBOLS = 24;
 const CHART_Y_AXIS_TARGET_SPLITS = 4;
 const CHART_NARROW_WIDTH = 520;
@@ -22,6 +24,9 @@ let chartInstance = null;
 let currentPage = 1;
 // Paging restarts whenever the account or period behind the list changes.
 let pageKey = '';
+// Columns rendered by the last list render, so crossing the phone breakpoint can re-page the list.
+let renderedColumnCount = 0;
+let listRerender = null;
 
 export function renderAccountTrend(metrics) {
     const panel = document.getElementById('accountTrendPanel');
@@ -43,6 +48,8 @@ export function renderAccountTrend(metrics) {
     const messageEl = document.getElementById('accountTrendMessage');
     if (!chartEl || !listEl || !messageEl) return;
 
+    renderedColumnCount = 0;
+    listRerender = null;
     if (!ready) {
         disposeChart();
         chartEl.hidden = true;
@@ -85,6 +92,11 @@ export function bindAccountTrend({ onPeriodChange, onViewChange, onPageChange })
 }
 
 export function resizeAccountTrendChart() {
+    if (renderedColumnCount && getListColumnCount() !== renderedColumnCount) {
+        // Keep the first visible row on screen when the page size changes.
+        currentPage = Math.floor((currentPage - 1) * renderedColumnCount / getListColumnCount()) + 1;
+        listRerender?.();
+    }
     if (!chartInstance || chartInstance.isDisposed()) return;
     chartInstance.resize();
 }
@@ -324,11 +336,34 @@ function renderList(listEl, metric, rows) {
         return;
     }
 
-    const pageCount = Math.max(1, Math.ceil(listRows.length / LIST_PAGE_SIZE));
+    const columnCount = getListColumnCount();
+    const pageSize = LIST_COLUMN_SIZE * columnCount;
+    const pageCount = Math.max(1, Math.ceil(listRows.length / pageSize));
     currentPage = Math.min(Math.max(currentPage, 1), pageCount);
-    const pageRows = listRows.slice((currentPage - 1) * LIST_PAGE_SIZE, currentPage * LIST_PAGE_SIZE);
+    const pageRows = listRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    renderedColumnCount = columnCount;
+    listRerender = () => renderList(listEl, metric, rows);
+
+    // Newest first down the left column, then continuing down the right column.
+    const half = Math.ceil(pageRows.length / columnCount);
+    const columns = columnCount > 1
+        ? [pageRows.slice(0, half), pageRows.slice(half)].filter(column => column.length > 0)
+        : [pageRows];
 
     listEl.innerHTML = `
+        <div class="account-trend-columns${columns.length > 1 ? ' two-columns' : ''}">
+            ${columns.map(renderListTable).join('')}
+        </div>
+        ${pageCount > 1 ? renderPager(pageCount, listRows.length) : ''}
+    `;
+}
+
+function getListColumnCount() {
+    return window.matchMedia?.(LIST_SINGLE_COLUMN_QUERY).matches ? 1 : 2;
+}
+
+function renderListTable(rows) {
+    return `
         <div class="account-trend-table-wrap">
             <table class="account-trend-table">
                 <thead>
@@ -340,7 +375,7 @@ function renderList(listEl, metric, rows) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${pageRows.map(row => `
+                    ${rows.map(row => `
                         <tr>
                             <td>${escapeHtml(row.date)}</td>
                             <td class="number-cell">${formatNumber(row.unitNav, 4)}</td>
@@ -351,7 +386,6 @@ function renderList(listEl, metric, rows) {
                 </tbody>
             </table>
         </div>
-        ${pageCount > 1 ? renderPager(pageCount, listRows.length) : ''}
     `;
 }
 
