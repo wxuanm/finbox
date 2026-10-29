@@ -2521,7 +2521,8 @@ select:focus {
 .performance-chart {
     /* auto, not 100%: the card has side margins and must not overflow the panel. */
     width: auto;
-    height: 430px;
+    /* Same plot height as the account trend chart (320px); the extra 80px holds the legend and zoom slider. */
+    height: 400px;
     padding: 0 12px 18px;
 }
 
@@ -4363,7 +4364,7 @@ select,
     }
 
     .performance-chart {
-        height: 360px;
+        height: 330px;
     }
 }
 
@@ -4646,8 +4647,8 @@ select,
 }
 
 .performance-chart {
-    margin: 0 16px 16px;
-    padding: 10px 10px 18px;
+    margin: 0 12px 18px;
+    padding: 10px 0 14px;
     border: 1px solid color-mix(in srgb, var(--primary-color) 10%, var(--border-color));
     border-radius: 20px;
     background:
@@ -4863,10 +4864,14 @@ select,
         padding: 16px 15px 12px;
     }
 
-    .performance-chart,
     .comparison-table-wrap,
     .management-panel .holding-table-wrap {
         margin: 10px 10px 14px;
+    }
+
+    .performance-chart {
+        margin: 6px 4px 14px;
+        padding: 8px 0 12px;
     }
 
     .chart-range-note {

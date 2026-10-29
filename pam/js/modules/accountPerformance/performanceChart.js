@@ -18,8 +18,8 @@ const MAX_DRAWDOWN_SERIES_NAME = '__max_drawdown__';
 const CHART_LINE_WIDTH = 2.4;
 const CHART_FOCUSED_LINE_WIDTH = 3.6;
 const CHART_BENCHMARK_LINE_WIDTH = 1.5;
-const CHART_GRID_LEFT = 24;
-const CHART_GRID_RIGHT = 70;
+const CHART_GRID_LEFT = 16;
+const CHART_GRID_RIGHT = 64;
 const CHART_GRID_HORIZONTAL_PADDING = CHART_GRID_LEFT + CHART_GRID_RIGHT;
 const CHART_Y_AXIS_TARGET_SPLITS = 5;
 const CHART_SERIES_HUE_COUNT = 6;
@@ -551,18 +551,13 @@ function rebaseChart() {
 
 function renderChartHints(chartParts = null) {
     const wrap = document.getElementById('chartHints');
-    const scale = document.getElementById('chartScaleHint');
     const sparse = document.getElementById('chartSparseHint');
-    if (!wrap || !scale || !sparse) return;
-    const showScale = Boolean(chartParts?.isVisibleRangeScaled);
+    if (!wrap || !sparse) return;
     const showSparse = Boolean(chartParts?.hasSparseSeries);
-    scale.hidden = !showScale;
     sparse.hidden = !showSparse;
-    const scaleText = t('chartAxisScaled');
     const sparseText = t('chartSparsePoints');
-    if (showScale && scale.textContent !== scaleText) scale.textContent = scaleText;
     if (showSparse && sparse.textContent !== sparseText) sparse.textContent = sparseText;
-    wrap.hidden = !showScale && !showSparse;
+    wrap.hidden = !showSparse;
 }
 
 function renderChartRangeNote() {
@@ -741,15 +736,11 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const maxDrawdownSeries = (maxDrawdownMetric && isAccountVisible(maxDrawdownMetric)
         && buildAccountMaxDrawdownSeries(maxDrawdownMetric, context, zoomBounds, yAxisBounds, theme))
         || buildEmptyMaxDrawdownSeries();
-    const extent = getPerformanceTimeExtent(context.metrics);
-    const isVisibleRangeScaled = Boolean(extent && zoomBounds
-        && (zoomBounds.startTime > extent.startTime + DAY_MS || zoomBounds.endTime < extent.endTime - DAY_MS));
     return {
         accountSeries,
         legendData: [...accountSeries.map(series => series.name), BENCHMARK_SERIES_ID],
         yAxisBounds,
         hasSparseSeries,
-        isVisibleRangeScaled,
         // Fewer date ticks on phones so day labels do not run together.
         xAxisDensity: (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH ? { splitNumber: 4 } : { splitNumber: 8 },
         ariaDescription: buildChartAriaDescription(context.metrics, visibleAccountSeries, zoomBounds),

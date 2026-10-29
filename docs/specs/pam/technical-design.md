@@ -215,7 +215,7 @@ The performance chart uses ECharts from CDN.
 - A user zoom stores an absolute custom window (`customZoomWindow`) that clears the active chip and shows `#chartRangeNote`; it is reapplied on every re-render until a period chip or `#chartRangeReset` clears it, or until it no longer overlaps the data.
 - The chart instance is reused across renders (`setOption` with `replaceMerge: ['series']`) instead of being disposed, so unrelated re-renders do not reset zoom or flash. Series have stable ids; legend visibility is kept per account name and excluded accounts are left out of the y-axis range and drawdown.
 - ECharts `aria` is enabled with a generated description of the visible window and each visible account's latest return.
-- The return axis range is calculated from the current visible window and snapped to compact, evenly spaced ticks on a 1-2-5 sequence with a `0.2%` minimum step. The snapped bounds provide natural margin without an additional padding interval, and `#chartScaleHint` states when the y-axis follows a partial visible window. Narrow charts (under 520px) request fewer date ticks.
+- The return axis range is calculated from the current visible window and snapped to compact, evenly spaced ticks on a 1-2-5 sequence with a `0.2%` minimum step. The snapped bounds provide natural margin without an additional padding interval; no separate hint is shown when the y-axis follows a partial visible window. Narrow charts (under 520px) request fewer date ticks.
 - Period chips update chart and metrics together.
 - If ECharts is unavailable, show an inline warning without blocking account management.
 
