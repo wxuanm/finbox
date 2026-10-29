@@ -111,6 +111,12 @@ Current checkpoint (2026-09-29):
 - [ ] Production: set `PAM_JOB_SECRET` in Pages and the Worker, deploy Pages, then deploy the Worker with the real `PAM_JOB_URL`.
 - [ ] Confirm on the Cloudflare limits page that the free plan's Cron Trigger count and per-invocation subrequest limit cover this job.
 
+## Phase 12: Account Trend
+
+- [x] Add a single-account trend panel to `账户管理` with a chart/list switch modeled on the VSIX single-fund trend.
+- [x] Share period chips with `账户收益` and persist `accountTrendView` in preferences, import/export, and cloud sync.
+- [x] Verify through `wrangler pages dev` with a local D1 user: chart and list render, paging, period sync, view persistence across reload, analysis-view round trip, 390px mobile layout without horizontal overflow, dark theme, and English.
+
 ## Recommended Future Hardening
 
 - [ ] Replace full-replace snapshot sync with a row diff and drop the redundant `idx_pam_snapshots_owner_account_date` index. Daily auto snapshots grow the table, and each full replace rewrites every snapshot row; with several accounts the 1 MB PATCH body limit is reached in a few years and heavy editing can approach the D1 free daily write quota.

@@ -5917,3 +5917,177 @@ select,
     display: inline-flex;
     flex: 0 0 auto;
 }
+
+/* Account trend: one account's curve or paged NAV list, mirroring the single-fund trend view. */
+.account-trend-toolbar {
+    display: flex;
+    align-items: center;
+    margin: 12px 12px 0;
+}
+
+.account-trend-toolbar .account-trend-view-switch {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: fit-content;
+    margin: 0;
+}
+
+.account-trend-panel .chart-message {
+    margin-bottom: 18px;
+}
+
+.account-trend-chart {
+    width: auto;
+    height: 320px;
+    margin: 8px 12px 18px;
+}
+
+.account-trend-list {
+    margin: 12px 12px 18px;
+}
+
+.account-trend-table-wrap {
+    overflow-x: auto;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
+    border-radius: 18px;
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-sm);
+}
+
+.account-trend-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.account-trend-table th,
+.account-trend-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.account-trend-table th {
+    color: var(--muted-text);
+    background: var(--surface-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.account-trend-table td {
+    color: var(--text-color);
+}
+
+.account-trend-table td.positive {
+    color: var(--positive-color);
+}
+
+.account-trend-table td.negative {
+    color: var(--negative-color);
+}
+
+.account-trend-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.account-trend-table tbody tr:hover td {
+    background: var(--primary-soft);
+}
+
+.account-trend-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    padding: 12px 2px 0;
+    color: var(--muted-text);
+    font-size: 12px;
+}
+
+.account-trend-pager-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.account-trend-page.active,
+.account-trend-page.active:disabled {
+    color: #ffffff;
+    border-color: transparent;
+    background: var(--primary-color);
+    opacity: 1;
+}
+
+.account-trend-pager-gap {
+    padding: 0 2px;
+}
+
+@media (max-width: 720px) {
+    .account-trend-panel .split-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .account-trend-panel .period-switch:not(.account-trend-view-switch) {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .account-trend-panel .period-switch::-webkit-scrollbar {
+        display: none;
+    }
+
+    .account-trend-panel .period-chip {
+        flex: 0 0 auto;
+        min-height: 30px;
+        padding-right: 8px;
+        padding-left: 8px;
+        font-size: 11px;
+    }
+
+    .account-trend-toolbar {
+        margin: 10px 10px 0;
+    }
+
+    /* Phones: the chart/list switch becomes a full-width segmented control, like the holdings view switch. */
+    .account-trend-toolbar .account-trend-view-switch {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .account-trend-toolbar .period-chip {
+        min-height: 34px;
+        font-size: 12px;
+    }
+
+    .account-trend-chart {
+        height: 260px;
+        margin: 6px 4px 14px;
+    }
+
+    .account-trend-list {
+        margin: 10px 10px 14px;
+    }
+
+    .account-trend-table th,
+    .account-trend-table td {
+        padding: 9px 10px;
+    }
+
+    .account-trend-pager {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .account-trend-pager-actions {
+        justify-content: center;
+    }
+}

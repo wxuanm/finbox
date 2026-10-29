@@ -121,7 +121,7 @@ PAM
 ├─ Header: product name, description, demo/import/export, amount privacy, language toggle, theme toggle
 ├─ Unified module navigation: 账户收益 / 账户管理 / future modules
 ├─ 账户收益: overview cards, performance chart, sortable account comparison table
-└─ 账户管理: account cards, context action menu, snapshot/holding/generate dialogs, holdings table, asset records, add-account dialog
+└─ 账户管理: account cards, context action menu, snapshot/holding/generate dialogs, account trend (chart/list), holdings table, asset records, add-account dialog
 ```
 
 UI direction:
@@ -133,7 +133,8 @@ UI direction:
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 - Keep holdings focused on current positions, valuation, unrealized profit/loss, and portfolio weight.
-- Keep the `账户管理` layout mobile-first: account cards first, current account summary, dialog-based snapshot/holding forms, holdings detail, and asset records. On web, account cards support drag reordering and persist the user-defined order.
+- Keep the `账户管理` layout mobile-first: account cards first, current account summary, dialog-based snapshot/holding forms, account trend, holdings detail, and asset records. On web, account cards support drag reordering and persist the user-defined order.
+- Show a single-account trend above holdings in `账户管理`, mirroring the VSIX single-fund trend: a `曲线` view plots the selected account's cash-flow-adjusted period return, and a `列表` view pages the snapshots (date, unit NAV, cumulative return, change since the previous snapshot). Its period chips share `selectedPeriod` with `账户收益`.
 
 ### Account Data Model
 

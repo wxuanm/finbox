@@ -11,6 +11,7 @@ export const state = {
     holdingSortKey: 'marketValue',
     holdingSortOrder: -1,
     holdingView: 'table',
+    accountTrendView: 'chart',
     editingHoldingId: '',
     editingSnapshotId: '',
     activeView: 'analysis',

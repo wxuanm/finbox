@@ -9,6 +9,7 @@ import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, rese
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
+import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
 import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
 import { HOLDING_VIEWS, bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
@@ -108,6 +109,7 @@ async function initializeWorkspace(user) {
     state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
     state.holdingSortOrder = preferences.holdingSortOrder || state.holdingSortOrder;
     state.holdingView = normalizeHoldingView(preferences.holdingView);
+    state.accountTrendView = normalizeAccountTrendView(preferences.accountTrendView);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
 
     applyTheme(state.theme);
@@ -448,6 +450,15 @@ function bindEvents() {
         renderApp();
     }
 
+    bindAccountTrend({
+        onPeriodChange: period => {
+            state.selectedPeriod = period;
+            persistPreferences();
+            renderApp();
+        },
+        onViewChange: switchAccountTrendView,
+        onPageChange: renderApp
+    });
     bindSnapshotTable({
         onEdit: editSnapshot,
         onDelete: deleteSnapshot
@@ -469,6 +480,7 @@ function bindEvents() {
     });
     window.addEventListener('resize', resizeChart, { passive: true });
     window.addEventListener('resize', resizeHoldingChart, { passive: true });
+    window.addEventListener('resize', resizeAccountTrendChart, { passive: true });
     window.addEventListener('resize', keepAccountFloatingActionsInView, { passive: true });
 }
 
@@ -612,6 +624,7 @@ function renderApp() {
     renderPeriodSwitch();
     renderPerformanceChart(metrics);
     renderAccountComparison(metrics);
+    renderAccountTrend(metrics);
     renderSnapshotTable();
     renderHoldingsPanel(holdingsMetrics);
     renderCloudSyncStatus();
@@ -654,6 +667,7 @@ function switchView(view) {
     requestAnimationFrame(() => {
         resizeChart();
         resizeHoldingChart();
+        resizeAccountTrendChart();
     });
 }
 
@@ -669,6 +683,16 @@ const LEGACY_HOLDING_VIEWS = { treemap: 'allocation' };
 function normalizeHoldingView(view) {
     const key = LEGACY_HOLDING_VIEWS[view] || view;
     return HOLDING_VIEWS.some(([viewKey]) => viewKey === key) ? key : 'table';
+}
+
+function switchAccountTrendView(view) {
+    state.accountTrendView = normalizeAccountTrendView(view);
+    persistPreferences();
+    renderApp();
+}
+
+function normalizeAccountTrendView(view) {
+    return ACCOUNT_TREND_VIEWS.some(([viewKey]) => viewKey === view) ? view : 'chart';
 }
 
 function openSnapshotForAccount(accountId) {
@@ -1122,6 +1146,7 @@ function exportData() {
                 holdingSortKey: state.holdingSortKey,
                 holdingSortOrder: state.holdingSortOrder,
                 holdingView: state.holdingView,
+                accountTrendView: state.accountTrendView,
                 currentLang: state.currentLang
             }
         }
@@ -1193,6 +1218,7 @@ function applyImportedData(data) {
     state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
     state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
     state.holdingView = normalizeHoldingView(data.preferences.holdingView);
+    state.accountTrendView = normalizeAccountTrendView(data.preferences.accountTrendView);
     state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';
@@ -1875,6 +1901,7 @@ function getCurrentPreferences() {
         holdingSortKey: state.holdingSortKey,
         holdingSortOrder: state.holdingSortOrder,
         holdingView: state.holdingView,
+        accountTrendView: state.accountTrendView,
         currentLang: state.currentLang
     };
 }
@@ -1906,6 +1933,7 @@ function applyCloudData(data) {
     state.holdingSortKey = preferences.holdingSortKey || 'marketValue';
     state.holdingSortOrder = Number(preferences.holdingSortOrder) || -1;
     state.holdingView = normalizeHoldingView(preferences.holdingView);
+    state.accountTrendView = normalizeAccountTrendView(preferences.accountTrendView);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';

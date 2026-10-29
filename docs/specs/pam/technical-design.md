@@ -64,6 +64,7 @@ Daily auto snapshots are produced by `POST /api/pam/jobs/auto-snapshot`, impleme
   holdingSortKey: 'marketValue',
   holdingSortOrder: -1,
   holdingView: 'table',
+  accountTrendView: 'chart',
   comparisonSortKey: 'periodReturn',
   comparisonSortOrder: -1,
   editingHoldingId: '',
@@ -100,7 +101,7 @@ Username/password is the default daily login. Access keys use `pam_<key-id>_<sec
 
 The browser groups local writes by domain and debounces synchronization. An HTTP `409 revision_conflict` pauses synchronization and requires an explicit user decision; cloud data never silently overwrites pending local changes.
 
-`pam:v1:preferences` stores selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, holdings view (`table`, `allocation`, or `contribution`; the retired `treemap` maps to `allocation`, and other invalid values, including the removed `bubble`, fall back to `table`), theme, and language. `currentLang` supports `zh` and `en`; missing or invalid values fall back to `zh`.
+`pam:v1:preferences` stores selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, holdings view (`table`, `allocation`, or `contribution`; the retired `treemap` maps to `allocation`, and other invalid values, including the removed `bubble`, fall back to `table`), account trend view (`chart` or `list`; invalid values fall back to `chart`), theme, and language. `currentLang` supports `zh` and `en`; missing or invalid values fall back to `zh`.
 
 ## Data Rules
 
@@ -185,7 +186,7 @@ calmarRatio = annualizedReturn / abs(maxDrawdown)
 3. Load ECharts only after authentication, then load state from storage.
 4. Initialize theme and language.
 5. Render account list and snapshot form.
-6. Calculate metrics and render overview cards, chart, account comparison table, holdings views, and snapshot table.
+6. Calculate metrics and render overview cards, chart, account comparison table, account trend, holdings views, and snapshot table.
 7. Keep the snapshot table account switch synchronized with the selected account.
 8. Bind global actions and initialize D1 synchronization.
 9. Persist user preferences after view, period, privacy, sort, language, theme, and account-selection changes.
@@ -216,6 +217,16 @@ The performance chart uses ECharts from CDN.
 - The return axis range is calculated from the current visible window and snapped to compact, evenly spaced ticks on a 1-2-5 sequence with a `0.2%` minimum step. The snapped bounds provide natural margin without an additional padding interval, and `#chartScaleHint` states when the y-axis follows a partial visible window. Narrow charts (under 520px) request fewer date ticks.
 - Period chips update chart and metrics together.
 - If ECharts is unavailable, show an inline warning without blocking account management.
+
+### Account Trend
+
+`accountPerformance/accountTrend.js` renders `#accountTrendPanel` in `账户管理` for `state.selectedAccountId`, following the VSIX single-fund trend's chart/list switch.
+
+- Rows come from `metric.periodPoints`, so the period anchor matches the overview cards and comparison table. Period return is `unitNav / anchor.unitNav - 1`; change compares each snapshot's unit NAV with the previous snapshot in the full series (the first snapshot has none).
+- `chart` draws one straight-segment line with a light area fill, a right-side return axis that always includes 0% (same 1-2-5 tick snapping as the performance chart), and low/high/latest marks. The latest label opens to the left of the point; low/high labels are dropped when they equal the latest value, sit at 0%, or are within 72px of the latest point. The tooltip shows period return, unit NAV, change, and masked-aware total assets. It has no zoom, benchmark, or drawdown overlay.
+- `list` shows newest-first rows of date, unit NAV (4 decimals), cumulative return, and change, 10 per page with first/prev/numbered/next/last controls. A pre-period anchor snapshot is a baseline only and is left out of the list. Paging resets when the account or period changes.
+- Period chips write the shared `state.selectedPeriod`. The view switch is hidden when the account has fewer than two valid snapshots; the panel then shows the metric error instead.
+- The chart is created only when its container has a width, so it is disposed while `账户管理` is hidden and recreated on return. Without ECharts the chart view shows `chartLibraryFailed`; the list view still works.
 
 ## UI/UX Refinements
 

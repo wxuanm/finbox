@@ -22,6 +22,7 @@ export function toggleTheme() {
         holdingSortKey: state.holdingSortKey,
         holdingSortOrder: state.holdingSortOrder,
         holdingView: state.holdingView,
+        accountTrendView: state.accountTrendView,
         currentLang: state.currentLang
     });
 }
