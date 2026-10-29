@@ -2519,10 +2519,10 @@ select:focus {
 }
 
 .performance-chart {
-    /* auto, not 100%: the card has side margins and must not overflow the panel. */
+    /* Spans the full panel width; ECharts' grid insets keep the plot off the panel edges. */
     width: auto;
-    /* Same plot height as the account trend chart (320px); the extra 80px holds the legend and zoom slider. */
-    height: 400px;
+    /* Same plot height as the account trend chart (320px); the extra 50px holds the legend and zoom slider. */
+    height: 370px;
     padding: 0 12px 18px;
 }
 
@@ -4364,7 +4364,7 @@ select,
     }
 
     .performance-chart {
-        height: 330px;
+        height: 310px;
     }
 }
 
@@ -4647,15 +4647,9 @@ select,
 }
 
 .performance-chart {
-    margin: 0 12px 18px;
-    padding: 10px 0 14px;
-    border: 1px solid color-mix(in srgb, var(--primary-color) 10%, var(--border-color));
-    border-radius: 20px;
-    background:
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 34%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.38), transparent 40%),
-        var(--surface-color);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+    /* Drawn straight on the panel, not as a nested card. */
+    margin: 10px 0 12px;
+    padding: 0;
 }
 
 .chart-range-note {
@@ -4813,7 +4807,6 @@ select,
 [data-theme="dark"] .overview-grid,
 [data-theme="dark"] .account-card-strip-panel,
 [data-theme="dark"] .management-panel,
-[data-theme="dark"] .performance-chart,
 [data-theme="dark"] .account-form.compact-account-form,
 [data-theme="dark"] .empty-state,
 [data-theme="dark"] .preview-empty {
@@ -4870,8 +4863,7 @@ select,
     }
 
     .performance-chart {
-        margin: 6px 4px 14px;
-        padding: 8px 0 12px;
+        margin: 6px 0 10px;
     }
 
     .chart-range-note {
