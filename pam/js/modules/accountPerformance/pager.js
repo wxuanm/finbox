@@ -2,6 +2,27 @@ import { t } from '../../config/i18n.js';
 import { escapeHtml } from '../../utils/formatter.js';
 
 // Shared by the paged lists in 账户管理. Buttons carry data-page; each list handles the click and re-renders.
+// Like the VSIX NAV list, desktop lists pair two records per table row; phones show one record per row.
+export const LIST_SINGLE_COLUMN_QUERY = '(max-width: 720px)';
+// Cell class that draws the divider between the left and right halves of a paired row.
+export const LIST_HALF_START_CLASS = 'list-half-start';
+
+export function getListColumnCount(singleColumnQuery = LIST_SINGLE_COLUMN_QUERY) {
+    return window.matchMedia?.(singleColumnQuery).matches ? 1 : 2;
+}
+
+// Newest first down the left half, then continuing down the right half; a short right half leaves a blank cell.
+export function pairRows(rows, columnCount) {
+    if (columnCount < 2) return rows.map(row => [row]);
+    const half = Math.ceil(rows.length / 2);
+    return rows.slice(0, half).map((row, index) => [row, rows[half + index]]);
+}
+
+// Keeps the first visible row on screen when the page size changes, e.g. across the phone breakpoint.
+export function keepFirstRowPage(page, fromPageSize, toPageSize) {
+    return Math.floor((page - 1) * fromPageSize / toPageSize) + 1;
+}
+
 export function getPageCount(rowCount, pageSize) {
     return Math.max(1, Math.ceil(rowCount / pageSize));
 }

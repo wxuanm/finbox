@@ -3,7 +3,7 @@ import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatChartAxisPercent, formatCurrency, formatNumber, formatPercent, signedClass } from '../../utils/formatter.js';
 import { withAlpha } from '../holdings/holdingsChartShared.js';
 import { getPeriodStartDate } from './metrics.js';
-import { clampPage, getPageCount, renderPager } from './pager.js';
+import { LIST_HALF_START_CLASS, clampPage, getListColumnCount, getPageCount, keepFirstRowPage, pairRows, renderPager } from './pager.js';
 
 // Mirrors the single-fund trend view in the VSIX: the same period drives a return curve or a paged NAV list.
 export const ACCOUNT_TREND_VIEWS = [
@@ -11,9 +11,8 @@ export const ACCOUNT_TREND_VIEWS = [
     ['list', 'accountTrendViewList']
 ];
 
-// Like the VSIX NAV list, a page holds two columns of rows side by side; phones show a single column.
+// Rows per column; a desktop page pairs two columns in one table, like the VSIX NAV list.
 const LIST_COLUMN_SIZE = 10;
-const LIST_SINGLE_COLUMN_QUERY = '(max-width: 720px)';
 const CHART_MAX_VISIBLE_SYMBOLS = 24;
 const CHART_Y_AXIS_TARGET_SPLITS = 4;
 const CHART_NARROW_WIDTH = 520;
@@ -94,8 +93,7 @@ export function bindAccountTrend({ onPeriodChange, onViewChange, onPageChange })
 
 export function resizeAccountTrendChart() {
     if (renderedColumnCount && getListColumnCount() !== renderedColumnCount) {
-        // Keep the first visible row on screen when the page size changes.
-        currentPage = Math.floor((currentPage - 1) * renderedColumnCount / getListColumnCount()) + 1;
+        currentPage = keepFirstRowPage(currentPage, renderedColumnCount, getListColumnCount());
         listRerender?.();
     }
     if (!chartInstance || chartInstance.isDisposed()) return;
@@ -345,48 +343,41 @@ function renderList(listEl, metric, rows) {
     renderedColumnCount = columnCount;
     listRerender = () => renderList(listEl, metric, rows);
 
-    // Newest first down the left column, then continuing down the right column.
-    const half = Math.ceil(pageRows.length / columnCount);
-    const columns = columnCount > 1
-        ? [pageRows.slice(0, half), pageRows.slice(half)].filter(column => column.length > 0)
-        : [pageRows];
-
     listEl.innerHTML = `
-        <div class="account-trend-columns${columns.length > 1 ? ' two-columns' : ''}">
-            ${columns.map(renderListTable).join('')}
-        </div>
-        ${pageCount > 1 ? renderPager(currentPage, pageCount, listRows.length) : ''}
-    `;
-}
-
-function getListColumnCount() {
-    return window.matchMedia?.(LIST_SINGLE_COLUMN_QUERY).matches ? 1 : 2;
-}
-
-function renderListTable(rows) {
-    return `
         <div class="account-trend-table-wrap">
             <table class="account-trend-table">
                 <thead>
-                    <tr>
-                        <th>${t('date')}</th>
-                        <th class="number-cell">${t('unitNav')}</th>
-                        <th class="number-cell">${t('cumulativeReturn')}</th>
-                        <th class="number-cell" title="${escapeHtml(t('snapshotChangeHint'))}">${t('snapshotChange')}</th>
-                    </tr>
+                    <tr>${renderListHeader(false)}${columnCount > 1 ? renderListHeader(true) : ''}</tr>
                 </thead>
                 <tbody>
-                    ${rows.map(row => `
+                    ${pairRows(pageRows, columnCount).map(([left, right]) => `
                         <tr>
-                            <td>${escapeHtml(row.date)}</td>
-                            <td class="number-cell">${formatNumber(row.unitNav, 4)}</td>
-                            <td class="number-cell ${signedClass(row.returnPct)}">${formatPercent(row.returnPct)}</td>
-                            <td class="number-cell ${signedClass(row.change)}">${formatPercent(row.change)}</td>
+                            ${renderListCells(left, false)}
+                            ${columnCount > 1 ? (right ? renderListCells(right, true) : `<td class="${LIST_HALF_START_CLASS}" colspan="4"></td>`) : ''}
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
         </div>
+        ${pageCount > 1 ? renderPager(currentPage, pageCount, listRows.length) : ''}
+    `;
+}
+
+function renderListHeader(halfStart) {
+    return `
+        <th${halfStart ? ` class="${LIST_HALF_START_CLASS}"` : ''}>${t('date')}</th>
+        <th class="number-cell">${t('unitNav')}</th>
+        <th class="number-cell">${t('cumulativeReturn')}</th>
+        <th class="number-cell" title="${escapeHtml(t('snapshotChangeHint'))}">${t('snapshotChange')}</th>
+    `;
+}
+
+function renderListCells(row, halfStart) {
+    return `
+        <td${halfStart ? ` class="${LIST_HALF_START_CLASS}"` : ''}>${escapeHtml(row.date)}</td>
+        <td class="number-cell">${formatNumber(row.unitNav, 4)}</td>
+        <td class="number-cell ${signedClass(row.returnPct)}">${formatPercent(row.returnPct)}</td>
+        <td class="number-cell ${signedClass(row.change)}">${formatPercent(row.change)}</td>
     `;
 }
 

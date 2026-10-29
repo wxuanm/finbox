@@ -118,6 +118,7 @@ Current checkpoint (2026-09-29):
 - [x] Verify through `wrangler pages dev` with a local D1 user: chart and list render, paging, period sync, view persistence across reload, analysis-view round trip, 390px mobile layout without horizontal overflow, dark theme, and English.
 - [x] Page the 资产记录 snapshot table 10 per page with the trend list pager (moved to shared `pager.js`), replacing the 5-row preview and 查看全部 toggle.
 - [x] Show 资产记录 on phones as one compact paged table (note column hidden) instead of per-record cards; verified at 390px and 360px without horizontal scroll.
+- [x] Pair two records per row in one divided table for the trend list and, from 1080px, the 资产记录 table, like the VSIX NAV list.
 
 ## Recommended Future Hardening
 

@@ -1,10 +1,15 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency } from '../../utils/formatter.js';
-import { clampPage, getPageCount, renderPager } from './pager.js';
+import { LIST_HALF_START_CLASS, clampPage, getListColumnCount, getPageCount, keepFirstRowPage, pairRows, renderPager } from './pager.js';
 
-const SNAPSHOT_PAGE_SIZE = 10;
+// Rows per column; a desktop page pairs two columns in one table, like the account trend list.
+const SNAPSHOT_COLUMN_SIZE = 10;
+// Two records with their action buttons need about 950px, so the table pairs rows only on wider screens.
+const SNAPSHOT_SINGLE_COLUMN_QUERY = '(max-width: 1079px)';
 let currentPage = 1;
+// Columns rendered by the last render, so crossing the phone breakpoint can re-page the table.
+let renderedColumnCount = 0;
 // Paging restarts when the account behind the table changes; edits and deletes keep the current page.
 let pageAccountId = '';
 
@@ -13,6 +18,7 @@ export function renderSnapshotTable() {
     const context = document.getElementById('snapshotTableContext');
     if (!wrap) return;
 
+    renderedColumnCount = 0;
     if (state.accounts.length === 0) {
         if (context) context.textContent = t('noViewableAccount');
         wrap.innerHTML = `<div class="empty-state">${t('noAccounts')}</div>`;
@@ -38,39 +44,60 @@ export function renderSnapshotTable() {
         return;
     }
 
-    const pageCount = getPageCount(rows.length, SNAPSHOT_PAGE_SIZE);
+    const columnCount = getListColumnCount(SNAPSHOT_SINGLE_COLUMN_QUERY);
+    const pageSize = SNAPSHOT_COLUMN_SIZE * columnCount;
+    const pageCount = getPageCount(rows.length, pageSize);
     currentPage = clampPage(currentPage, pageCount);
-    const visibleRows = rows.slice((currentPage - 1) * SNAPSHOT_PAGE_SIZE, currentPage * SNAPSHOT_PAGE_SIZE);
+    const visibleRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    renderedColumnCount = columnCount;
 
     wrap.innerHTML = `
-        <table class="snapshot-table">
+        <table class="snapshot-table${columnCount > 1 ? ' two-columns' : ''}">
             <thead>
-                <tr>
-                    <th>${t('date')}</th>
-                    <th class="number-cell">${t('totalAssets')}</th>
-                    <th class="number-cell">${t('netFlow')}</th>
-                    <th>${t('note')}</th>
-                    <th>${t('actions')}</th>
-                </tr>
+                <tr>${renderHeader(false)}${columnCount > 1 ? renderHeader(true) : ''}</tr>
             </thead>
             <tbody>
-                ${visibleRows.map(row => `
+                ${pairRows(visibleRows, columnCount).map(([left, right]) => `
                     <tr>
-                        <td>${row.date}${renderSourceBadge(row)}</td>
-                        <td class="number-cell">${formatCurrency(row.totalValue, state.amountsHidden)}</td>
-                        <td class="number-cell">${formatCurrency(row.netFlow, state.amountsHidden)}</td>
-                        <td>${escapeHtml(row.note || '-')}</td>
-                        <td>
-                            <div class="row-actions">
-                                <button class="mini-btn icon-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button>
-                                <button class="mini-btn icon-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button>
-                            </div>
-                        </td>
+                        ${renderCells(left, false)}
+                        ${columnCount > 1 ? (right ? renderCells(right, true) : `<td class="${LIST_HALF_START_CLASS}" colspan="5"></td>`) : ''}
                     </tr>
                 `).join('')}
             </tbody>
         </table>
         ${pageCount > 1 ? `<div class="snapshot-table-footer">${renderPager(currentPage, pageCount, rows.length)}</div>` : ''}
+    `;
+}
+
+export function resizeSnapshotTable() {
+    const columnCount = getListColumnCount(SNAPSHOT_SINGLE_COLUMN_QUERY);
+    if (!renderedColumnCount || columnCount === renderedColumnCount) return;
+    currentPage = keepFirstRowPage(currentPage, renderedColumnCount, columnCount);
+    renderSnapshotTable();
+}
+
+function renderHeader(halfStart) {
+    return `
+        <th class="snapshot-date-cell${halfStart ? ` ${LIST_HALF_START_CLASS}` : ''}">${t('date')}</th>
+        <th class="snapshot-value-cell number-cell">${t('totalAssets')}</th>
+        <th class="snapshot-value-cell number-cell">${t('netFlow')}</th>
+        <th class="snapshot-note-cell">${t('note')}</th>
+        <th class="snapshot-actions-cell">${t('actions')}</th>
+    `;
+}
+
+function renderCells(row, halfStart) {
+    return `
+        <td class="snapshot-date-cell${halfStart ? ` ${LIST_HALF_START_CLASS}` : ''}">${row.date}${renderSourceBadge(row)}</td>
+        <td class="snapshot-value-cell number-cell">${formatCurrency(row.totalValue, state.amountsHidden)}</td>
+        <td class="snapshot-value-cell number-cell">${formatCurrency(row.netFlow, state.amountsHidden)}</td>
+        <td class="snapshot-note-cell" title="${escapeHtml(row.note || '')}">${escapeHtml(row.note || '-')}</td>
+        <td class="snapshot-actions-cell">
+            <div class="row-actions">
+                <button class="mini-btn icon-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button>
+                <button class="mini-btn icon-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button>
+            </div>
+        </td>
     `;
 }
 

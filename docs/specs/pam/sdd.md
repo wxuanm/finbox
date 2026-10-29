@@ -134,7 +134,7 @@ UI direction:
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 - Keep holdings focused on current positions, valuation, unrealized profit/loss, and portfolio weight.
 - Keep the `账户管理` layout mobile-first: account cards first, current account summary, dialog-based snapshot/holding forms, account trend, holdings detail, and asset records. On web, account cards support drag reordering and persist the user-defined order.
-- Show a single-account trend above holdings in `账户管理`, mirroring the VSIX single-fund trend: a `曲线` view plots the selected account's cash-flow-adjusted period return, and a `列表` view pages the snapshots (date, unit NAV, cumulative return, change since the previous snapshot) in two side-by-side columns on desktop and one column on phones. Its period chips share `selectedPeriod` with `账户收益`.
+- Show a single-account trend above holdings in `账户管理`, mirroring the VSIX single-fund trend: a `曲线` view plots the selected account's cash-flow-adjusted period return, and a `列表` view pages the snapshots (date, unit NAV, cumulative return, change since the previous snapshot) as one table that pairs two snapshots per row on desktop, split by a divider like the VSIX NAV list, and one snapshot per row on phones. Its period chips share `selectedPeriod` with `账户收益`.
 
 ### Account Data Model
 
@@ -379,7 +379,7 @@ Daily auto snapshots run without a browser. A minimal Cron Worker (`workers/pam-
 - Deleting an account requires confirmation and removes its snapshots.
 - Users can add, edit, and delete snapshots.
 - Historical snapshots can be switched by account inside the snapshot table panel.
-- The snapshot table pages newest-first records, 10 per page, with the same pager as the account trend list. Phones keep it as one compact single-column table (date, total assets, net flow, actions; the note stays in the edit dialog) instead of per-record cards.
+- The snapshot table pages newest-first records with the same pager as the account trend list. Wide screens pair two records per row in one table, split by a divider (20 per page); narrower screens show one record per row (10 per page). Phones keep it as one compact single-column table (date, total assets, net flow, actions; the note stays in the edit dialog) instead of per-record cards.
 - Same-account same-date entries update the existing snapshot only after confirmation.
 - Accounts and snapshots persist after page refresh.
 - Two or more valid snapshots generate a performance curve.

@@ -8,7 +8,7 @@ import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from '.
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
-import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
+import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
 import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
@@ -481,6 +481,7 @@ function bindEvents() {
     window.addEventListener('resize', resizeChart, { passive: true });
     window.addEventListener('resize', resizeHoldingChart, { passive: true });
     window.addEventListener('resize', resizeAccountTrendChart, { passive: true });
+    window.addEventListener('resize', resizeSnapshotTable, { passive: true });
     window.addEventListener('resize', keepAccountFloatingActionsInView, { passive: true });
 }
 

@@ -2720,24 +2720,44 @@ select:focus {
 
 .holding-table th:last-child,
 .holding-table td:last-child,
-.snapshot-table th:last-child,
-.snapshot-table td:last-child {
+.snapshot-table .snapshot-actions-cell {
     width: 94px;
 }
 
-.snapshot-table th:nth-child(2),
-.snapshot-table td:nth-child(2) {
+.snapshot-table .snapshot-date-cell {
+    width: 22%;
+}
+
+.snapshot-table .snapshot-value-cell {
     width: 18%;
 }
 
-.snapshot-table th:nth-child(3),
-.snapshot-table td:nth-child(3) {
-    width: 16%;
+/* Two records per row: both halves get the same fixed widths, and the note takes what is left in each half. */
+.snapshot-table.two-columns th,
+.snapshot-table.two-columns td {
+    white-space: nowrap;
 }
 
-.snapshot-table th:nth-child(4),
-.snapshot-table td:nth-child(4) {
-    width: 30%;
+.snapshot-table.two-columns .snapshot-date-cell {
+    width: 150px;
+}
+
+.snapshot-table.two-columns .snapshot-value-cell {
+    width: 108px;
+}
+
+.snapshot-table.two-columns .snapshot-note-cell {
+    width: auto;
+}
+
+.snapshot-table.two-columns .snapshot-actions-cell {
+    width: 96px;
+}
+
+.snapshot-table .snapshot-note-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .holding-table th:last-child {
@@ -2746,23 +2766,13 @@ select:focus {
 
 .holding-table th:last-child,
 .holding-table td:last-child,
-.snapshot-table th:last-child,
-.snapshot-table td:last-child {
+.snapshot-table .snapshot-actions-cell {
     text-align: right;
 }
 
 .holding-table th:nth-child(n+2),
-.holding-table td:nth-child(n+2),
-.snapshot-table th:nth-child(2),
-.snapshot-table td:nth-child(2),
-.snapshot-table th:nth-child(3),
-.snapshot-table td:nth-child(3) {
+.holding-table td:nth-child(n+2) {
     text-align: right;
-}
-
-.snapshot-table th:nth-child(4),
-.snapshot-table td:nth-child(4) {
-    text-align: left;
 }
 
 .comparison-table th button {
@@ -2795,8 +2805,7 @@ select:focus {
     white-space: nowrap;
 }
 
-.snapshot-table th:first-child,
-.snapshot-table td:first-child,
+.snapshot-table .snapshot-date-cell,
 .holding-table th:first-child,
 .holding-table td:first-child {
     overflow: hidden;
@@ -5692,17 +5701,6 @@ select,
     margin: 12px 12px 18px;
 }
 
-.account-trend-columns {
-    display: grid;
-    gap: 12px;
-}
-
-/* Two side-by-side columns, like the VSIX NAV list; the rows of a short right column stay top-aligned. */
-.account-trend-columns.two-columns {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-}
-
 .account-trend-table-wrap {
     overflow-x: auto;
     border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
@@ -5752,6 +5750,40 @@ select,
 
 .account-trend-table tbody tr:hover td {
     background: var(--primary-soft);
+}
+
+/* Below this width two records no longer fit with their notes; the note stays in the edit dialog. */
+@media (max-width: 1100px) {
+    .snapshot-table.two-columns .snapshot-note-cell {
+        display: none;
+    }
+
+    .snapshot-table.two-columns th,
+    .snapshot-table.two-columns td {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+
+    /* Without the note each half splits into date, two amounts, and the fixed-width actions. */
+    .snapshot-table.two-columns .snapshot-date-cell {
+        width: 15%;
+    }
+
+    .snapshot-table.two-columns .snapshot-value-cell {
+        width: 12%;
+    }
+
+    .account-trend-table th,
+    .account-trend-table td {
+        padding-right: 9px;
+        padding-left: 9px;
+    }
+}
+
+/* The right half of a paired list row starts after a divider, like the VSIX NAV list. */
+.account-trend-table .list-half-start,
+.snapshot-table .list-half-start {
+    border-left: 2px solid color-mix(in srgb, var(--primary-color) 38%, var(--border-color));
 }
 
 .list-pager {
@@ -5871,18 +5903,15 @@ select,
         white-space: nowrap;
     }
 
-    .snapshot-table th:nth-child(4),
-    .snapshot-table td:nth-child(4) {
+    .snapshot-table .snapshot-note-cell {
         display: none;
     }
 
-    .snapshot-table th:first-child,
-    .snapshot-table td:first-child {
+    .snapshot-table .snapshot-date-cell {
         padding-left: 10px;
     }
 
-    .snapshot-table th:last-child,
-    .snapshot-table td:last-child {
+    .snapshot-table .snapshot-actions-cell {
         padding-right: 8px;
     }
 
@@ -5929,13 +5958,11 @@ select,
         padding-left: 3px;
     }
 
-    .snapshot-table th:first-child,
-    .snapshot-table td:first-child {
+    .snapshot-table .snapshot-date-cell {
         padding-left: 8px;
     }
 
-    .snapshot-table th:last-child,
-    .snapshot-table td:last-child {
+    .snapshot-table .snapshot-actions-cell {
         padding-right: 6px;
     }
 
