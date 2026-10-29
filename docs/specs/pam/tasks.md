@@ -116,6 +116,8 @@ Current checkpoint (2026-09-29):
 - [x] Add a single-account trend panel to `账户管理` with a chart/list switch modeled on the VSIX single-fund trend.
 - [x] Share period chips with `账户收益` and persist `accountTrendView` in preferences, import/export, and cloud sync.
 - [x] Verify through `wrangler pages dev` with a local D1 user: chart and list render, paging, period sync, view persistence across reload, analysis-view round trip, 390px mobile layout without horizontal overflow, dark theme, and English.
+- [x] Page the 资产记录 snapshot table 10 per page with the trend list pager (moved to shared `pager.js`), replacing the 5-row preview and 查看全部 toggle.
+- [x] Show 资产记录 on phones as one compact paged table (note column hidden) instead of per-record cards; verified at 390px and 360px without horizontal scroll.
 
 ## Recommended Future Hardening
 

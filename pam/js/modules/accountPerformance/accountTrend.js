@@ -3,6 +3,7 @@ import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatChartAxisPercent, formatCurrency, formatNumber, formatPercent, signedClass } from '../../utils/formatter.js';
 import { withAlpha } from '../holdings/holdingsChartShared.js';
 import { getPeriodStartDate } from './metrics.js';
+import { clampPage, getPageCount, renderPager } from './pager.js';
 
 // Mirrors the single-fund trend view in the VSIX: the same period drives a return curve or a paged NAV list.
 export const ACCOUNT_TREND_VIEWS = [
@@ -338,8 +339,8 @@ function renderList(listEl, metric, rows) {
 
     const columnCount = getListColumnCount();
     const pageSize = LIST_COLUMN_SIZE * columnCount;
-    const pageCount = Math.max(1, Math.ceil(listRows.length / pageSize));
-    currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+    const pageCount = getPageCount(listRows.length, pageSize);
+    currentPage = clampPage(currentPage, pageCount);
     const pageRows = listRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     renderedColumnCount = columnCount;
     listRerender = () => renderList(listEl, metric, rows);
@@ -354,7 +355,7 @@ function renderList(listEl, metric, rows) {
         <div class="account-trend-columns${columns.length > 1 ? ' two-columns' : ''}">
             ${columns.map(renderListTable).join('')}
         </div>
-        ${pageCount > 1 ? renderPager(pageCount, listRows.length) : ''}
+        ${pageCount > 1 ? renderPager(currentPage, pageCount, listRows.length) : ''}
     `;
 }
 
@@ -387,42 +388,6 @@ function renderListTable(rows) {
             </table>
         </div>
     `;
-}
-
-function renderPager(pageCount, rowCount) {
-    const button = (page, label, disabled, extraClass = '') => `
-        <button class="mini-btn account-trend-page${extraClass}" type="button" data-page="${page}"${disabled ? ' disabled' : ''}>${label}</button>
-    `;
-    return `
-        <div class="account-trend-pager">
-            <span>${escapeHtml(t('pagerSummary', { page: currentPage, pages: pageCount, count: rowCount }))}</span>
-            <div class="account-trend-pager-actions">
-                ${button(1, t('pagerFirst'), currentPage <= 1)}
-                ${button(currentPage - 1, t('pagerPrev'), currentPage <= 1)}
-                ${buildPageNumbers(pageCount).map(page => page === null
-                    ? '<span class="account-trend-pager-gap">...</span>'
-                    : button(page, page, page === currentPage, page === currentPage ? ' active' : '')).join('')}
-                ${button(currentPage + 1, t('pagerNext'), currentPage >= pageCount)}
-                ${button(pageCount, t('pagerLast'), currentPage >= pageCount)}
-            </div>
-        </div>
-    `;
-}
-
-// First, last, and two pages either side of the current one; null marks a gap.
-function buildPageNumbers(pageCount) {
-    const pages = new Set([1, pageCount]);
-    for (let page = currentPage - 2; page <= currentPage + 2; page += 1) {
-        if (page >= 1 && page <= pageCount) pages.add(page);
-    }
-    const result = [];
-    let previous = 0;
-    [...pages].sort((a, b) => a - b).forEach(page => {
-        if (page - previous > 1) result.push(null);
-        result.push(page);
-        previous = page;
-    });
-    return result;
 }
 
 function parseDate(date) {

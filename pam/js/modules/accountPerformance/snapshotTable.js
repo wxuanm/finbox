@@ -1,9 +1,12 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency } from '../../utils/formatter.js';
+import { clampPage, getPageCount, renderPager } from './pager.js';
 
-const DEFAULT_SNAPSHOT_LIMIT = 5;
-let showAllSnapshots = false;
+const SNAPSHOT_PAGE_SIZE = 10;
+let currentPage = 1;
+// Paging restarts when the account behind the table changes; edits and deletes keep the current page.
+let pageAccountId = '';
 
 export function renderSnapshotTable() {
     const wrap = document.getElementById('snapshotTable');
@@ -17,6 +20,10 @@ export function renderSnapshotTable() {
     }
 
     const accountId = state.selectedAccountId || state.accounts[0]?.id;
+    if (accountId !== pageAccountId) {
+        pageAccountId = accountId;
+        currentPage = 1;
+    }
     const account = state.accounts.find(item => item.id === accountId);
     const rows = state.snapshots
         .filter(snapshot => snapshot.accountId === accountId)
@@ -31,8 +38,9 @@ export function renderSnapshotTable() {
         return;
     }
 
-    const visibleRows = showAllSnapshots ? rows : rows.slice(0, DEFAULT_SNAPSHOT_LIMIT);
-    const hiddenCount = Math.max(rows.length - visibleRows.length, 0);
+    const pageCount = getPageCount(rows.length, SNAPSHOT_PAGE_SIZE);
+    currentPage = clampPage(currentPage, pageCount);
+    const visibleRows = rows.slice((currentPage - 1) * SNAPSHOT_PAGE_SIZE, currentPage * SNAPSHOT_PAGE_SIZE);
 
     wrap.innerHTML = `
         <table class="snapshot-table">
@@ -48,7 +56,7 @@ export function renderSnapshotTable() {
             <tbody>
                 ${visibleRows.map(row => `
                     <tr>
-                        <td><span class="snapshot-date-text">${row.date}${renderSourceBadge(row)}</span>${renderSnapshotMobileCard(row)}</td>
+                        <td>${row.date}${renderSourceBadge(row)}</td>
                         <td class="number-cell">${formatCurrency(row.totalValue, state.amountsHidden)}</td>
                         <td class="number-cell">${formatCurrency(row.netFlow, state.amountsHidden)}</td>
                         <td>${escapeHtml(row.note || '-')}</td>
@@ -62,44 +70,7 @@ export function renderSnapshotTable() {
                 `).join('')}
             </tbody>
         </table>
-        ${rows.length > DEFAULT_SNAPSHOT_LIMIT ? `
-            <div class="snapshot-table-footer">
-                <button class="mini-btn snapshot-toggle-btn" type="button" data-action="toggle-snapshots">
-                    ${showAllSnapshots ? t('collapse') : t('viewAllCount', { count: rows.length })}
-                </button>
-            </div>
-        ` : ''}
-    `;
-}
-
-function renderSnapshotMobileCard(row) {
-    return `
-        <div class="snapshot-mobile-card">
-            <div class="snapshot-mobile-card-head">
-                <div>
-                    <span>${t('date')}</span>
-                    <strong>${row.date}${renderSourceBadge(row)}</strong>
-                </div>
-            </div>
-            <div class="snapshot-mobile-details">
-                <div>
-                    <span>${t('totalAssets')}</span>
-                    <strong>${formatCurrency(row.totalValue, state.amountsHidden)}</strong>
-                </div>
-                <div>
-                    <span>${t('netFlow')}</span>
-                    <strong>${formatCurrency(row.netFlow, state.amountsHidden)}</strong>
-                </div>
-                <div>
-                    <span>${t('note')}</span>
-                    <strong>${escapeHtml(row.note || '-')}</strong>
-                </div>
-            </div>
-            <div class="snapshot-mobile-actions">
-                <button class="mini-btn icon-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button>
-                <button class="mini-btn icon-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button>
-            </div>
-        </div>
+        ${pageCount > 1 ? `<div class="snapshot-table-footer">${renderPager(currentPage, pageCount, rows.length)}</div>` : ''}
     `;
 }
 
@@ -113,13 +84,15 @@ export function bindSnapshotTable({ onEdit, onDelete }) {
     const wrap = document.getElementById('snapshotTable');
     if (!wrap) return;
     wrap.addEventListener('click', event => {
-        const target = event.target.closest('[data-action]');
-        if (!target) return;
-        if (target.dataset.action === 'toggle-snapshots') {
-            showAllSnapshots = !showAllSnapshots;
+        const pageButton = event.target.closest('[data-page]');
+        if (pageButton) {
+            if (pageButton.disabled) return;
+            currentPage = Number(pageButton.dataset.page) || 1;
             renderSnapshotTable();
             return;
         }
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
         if (target.dataset.action === 'edit-snapshot') onEdit(target.dataset.snapshotId);
         if (target.dataset.action === 'delete-snapshot') onDelete(target.dataset.snapshotId);
     });

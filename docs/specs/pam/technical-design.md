@@ -32,6 +32,7 @@ pam/
    │  │  ├─ performanceChart.js
    │  │  ├─ metricsPanel.js
    │  │  ├─ snapshotTable.js
+   │  │  ├─ pager.js
    │  │  ├─ metrics.js
    │  │  └─ storage.js
    │  └─ holdings/
@@ -187,7 +188,7 @@ calmarRatio = annualizedReturn / abs(maxDrawdown)
 4. Initialize theme and language.
 5. Render account list and snapshot form.
 6. Calculate metrics and render overview cards, chart, account comparison table, account trend, holdings views, and snapshot table.
-7. Keep the snapshot table account switch synchronized with the selected account.
+7. Keep the snapshot table account switch synchronized with the selected account. The table pages newest-first snapshots 10 per page with the shared `pager.js` controls on desktop and phones; paging resets when the selected account changes and otherwise keeps the current page (clamped) across edits and deletes. Below 720px the table stays a single compact table like the trend list: the note column is hidden, cells use auto widths with 28px action buttons, and below 400px the font, padding, and buttons shrink again so 360px phones need no horizontal scroll.
 8. Bind global actions and initialize D1 synchronization.
 9. Persist user preferences after view, period, privacy, sort, language, theme, and account-selection changes.
 
@@ -224,7 +225,7 @@ The performance chart uses ECharts from CDN.
 
 - Rows come from `metric.periodPoints`, so the period anchor matches the overview cards and comparison table. Period return is `unitNav / anchor.unitNav - 1`; change compares each snapshot's unit NAV with the previous snapshot in the full series (the first snapshot has none).
 - `chart` draws one straight-segment line with a light area fill, a right-side return axis that always includes 0% (same 1-2-5 tick snapping as the performance chart), and low/high/latest marks. The latest label opens to the left of the point; low/high labels are dropped when they equal the latest value, sit at 0%, or are within 72px of the latest point. The tooltip shows period return, unit NAV, change, and masked-aware total assets. It has no zoom, benchmark, or drawdown overlay.
-- `list` shows newest-first rows of date, unit NAV (4 decimals), cumulative return, and change, 20 per page in two side-by-side tables like the VSIX NAV list: the left column holds the first half of the page and the right column continues with the rest. Below 720px it is a single table with 10 rows per page; crossing that breakpoint re-pages the list so the first visible row stays on screen. Pages have first/prev/numbered/next/last controls. A pre-period anchor snapshot is a baseline only and is left out of the list. Paging resets when the account or period changes.
+- `list` shows newest-first rows of date, unit NAV (4 decimals), cumulative return, and change, 20 per page in two side-by-side tables like the VSIX NAV list: the left column holds the first half of the page and the right column continues with the rest. Below 720px it is a single table with 10 rows per page; crossing that breakpoint re-pages the list so the first visible row stays on screen. Pages have first/prev/numbered/next/last controls from the shared `pager.js`. A pre-period anchor snapshot is a baseline only and is left out of the list. Paging resets when the account or period changes.
 - The period chips and the chart/list switch share one toolbar in the panel header, period first. On desktop it sits beside the title; when it no longer fits there the whole toolbar moves to its own row, and below 720px the period chips and a full-width chart/list segmented control stack under the title.
 - Period chips write the shared `state.selectedPeriod`. The view switch is hidden when the account has fewer than two valid snapshots; the panel then shows the metric error instead.
 - The chart is created only when its container has a width, so it is disposed while `账户管理` is hidden and recreated on return. Without ECharts the chart view shows `chartLibraryFailed`; the list view still works.

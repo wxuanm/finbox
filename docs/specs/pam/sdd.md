@@ -331,6 +331,7 @@ pam/
    │  │  ├─ performanceChart.js
    │  │  ├─ metricsPanel.js
    │  │  ├─ snapshotTable.js
+   │  │  ├─ pager.js
    │  │  ├─ metrics.js
    │  │  └─ storage.js
    │  └─ holdings/
@@ -378,6 +379,7 @@ Daily auto snapshots run without a browser. A minimal Cron Worker (`workers/pam-
 - Deleting an account requires confirmation and removes its snapshots.
 - Users can add, edit, and delete snapshots.
 - Historical snapshots can be switched by account inside the snapshot table panel.
+- The snapshot table pages newest-first records, 10 per page, with the same pager as the account trend list. Phones keep it as one compact single-column table (date, total assets, net flow, actions; the note stays in the edit dialog) instead of per-record cards.
 - Same-account same-date entries update the existing snapshot only after confirmation.
 - Accounts and snapshots persist after page refresh.
 - Two or more valid snapshots generate a performance curve.

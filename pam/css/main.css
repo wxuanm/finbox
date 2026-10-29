@@ -2946,10 +2946,6 @@ select:focus {
     display: none;
 }
 
-.snapshot-mobile-card {
-    display: none;
-}
-
 .comparison-row,
 .comparison-account-heading,
 .comparison-account-cell {
@@ -3026,10 +3022,9 @@ select:focus {
     font-size: 12px;
 }
 
-.snapshot-toggle-btn {
-    color: var(--primary-color);
-    border-color: color-mix(in srgb, var(--primary-color) 32%, var(--border-color));
-    background: var(--surface-color);
+.snapshot-table-footer .list-pager {
+    flex: 1;
+    padding: 0;
 }
 
 .hidden {
@@ -3100,7 +3095,6 @@ select:focus {
 .management-form label,
 .asset-tool-bar label,
 .table-account-switch,
-.snapshot-mobile-details span,
 .holding-mobile-details span {
     color: var(--muted-text);
     font-size: 11px;
@@ -3620,20 +3614,17 @@ select,
     }
 
     .holding-table,
-    .comparison-table,
-    .snapshot-table {
+    .comparison-table {
         min-width: 0;
         border-collapse: separate;
         border-spacing: 0 10px;
     }
 
-    .holding-table,
-    .snapshot-table {
+    .holding-table {
         border-spacing: 0 12px;
     }
 
-    .management-panel .holding-table-wrap,
-    .management-panel .snapshot-table-wrap {
+    .management-panel .holding-table-wrap {
         margin: 10px 12px 16px;
         overflow: visible;
         border: 0;
@@ -3643,8 +3634,7 @@ select,
     }
 
     .holding-table thead,
-    .comparison-table thead,
-    .snapshot-table thead {
+    .comparison-table thead {
         display: none;
     }
 
@@ -3653,23 +3643,18 @@ select,
     .holding-table td,
     .comparison-table tbody,
     .comparison-table tr,
-    .comparison-table td,
-    .snapshot-table tbody,
-    .snapshot-table tr,
-    .snapshot-table td {
+    .comparison-table td {
         display: block;
         width: 100%;
     }
 
-    .holding-table tbody,
-    .snapshot-table tbody {
+    .holding-table tbody {
         display: grid;
         gap: 12px;
     }
 
     .holding-table tr,
-    .comparison-table tr,
-    .snapshot-table tr {
+    .comparison-table tr {
         position: relative;
         overflow: hidden;
         padding: 15px;
@@ -3692,8 +3677,7 @@ select,
         box-shadow: var(--shadow-sm);
     }
 
-    .holding-table tr::before,
-    .snapshot-table tr::before {
+    .holding-table tr::before {
         content: "";
         position: absolute;
         inset: 0 auto 0 0;
@@ -3701,22 +3685,19 @@ select,
         background: linear-gradient(180deg, var(--primary-color), var(--accent-color));
     }
 
-    .holding-table tbody tr:nth-child(even),
-    .snapshot-table tbody tr:nth-child(even) {
+    .holding-table tbody tr:nth-child(even) {
         background:
             radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary-color) 12%, transparent), transparent 46%),
             linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 48%),
             var(--surface-elevated);
     }
 
-    .holding-table tbody tr:hover,
-    .snapshot-table tbody tr:hover {
+    .holding-table tbody tr:hover {
         box-shadow: 0 20px 40px -30px rgb(15 23 42 / 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.64);
     }
 
     .holding-table td,
-    .comparison-table td,
-    .snapshot-table td {
+    .comparison-table td {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -3727,8 +3708,7 @@ select,
     }
 
     .holding-table td::before,
-    .comparison-table td::before,
-    .snapshot-table td::before {
+    .comparison-table td::before {
         flex: 0 0 auto;
         color: var(--muted-text);
         font-size: 11px;
@@ -3739,8 +3719,7 @@ select,
     }
 
     .holding-table td:nth-child(1),
-    .comparison-table td:nth-child(1),
-    .snapshot-table td:nth-child(1) {
+    .comparison-table td:nth-child(1) {
         display: block;
         padding: 0 0 12px;
         border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
@@ -3766,21 +3745,12 @@ select,
         font-weight: 850;
     }
 
-    .snapshot-table td:first-child {
-        color: var(--heading-color);
-        font-size: 17px;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
-    }
-
     .comparison-table td:first-child {
         padding-bottom: 11px;
     }
 
     .holding-table td:nth-child(1)::before,
-    .comparison-table td:nth-child(1)::before,
-    .snapshot-table td:nth-child(1)::before {
+    .comparison-table td:nth-child(1)::before {
         display: none;
     }
 
@@ -4200,144 +4170,7 @@ select,
         display: none !important;
     }
 
-    .snapshot-table td:nth-child(2)::before { content: "总资产"; }
-    .snapshot-table td:nth-child(3)::before { content: "净流入"; }
-    .snapshot-table td:nth-child(4)::before { content: "备注"; }
-    .snapshot-table td:nth-child(5)::before { content: "操作"; }
-
-    .snapshot-table-wrap .snapshot-table > tbody > tr > td:not(:first-child) {
-        display: none !important;
-    }
-
-    .snapshot-table-wrap .snapshot-table {
-        border-spacing: 0;
-    }
-
-    .snapshot-table-wrap .snapshot-table tbody {
-        display: grid !important;
-        gap: 12px;
-    }
-
-    .snapshot-table-wrap .snapshot-table tr {
-        display: block !important;
-        width: 100% !important;
-        padding: 0;
-        overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
-        border-radius: 24px;
-        background:
-            radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent-color) 14%, transparent), transparent 44%),
-            radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--primary-color) 12%, transparent), transparent 46%),
-            linear-gradient(145deg, var(--surface-elevated), var(--surface-muted));
-        box-shadow: 0 20px 42px -34px rgb(15 23 42 / 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.62);
-    }
-
-    .snapshot-table-wrap .snapshot-table tr::before {
-        content: "";
-        display: block;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, var(--accent-color), var(--primary-color), var(--wealth-gold));
-    }
-
-    .snapshot-table-wrap .snapshot-table td:first-child {
-        display: block !important;
-        width: 100% !important;
-        padding: 0;
-        border: 0;
-        text-align: left;
-    }
-
-    .snapshot-table-wrap .snapshot-table td:first-child::before,
-    .snapshot-date-text {
-        display: none !important;
-    }
-
-    .snapshot-mobile-card {
-        display: grid;
-        gap: 12px;
-        padding: 16px;
-    }
-
-    .snapshot-mobile-card-head {
-        display: grid;
-        gap: 4px;
-    }
-
-    .snapshot-mobile-card-head span,
-    .snapshot-mobile-details span {
-        color: var(--muted-text);
-        font-size: 11px;
-        font-weight: 800;
-    }
-
-    .snapshot-mobile-card-head strong {
-        color: var(--heading-color);
-        font-size: 17px;
-        font-weight: 900;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .snapshot-mobile-details {
-        display: grid;
-        gap: 1px;
-        overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--border-color) 76%, transparent);
-        border-radius: 18px;
-        background: var(--border-color);
-    }
-
-    .snapshot-mobile-details > div {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 11px 12px;
-        background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
-    }
-
-    .snapshot-mobile-details strong {
-        min-width: 0;
-        overflow: hidden;
-        color: var(--heading-color);
-        font-size: 12px;
-        font-weight: 800;
-        line-height: 1.35;
-        text-align: right;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .snapshot-mobile-details > div:first-child strong {
-        font-size: 13px;
-        font-weight: 850;
-        letter-spacing: -0.01em;
-    }
-
-    .snapshot-mobile-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 9px;
-        padding-top: 2px;
-    }
-
-    .snapshot-mobile-actions .mini-btn.icon-btn {
-        width: 100%;
-        height: 42px;
-        min-height: 42px;
-        border-radius: 14px;
-        color: var(--primary-color);
-        border-color: color-mix(in srgb, var(--primary-color) 18%, var(--border-color));
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.6), transparent 66%),
-            var(--surface-elevated);
-    }
-
-    .holding-table .number-cell,
-    .snapshot-table .number-cell {
+    .holding-table .number-cell {
         text-align: right !important;
         color: var(--heading-color);
         font-size: 15px;
@@ -4422,8 +4255,7 @@ select,
         font-weight: 800 !important;
     }
 
-    .holding-table-wrap .holding-table tr,
-    .snapshot-table-wrap .snapshot-table tr {
+    .holding-table-wrap .holding-table tr {
         border-color: color-mix(in srgb, var(--primary-color) 18%, var(--border-color));
         background:
             radial-gradient(circle at 0 0, var(--primary-soft), transparent 38%),
@@ -4433,21 +4265,18 @@ select,
         box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.58);
     }
 
-    .holding-table-wrap .holding-table tr::before,
-    .snapshot-table-wrap .snapshot-table tr::before {
+    .holding-table-wrap .holding-table tr::before {
         height: 3px;
         background: linear-gradient(90deg, transparent, var(--primary-color), var(--accent-color), transparent);
         opacity: 0.62;
     }
 
-    .holding-mobile-card,
-    .snapshot-mobile-card {
+    .holding-mobile-card {
         gap: 13px;
         padding: 15px;
     }
 
-    .holding-mobile-card-head,
-    .snapshot-mobile-card-head {
+    .holding-mobile-card-head {
         margin: -15px -15px 0;
         padding: 15px 15px 13px;
         border-bottom: 1px solid var(--border-color);
@@ -4457,8 +4286,7 @@ select,
             linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
     }
 
-    .holding-mobile-card-head strong,
-    .snapshot-mobile-card-head strong {
+    .holding-mobile-card-head strong {
         color: var(--heading-color);
         font-size: 17px;
         font-weight: 900;
@@ -4473,16 +4301,14 @@ select,
         box-shadow: none;
     }
 
-    .holding-mobile-details,
-    .snapshot-mobile-details {
+    .holding-mobile-details {
         border-color: var(--border-color);
         border-radius: 16px;
         background: var(--border-color);
         box-shadow: var(--shadow-sm);
     }
 
-    .holding-mobile-details > div,
-    .snapshot-mobile-details > div {
+    .holding-mobile-details > div {
         min-height: 42px;
         padding: 10px 12px;
         background:
@@ -4490,8 +4316,7 @@ select,
             var(--surface-elevated);
     }
 
-    .holding-mobile-details span,
-    .snapshot-mobile-details span {
+    .holding-mobile-details span {
         color: var(--muted-text);
         font-size: 11px;
         font-weight: 800;
@@ -4499,21 +4324,18 @@ select,
     }
 
     .holding-mobile-details strong,
-    .snapshot-mobile-details strong,
     .holding-mobile-details .valuation-status {
         font-size: 12px !important;
         font-weight: 800 !important;
         line-height: 1.35;
     }
 
-    .holding-mobile-actions,
-    .snapshot-mobile-actions {
+    .holding-mobile-actions {
         margin: 0 -1px;
         padding-top: 0;
     }
 
-    .holding-mobile-actions .mini-btn.icon-btn,
-    .snapshot-mobile-actions .mini-btn.icon-btn {
+    .holding-mobile-actions .mini-btn.icon-btn {
         height: 40px;
         min-height: 40px;
         border-radius: 13px;
@@ -4525,31 +4347,10 @@ select,
         box-shadow: var(--shadow-sm);
     }
 
-    .holding-mobile-actions .mini-btn.icon-btn:hover,
-    .snapshot-mobile-actions .mini-btn.icon-btn:hover {
+    .holding-mobile-actions .mini-btn.icon-btn:hover {
         color: var(--primary-color);
         border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
         background: var(--primary-soft);
-    }
-
-    .snapshot-table-footer {
-        display: grid;
-        justify-items: stretch;
-        margin-top: 8px;
-        padding: 12px;
-        border: 1px solid var(--border-color);
-        border-radius: 18px;
-        text-align: center;
-        background:
-            linear-gradient(135deg, var(--primary-soft), transparent 54%),
-            var(--surface-elevated);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .snapshot-toggle-btn {
-        min-height: 40px;
-        border-radius: 999px;
-        font-weight: 900;
     }
 
     .performance-chart {
@@ -4579,7 +4380,6 @@ select,
 .snapshot-table .positive,
 .comparison-table .positive,
 .holding-mobile-details .positive,
-.snapshot-mobile-details .positive,
 .account-card-metrics .positive,
 .overview-card .positive {
     color: var(--positive-color) !important;
@@ -4590,7 +4390,6 @@ select,
 .snapshot-table .negative,
 .comparison-table .negative,
 .holding-mobile-details .negative,
-.snapshot-mobile-details .negative,
 .account-card-metrics .negative,
 .overview-card .negative {
     color: var(--negative-color) !important;
@@ -4611,8 +4410,7 @@ select {
 .overview-card strong,
 .form-card-head h3,
 .confirm-dialog-copy strong,
-.holding-mobile-card-head strong,
-.snapshot-mobile-card-head strong {
+.holding-mobile-card-head strong {
     color: var(--heading-color);
     font-weight: 900 !important;
     line-height: 1.2;
@@ -4629,8 +4427,7 @@ select {
 }
 
 .account-card-heading strong,
-.holding-mobile-card-head strong,
-.snapshot-mobile-card-head strong {
+.holding-mobile-card-head strong {
     font-size: 17px;
 }
 
@@ -4676,9 +4473,7 @@ select {
 .comparison-table td::before,
 .holding-table td::before,
 .snapshot-table td::before,
-.holding-mobile-details span,
-.snapshot-mobile-details span,
-.snapshot-mobile-card-head span {
+.holding-mobile-details span {
     font-size: 11px !important;
     font-weight: 800 !important;
     line-height: 1.35;
@@ -4691,7 +4486,6 @@ select {
 .snapshot-table td,
 .account-card-metrics strong,
 .holding-mobile-details strong,
-.snapshot-mobile-details strong,
 .valuation-status,
 .price-pair > span,
 .price-pair small {
@@ -4722,7 +4516,6 @@ select {
 .context-action,
 .module-tab,
 .period-chip,
-.snapshot-toggle-btn,
 .account-add-card strong {
     font-size: 13px;
     font-weight: 800 !important;
@@ -4739,7 +4532,6 @@ select,
 }
 
 .metric-input input,
-.snapshot-mobile-details > div:first-child strong,
 .holding-mobile-card .holding-mobile-details > div:first-child strong {
     font-weight: 850 !important;
 }
@@ -5064,8 +4856,7 @@ select,
 
     .performance-chart,
     .comparison-table-wrap,
-    .management-panel .holding-table-wrap,
-    .management-panel .snapshot-table-wrap {
+    .management-panel .holding-table-wrap {
         margin: 10px 10px 14px;
     }
 
@@ -5295,18 +5086,14 @@ select,
 
     .comparison-table-wrap .comparison-table tr,
     .holding-table-wrap .holding-table tr,
-    .snapshot-table-wrap .snapshot-table tr,
     .holding-table-wrap .holding-table td:nth-child(2),
-    .holding-table-wrap .holding-table td:nth-child(4),
-    .snapshot-table-wrap .snapshot-table td:nth-child(2),
-    .snapshot-table-wrap .snapshot-table td:nth-child(3) {
+    .holding-table-wrap .holding-table td:nth-child(4) {
         background: var(--surface-elevated) !important;
         box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
     }
 
     .comparison-table-wrap .comparison-table tr,
-    .holding-table-wrap .holding-table tr,
-    .snapshot-table-wrap .snapshot-table tr {
+    .holding-table-wrap .holding-table tr {
         transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
     }
 
@@ -5346,28 +5133,17 @@ select,
         transform: translateY(-1px);
     }
 
-    .snapshot-table-wrap .snapshot-table tr:hover {
-        background: var(--surface-elevated) !important;
-        border-color: color-mix(in srgb, var(--primary-color) 28%, var(--border-color)) !important;
-        box-shadow: 0 18px 38px -28px rgb(15 23 42 / 0.42), inset 3px 0 0 var(--accent-color) !important;
-        transform: translateY(-1px);
-    }
-
-    .holding-table-wrap .holding-table tr::before,
-    .snapshot-table-wrap .snapshot-table tr::before {
+    .holding-table-wrap .holding-table tr::before {
         background: linear-gradient(90deg, transparent, var(--primary-color), var(--accent-color), transparent);
         opacity: 0.42;
     }
 
     .holding-mobile-card,
-    .holding-mobile-card-head,
-    .snapshot-mobile-card,
-    .snapshot-mobile-card-head {
+    .holding-mobile-card-head {
         background: transparent !important;
     }
 
-    .holding-table-wrap .holding-table tr:hover .holding-mobile-details > div,
-    .snapshot-table-wrap .snapshot-table tr:hover .snapshot-mobile-details > div {
+    .holding-table-wrap .holding-table tr:hover .holding-mobile-details > div {
         background: transparent;
     }
 
@@ -5380,17 +5156,7 @@ select,
         box-shadow: none;
     }
 
-    .snapshot-mobile-details {
-        gap: 0;
-        overflow: visible;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-    }
-
-    .holding-mobile-details > div,
-    .snapshot-mobile-details > div {
+    .holding-mobile-details > div {
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
@@ -5402,8 +5168,7 @@ select,
         box-shadow: none !important;
     }
 
-    .holding-mobile-details > div:nth-last-child(1),
-    .snapshot-mobile-details > div:nth-last-child(1) {
+    .holding-mobile-details > div:nth-last-child(1) {
         border-bottom: 0;
     }
 
@@ -5448,31 +5213,13 @@ select,
         align-items: start;
     }
 
-    .snapshot-mobile-card {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: start;
-    }
-
     .holding-mobile-card-head {
         grid-column: 1;
         min-width: 0;
         border-bottom: 0 !important;
     }
 
-    .snapshot-mobile-card-head {
-        grid-column: 1;
-        min-width: 0;
-        border-bottom: 0 !important;
-    }
-
     .holding-mobile-details {
-        grid-column: 1 / -1;
-        margin-top: 0;
-        padding-top: 12px;
-        border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-    }
-
-    .snapshot-mobile-details {
         grid-column: 1 / -1;
         margin-top: 0;
         padding-top: 12px;
@@ -5489,18 +5236,7 @@ select,
         border-top: 0;
     }
 
-    .snapshot-mobile-actions {
-        grid-column: 2;
-        grid-row: 1;
-        display: flex;
-        gap: 6px;
-        margin-top: 0;
-        padding-top: 0;
-        border-top: 0;
-    }
-
-    .holding-mobile-actions .mini-btn.icon-btn,
-    .snapshot-mobile-actions .mini-btn.icon-btn {
+    .holding-mobile-actions .mini-btn.icon-btn {
         width: 34px;
         min-width: 34px;
         height: 34px;
@@ -6018,7 +5754,7 @@ select,
     background: var(--primary-soft);
 }
 
-.account-trend-pager {
+.list-pager {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -6029,22 +5765,22 @@ select,
     font-size: 12px;
 }
 
-.account-trend-pager-actions {
+.list-pager-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;
 }
 
-.account-trend-page.active,
-.account-trend-page.active:disabled {
+.list-pager-page.active,
+.list-pager-page.active:disabled {
     color: #ffffff;
     border-color: transparent;
     background: var(--primary-color);
     opacity: 1;
 }
 
-.account-trend-pager-gap {
+.list-pager-gap {
     padding: 0 2px;
 }
 
@@ -6109,12 +5845,109 @@ select,
         padding: 9px 10px;
     }
 
-    .account-trend-pager {
+    .list-pager {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .account-trend-pager-actions {
+    .list-pager-actions {
         justify-content: center;
+    }
+
+    /* Phones keep the snapshot table as one paged list, like the account trend list; the note column is dropped to fit. */
+    .management-panel .snapshot-table-wrap {
+        margin: 10px 8px 14px;
+        border-radius: 18px;
+    }
+
+    .snapshot-table {
+        table-layout: auto;
+    }
+
+    .snapshot-table th,
+    .snapshot-table td {
+        width: auto !important;
+        padding: 9px 4px;
+        white-space: nowrap;
+    }
+
+    .snapshot-table th:nth-child(4),
+    .snapshot-table td:nth-child(4) {
+        display: none;
+    }
+
+    .snapshot-table th:first-child,
+    .snapshot-table td:first-child {
+        padding-left: 10px;
+    }
+
+    .snapshot-table th:last-child,
+    .snapshot-table td:last-child {
+        padding-right: 8px;
+    }
+
+    .snapshot-table .row-actions {
+        gap: 4px;
+    }
+
+    .snapshot-table .mini-btn.icon-btn {
+        flex-basis: 28px;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+        border-radius: 9px;
+    }
+
+    .snapshot-table .snapshot-source-badge {
+        display: flex;
+        width: fit-content;
+        margin: 3px 0 0;
+        padding: 0 5px;
+        font-size: 10px;
+    }
+
+    .snapshot-table-footer {
+        padding: 10px 10px 12px;
+    }
+}
+
+/* Narrow phones (360px class): shrink the snapshot list further so all four columns fit without sideways scrolling. */
+@media (max-width: 400px) {
+    .management-panel .snapshot-table-wrap {
+        margin-right: 6px;
+        margin-left: 6px;
+    }
+
+    .snapshot-table td {
+        font-size: 11px;
+    }
+
+    .snapshot-table th,
+    .snapshot-table td {
+        padding-right: 3px;
+        padding-left: 3px;
+    }
+
+    .snapshot-table th:first-child,
+    .snapshot-table td:first-child {
+        padding-left: 8px;
+    }
+
+    .snapshot-table th:last-child,
+    .snapshot-table td:last-child {
+        padding-right: 6px;
+    }
+
+    .snapshot-table .row-actions {
+        gap: 3px;
+    }
+
+    .snapshot-table .mini-btn.icon-btn {
+        flex-basis: 26px;
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        min-height: 26px;
     }
 }
