@@ -2519,7 +2519,7 @@ select:focus {
 }
 
 .performance-chart {
-    /* Spans the full panel width; ECharts' grid insets keep the plot off the panel edges. */
+    /* auto, not 100%: the chart has side margins and must not overflow the panel. */
     width: auto;
     /* Same plot height as the account trend chart (320px); the extra 50px holds the legend and zoom slider. */
     height: 370px;
@@ -4647,8 +4647,8 @@ select,
 }
 
 .performance-chart {
-    /* Drawn straight on the panel, not as a nested card. */
-    margin: 10px 0 12px;
+    /* Drawn straight on the panel with the same insets as the account trend chart, not as a nested card. */
+    margin: 12px 12px 18px;
     padding: 0;
 }
 
@@ -4863,7 +4863,7 @@ select,
     }
 
     .performance-chart {
-        margin: 6px 0 10px;
+        margin: 6px 4px 14px;
     }
 
     .chart-range-note {
@@ -5153,6 +5153,7 @@ select,
         background: transparent;
     }
 
+    /* Compact label/value rows: tighter padding and a one-line weight keep each card short. */
     .holding-mobile-details {
         gap: 0;
         overflow: visible;
@@ -5166,16 +5167,21 @@ select,
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 12px !important;
+        gap: 10px !important;
+        min-width: 0;
         min-height: 0;
-        padding: 11px 0;
+        padding: 6px 0;
         border-bottom: 1px solid color-mix(in srgb, var(--border-color) 66%, transparent);
         background: transparent;
         box-shadow: none !important;
     }
 
-    .holding-mobile-details > div:nth-last-child(1) {
+    .holding-mobile-details > div:last-child {
         border-bottom: 0;
+    }
+
+    .holding-mobile-details > div > span {
+        flex: 0 0 auto;
     }
 
     .holding-mobile-details > div:first-child strong,
@@ -5208,6 +5214,27 @@ select,
         text-align: right;
     }
 
+    /* Bar beside the number rather than above it, so the weight row stays one line tall. */
+    .holding-table td:first-child .holding-mobile-details .holding-weight {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: auto;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    .holding-table td:first-child .holding-mobile-details .holding-weight > span {
+        display: block;
+        flex: 0 0 48px;
+        width: 48px;
+    }
+
+    .holding-table td:first-child .holding-mobile-details .valuation-status {
+        overflow: visible;
+        white-space: nowrap;
+    }
+
     .holding-mobile-actions {
         margin-top: 4px;
         padding-top: 12px;
@@ -5217,18 +5244,36 @@ select,
     .holding-mobile-card {
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: start;
+        gap: 10px;
+        padding: 12px 14px;
     }
 
     .holding-mobile-card-head {
         grid-column: 1;
         min-width: 0;
+        margin: 0;
+        padding: 0;
         border-bottom: 0 !important;
+    }
+
+    .holding-mobile-card-head strong {
+        font-size: 15px;
+    }
+
+    /* Plain meta line under the name; the pill made the head nearly twice as tall. */
+    .holding-table td:first-child .holding-mobile-card-head small {
+        display: block;
+        margin-top: 3px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
     }
 
     .holding-mobile-details {
         grid-column: 1 / -1;
         margin-top: 0;
-        padding-top: 12px;
+        padding-top: 10px;
         border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
     }
 
