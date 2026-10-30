@@ -1577,9 +1577,15 @@ function saveHolding(payload) {
 
     const now = new Date().toISOString();
     if (state.editingHoldingId) {
-        state.holdings = state.holdings.map(holding => holding.id === state.editingHoldingId
-            ? { ...holding, ...payload, currency: 'CNY', priceSource: holding.priceSource || 'manual', priceUpdatedAt: holding.priceUpdatedAt || now }
-            : holding);
+        // Changing the price or its valuation date by hand makes the price manual again; editing only
+        // quantity, cost, or name keeps a quoted price and its quote time.
+        state.holdings = state.holdings.map(holding => {
+            if (holding.id !== state.editingHoldingId) return holding;
+            const repriced = Number(payload.currentPrice) !== Number(holding.currentPrice) || payload.asOfDate !== holding.asOfDate;
+            return repriced
+                ? { ...holding, ...payload, currency: 'CNY', priceSource: 'manual', priceUpdatedAt: now }
+                : { ...holding, ...payload, currency: 'CNY', priceSource: holding.priceSource || 'manual', priceUpdatedAt: holding.priceUpdatedAt || now };
+        });
         showHoldingMessage(t('holdingUpdated'));
     } else {
         state.holdings.push({

@@ -1,7 +1,7 @@
 import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { currentLocale, escapeHtml, formatCurrency, formatPercent, formatPrice, formatWeight, signedClass, todayKey } from '../../utils/formatter.js';
-import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel, getPriceStatusParts, isStalePrice } from './holdingsMetrics.js';
+import { ASSET_CLASSES, MARKETS, getAssetClassLabel, getMarketLabel, getPriceDate, getPriceStatusParts, isStalePrice } from './holdingsMetrics.js';
 import { disposeHoldingChart, getHoldingChartContainer, setHoldingChartClickHandler, trackHoldingChartLayout } from './holdingsChartShared.js';
 import { renderHoldingAllocation } from './holdingsAllocation.js';
 import { renderHoldingContribution } from './holdingsContribution.js';
@@ -410,7 +410,10 @@ function compareHoldings(a, b) {
     if (aCash !== bCash) return aCash ? 1 : -1;
     const direction = state.holdingSortOrder || -1;
     const key = state.holdingSortKey || 'marketValue';
-    if (['name', 'accountName', 'assetClass', 'priceUpdatedAt'].includes(key)) {
+    if (key === 'priceUpdatedAt') {
+        return getPriceDate(a).localeCompare(getPriceDate(b)) * direction;
+    }
+    if (['name', 'accountName', 'assetClass'].includes(key)) {
         return String(a[key] || '').localeCompare(String(b[key] || ''), currentLocale(), { numeric: true }) * direction;
     }
     const aValue = Number(a[key]);

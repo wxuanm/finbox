@@ -60,8 +60,17 @@ export function getMarketLabel(value) {
     return t(MARKETS.find(([key]) => key === value)?.[1] || 'marketOther');
 }
 
+// A quoted price is dated by its quote time; a manual price by the valuation date the user enters,
+// since editing never touches `priceUpdatedAt` and would otherwise show the original entry time.
+export function getPriceDate(row) {
+    const value = row.priceSource === 'quote'
+        ? row.priceUpdatedAt || row.asOfDate
+        : row.asOfDate || row.priceUpdatedAt;
+    return String(value || '').slice(0, 10);
+}
+
 export function getPriceStatusParts(row) {
-    const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
+    const date = getPriceDate(row);
     if (!date) return { label: t('notRecorded'), date: '-' };
     if (row.priceSource !== 'quote') return { label: t('manual'), date };
     return { label: isStalePrice(row) ? t('stale') : t('quote'), date };
@@ -70,7 +79,7 @@ export function getPriceStatusParts(row) {
 // Cash is priced at 1 by definition, so its record date says nothing about price freshness.
 export function isStalePrice(row) {
     if (row.assetClass === 'cash' || row.market === 'Cash') return false;
-    const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
+    const date = getPriceDate(row);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return true;
     const updatedAt = new Date(`${date}T00:00:00`).getTime();
     const today = new Date(`${todayKey()}T00:00:00`).getTime();
