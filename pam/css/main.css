@@ -6020,3 +6020,468 @@ select,
         min-height: 26px;
     }
 }
+
+/* Asset allocation: HTML bars and tables only, so the view works without ECharts. */
+.alloc-head-action {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.alloc-content {
+    display: grid;
+    gap: 18px;
+    padding: 16px 20px 22px;
+    container-type: inline-size;
+}
+
+.alloc-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+}
+
+.alloc-stats > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+}
+
+.alloc-stats dt {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.alloc-stats dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    min-width: 0;
+    margin: 0;
+}
+
+.alloc-stats strong {
+    color: var(--heading-color);
+    font-size: 20px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.alloc-stats strong.warning {
+    color: var(--warning-color);
+}
+
+.alloc-stats small {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.alloc-notice {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 14px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--warning-color) 40%, var(--border-color));
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--warning-color) 8%, var(--surface-color));
+}
+
+.alloc-notice p {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.alloc-notice strong {
+    color: var(--heading-color);
+}
+
+.alloc-notice small {
+    color: var(--muted-text);
+    font-size: 11px;
+}
+
+.alloc-notice .alloc-notice-names {
+    grid-column: 1;
+    color: var(--muted-text);
+}
+
+.alloc-notice-action {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+}
+
+.alloc-section {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.alloc-section-title {
+    margin: 0;
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.alloc-class-list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+}
+
+.alloc-class-row + .alloc-class-row {
+    border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+}
+
+/* Name | bar | figures | chevron on wide cards; the bar drops to its own line on narrow ones. */
+.alloc-class-toggle {
+    display: grid;
+    grid-template-columns: minmax(96px, 160px) minmax(0, 1fr) minmax(112px, auto) 16px;
+    grid-template-areas: "name bar figures chevron";
+    gap: 6px 16px;
+    align-items: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: inherit;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.alloc-class-toggle:hover {
+    background: var(--primary-soft);
+}
+
+.alloc-class-toggle:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.alloc-class-name {
+    display: grid;
+    grid-area: name;
+    gap: 2px;
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.alloc-class-name small {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.alloc-class-figures {
+    display: grid;
+    grid-area: figures;
+    gap: 2px;
+    justify-items: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.alloc-class-figures strong {
+    color: var(--heading-color);
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.alloc-class-figures small {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.alloc-bar {
+    grid-area: bar;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--border-color) 60%, transparent);
+}
+
+/* One hue for every class: each row is already named, and P/L red/green stays out of this view. */
+.alloc-bar > span {
+    display: block;
+    min-width: 2px;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background: color-mix(in srgb, var(--primary-color) 78%, transparent);
+}
+
+.alloc-chevron {
+    grid-area: chevron;
+    color: var(--muted-text);
+    transition: transform 0.15s ease;
+}
+
+.alloc-class-row.expanded .alloc-chevron {
+    transform: rotate(90deg);
+}
+
+.alloc-class-row {
+    min-width: 0;
+}
+
+.alloc-holdings {
+    min-width: 0;
+    overflow-x: auto;
+    padding: 0 14px 12px;
+}
+
+/* The account name repeats under the holding name only where the account column is hidden. */
+.alloc-holding-name small {
+    display: none;
+    font-size: 11px;
+}
+
+.alloc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.alloc-table th,
+.alloc-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.alloc-table thead th {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.alloc-table tbody tr:last-child > * {
+    border-bottom: 0;
+}
+
+.alloc-table .number-cell {
+    text-align: right;
+}
+
+.alloc-table tbody th {
+    color: var(--heading-color);
+    font-weight: 800;
+}
+
+.alloc-muted {
+    color: var(--muted-text);
+}
+
+.alloc-stale {
+    color: var(--warning-color);
+}
+
+.alloc-table-wrap {
+    overflow-x: auto;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+}
+
+/* Weight cells carry a faint fill proportional to the weight, so each column scans like a strip. */
+.alloc-cell {
+    display: inline-block;
+    min-width: 58px;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--primary-color) 18%, transparent) var(--alloc-weight, 0%), transparent var(--alloc-weight, 0%));
+    color: var(--heading-color);
+    font-weight: 800;
+}
+
+.alloc-missing-row th,
+.alloc-missing-row td {
+    color: var(--muted-text);
+}
+
+/* The account column stays put while class columns scroll on narrow screens. */
+.alloc-mix-table tbody th,
+.alloc-mix-table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface-color);
+}
+
+.alloc-footnote {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.alloc-empty > div {
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+}
+
+.alloc-empty p {
+    margin: 0;
+}
+
+.alloc-inclusion-list {
+    display: grid;
+    gap: 6px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+}
+
+.alloc-inclusion-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-color);
+    cursor: pointer;
+}
+
+.alloc-inclusion-item input {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--primary-color);
+}
+
+.alloc-inclusion-item span {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.alloc-inclusion-item strong {
+    overflow: hidden;
+    color: var(--heading-color);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.alloc-inclusion-item small {
+    color: var(--muted-text);
+    font-size: 12px;
+}
+
+@container (max-width: 560px) {
+    .alloc-class-toggle {
+        grid-template-columns: minmax(0, 1fr) auto 16px;
+        grid-template-areas:
+            "name figures chevron"
+            "bar bar bar";
+        padding: 10px 12px;
+    }
+
+    .alloc-class-name {
+        grid-auto-flow: column;
+        justify-content: start;
+        align-items: baseline;
+        gap: 8px;
+    }
+
+    .alloc-class-figures {
+        grid-auto-flow: column;
+        align-items: baseline;
+        gap: 8px;
+    }
+
+    .alloc-holdings {
+        padding: 0 4px 8px;
+    }
+
+    .alloc-holding-table .alloc-account-col {
+        display: none;
+    }
+
+    .alloc-holding-name {
+        display: grid;
+        gap: 2px;
+        white-space: normal;
+    }
+
+    .alloc-holding-table td.alloc-holding-name {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .alloc-holding-name small {
+        display: block;
+    }
+}
+
+@media (max-width: 720px) {
+    .allocation-panel .split-head {
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .allocation-panel .alloc-head-action {
+        margin-left: auto;
+    }
+
+    .alloc-content {
+        gap: 14px;
+        padding: 12px 10px 16px;
+    }
+
+    .alloc-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .alloc-stats > div:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .alloc-stats > div {
+        padding: 10px 12px;
+    }
+
+    .alloc-stats strong {
+        font-size: 18px;
+    }
+
+    .alloc-notice {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .alloc-notice-action {
+        grid-row: auto;
+        grid-column: 1;
+        justify-self: start;
+    }
+
+    .alloc-table th,
+    .alloc-table td {
+        padding: 7px 8px;
+    }
+}

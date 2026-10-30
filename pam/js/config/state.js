@@ -2,6 +2,7 @@ export const state = {
     accounts: [],
     snapshots: [],
     holdings: [],
+    allocation: { excludedAccountIds: [], updatedAt: '' },
     selectedAccountId: '',
     selectedPeriod: '3M',
     selectedHighlightAccountId: '',

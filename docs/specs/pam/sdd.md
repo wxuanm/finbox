@@ -219,6 +219,10 @@ Empty state:
 
 See `docs/specs/pam/holdings.md` for detailed holdings requirements, data model, quote scope, and acceptance criteria.
 
+### Asset Allocation
+
+See `docs/specs/pam/allocation.md` for the `资产配置` module. P1 is implemented: cross-account allocation by holding asset class, coverage and stale-price share, per-account mix, and account inclusion. P2 (target weights, drift, and rebalancing amounts) is planned.
+
 ## 3. Calculation Spec
 
 ### Default Performance Method

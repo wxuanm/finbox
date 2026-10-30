@@ -11,11 +11,14 @@ import { bindAccountComparison, renderAccountComparison, renderOverviewCards } f
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
-import { buildHoldingsMetrics } from './modules/holdings/holdingsMetrics.js';
+import { buildHoldingsMetrics, isStalePrice } from './modules/holdings/holdingsMetrics.js';
 import { HOLDING_VIEWS, bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
 import { fetchQuotes } from './modules/holdings/quoteApi.js';
 import { SNAPSHOT_DATE_REFERENCE_FUNDS, getAccountHoldingMarketValue, resolveReferenceNavDate, resolveSnapshotPrice } from './modules/holdings/snapshotValuation.js';
 import { resizeHoldingChart } from './modules/holdings/holdingsChartShared.js';
+import { buildAllocationMetrics, normalizeAllocation } from './modules/allocation/allocationMetrics.js';
+import { bindAllocationPanel, renderAllocationPanel } from './modules/allocation/allocationPanel.js';
+import { loadAllocation, saveAllocation } from './modules/allocation/storage.js';
 import { escapeHtml, formatCurrency, todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
@@ -32,6 +35,7 @@ const PAM_CACHE_KEYS = [
     'pam:v1:snapshots',
     'pam:v1:holdings',
     'pam:v1:preferences',
+    'pam:v1:allocation',
     'pam:v1:cloud-sync'
 ];
 const PAM_CACHE_OWNER_KEY = 'pam:v1:cache-owner';
@@ -98,6 +102,7 @@ async function initializeWorkspace(user) {
     state.accounts = loadAccounts();
     state.snapshots = loadSnapshots();
     state.holdings = loadHoldings();
+    state.allocation = normalizeAllocation(loadAllocation(), new Set(state.accounts.map(account => account.id)));
     state.theme = preferences.theme || 'light';
     state.selectedPeriod = preferences.selectedPeriod || '3M';
     state.activeView = normalizeActiveView(preferences.activeView);
@@ -419,6 +424,22 @@ function bindEvents() {
     document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
         cancelAssetDialog('snapshot');
     });
+    document.getElementById('allocationInclusionBtn')?.addEventListener('click', openAllocationInclusionDialog);
+    document.getElementById('allocationInclusionForm')?.addEventListener('submit', applyAllocationInclusion);
+    document.querySelectorAll('[data-allocation-inclusion-close]').forEach(button => {
+        button.addEventListener('click', closeAllocationInclusionDialog);
+    });
+    document.getElementById('allocationInclusionDialog')?.addEventListener('cancel', event => {
+        event.preventDefault();
+        closeAllocationInclusionDialog();
+    });
+    bindAllocationPanel({
+        onOpenInclusion: openAllocationInclusionDialog,
+        onGoToAccount: accountId => {
+            if (state.accounts.some(account => account.id === accountId)) state.selectedAccountId = accountId;
+            switchView('assetData');
+        }
+    });
 
     bindAccountList({
         onSelect: selectAccount,
@@ -628,6 +649,12 @@ function renderApp() {
     renderAccountTrend(metrics);
     renderSnapshotTable();
     renderHoldingsPanel(holdingsMetrics);
+    renderAllocationPanel(buildAllocationMetrics({
+        accounts: state.accounts,
+        snapshots: state.snapshots,
+        rows: holdingsMetrics.allRows.map(row => ({ ...row, stale: isStalePrice(row) })),
+        excludedAccountIds: state.allocation.excludedAccountIds
+    }));
     renderCloudSyncStatus();
 }
 
@@ -787,6 +814,62 @@ function closeAccountDialog() {
     }
 }
 
+function openAllocationInclusionDialog() {
+    const dialog = document.getElementById('allocationInclusionDialog');
+    const list = document.getElementById('allocationInclusionList');
+    if (!dialog || !list) return;
+    const excluded = new Set(state.allocation.excludedAccountIds);
+    list.innerHTML = state.accounts.map(account => {
+        const latest = state.snapshots
+            .filter(snapshot => snapshot.accountId === account.id)
+            .reduce((found, snapshot) => (!found || snapshot.date > found.date ? snapshot : found), null);
+        const detail = latest
+            ? t('allocationLatestTotal', { value: formatCurrency(latest.totalValue, state.amountsHidden) })
+            : t('allocationNoSnapshot');
+        return `
+            <li>
+                <label class="alloc-inclusion-item">
+                    <input type="checkbox" name="includedAccount" value="${escapeHtml(account.id)}"${excluded.has(account.id) ? '' : ' checked'}>
+                    <span><strong>${escapeHtml(account.name)}</strong><small>${detail}</small></span>
+                </label>
+            </li>
+        `;
+    }).join('');
+    if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+    }
+}
+
+function closeAllocationInclusionDialog() {
+    const dialog = document.getElementById('allocationInclusionDialog');
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') {
+        dialog.close();
+    } else {
+        dialog.removeAttribute('open');
+    }
+}
+
+// Changes apply on submit only, so unchecking several accounts syncs once.
+function applyAllocationInclusion(event) {
+    event.preventDefault();
+    const included = new Set([...event.target.querySelectorAll('input[name="includedAccount"]:checked')].map(input => input.value));
+    const excludedAccountIds = state.accounts.map(account => account.id).filter(id => !included.has(id));
+    const current = new Set(state.allocation.excludedAccountIds);
+    const changed = excludedAccountIds.length !== current.size || excludedAccountIds.some(id => !current.has(id));
+    closeAllocationInclusionDialog();
+    if (!changed) return;
+    state.allocation = touchAllocation({ excludedAccountIds });
+    saveAllocation(state.allocation);
+    renderApp();
+}
+
+function touchAllocation(changes) {
+    return { ...state.allocation, ...changes, updatedAt: new Date().toISOString() };
+}
+
 function renderActiveView() {
     document.querySelectorAll('.module-tab[data-view]').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.view === state.activeView);
@@ -906,6 +989,11 @@ function deleteAccountNow(accountId) {
     state.accounts = state.accounts.filter(item => item.id !== accountId);
     state.snapshots = state.snapshots.filter(snapshot => snapshot.accountId !== accountId);
     state.holdings = state.holdings.filter(holding => holding.accountId !== accountId);
+    if (state.allocation.excludedAccountIds.includes(accountId)) {
+        state.allocation = touchAllocation({
+            excludedAccountIds: state.allocation.excludedAccountIds.filter(id => id !== accountId)
+        });
+    }
     if (state.selectedAccountId === accountId) state.selectedAccountId = state.accounts[0]?.id || '';
     if (state.selectedHighlightAccountId === accountId) state.selectedHighlightAccountId = '';
     persistAll();
@@ -1135,6 +1223,7 @@ function exportData() {
             accounts: state.accounts,
             snapshots: state.snapshots,
             holdings: state.holdings,
+            allocation: state.allocation,
             preferences: {
                 theme: state.theme,
                 selectedAccountId: state.selectedAccountId,
@@ -1208,6 +1297,7 @@ function applyImportedData(data) {
     state.accounts = data.accounts;
     state.snapshots = data.snapshots;
     state.holdings = data.holdings;
+    state.allocation = data.allocation;
     state.theme = data.preferences.theme || state.theme;
     state.selectedPeriod = data.preferences.selectedPeriod || '3M';
     state.activeView = normalizeActiveView(data.preferences.activeView);
@@ -1241,7 +1331,9 @@ function parseImportPayload(payload) {
         ? payload.data.holdings.map(normalizeImportedHolding).filter(holding => holding && accountIds.has(holding.accountId))
         : [];
     const preferences = payload.data.preferences && typeof payload.data.preferences === 'object' ? payload.data.preferences : {};
-    return { accounts, snapshots, holdings, preferences };
+    // Backups made before allocation existed import with every account included.
+    const allocation = normalizeAllocation(payload.data.allocation, accountIds);
+    return { accounts, snapshots, holdings, allocation, preferences };
 }
 
 function normalizeImportedAccount(account) {
@@ -1867,6 +1959,7 @@ function runPendingConfirmAction() {
 
 function normalizeActiveView(view) {
     if (view === 'data' || view === 'holdings' || view === 'assetData') return 'assetData';
+    if (view === 'allocation') return 'allocation';
     return 'analysis';
 }
 
@@ -1882,6 +1975,7 @@ function persistAll() {
     saveAccounts(state.accounts);
     saveSnapshots(state.snapshots);
     saveHoldings(state.holdings);
+    saveAllocation(state.allocation);
     persistPreferences();
 }
 
@@ -1912,6 +2006,7 @@ function getCloudSyncData() {
         accounts: state.accounts,
         snapshots: state.snapshots,
         holdings: state.holdings,
+        allocation: state.allocation,
         preferences: getCurrentPreferences()
     };
 }
@@ -1922,6 +2017,7 @@ function applyCloudData(data) {
     state.accounts = normalized.accounts;
     state.snapshots = normalized.snapshots;
     state.holdings = normalized.holdings;
+    state.allocation = normalized.allocation;
     const preferences = normalized.preferences;
     state.theme = preferences.theme || 'light';
     state.selectedPeriod = preferences.selectedPeriod || '3M';

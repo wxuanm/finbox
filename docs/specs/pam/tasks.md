@@ -120,6 +120,27 @@ Current checkpoint (2026-09-29):
 - [x] Show 资产记录 on phones as one compact paged table (note column hidden) instead of per-record cards; verified at 390px and 360px without horizontal scroll.
 - [x] Pair two records per row in one divided table for the trend list and, from 1080px, the 资产记录 table, like the VSIX NAV list.
 
+## Phase 13: Asset Allocation
+
+Spec: `docs/specs/pam/allocation.md`.
+
+P1: Current allocation
+
+- [x] Add `pam:v1:allocation` storage with normalization, the `allocation` sync domain, the `pam_allocation` D1 migration, server validation, and JSON import/export.
+- [x] Implement pure `allocationMetrics.js`: class values, weights, coverage, stale share, and per-account mix.
+- [x] Enable the `资产配置` tab and render stats, class bars with expandable holdings, coverage notice, and account mix.
+- [x] Add the account inclusion dialog.
+- [x] Verify through `wrangler pages dev` with a local D1 user: API round trip, validation rejections, and stale-revision `409`; weights against holdings, exclusion and sync across reload, missing-holdings notice and its jump to `账户管理`, empty states, deleting an excluded account, export/import (including backups without allocation), privacy, English, dark theme, ECharts blocked, and 390/360px phones with no page scroll or panel clipping.
+- [ ] Production: apply migration `0004_pam_allocation.sql` before deploying Pages.
+
+P2: Targets and rebalancing
+
+- [ ] Add the targets dialog with bands, fill-from-current, and clear.
+- [ ] Implement drift, 5/25 band status, and `新增资金` / `买卖调整` rebalancing amounts.
+- [ ] Render target ticks, bands, and status on class bars, plus the rebalance panel; persist `allocationRebalanceMode`.
+- [ ] Include allocation in the sync-conflict loss message and demo data.
+- [ ] Verify through `wrangler pages dev`: calculations against hand-checked examples, privacy, sync and backup round trip, no ECharts, light and dark themes, both languages, desktop and 360px mobile.
+
 ## Recommended Future Hardening
 
 - [ ] Replace full-replace snapshot sync with a row diff and drop the redundant `idx_pam_snapshots_owner_account_date` index. Daily auto snapshots grow the table, and each full replace rewrites every snapshot row; with several accounts the 1 MB PATCH body limit is reached in a few years and heavy editing can approach the D1 free daily write quota.

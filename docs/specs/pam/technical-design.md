@@ -35,6 +35,10 @@ pam/
    │  │  ├─ pager.js
    │  │  ├─ metrics.js
    │  │  └─ storage.js
+   │  ├─ allocation/
+   │  │  ├─ allocationMetrics.js
+   │  │  ├─ allocationPanel.js
+   │  │  └─ storage.js
    │  └─ holdings/
    │     ├─ holdingsMetrics.js
    │     ├─ holdingsPanel.js
@@ -87,6 +91,7 @@ Storage keys:
 pam:v1:accounts
 pam:v1:snapshots
 pam:v1:holdings
+pam:v1:allocation
 pam:v1:preferences
 ```
 
@@ -96,7 +101,7 @@ Stored objects include `schemaVersion: 1`. Reads must tolerate missing or malfor
 
 The existing `pam_user_state.email` column and `userEmail` synchronization metadata are reserved for a future optional contact or notification identity. They are currently blank, do not participate in login, authorization, ownership, or cache isolation, and must not be treated as a verified email address. Authentication continues to use `pam_users.username`; any future email feature must add explicit collection and verification behavior before relying on these fields.
 
-Cloud storage uses authentication tables `pam_users`, `pam_credentials`, and `pam_sessions`, plus normalized business tables `pam_user_state`, `pam_accounts`, `pam_snapshots`, `pam_holdings`, and `pam_preferences`. D1 stores HMAC-SHA-256 access-key hashes, per-user password salts and PBKDF2-SHA-256 password hashes, and SHA-256 session-token hashes; raw access keys, passwords, and session tokens are never stored there. Password derivation first applies the encrypted `PAM_KEY_PEPPER`, then 10,000 PBKDF2 iterations with a random 16-byte user salt. The PBKDF2 cost is bounded for the Cloudflare Pages edge CPU budget; the separately stored pepper prevents a D1-only leak from enabling offline password guesses. The server validates the `pam_session` HttpOnly cookie and derives `owner_id` as `user:<uuid>` from the session. Client-supplied user identifiers are never accepted for authorization. `/api/pam/data` supports authenticated full reads and domain-level replacement writes. Writes claim the expected revision and a unique write token in one D1 batch, preventing a stale client from modifying data.
+Cloud storage uses authentication tables `pam_users`, `pam_credentials`, and `pam_sessions`, plus normalized business tables `pam_user_state`, `pam_accounts`, `pam_snapshots`, `pam_holdings`, `pam_allocation`, and `pam_preferences`. `pam_allocation` and `pam_preferences` each hold one JSON document per owner. D1 stores HMAC-SHA-256 access-key hashes, per-user password salts and PBKDF2-SHA-256 password hashes, and SHA-256 session-token hashes; raw access keys, passwords, and session tokens are never stored there. Password derivation first applies the encrypted `PAM_KEY_PEPPER`, then 10,000 PBKDF2 iterations with a random 16-byte user salt. The PBKDF2 cost is bounded for the Cloudflare Pages edge CPU budget; the separately stored pepper prevents a D1-only leak from enabling offline password guesses. The server validates the `pam_session` HttpOnly cookie and derives `owner_id` as `user:<uuid>` from the session. Client-supplied user identifiers are never accepted for authorization. `/api/pam/data` supports authenticated full reads and domain-level replacement writes. Writes claim the expected revision and a unique write token in one D1 batch, preventing a stale client from modifying data.
 
 Username/password is the default daily login. Access keys use `pam_<key-id>_<secret>` format, are shown once when an operator provisions a user, and remain the first-time password setup and recovery mechanism. After Access-key authentication, the browser requires a 12–128 character password before entering the workspace; using an Access key again allows password replacement. A successful login creates a seven-day opaque session; the raw token exists only in a `HttpOnly; SameSite=Strict; Secure` production cookie. Login, password changes, logout, and data writes require a same-origin browser request. Logout revokes the server-side session, and disabling a user or increasing `auth_version` invalidates that user's sessions.
 
@@ -272,6 +277,7 @@ Export payload:
     accounts: [],
     snapshots: [],
     holdings: [],
+    allocation: { excludedAccountIds: [], updatedAt: '' },
     preferences: {}
   }
 }
@@ -280,10 +286,11 @@ Export payload:
 Import behavior:
 
 - Accept only `app: 'pam'` and `schemaVersion: 1`.
-- Normalize accounts, snapshots, holdings, and preferences before applying.
+- Normalize accounts, snapshots, holdings, allocation, and preferences before applying.
 - Drop snapshots whose `accountId` does not exist in the imported accounts.
 - Drop holdings whose `accountId` does not exist in the imported accounts.
-- Older backups without holdings import with `holdings: []`.
+- Drop excluded allocation ids that do not exist in the imported accounts.
+- Older backups without holdings import with `holdings: []`; backups without allocation import with every account included.
 - Replace current local PAM data only after confirmation.
 - Cache imported data locally and queue it for authenticated cloud synchronization after confirmation.
 
@@ -328,6 +335,10 @@ Snapshot sync is full replace, so a stale browser must never PATCH over rows ano
 - Fetching and parsing live in `functions/api/_lib/quoteSources.js` (`fetchQuotes(items)`), shared with the auto-snapshot job; `functions/api/quotes.js` only parses the request and builds the response.
 - Quote refresh updates only current price, name when available, price source, and price update time.
 - The endpoint accepts up to 40 unique `market:symbol` items and returns `Cache-Control: no-store`.
+
+## Asset Allocation
+
+`资产配置` details live in `docs/specs/pam/allocation.md`. `app.js` builds allocation metrics on every render from `buildHoldingsMetrics(...).allRows`, tagging each row with `isStalePrice`, and passes them to `renderAllocationPanel`. `activeView` accepts `allocation`. The account exclusion list is the `allocation` sync domain, not a preference, so a conflict that discards it shows the loss message.
 
 ## Verification
 

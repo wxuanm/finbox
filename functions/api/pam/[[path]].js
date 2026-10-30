@@ -9,7 +9,7 @@ const PASSWORD_ITERATIONS = 10_000;
 const PASSWORD_MIN_LENGTH = 12;
 const PASSWORD_MAX_LENGTH = 128;
 const MAX_COUNTS = Object.freeze({ accounts: 200, snapshots: 20_000, holdings: 10_000 });
-const ALLOWED_DOMAINS = new Set(['accounts', 'snapshots', 'holdings', 'preferences']);
+const ALLOWED_DOMAINS = new Set(['accounts', 'snapshots', 'holdings', 'allocation', 'preferences']);
 const encoder = new TextEncoder();
 const loginFailures = new Map();
 
@@ -77,7 +77,7 @@ async function secretsMatch(provided, expected) {
 }
 
 async function loadData(db, identity) {
-  const [stateResult, accountsResult, snapshotsResult, holdingsResult, preferencesResult] = await db.batch([
+  const [stateResult, accountsResult, snapshotsResult, holdingsResult, preferencesResult, allocationResult] = await db.batch([
     db.prepare('SELECT revision, updated_at FROM pam_user_state WHERE owner_id = ?').bind(identity.ownerId),
     db.prepare(`SELECT id, name, currency, created_at, updated_at
       FROM pam_accounts WHERE owner_id = ? ORDER BY position, created_at, id`).bind(identity.ownerId),
@@ -86,7 +86,8 @@ async function loadData(db, identity) {
     db.prepare(`SELECT id, account_id, symbol, name, asset_class, market, quantity, cost_price,
       current_price, currency, price_source, price_updated_at, as_of_date, note
       FROM pam_holdings WHERE owner_id = ? ORDER BY id`).bind(identity.ownerId),
-    db.prepare('SELECT data FROM pam_preferences WHERE owner_id = ?').bind(identity.ownerId)
+    db.prepare('SELECT data FROM pam_preferences WHERE owner_id = ?').bind(identity.ownerId),
+    db.prepare('SELECT data FROM pam_allocation WHERE owner_id = ?').bind(identity.ownerId)
   ]);
 
   const state = stateResult.results?.[0];
@@ -127,6 +128,7 @@ async function loadData(db, identity) {
         asOfDate: row.as_of_date,
         note: row.note
       })),
+      allocation: parseJsonObject(allocationResult.results?.[0]?.data),
       preferences: parseJsonObject(preferencesResult.results?.[0]?.data)
     }
   }, 200, noStoreHeaders());
@@ -231,7 +233,9 @@ function appendDomainStatements(statements, db, domain, value, context) {
     return;
   }
 
-  statements.push(db.prepare(`INSERT INTO pam_preferences (owner_id, data, updated_at)
+  // Allocation and preferences are single JSON documents per owner; the table name is never user input.
+  const documentTable = domain === 'allocation' ? 'pam_allocation' : 'pam_preferences';
+  statements.push(db.prepare(`INSERT INTO ${documentTable} (owner_id, data, updated_at)
     SELECT ?, ?, ? WHERE ${ownsWrite}
     ON CONFLICT(owner_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`)
     .bind(ownerId, JSON.stringify(value), now, ownerId, writeToken));
@@ -258,6 +262,7 @@ function validateDomain(domain, value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return 'Invalid preferences';
     return '';
   }
+  if (domain === 'allocation') return isAllocation(value) ? '' : 'Invalid allocation';
   if (!Array.isArray(value)) return `Invalid ${domain}`;
   if (value.length > MAX_COUNTS[domain]) return `Too many ${domain}`;
   const validators = { accounts: isAccount, snapshots: isSnapshot, holdings: isHolding };
@@ -304,6 +309,16 @@ function isHolding(item) {
     && isBoundedString(item.priceUpdatedAt, 60)
     && isBoundedString(item.asOfDate, 20)
     && isBoundedString(item.note, 500);
+}
+
+function isAllocation(value) {
+  if (!isObject(value)) return false;
+  const ids = value.excludedAccountIds;
+  return Array.isArray(ids)
+    && ids.length <= MAX_COUNTS.accounts
+    && ids.every(id => isShortString(id, 120))
+    && new Set(ids).size === ids.length
+    && (value.updatedAt === '' || isIsoDateTime(value.updatedAt));
 }
 
 async function login(request, env) {

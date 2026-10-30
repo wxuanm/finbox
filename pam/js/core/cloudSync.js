@@ -1,6 +1,6 @@
 const SYNC_META_KEY = 'pam:v1:cloud-sync';
 const CHANGE_EVENT = 'pam:local-data-change';
-const ALL_DOMAINS = ['accounts', 'snapshots', 'holdings', 'preferences'];
+const ALL_DOMAINS = ['accounts', 'snapshots', 'holdings', 'allocation', 'preferences'];
 const SYNC_DELAY_MS = 700;
 const RETRY_DELAY_MS = 12_000;
 
@@ -347,6 +347,9 @@ function normalizeCloudData(value) {
         accounts: Array.isArray(data.accounts) ? data.accounts : [],
         snapshots: Array.isArray(data.snapshots) ? data.snapshots : [],
         holdings: Array.isArray(data.holdings) ? data.holdings : [],
+        allocation: data.allocation && typeof data.allocation === 'object' && !Array.isArray(data.allocation)
+            ? data.allocation
+            : {},
         preferences: data.preferences && typeof data.preferences === 'object' && !Array.isArray(data.preferences)
             ? data.preferences
             : {}
@@ -358,7 +361,7 @@ function hasBusinessData(data) {
 }
 
 function emptyData() {
-    return { accounts: [], snapshots: [], holdings: [], preferences: {} };
+    return { accounts: [], snapshots: [], holdings: [], allocation: {}, preferences: {} };
 }
 
 async function readResponseJson(response) {
