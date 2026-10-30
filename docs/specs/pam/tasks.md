@@ -135,11 +135,12 @@ P1: Current allocation
 
 P2: Targets and rebalancing
 
-- [ ] Add the targets dialog with bands, fill-from-current, and clear.
-- [ ] Implement drift, 5/25 band status, and `新增资金` / `买卖调整` rebalancing amounts.
-- [ ] Render target ticks, bands, and status on class bars, plus the rebalance panel; persist `allocationRebalanceMode`.
-- [ ] Include allocation in the sync-conflict loss message and demo data.
-- [ ] Verify through `wrangler pages dev`: calculations against hand-checked examples, privacy, sync and backup round trip, no ECharts, light and dark themes, both languages, desktop and 360px mobile.
+- [x] Add the targets dialog with bands, fill-from-current, and clear.
+- [x] Implement drift, 5/25 band status, and `新增资金` / `买卖调整` rebalancing amounts, including the blocked case (a 0% target that still holds value).
+- [x] Render target ticks, bands, and status on class bars, plus the rebalance panel; persist `allocationRebalanceMode`.
+- [x] Include allocation in the sync-conflict loss message and demo data.
+- [x] Validate targets and bands on the server with the shared normalizers from `allocationMetrics.js`.
+- [x] Verify: calculations against hand-checked examples (minimum new money, no overshoot below it, trades summing to 0, blocked class); through `wrangler pages dev`, server acceptance of P1- and P2-shaped data and rejection of broken targets/bands; dialog validation, drift and status, both modes, mode and targets across reload and cloud, privacy, English, dark theme, 1000px stacking, and 390/360px phones with no page scroll or clipping.
 
 ## Recommended Future Hardening
 

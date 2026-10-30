@@ -6022,6 +6022,13 @@ select,
 }
 
 /* Asset allocation: HTML bars and tables only, so the view works without ECharts. */
+.alloc-head-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .alloc-head-action {
     display: inline-flex;
     flex: 0 0 auto;
@@ -6041,6 +6048,10 @@ select,
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     margin: 0;
+}
+
+.alloc-stats.four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .alloc-stats > div {
@@ -6149,10 +6160,11 @@ select,
     border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
 }
 
-/* Name | bar | figures | chevron on wide cards; the bar drops to its own line on narrow ones. */
+/* Name | bar | figures | chevron on wide cards; the bar drops to its own line on narrow ones.
+   The bar track is capped so the figures stay next to it on wide screens. */
 .alloc-class-toggle {
     display: grid;
-    grid-template-columns: minmax(96px, 160px) minmax(0, 1fr) minmax(112px, auto) 16px;
+    grid-template-columns: minmax(96px, 160px) minmax(0, 560px) minmax(112px, 1fr) 16px;
     grid-template-areas: "name bar figures chevron";
     gap: 6px 16px;
     align-items: center;
@@ -6213,6 +6225,7 @@ select,
 }
 
 .alloc-bar {
+    position: relative;
     grid-area: bar;
     height: 10px;
     overflow: hidden;
@@ -6221,12 +6234,308 @@ select,
 }
 
 /* One hue for every class: each row is already named, and P/L red/green stays out of this view. */
-.alloc-bar > span {
+.alloc-bar-fill {
+    position: relative;
     display: block;
     min-width: 2px;
     height: 100%;
     border-radius: 0 4px 4px 0;
     background: color-mix(in srgb, var(--primary-color) 78%, transparent);
+}
+
+/* Tolerance band behind the fill and a target tick above it, on the same 0-100% scale. */
+.alloc-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: color-mix(in srgb, var(--heading-color) 12%, transparent);
+}
+
+.alloc-target-tick {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--heading-color);
+}
+
+.alloc-class-target {
+    display: flex;
+    flex-wrap: wrap;
+    grid-area: target;
+    gap: 2px 10px;
+    align-items: baseline;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.alloc-drift {
+    color: var(--heading-color);
+}
+
+/* Status always reads as text; only under/over carry the warning tone, never P/L red/green. */
+.alloc-status {
+    padding: 1px 7px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.alloc-status.under,
+.alloc-status.over {
+    border-color: color-mix(in srgb, var(--warning-color) 55%, var(--border-color));
+    color: var(--heading-color);
+    background: color-mix(in srgb, var(--warning-color) 16%, transparent);
+}
+
+.alloc-class-row.with-target .alloc-class-toggle {
+    grid-template-areas:
+        "name bar figures chevron"
+        "name target figures chevron";
+}
+
+.alloc-mode-switch {
+    flex: 0 0 auto;
+}
+
+.alloc-class-toggle.static {
+    cursor: default;
+}
+
+.alloc-class-toggle.static:hover {
+    background: transparent;
+}
+
+.alloc-class-row.empty .alloc-class-figures strong {
+    color: var(--muted-text);
+}
+
+.alloc-target-prompt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: 1px dashed color-mix(in srgb, var(--primary-color) 30%, var(--border-color));
+    border-radius: var(--radius-lg);
+}
+
+.alloc-target-prompt p {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 13px;
+}
+
+/* Wide cards put class bars and the rebalance panel side by side. */
+.alloc-main {
+    display: grid;
+    gap: 18px;
+    min-width: 0;
+}
+
+@container (min-width: 1040px) {
+    .alloc-main.has-targets {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        align-items: start;
+    }
+}
+
+.alloc-rebalance-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.alloc-rebalance-warning {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.alloc-cash-in {
+    display: grid;
+    gap: 6px;
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+}
+
+.alloc-cash-in label {
+    display: grid;
+    gap: 4px;
+}
+
+.alloc-cash-in label > span {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.alloc-cash-in input {
+    width: 100%;
+    min-height: 38px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--heading-color);
+    background: var(--surface-muted);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.alloc-cash-in-status {
+    margin: 0;
+    color: var(--heading-color);
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.5;
+}
+
+.alloc-trade {
+    font-weight: 800;
+}
+
+.alloc-trade.sell {
+    color: var(--muted-text);
+}
+
+.alloc-targets-form {
+    display: grid;
+    gap: 14px;
+}
+
+.alloc-target-inputs {
+    display: grid;
+    gap: 8px;
+}
+
+.alloc-target-input {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-color);
+}
+
+.alloc-target-input > span:first-child {
+    display: grid;
+    gap: 2px;
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.alloc-target-input small {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.alloc-target-field {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--muted-text);
+    font-weight: 800;
+}
+
+.alloc-target-field input,
+.alloc-band-fields input {
+    width: 96px;
+    min-height: 36px;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--heading-color);
+    background: var(--surface-muted);
+    font: inherit;
+    font-weight: 800;
+    text-align: right;
+}
+
+.alloc-target-total {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    color: var(--muted-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.alloc-target-total strong {
+    color: var(--heading-color);
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+}
+
+.alloc-target-total strong.invalid {
+    color: var(--warning-color);
+}
+
+.alloc-target-total .ghost-btn {
+    margin-left: auto;
+}
+
+.alloc-band-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.alloc-band-fields legend {
+    padding: 0 4px;
+    color: var(--heading-color);
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.alloc-band-fields label {
+    display: grid;
+    gap: 4px;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.alloc-band-fields input {
+    width: 100%;
+}
+
+.alloc-band-help {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.alloc-targets-actions .alloc-clear-targets {
+    margin-left: auto;
+}
+
+.alloc-targets-actions .primary-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .alloc-chevron {
@@ -6393,11 +6702,13 @@ select,
 }
 
 @container (max-width: 560px) {
-    .alloc-class-toggle {
+    .alloc-class-toggle,
+    .alloc-class-row.with-target .alloc-class-toggle {
         grid-template-columns: minmax(0, 1fr) auto 16px;
         grid-template-areas:
             "name figures chevron"
-            "bar bar bar";
+            "bar bar bar"
+            "target target target";
         padding: 10px 12px;
     }
 
@@ -6436,6 +6747,12 @@ select,
     .alloc-holding-name small {
         display: block;
     }
+
+    /* The class rows above already show current amounts, so phones keep adjustment and result. */
+    .alloc-rebalance-table .alloc-target-col,
+    .alloc-rebalance-table .alloc-current-col {
+        display: none;
+    }
 }
 
 @media (max-width: 720px) {
@@ -6444,7 +6761,7 @@ select,
         align-items: center;
     }
 
-    .allocation-panel .alloc-head-action {
+    .allocation-panel .alloc-head-actions {
         margin-left: auto;
     }
 
@@ -6458,8 +6775,28 @@ select,
         gap: 8px;
     }
 
-    .alloc-stats > div:first-child {
+    .alloc-stats.four {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Three stats: the total spans a row; four stats already pair up as 2×2. */
+    .alloc-stats:not(.four) > div:first-child {
         grid-column: 1 / -1;
+    }
+
+    .alloc-target-total .ghost-btn {
+        margin-left: 0;
+    }
+
+    .alloc-target-field input {
+        width: 84px;
+    }
+
+    /* Full-width two-segment control, like the holdings view switch. */
+    .alloc-rebalance-head .alloc-mode-switch {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
     }
 
     .alloc-stats > div {

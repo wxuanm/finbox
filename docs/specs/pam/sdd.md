@@ -221,7 +221,7 @@ See `docs/specs/pam/holdings.md` for detailed holdings requirements, data model,
 
 ### Asset Allocation
 
-See `docs/specs/pam/allocation.md` for the `资产配置` module. P1 is implemented: cross-account allocation by holding asset class, coverage and stale-price share, per-account mix, and account inclusion. P2 (target weights, drift, and rebalancing amounts) is planned.
+See `docs/specs/pam/allocation.md` for the `资产配置` module. It covers cross-account allocation by holding asset class, coverage and stale-price share, per-account mix, account inclusion, target weights with a 5/25 tolerance band, drift and status, and class-level rebalancing amounts (buy-only new money or buy and sell). Allocation history (P3) is planned.
 
 ## 3. Calculation Spec
 

@@ -11,15 +11,15 @@ import { bindAccountComparison, renderAccountComparison, renderOverviewCards } f
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
-import { buildHoldingsMetrics, isStalePrice } from './modules/holdings/holdingsMetrics.js';
+import { buildHoldingsMetrics, getAssetClassLabel, isStalePrice } from './modules/holdings/holdingsMetrics.js';
 import { HOLDING_VIEWS, bindHoldingsPanel, renderHoldingsPanel, resetHoldingForm, showHoldingMessage } from './modules/holdings/holdingsPanel.js';
 import { fetchQuotes } from './modules/holdings/quoteApi.js';
 import { SNAPSHOT_DATE_REFERENCE_FUNDS, getAccountHoldingMarketValue, resolveReferenceNavDate, resolveSnapshotPrice } from './modules/holdings/snapshotValuation.js';
 import { resizeHoldingChart } from './modules/holdings/holdingsChartShared.js';
-import { buildAllocationMetrics, normalizeAllocation } from './modules/allocation/allocationMetrics.js';
-import { bindAllocationPanel, renderAllocationPanel } from './modules/allocation/allocationPanel.js';
+import { ALLOCATION_CLASSES, buildAllocationMetrics, isTargetSumValid, normalizeAllocation, normalizeBand, normalizeTargets, suggestTargets } from './modules/allocation/allocationMetrics.js';
+import { REBALANCE_MODES, bindAllocationPanel, renderAllocationPanel } from './modules/allocation/allocationPanel.js';
 import { loadAllocation, saveAllocation } from './modules/allocation/storage.js';
-import { escapeHtml, formatCurrency, todayKey } from './utils/formatter.js';
+import { escapeHtml, formatCurrency, formatWeight, todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
 let snapshotGenerationInProgress = false;
@@ -115,6 +115,7 @@ async function initializeWorkspace(user) {
     state.holdingSortOrder = preferences.holdingSortOrder || state.holdingSortOrder;
     state.holdingView = normalizeHoldingView(preferences.holdingView);
     state.accountTrendView = normalizeAccountTrendView(preferences.accountTrendView);
+    state.allocationRebalanceMode = normalizeRebalanceMode(preferences.allocationRebalanceMode);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
 
     applyTheme(state.theme);
@@ -433,8 +434,27 @@ function bindEvents() {
         event.preventDefault();
         closeAllocationInclusionDialog();
     });
+    document.getElementById('allocationTargetsBtn')?.addEventListener('click', openAllocationTargetsDialog);
+    document.getElementById('allocationTargetsForm')?.addEventListener('submit', saveAllocationTargets);
+    document.getElementById('allocationTargetsForm')?.addEventListener('input', updateAllocationTargetsForm);
+    document.getElementById('allocationFillCurrentBtn')?.addEventListener('click', fillAllocationTargetsFromCurrent);
+    document.getElementById('allocationClearTargetsBtn')?.addEventListener('click', confirmClearAllocationTargets);
+    document.querySelectorAll('[data-allocation-targets-close]').forEach(button => {
+        button.addEventListener('click', closeAllocationTargetsDialog);
+    });
+    document.getElementById('allocationTargetsDialog')?.addEventListener('cancel', event => {
+        event.preventDefault();
+        closeAllocationTargetsDialog();
+    });
     bindAllocationPanel({
         onOpenInclusion: openAllocationInclusionDialog,
+        onOpenTargets: openAllocationTargetsDialog,
+        onModeChange: mode => {
+            state.allocationRebalanceMode = normalizeRebalanceMode(mode);
+            persistPreferences();
+            renderApp();
+        },
+        onRender: renderApp,
         onGoToAccount: accountId => {
             if (state.accounts.some(account => account.id === accountId)) state.selectedAccountId = accountId;
             switchView('assetData');
@@ -870,6 +890,143 @@ function touchAllocation(changes) {
     return { ...state.allocation, ...changes, updatedAt: new Date().toISOString() };
 }
 
+function currentAllocationMetrics() {
+    const { allRows } = buildHoldingsMetrics(state.holdings, state.accounts, state.holdingFilters);
+    return buildAllocationMetrics({
+        accounts: state.accounts,
+        snapshots: state.snapshots,
+        rows: allRows.map(row => ({ ...row, stale: isStalePrice(row) })),
+        excludedAccountIds: state.allocation.excludedAccountIds
+    });
+}
+
+function openAllocationTargetsDialog() {
+    const dialog = document.getElementById('allocationTargetsDialog');
+    const container = document.getElementById('allocationTargetInputs');
+    if (!dialog || !container) return;
+    const metrics = currentAllocationMetrics();
+    const targets = state.allocation.targets || suggestTargets(metrics.classes);
+    container.innerHTML = ALLOCATION_CLASSES.map(assetClass => {
+        const current = metrics.classes.find(item => item.assetClass === assetClass)?.weight || 0;
+        return `
+            <label class="alloc-target-input">
+                <span>${getAssetClassLabel(assetClass)}<small>${t('allocationTargetCurrent', { weight: formatWeight(current) })}</small></span>
+                <span class="alloc-target-field">
+                    <input type="number" inputmode="decimal" min="0" max="100" step="0.1" name="target-${assetClass}" value="${targets[assetClass]}">
+                    <span aria-hidden="true">%</span>
+                </span>
+            </label>
+        `;
+    }).join('');
+    document.getElementById('allocationBandAbsoluteInput').value = state.allocation.band.absolute;
+    document.getElementById('allocationBandRelativeInput').value = state.allocation.band.relative;
+    document.getElementById('allocationClearTargetsBtn').hidden = !state.allocation.targets;
+    document.getElementById('allocationFillCurrentBtn').disabled = metrics.totalValue <= 0;
+    updateAllocationTargetsForm();
+    if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else if (!dialog.open) {
+        dialog.setAttribute('open', '');
+    }
+}
+
+function closeAllocationTargetsDialog() {
+    const dialog = document.getElementById('allocationTargetsDialog');
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') {
+        dialog.close();
+    } else {
+        dialog.removeAttribute('open');
+    }
+}
+
+// Read the dialog as typed. Each field is checked separately so the message names the real problem.
+function readAllocationTargetsForm() {
+    const form = document.getElementById('allocationTargetsForm');
+    const raw = Object.fromEntries(ALLOCATION_CLASSES.map(assetClass => [
+        assetClass,
+        form.querySelector(`[name="target-${assetClass}"]`).value.trim()
+    ]));
+    const targets = {};
+    let valuesValid = true;
+    ALLOCATION_CLASSES.forEach(assetClass => {
+        const num = raw[assetClass] === '' ? 0 : Number(raw[assetClass]);
+        if (!Number.isFinite(num) || num < 0 || num > 100 || Math.abs(Math.round(num * 10) - num * 10) > 1e-6) valuesValid = false;
+        targets[assetClass] = Number.isFinite(num) ? Math.round(num * 10) / 10 : 0;
+    });
+    const total = ALLOCATION_CLASSES.reduce((sum, assetClass) => sum + targets[assetClass], 0);
+    const band = {
+        absolute: Number(document.getElementById('allocationBandAbsoluteInput').value),
+        relative: Number(document.getElementById('allocationBandRelativeInput').value)
+    };
+    const normalizedBand = normalizeBand(band);
+    const bandValid = normalizedBand.absolute === band.absolute && normalizedBand.relative === band.relative;
+    return { targets, total, band, valuesValid, sumValid: isTargetSumValid(targets), bandValid };
+}
+
+function updateAllocationTargetsForm() {
+    const form = readAllocationTargetsForm();
+    const totalEl = document.getElementById('allocationTargetTotal');
+    totalEl.textContent = formatWeight(form.total);
+    totalEl.classList.toggle('invalid', !form.sumValid);
+    const absolute = Number.isFinite(form.band.absolute) ? form.band.absolute : '-';
+    const relative = Number.isFinite(form.band.relative) ? form.band.relative : '-';
+    document.getElementById('allocationBandHelp').textContent = t('allocationBandHelp', { absolute, relative });
+    const message = !form.valuesValid
+        ? t('allocationTargetsValueError')
+        : !form.sumValid
+            ? t('allocationTargetsSumError', { total: formatWeight(form.total) })
+            : !form.bandValid ? t('allocationBandError') : '';
+    document.getElementById('allocationTargetsMessage').textContent = message;
+    document.getElementById('allocationTargetsSaveBtn').disabled = Boolean(message);
+}
+
+function fillAllocationTargetsFromCurrent() {
+    const suggested = suggestTargets(currentAllocationMetrics().classes);
+    ALLOCATION_CLASSES.forEach(assetClass => {
+        const input = document.querySelector(`#allocationTargetsForm [name="target-${assetClass}"]`);
+        if (input) input.value = suggested[assetClass];
+    });
+    updateAllocationTargetsForm();
+}
+
+function saveAllocationTargets(event) {
+    event.preventDefault();
+    const form = readAllocationTargetsForm();
+    if (!form.valuesValid || !form.sumValid || !form.bandValid) {
+        updateAllocationTargetsForm();
+        return;
+    }
+    const targets = normalizeTargets(form.targets);
+    if (!targets) return;
+    state.allocation = touchAllocation({ targets, band: normalizeBand(form.band) });
+    saveAllocation(state.allocation);
+    closeAllocationTargetsDialog();
+    renderApp();
+    showAppMessage(t('allocationTargetsSaved'));
+}
+
+function confirmClearAllocationTargets() {
+    closeAllocationTargetsDialog();
+    showConfirmDialog({
+        eyebrow: 'Target Allocation',
+        title: t('allocationClearTitle'),
+        description: t('allocationClearDesc'),
+        message: t('allocationClearMessage'),
+        confirmLabel: t('allocationClearTargets'),
+        onConfirm: () => {
+            state.allocation = touchAllocation({ targets: null });
+            saveAllocation(state.allocation);
+            renderApp();
+            showAppMessage(t('allocationTargetsCleared'));
+        }
+    });
+}
+
+function normalizeRebalanceMode(mode) {
+    return REBALANCE_MODES.some(([key]) => key === mode) ? mode : 'cashIn';
+}
+
 function renderActiveView() {
     document.querySelectorAll('.module-tab[data-view]').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.view === state.activeView);
@@ -1172,6 +1329,10 @@ function addDemoData() {
     state.accounts.push(...demoAccounts);
     state.snapshots.push(...demoSnapshots);
     state.holdings.push(...demoHoldings);
+    // Example targets only when the user has none, so demo data never overwrites a real plan.
+    if (!state.allocation.targets) {
+        state.allocation = touchAllocation({ targets: { stock: 25, fund: 40, bond: 10, other: 15, cash: 10 } });
+    }
     state.selectedAccountId = steady.id;
     state.selectedPeriod = '3M';
     state.activeView = 'assetData';
@@ -1237,6 +1398,7 @@ function exportData() {
                 holdingSortOrder: state.holdingSortOrder,
                 holdingView: state.holdingView,
                 accountTrendView: state.accountTrendView,
+                allocationRebalanceMode: state.allocationRebalanceMode,
                 currentLang: state.currentLang
             }
         }
@@ -1310,6 +1472,7 @@ function applyImportedData(data) {
     state.holdingSortOrder = Number(data.preferences.holdingSortOrder) || -1;
     state.holdingView = normalizeHoldingView(data.preferences.holdingView);
     state.accountTrendView = normalizeAccountTrendView(data.preferences.accountTrendView);
+    state.allocationRebalanceMode = normalizeRebalanceMode(data.preferences.allocationRebalanceMode);
     state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';
@@ -1997,6 +2160,7 @@ function getCurrentPreferences() {
         holdingSortOrder: state.holdingSortOrder,
         holdingView: state.holdingView,
         accountTrendView: state.accountTrendView,
+        allocationRebalanceMode: state.allocationRebalanceMode,
         currentLang: state.currentLang
     };
 }
@@ -2031,6 +2195,7 @@ function applyCloudData(data) {
     state.holdingSortOrder = Number(preferences.holdingSortOrder) || -1;
     state.holdingView = normalizeHoldingView(preferences.holdingView);
     state.accountTrendView = normalizeAccountTrendView(preferences.accountTrendView);
+    state.allocationRebalanceMode = normalizeRebalanceMode(preferences.allocationRebalanceMode);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';

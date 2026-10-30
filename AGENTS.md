@@ -39,6 +39,7 @@
 - Account return calculations are cash-flow adjusted: net flows change shares at the previous unit NAV, and chart lines connect manual snapshots without smoothing.
 - Holdings quote refresh only supports `CN` and `Fund` markets through `/api/quotes`; cash and unsupported markets remain manually priced.
 - Snapshot `source` is omitted (manual), `holdings` (browser dialog), or `auto` (daily job). Valuation rules shared by the browser and the job live in `pam/js/modules/holdings/snapshotValuation.js`; keep it free of DOM, `state`, i18n, and local-timezone helpers because a Pages Function imports it.
+- Allocation code is under `pam/js/modules/allocation/`; its exclusions, targets, and band sync as their own `allocation` domain (`pam_allocation`, migration `0004`). `allocationMetrics.js` is imported by `functions/api/pam/[[path]].js` to validate writes, so keep it free of DOM, `state`, i18n, and local-timezone helpers too.
 - Snapshot sync is full replace guarded by `revision`. Anything else that writes snapshots must bump `revision` the same way, or a stale browser will delete its rows. When the cloud revision has moved, the browser always loads the latest cloud data and discards its unsynced edits, telling the user when snapshots, holdings, or accounts were lost.
 - PAM imports ECharts from CDN in `pam/index.html`; handle ECharts absence without blocking account/holding management.
 

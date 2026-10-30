@@ -4,7 +4,7 @@
 
 - Module: 资产配置 top-level workspace view
 - Parent tool: PAM
-- Status: P1 implemented; P2 planned
+- Status: P1 and P2 implemented
 - First release focus: cross-account allocation by the existing holding asset classes, target weights, drift, and rebalancing amounts
 
 ## Product Goal
@@ -59,7 +59,7 @@ P2: Targets and rebalancing
 
 ## Data Model
 
-New storage key `pam:v1:allocation`, wrapped like other domains as `{ schemaVersion: 1, data }`. P1 stores only the exclusion list; P2 adds `targets` and `band`:
+New storage key `pam:v1:allocation`, wrapped like other domains as `{ schemaVersion: 1, data }`. P1 stored only the exclusion list; P2 added `targets` and `band`, and P1-shaped data still loads:
 
 ```js
 {
@@ -78,9 +78,11 @@ New storage key `pam:v1:allocation`, wrapped like other domains as `{ schemaVers
 | `band.absolute` (P2) | Absolute tolerance, percentage points | Finite, 0.5–20, default 5 |
 | `band.relative` (P2) | Relative tolerance, percent of the target | Finite, 5–100, default 25 |
 
-Normalization tolerates missing or malformed data and falls back to `{ excludedAccountIds: [], updatedAt: '' }`. In P2 the fallback adds `targets: null, band: { absolute: 5, relative: 25 }`, and a `targets` object that is malformed or does not sum to 100 normalizes to `null` instead of being repaired, so a broken target never produces rebalancing amounts. P2 must extend `normalizeAllocation` and the server's `isAllocation` together.
+Normalization tolerates missing or malformed data and falls back to `{ excludedAccountIds: [], updatedAt: '', targets: null, band: { absolute: 5, relative: 25 } }`. A `targets` object that is malformed or does not sum to 100 normalizes to `null` instead of being repaired, so a broken target never produces rebalancing amounts; an out-of-range band value falls back to its default.
 
-Preferences gain `allocationRebalanceMode` (`cashIn` or `full`, default `cashIn`; invalid values fall back to `cashIn`). The new-money amount typed into the rebalance panel is not persisted.
+The server imports `normalizeTargets` and `normalizeBand` from `allocationMetrics.js` (the module is DOM-free for this reason) and accepts a write only when normalizing changes nothing. A broken target set or band is therefore rejected with `400 Invalid allocation`, never silently repaired, and the browser and server rules cannot drift apart. `targets` and `band` may be omitted, so a P1 client can still write.
+
+Preferences gain `allocationRebalanceMode` (`cashIn` or `full`, default `cashIn`; invalid values fall back to `cashIn`). The new-money amount typed into the rebalance panel is kept across re-renders but not persisted.
 
 ## Calculations
 
@@ -146,7 +148,16 @@ required  = T* - T
 buy*[c]   = targets[c] / 100 * T* - classValue[c]
 ```
 
-If any class has `targets[c] = 0` and `classValue[c] > 0`, buying alone can never reach target. The panel says so, names the class, and computes `T*` over the remaining classes.
+If any class has `targets[c] = 0` and `classValue[c] > 0`, buying alone can never reach target: that class is `blocked`. The panel says so and names it. The blocked classes keep their value, and the reachable classes (target above 0) aim at their target ratio of what is left:
+
+```text
+B         = sum(classValue of blocked classes)
+share[c]  = targets[c] / sum(targets of reachable classes)
+T*        = max(T, B + max(classValue[c] / share[c] for reachable c))
+aim[c]    = share[c] * (T_after - B)        // reachable; 0 for blocked
+```
+
+`required`, `buy*`, and the surplus split above `required` use `share` and `aim` in place of `targets / 100`. The table's target-amount column shows `aim`, so it matches what the plan buys toward rather than a target it cannot reach. Without a blocked class this reduces to the formulas above.
 
 With a user-entered amount `C > 0`:
 
@@ -178,10 +189,11 @@ With no accounts, every account excluded, or no included holding above 0, the co
 ### Class bars
 
 - Fixed class order `stock`, `fund`, `bond`, `other`, `cash`, with cash last as in the holdings table. The order is fixed, not sorted by weight, so a row stays in place as values move.
-- A class row shows when it has value (P2: or a target above 0).
+- A class row shows when it has value or a target above 0. A row with a target but no holdings is static (nothing to expand).
 - Each row shows class name with its holding count, a horizontal bar of the current weight, the weight (2 decimals), and the amount.
 - Every bar uses the same lightened primary hue, like the holdings `仓位分布` view. Each row is already named, so color carries no identity, and P/L red/green stays out of this view.
-- With targets set (P2), the bar track also shows the tolerance band as a shaded range and the target as a tick. The row adds `目标 x%`, signed drift in pp, and a status label. Status uses `--warning-color` for `低配`/`超配` and stays neutral for `正常`, and is always stated in text. Rise/fall red and green are not used, because drift is not profit or loss.
+- With targets set, the bar track also shows the tolerance band as a shaded range and the target as a tick, on the same true 0–100% scale as the fill (not rescaled, so the bar still reads as where the money sits). The row adds `目标 x%`, signed drift in pp, and a status label. Status uses `--warning-color` for `低配`/`超配` and stays neutral for `正常`, and is always stated in text. Rise/fall red and green are not used, because drift is not profit or loss. A footnote states the active band. On desktop the bar track is capped at 560px so the figures stay next to it.
+- Without targets, a prompt under the class bars offers `设置目标`; the rebalance panel and target lines are hidden.
 - Each row is a button (`aria-expanded`) that expands its holdings: name, account, amount, and weight of `T`, sorted by amount descending, with the `⚠` prefix for stale prices. Expanded rows stay open across re-renders until reload. Holdings rows link to nothing; holdings are edited in `账户管理`.
 - On narrow cards (container below 560px) name and figures share the first line and the bar takes the second. The expanded list then drops its account column and shows the account name under the holding name, so it fits a 360px phone.
 - A footnote states the asset-class limitation in one line.
@@ -199,18 +211,19 @@ With no accounts, every account excluded, or no included holding above 0, the co
 
 ### Targets dialog (P2)
 
-- `设置目标` opens a dialog with one number input per class, prefilled with current targets. When none are set, inputs start at the current weights rounded to whole numbers, adjusted so they sum to 100.
-- A live total shows `合计 x%`. Save is disabled unless the total is 100. A `按当前比例填充` action re-fills from the current weights.
-- The same dialog edits the absolute and relative bands, with one-line help: `偏离超过 a 个百分点或目标的 r% 时提示调整`.
-- `清除目标` sets `targets` to `null` after in-app confirmation. The P2 sections then hide and are replaced by a prompt to set targets.
+- `设置目标` (header, and the prompt when no targets exist) opens a dialog with one number input per class, each showing that class's current weight. Inputs are prefilled with current targets; when none are set, they start at the current weights rounded to whole numbers by largest remainder, so they sum to exactly 100.
+- A live total shows `合计 x%`. Save is disabled, with a message naming the problem, unless every value is 0–100 with at most 1 decimal, the total is 100, and both bands are in range. An empty input counts as 0. `按当前比例填充` re-fills from the current weights.
+- The same dialog edits the absolute and relative bands, with live help: `偏离超过 a 个百分点或目标的 r% 时提示调整，以先达到者为准`.
+- `清除目标` appears only when targets exist. It sets `targets` to `null` after in-app confirmation; the band is kept.
 
 ### Rebalance panel (P2)
 
 - Shown only when targets are set and `T > 0`.
 - Mode switch: `新增资金` / `买卖调整`, persisted in preferences.
-- `新增资金`: an amount input, empty by default. When empty, the panel shows `回到目标至少需新增 required` and the `buy*` breakdown. With an amount, it shows the `buy` breakdown and resulting weights.
+- `新增资金`: an amount input, empty by default. When empty, the panel shows `回到目标至少需新增 required` (or that it is already on target) and the `buy*` breakdown. With an amount, it shows the `buy` breakdown and resulting weights, and below `required` explains that the money is split across gaps without passing any target. The amount applies on blur or Enter rather than per keystroke, so typing keeps focus; zero, negative, or invalid input clears it.
 - `买卖调整`: shows `trade` per class as `买入` or `卖出` with the resulting weights, which equal the targets.
-- Table columns: class, current amount, target amount, adjustment, weight after.
+- Stale prices and missing-holdings accounts each add a one-line warning above the amounts.
+- Table columns: class, current amount, target amount, adjustment, weight after. Rows show only classes with value, a target, or a trade.
 - One-line disclaimer: amounts are class-level, exclude fees and taxes, and are not instrument recommendations.
 
 ### Account mix
@@ -222,8 +235,8 @@ With no accounts, every account excluded, or no included holding above 0, the co
 
 ### Responsive
 
-- Desktop: stats row in three columns (P2 adds `最大偏离` as a fourth). P2: class bars and the rebalance panel sit side by side when the view is at least 1080px wide, otherwise stacked.
-- Phones (below 720px): `纳入资产` spans the first stats row and the other two stats share the next. The header action moves under the description, right-aligned. P2: the rebalance table drops the target-amount column, which stays visible in an expanded row. Must work at 360px without page scroll or content clipped by the panel.
+- Desktop: stats row in three columns, or four with targets (`最大偏离` shows the largest drift with its class and status). Class bars and the rebalance panel sit side by side when the content area is at least 1040px wide (a container query), otherwise stacked.
+- Phones (below 720px): with three stats `纳入资产` spans the first row and the other two share the next; with four they form a 2×2 grid. Header actions move under the description, right-aligned. The mode switch becomes a full-width two-segment control. The rebalance table drops the current-amount and target-amount columns (current amounts are already in the class rows), keeping class, adjustment, and weight after so it fits 360px without scrolling. Must work at 360px without page scroll or content clipped by the panel.
 
 ### Privacy and i18n
 
@@ -233,15 +246,15 @@ With no accounts, every account excluded, or no included holding above 0, the co
 ## Persistence, Sync, And Backup
 
 - Local cache `pam:v1:allocation`; cloud domain `allocation` in `/api/pam/data`, stored as one JSON document per owner in D1 table `pam_allocation (owner_id PRIMARY KEY, data, updated_at)` from migration `0004_pam_allocation.sql`, with an owner foreign key that cascades. Writes follow the existing domain replacement guarded by `revision`, so allocation and preferences writes never touch each other. The key is part of the browser cache that is cleared when the signed-in user changes.
-- Server validation mirrors the data model rules: an object with a unique `excludedAccountIds` string list no longer than the account limit and an ISO or empty `updatedAt`.
-- When a revision conflict discards unsynced allocation edits, the existing loss message is shown, as for accounts, snapshots, and holdings. A lost `allocationRebalanceMode` (P2) is a preference and stays silent.
-- JSON export adds `data.allocation`. Import normalizes it, drops excluded ids missing from the imported accounts, and treats backups without it as the default.
-- P2: demo data sets example targets only when no targets exist.
+- Server validation: an object with a unique `excludedAccountIds` string list no longer than the account limit, an ISO or empty `updatedAt`, and optional `targets` and `band` that pass the shared normalizers unchanged (see Data Model).
+- When a revision conflict discards unsynced allocation edits (exclusions, targets, or bands), the existing loss message is shown, as for accounts, snapshots, and holdings. A lost `allocationRebalanceMode` is a preference and stays silent.
+- JSON export adds `data.allocation`, and preferences include `allocationRebalanceMode`. Import normalizes allocation, drops excluded ids missing from the imported accounts, and treats backups without it as the default.
+- Demo data sets example targets (stock 25, fund 40, bond 10, other 15, cash 10) only when no targets exist, so it never overwrites a real plan.
 
 ## Implementation Notes
 
-- Folder `pam/js/modules/allocation/`: `allocationMetrics.js` (pure calculations and `normalizeAllocation`), `allocationPanel.js` (render and bind), and `storage.js` (load and save). The inclusion dialog markup is static in `index.html` and its handlers live in `app.js` beside the other dialogs; P2 may move dialogs into `allocationDialogs.js`.
-- `allocationMetrics.js` takes rows, accounts, snapshots, and the exclusion list as arguments. It must not import DOM helpers, `state.js`, `i18n.js`, or `formatter.js`, and must not read the local date. That keeps it importable by a Pages Function when P3 records class values with auto snapshots. Stale flags are computed by the caller with `isStalePrice` and passed in on each row as `stale`.
+- Folder `pam/js/modules/allocation/`: `allocationMetrics.js` (pure calculations: metrics, normalization, `suggestTargets`, `buildDrift`, `buildFullRebalance`, `buildCashInRebalance`), `allocationPanel.js` (render and bind, including the rebalance panel), and `storage.js` (load and save). The inclusion and targets dialogs are static markup in `index.html` with handlers in `app.js` beside the other dialogs.
+- `allocationMetrics.js` takes rows, accounts, snapshots, and the exclusion list as arguments. It must not import DOM helpers, `state.js`, `i18n.js`, or `formatter.js`, and must not read the local date: `functions/api/pam/[[path]].js` imports its normalizers for validation, and P3 may import it to record class values with auto snapshots. Stale flags are computed by the caller with `isStalePrice` and passed in on each row as `stale`.
 - Reuse `buildHoldingsMetrics` normalization for market value. Do not duplicate the holdings formulas.
 - Recompute on every render from current state; nothing derived is stored.
 
@@ -266,6 +279,8 @@ P2
 - In `买卖调整`, trades sum to 0 and resulting weights equal targets.
 - In `新增资金` with no amount, `required` is the smallest buy-only amount that reaches target; each class's resulting weight equals its target.
 - In `新增资金` with an amount, buys are non-negative, sum to the amount, and never push a class above its target when the amount is below `required`.
-- A target-0 class holding value shows the buy-only limitation instead of an impossible amount.
-- Targets and bands sync as the `allocation` domain; losing unsynced allocation edits in a conflict shows the loss message.
+- A target-0 class holding value shows the buy-only limitation instead of an impossible amount; the reachable classes reach their relative target ratio, and the target-amount column matches what is bought toward.
+- Targets and bands sync as the `allocation` domain; losing unsynced allocation edits in a conflict shows the loss message. The server rejects broken targets or bands.
+- The rebalance mode persists across reload and syncs as a preference.
+- Demo data adds example targets only when none exist.
 - Desktop and 360px phone layouts have no horizontal scroll, in light and dark themes and in both languages.

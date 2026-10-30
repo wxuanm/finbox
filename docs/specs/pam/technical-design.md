@@ -338,7 +338,7 @@ Snapshot sync is full replace, so a stale browser must never PATCH over rows ano
 
 ## Asset Allocation
 
-`资产配置` details live in `docs/specs/pam/allocation.md`. `app.js` builds allocation metrics on every render from `buildHoldingsMetrics(...).allRows`, tagging each row with `isStalePrice`, and passes them to `renderAllocationPanel`. `activeView` accepts `allocation`. The account exclusion list is the `allocation` sync domain, not a preference, so a conflict that discards it shows the loss message.
+`资产配置` details live in `docs/specs/pam/allocation.md`. `app.js` builds allocation metrics on every render from `buildHoldingsMetrics(...).allRows`, tagging each row with `isStalePrice`, and passes them to `renderAllocationPanel`. `activeView` accepts `allocation`. The account exclusion list, target weights, and tolerance band form the `allocation` sync domain, not a preference, so a conflict that discards them shows the loss message; `allocationRebalanceMode` is a preference. The Pages Function imports `normalizeTargets` and `normalizeBand` from `allocationMetrics.js` to validate writes, so that module must stay free of DOM, `state`, i18n, and local-date helpers.
 
 ## Verification
 

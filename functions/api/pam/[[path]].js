@@ -1,4 +1,5 @@
 import { runAutoSnapshot } from './_autoSnapshot.js';
+import { normalizeBand, normalizeTargets } from '../../../pam/js/modules/allocation/allocationMetrics.js';
 
 const MAX_BODY_BYTES = 1_000_000;
 const MIN_JOB_SECRET_LENGTH = 32;
@@ -318,7 +319,25 @@ function isAllocation(value) {
     && ids.length <= MAX_COUNTS.accounts
     && ids.every(id => isShortString(id, 120))
     && new Set(ids).size === ids.length
-    && (value.updatedAt === '' || isIsoDateTime(value.updatedAt));
+    && (value.updatedAt === '' || isIsoDateTime(value.updatedAt))
+    && isAllocationTargets(value.targets)
+    && isAllocationBand(value.band);
+}
+
+// Same rules as the browser: a value passes only if normalizing it changes nothing, so a broken
+// target set is rejected instead of being silently repaired. Older clients omit both fields.
+function isAllocationTargets(targets) {
+  if (targets === undefined || targets === null) return true;
+  const normalized = normalizeTargets(targets);
+  return normalized !== null && Object.keys(targets).length === Object.keys(normalized).length
+    && Object.keys(normalized).every(key => normalized[key] === targets[key]);
+}
+
+function isAllocationBand(band) {
+  if (band === undefined) return true;
+  if (!isObject(band) || Object.keys(band).length !== 2) return false;
+  const normalized = normalizeBand(band);
+  return normalized.absolute === band.absolute && normalized.relative === band.relative;
 }
 
 async function login(request, env) {
