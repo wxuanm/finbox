@@ -19,8 +19,7 @@ export function buildAllocationMetrics({ accounts, snapshots, rows, excludedAcco
         assetClass,
         value: totals[assetClass],
         weight: totalValue > 0 ? totals[assetClass] / totalValue * 100 : null,
-        holdings: valuedRows
-            .filter(row => row.assetClass === assetClass)
+        holdings: mergeInstruments(valuedRows.filter(row => row.assetClass === assetClass))
             .sort((a, b) => b.marketValue - a.marketValue)
             .map(row => ({ ...row, weight: row.marketValue / totalValue * 100 }))
     }));
@@ -248,6 +247,27 @@ function sumClassValues(classes) {
 
 function round2(value) {
     return Math.round(value * 100) / 100;
+}
+
+// One row per instrument: holdings sharing market and symbol merge across accounts. Holdings
+// without a symbol (cash, manual entries) stay separate, since a shared name is no proof of
+// the same instrument. The merged row takes the name of its largest holding and is stale when
+// any part is.
+function mergeInstruments(rows) {
+    const groups = new Map();
+    [...rows].sort((a, b) => b.marketValue - a.marketValue).forEach((row, index) => {
+        const symbol = String(row.symbol || '').trim().toUpperCase();
+        const key = symbol ? `${row.market}:${symbol}` : `#${index}`;
+        const group = groups.get(key);
+        if (!group) {
+            groups.set(key, { ...row, accountNames: [row.accountName] });
+            return;
+        }
+        group.marketValue += row.marketValue;
+        group.stale = group.stale || row.stale;
+        if (!group.accountNames.includes(row.accountName)) group.accountNames.push(row.accountName);
+    });
+    return [...groups.values()];
 }
 
 function sumByClass(rows) {

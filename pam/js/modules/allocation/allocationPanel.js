@@ -303,9 +303,9 @@ function renderClassRow(item, drift) {
                         <tr>
                             <td class="alloc-holding-name">
                                 <span>${row.stale ? `<span class="alloc-stale" title="${escapeHtml(t('stale'))}">⚠</span> ` : ''}${escapeHtml(row.name)}</span>
-                                <small class="alloc-muted">${escapeHtml(row.accountName)}</small>
+                                <small class="alloc-muted">${escapeHtml(row.accountNames.join('、'))}</small>
                             </td>
-                            <td class="alloc-muted alloc-account-col">${escapeHtml(row.accountName)}</td>
+                            <td class="alloc-muted alloc-account-col">${escapeHtml(row.accountNames.join('、'))}</td>
                             <td class="number-cell">${formatCurrency(row.marketValue, state.amountsHidden)}</td>
                             <td class="number-cell">${formatWeight(row.weight)}</td>
                         </tr>

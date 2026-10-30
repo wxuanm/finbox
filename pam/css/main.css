@@ -6564,6 +6564,12 @@ select,
     font-size: 11px;
 }
 
+/* A merged instrument lists every holding account, so this column wraps instead of widening. */
+.alloc-holding-table td.alloc-account-col {
+    white-space: normal;
+    min-width: 8em;
+}
+
 .alloc-table {
     width: 100%;
     border-collapse: collapse;
