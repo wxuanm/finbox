@@ -111,7 +111,7 @@ coverage       = T + missingValue > 0 ? T / (T + missingValue) * 100 : null
 staleShare     = T > 0 ? sum(marketValue of rows where isStalePrice(row)) / T * 100 : null
 ```
 
-`isStalePrice` is the existing holdings rule (over three days old), so the allocation page and holdings charts flag the same rows. Coverage does not compare a held account's holdings with its own snapshot total, because the two are taken at different prices and times.
+`isStalePrice` is the existing holdings rule (over three days old, never for cash), so the allocation page and holdings charts flag the same rows. Coverage does not compare a held account's holdings with its own snapshot total, because the two are taken at different prices and times.
 
 Per-account mix uses the same formula restricted to one account; its weights sum to 100% within that account.
 

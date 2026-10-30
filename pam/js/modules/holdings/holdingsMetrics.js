@@ -67,7 +67,9 @@ export function getPriceStatusParts(row) {
     return { label: isStalePrice(row) ? t('stale') : t('quote'), date };
 }
 
+// Cash is priced at 1 by definition, so its record date says nothing about price freshness.
 export function isStalePrice(row) {
+    if (row.assetClass === 'cash' || row.market === 'Cash') return false;
     const date = String(row.priceUpdatedAt || row.asOfDate || '').slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return true;
     const updatedAt = new Date(`${date}T00:00:00`).getTime();

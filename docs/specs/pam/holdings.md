@@ -151,7 +151,7 @@ Response:
 - When an asset class or market filter is active, chart footnotes state that weights are based on the current filter.
 - With a mouse, clicking an allocation or contribution bar, or its name label, opens that holding in the edit dialog. On touch devices (`hover: none`) a tap only opens the tooltip, which stays open and carries an `编辑` button; the editor opens only from that button, so checking details never opens the editor by accident.
 - On phones the view switch is a full-width three-segment control and the two filters split the next row; the chart drops its inner card frame so it uses the panel width.
-- Charts flag stale prices (over three days old): names get a `⚠` prefix, tooltips show price status and date, and a footnote states the stale count.
+- Charts flag stale prices (over three days old; cash is never stale because it is priced at 1): names get a `⚠` prefix, tooltips show price status and date, and a footnote states the stale count.
 - Holdings detail provides a clear add-holding action and identifies manual, quoted, and stale (over three days old) valuations.
 - A-share quote refresh updates current price from the latest price, including Shanghai exchange-traded funds stored as stock/CN holdings such as `510300`. Fund quote refresh updates current price from the latest disclosed unit NAV, not the intraday estimated NAV. Refresh also updates name when available, price source, and price update time.
 - Quote refresh failure does not block manual holding maintenance.
