@@ -123,8 +123,17 @@ export function resizeChart() {
     // Snapshot density and marker placement depend on plot width, so rebuild series after the size changes.
     if (!chartContext) return;
     const chartParts = buildPerformanceChartParts(chartContext);
-    chartInstance.setOption({ xAxis: chartParts.xAxisDensity, yAxis: chartParts.yAxisBounds, series: chartParts.series }, false);
+    // Merge mode keeps the legend's theme color while the font size follows the new width.
+    chartInstance.setOption({ legend: buildLegendDensity(), xAxis: chartParts.xAxisDensity, yAxis: chartParts.yAxisBounds, series: chartParts.series }, false);
     renderChartHints(chartParts);
+}
+
+// Phones fit more legend items per page with smaller swatches and tighter gaps.
+function buildLegendDensity() {
+    const narrow = (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH;
+    return narrow
+        ? { itemWidth: 16, itemHeight: 9, itemGap: 8, left: 4, right: 4, textStyle: { fontSize: 11 } }
+        : { itemWidth: 25, itemHeight: 14, itemGap: 10, left: 'center', right: 'auto', textStyle: { fontSize: 12 } };
 }
 
 // ECharts' inside dataZoom swallows every wheel event over the plot, even when zoomOnMouseWheel is 'ctrl'.
@@ -190,10 +199,11 @@ function buildChartOption(chartParts) {
         legend: {
             type: 'scroll',
             top: 0,
+            ...buildLegendDensity(),
             data: chartParts.legendData,
             selected: Object.fromEntries(chartParts.legendData.map(name => [name, legendSelected[name] !== false])),
             formatter: name => name === BENCHMARK_SERIES_ID ? t('benchmarkShort') : name,
-            textStyle: { color: theme.text },
+            textStyle: { ...buildLegendDensity().textStyle, color: theme.text },
             pageIconColor: theme.primary,
             pageIconInactiveColor: theme.borderStrong,
             pageTextStyle: { color: theme.muted }
