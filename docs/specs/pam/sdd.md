@@ -129,7 +129,7 @@ UI direction:
 - Keep the default experience decision-first: account return overview, chart, and sortable comparison table.
 - Keep account snapshots and current holdings together under `账户管理`, organized by the selected account rather than by separate modules.
 - Show module-specific actions on the right side of the top navigation; when `账户管理` is active, show icon actions for snapshot entry, holding entry, snapshot generation, quote refresh, and add-account.
-- Mobile header and account-management actions collapse into menus or floating actions to keep the workspace usable on small screens.
+- On small screens the header stays pinned with its `...` menu, the module tabs sit in a fixed bottom bar, and account-management actions collapse into a floating `+` menu above that bar, so the main controls stay in thumb reach while scrolling.
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review.
 - Keep holdings focused on current positions, valuation, unrealized profit/loss, and portfolio weight.

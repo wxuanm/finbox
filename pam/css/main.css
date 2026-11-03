@@ -495,16 +495,6 @@ button:disabled {
     display: grid;
 }
 
-.mobile-context-actions {
-    position: relative;
-    display: none;
-    margin-left: auto;
-}
-
-.mobile-context-actions.active {
-    display: none;
-}
-
 .context-action {
     display: inline-flex;
     align-items: center;
@@ -539,46 +529,6 @@ button:disabled {
 .context-action:disabled {
     cursor: not-allowed;
     opacity: 0.5;
-}
-
-.context-action-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    z-index: 80;
-    display: none;
-    width: max-content;
-    min-width: 0;
-    padding: 6px;
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    background: var(--surface-color);
-    box-shadow: var(--shadow-md);
-}
-
-.mobile-context-actions.menu-open .context-action-menu {
-    display: grid;
-    gap: 4px;
-}
-
-.context-action-menu button {
-    width: max-content;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 10px;
-    border: 0;
-    border-radius: 9px;
-    color: var(--text-color);
-    background: transparent;
-    font-size: 12px;
-    font-weight: 750;
-    white-space: nowrap;
-}
-
-.context-action-menu button:hover {
-    background: var(--primary-soft);
 }
 
 .workspace-view {
@@ -1177,7 +1127,76 @@ button:disabled {
     box-shadow: none;
 }
 
+/* Floating "+" button and its menu: used on phones and desktop. */
 .account-floating-toggle {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 28% 22%, rgb(255 255 255 / 0.3), transparent 28%),
+        linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.account-floating-toggle span {
+    transition: transform 0.16s ease;
+}
+
+.account-context-actions.is-open .account-floating-toggle span {
+    transform: rotate(45deg);
+}
+
+.account-floating-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
+    display: grid;
+    width: 148px;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.98);
+    transform-origin: right bottom;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.account-context-actions.is-open .account-floating-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.account-context-actions.is-menu-below .account-floating-menu {
+    top: calc(100% + 10px);
+    bottom: auto;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: right top;
+}
+
+.account-context-actions.is-menu-below.is-open .account-floating-menu {
+    transform: translateY(0) scale(1);
+}
+
+.account-context-actions.is-menu-left .account-floating-menu {
+    right: auto;
+    left: 0;
+    transform-origin: left bottom;
+}
+
+.account-context-actions.is-menu-left.is-menu-below .account-floating-menu {
+    transform-origin: left top;
+}
+
+/* Generate/refresh live in the floating menu on phones; desktop keeps them in the toolbar. */
+.account-menu-mobile-only {
     display: none;
 }
 
@@ -1197,75 +1216,14 @@ button:disabled {
     }
 
     .account-floating-toggle {
-        display: grid;
         width: 68px;
         height: 68px;
-        place-items: center;
-        border: 0;
-        border-radius: 50%;
-        color: #ffffff;
-        background:
-            radial-gradient(circle at 28% 22%, rgb(255 255 255 / 0.3), transparent 28%),
-            linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
         font-size: 38px;
-        font-weight: 700;
-        line-height: 1;
-        transition: transform 0.16s ease, box-shadow 0.16s ease;
     }
 
     .account-floating-toggle:hover {
         transform: translateY(-2px);
         box-shadow: 0 22px 38px rgb(37 99 235 / 0.32);
-    }
-
-    .account-context-actions.is-open .account-floating-toggle span {
-        transform: rotate(45deg);
-    }
-
-    .account-floating-toggle span {
-        transition: transform 0.16s ease;
-    }
-
-    .account-floating-menu {
-        position: absolute;
-        right: 0;
-        bottom: calc(100% + 10px);
-        display: grid;
-        width: 148px;
-        gap: 8px;
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(8px) scale(0.98);
-        transform-origin: right bottom;
-        transition: opacity 0.16s ease, transform 0.16s ease;
-    }
-
-    .account-context-actions.is-open .account-floating-menu {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0) scale(1);
-    }
-
-    .account-context-actions.is-menu-below .account-floating-menu {
-        top: calc(100% + 10px);
-        bottom: auto;
-        transform: translateY(-8px) scale(0.98);
-        transform-origin: right top;
-    }
-
-    .account-context-actions.is-menu-below.is-open .account-floating-menu {
-        transform: translateY(0) scale(1);
-    }
-
-    .account-context-actions.is-menu-left .account-floating-menu {
-        right: auto;
-        left: 0;
-        transform-origin: left bottom;
-    }
-
-    .account-context-actions.is-menu-left.is-menu-below .account-floating-menu {
-        transform-origin: left top;
     }
 }
 
@@ -3422,9 +3380,84 @@ select,
         width: 100%;
     }
 
+    /* Header stays pinned so the top "..." menu is always reachable while scrolling. */
+    .global-header,
+    .hero {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        margin-bottom: 0;
+    }
+
+    /* Module tabs move to a fixed bottom bar, within reach of the thumb. */
     .module-tabs {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 35;
+        display: flex;
         align-items: center;
-        border-radius: 18px 18px 0 0;
+        gap: 4px;
+        margin: 0;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+        border: 0;
+        border-top: 1px solid var(--border-color);
+        border-radius: 0;
+        background: var(--surface-elevated);
+        box-shadow: 0 -10px 26px -18px rgb(15 23 42 / 0.36);
+        backdrop-filter: blur(18px);
+    }
+
+    .module-tabs::before {
+        display: none;
+    }
+
+    .module-tab-list {
+        flex: 1 1 auto;
+        min-width: 0;
+        justify-content: space-around;
+        gap: 2px;
+    }
+
+    .module-tab {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 44px;
+        padding: 6px 4px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    /* The desktop batch toolbar stays hidden on phones; its actions are in the floating menu. */
+    .module-tabs .context-actions.active {
+        display: none;
+    }
+
+    .account-menu-mobile-only {
+        display: inline-flex;
+    }
+
+    /* Leave room under the workspace so the fixed tab bar never covers the last row. */
+    .app-shell {
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .workspace {
+        border-radius: 24px;
+    }
+
+    .account-context-actions.active {
+        position: fixed;
+        right: 16px;
+        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+        left: auto;
+        z-index: 36;
+        display: block;
+        width: auto;
+        min-width: 0;
+        filter: drop-shadow(0 14px 22px rgb(15 23 42 / 0.18));
+        touch-action: none;
+        user-select: none;
     }
 
     .overview-grid {
@@ -3461,21 +3494,6 @@ select,
         min-width: 0;
     }
 
-    .context-actions.active {
-        display: none;
-    }
-
-    .mobile-context-actions .context-action {
-        width: 38px;
-        min-height: 38px;
-        padding: 0;
-    }
-
-    .mobile-context-actions.active {
-        display: block;
-        flex: 0 0 auto;
-    }
-
     .asset-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -3495,10 +3513,6 @@ select,
 
     .account-card-strip-panel.is-empty .account-card-strip {
         display: block;
-    }
-
-    .account-context-actions.active {
-        display: none;
     }
 
     .account-card-strip .account-item {

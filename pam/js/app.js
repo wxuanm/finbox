@@ -369,7 +369,6 @@ function bindEvents() {
     document.getElementById('amountPrivacyBtn')?.addEventListener('click', toggleAmountPrivacy);
     document.getElementById('cloudSyncStatus')?.addEventListener('click', handleCloudSyncStatusClick);
     document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleMobileActionMenu);
-    document.getElementById('contextMenuBtn')?.addEventListener('click', toggleContextActionMenu);
     bindAccountFloatingActions();
     document.getElementById('importDataInput')?.addEventListener('change', importData);
     document.addEventListener('click', closeMobileActionMenu);
@@ -604,7 +603,12 @@ function positionAccountFloatingActions(right, bottom) {
 
 function keepAccountFloatingActionsInView() {
     const wrap = document.getElementById('accountFloatingActions');
-    if (!wrap || window.matchMedia('(max-width: 720px)').matches) return;
+    if (!wrap) return;
+    if (window.matchMedia('(max-width: 720px)').matches) {
+        // Phones pin the button with CSS; drop any offset left behind by a desktop drag.
+        wrap.removeAttribute('style');
+        return;
+    }
     const rect = wrap.getBoundingClientRect();
     positionAccountFloatingActions(window.innerWidth - rect.right, window.innerHeight - rect.bottom);
 }
@@ -637,19 +641,9 @@ function toggleMobileActionMenu(event) {
     button?.setAttribute('aria-expanded', String(isOpen));
 }
 
-function toggleContextActionMenu(event) {
-    event.stopPropagation();
-    const menu = document.querySelector('.mobile-context-actions');
-    const button = document.getElementById('contextMenuBtn');
-    const isOpen = menu?.classList.toggle('menu-open') || false;
-    button?.setAttribute('aria-expanded', String(isOpen));
-}
-
 function closeMobileActionMenu() {
     document.querySelector('.mobile-more-actions')?.classList.remove('menu-open');
     document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded', 'false');
-    document.querySelector('.mobile-context-actions')?.classList.remove('menu-open');
-    document.getElementById('contextMenuBtn')?.setAttribute('aria-expanded', 'false');
 }
 
 function renderApp() {
