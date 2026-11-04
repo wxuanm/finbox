@@ -7591,36 +7591,47 @@ select,
     }
 }
 
-/* Phones: same 340px chart, tighter chrome around it. The title row carries the full-screen button
-   and the period chips keep their own full-width row. */
+/* Phones: same 340px chart, tighter chrome around it. Row 1 is the title with its description inline;
+   row 2 is the period chips with the full-screen button on their right. */
 @media (max-width: 720px) {
     .chart-panel .split-head {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 8px 10px;
+        gap: 8px;
         align-items: center;
         padding: 12px 14px 8px;
     }
 
     .chart-panel .chart-panel-title {
-        grid-column: 1;
+        display: flex;
+        grid-column: 1 / -1;
         grid-row: 1;
+        gap: 8px;
+        align-items: baseline;
+        min-width: 0;
+    }
+
+    .chart-panel .chart-panel-title h2 {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .chart-panel .split-head > .period-switch {
+        grid-column: 1;
+        grid-row: 2;
     }
 
     .chart-panel .chart-fullscreen-btn {
         grid-column: 2;
-        grid-row: 1;
-        width: 34px;
-        height: 34px;
-    }
-
-    .chart-panel .split-head > .period-switch {
-        grid-column: 1 / -1;
         grid-row: 2;
+        width: 38px;
+        height: 38px;
     }
 
     .chart-panel .panel-head p {
-        margin-top: 2px;
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0;
         overflow: hidden;
         font-size: 11px;
         text-overflow: ellipsis;
@@ -7641,6 +7652,85 @@ select,
 
     .chart-legend-mobile {
         margin-bottom: 10px !important;
+    }
+
+    /* Account comparison: description inline with the title, slimmer sort bar and rows. */
+    .comparison-panel .split-head {
+        padding: 12px 14px 8px;
+    }
+
+    .comparison-panel .panel-head > div:first-child {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        min-width: 0;
+    }
+
+    .comparison-panel .panel-head h2 {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .comparison-panel .title-period-badge {
+        min-height: 20px;
+        padding: 1px 7px;
+        font-size: 12px !important;
+    }
+
+    .comparison-panel .comparison-desc-mobile {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .comparison-panel .comparison-table-wrap {
+        margin: 8px 10px 10px;
+    }
+
+    .comparison-mobile {
+        gap: 8px;
+    }
+
+    .comparison-sort-select,
+    .comparison-sort-direction {
+        min-height: 34px;
+        border-radius: 10px;
+        box-shadow: none;
+    }
+
+    .comparison-sort-select select {
+        min-height: 32px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+
+    .cmp-row-main {
+        gap: 8px;
+        min-height: 48px;
+        padding: 7px 10px 7px 12px;
+    }
+
+    .cmp-row-name,
+    .cmp-row-figures {
+        gap: 1px;
+    }
+
+    .cmp-row-figures strong {
+        font-size: 16px;
+    }
+
+    .cmp-row-details {
+        gap: 6px;
+        margin: 0 10px 0 30px;
+        padding-top: 8px;
+    }
+
+    .cmp-row-date {
+        margin: 4px 10px 8px 30px !important;
     }
 }
 
@@ -7748,5 +7838,49 @@ html.chart-fullscreen-open .chart-panel.is-fullscreen {
             env(safe-area-inset-top, 0px);
         transform: rotate(90deg);
         transform-origin: top left;
+    }
+}
+
+/* Mobile type floor. iOS Safari zooms the page when a focused field is under 16px, so form fields
+   use 16px on phones; primary data stays at 12px or more and no label drops below 11px. */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+@media (max-width: 720px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Same specificity as the rule above plus one attribute, so amounts stay a step bolder. */
+    input[type="number"]:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+        font-weight: 700 !important;
+    }
+
+    .holding-summary dt,
+    .holding-row-details dt,
+    .cmp-row-details dt,
+    .panel-kicker,
+    .account-card-heading > div > span,
+    .snapshot-table .snapshot-source-badge {
+        font-size: 11px;
+    }
+
+    .account-trend-panel .period-chip {
+        font-size: 12px;
+    }
+
+    .snapshot-table td {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 400px) {
+    .snapshot-table td {
+        font-size: 12px;
     }
 }
