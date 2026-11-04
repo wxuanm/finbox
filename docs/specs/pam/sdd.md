@@ -362,7 +362,7 @@ Preferences include selected account, selected period, highlighted comparison ac
 ### Dependencies
 
 - Native ES modules.
-- ECharts CDN for charts.
+- ECharts CDN for charts (cdnjs primary, unpkg backup, 10-second timeout per source).
 - Cloudflare D1 with browser `localStorage` as a local cache.
 - Cloudflare Pages static hosting.
 

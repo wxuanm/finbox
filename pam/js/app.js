@@ -331,22 +331,38 @@ function showAuthMessage(message, isError = false) {
     element.classList.toggle('error', Boolean(isError));
 }
 
+// Tried in order: cdnjs first, unpkg as backup. Each source gets its own timeout.
+const ECHARTS_SOURCES = [
+    'https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js',
+    'https://unpkg.com/echarts@5.6.0/dist/echarts.min.js',
+];
+const ECHARTS_LOAD_TIMEOUT_MS = 10000;
+
 function loadECharts() {
     if (globalThis.echarts) return Promise.resolve();
+    return ECHARTS_SOURCES.reduce(
+        (chain, src) => chain.then(() => (globalThis.echarts ? undefined : loadEChartsScript(src))),
+        Promise.resolve()
+    );
+}
+
+function loadEChartsScript(src) {
     return new Promise(resolve => {
         let settled = false;
+        let timer = null;
         const finish = () => {
             if (settled) return;
             settled = true;
+            clearTimeout(timer);
             resolve();
         };
         const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js';
+        script.src = src;
         script.referrerPolicy = 'no-referrer';
         script.onload = finish;
         script.onerror = finish;
         document.head.appendChild(script);
-        setTimeout(finish, 5000);
+        timer = setTimeout(finish, ECHARTS_LOAD_TIMEOUT_MS);
     });
 }
 

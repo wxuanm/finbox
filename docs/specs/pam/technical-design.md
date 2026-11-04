@@ -203,7 +203,7 @@ Destructive and overwrite actions use an in-app confirmation dialog rather than 
 
 ## Chart Design
 
-The performance chart uses ECharts from CDN.
+The performance chart uses ECharts from CDN. `pam/js/app.js` loads `echarts@5.6.0` from cdnjs first and falls back to unpkg if that source errors or does not finish within 10 seconds. If both fail, chart areas show a notice and account management keeps working.
 
 - X axis: date.
 - Y axis: active-period return percentage, normalized from each account's period anchor point and rendered on the right side of the plot.
