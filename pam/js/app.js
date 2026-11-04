@@ -626,6 +626,9 @@ function keepAccountFloatingActionsInView() {
         return;
     }
     const rect = wrap.getBoundingClientRect();
+    // Outside 账户管理 the button is display:none and measures 0×0 at the top-left, which would clamp
+    // it into that corner; keep the last position and re-check when the view is shown again.
+    if (rect.width === 0 && rect.height === 0) return;
     positionAccountFloatingActions(window.innerWidth - rect.right, window.innerHeight - rect.bottom);
 }
 
@@ -726,6 +729,7 @@ function switchView(view) {
         resizeChart();
         resizeHoldingChart();
         resizeAccountTrendChart();
+        keepAccountFloatingActionsInView();
     });
 }
 
