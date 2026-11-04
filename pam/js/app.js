@@ -7,6 +7,7 @@ import { buildAccountMetrics } from './modules/accountPerformance/metrics.js';
 import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
+import { bindChartFullscreen, renderChartFullscreenButton } from './modules/accountPerformance/chartFullscreen.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
@@ -488,6 +489,7 @@ function bindEvents() {
         persistPreferences();
         renderApp();
     });
+    bindChartFullscreen({ onResize: resizeChart });
     bindAccountComparison({
         onHighlight: accountId => {
             state.selectedHighlightAccountId = state.selectedHighlightAccountId === accountId ? '' : accountId;
@@ -677,6 +679,7 @@ function renderApp() {
     renderAccountList(metrics);
     renderSnapshotForm();
     renderPeriodSwitch();
+    renderChartFullscreenButton();
     renderPerformanceChart(metrics);
     renderAccountComparison(metrics);
     renderAccountTrend(metrics);

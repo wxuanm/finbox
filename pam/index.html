@@ -162,13 +162,14 @@
             <section id="analysisView" class="workspace-view active" data-workspace-view="analysis">
                 <section id="overviewCards" class="overview-grid" aria-live="polite"></section>
 
-                <section class="panel management-panel chart-panel focus-panel">
+                <section id="performanceChartPanel" class="panel management-panel chart-panel focus-panel">
                     <div class="panel-head split-head">
-                        <div>
+                        <div class="chart-panel-title">
                             <h2 data-i18n="performanceTitle">收益走势</h2>
                             <p data-i18n="performanceDesc">现金流调整后收益率，非资产规模变化。</p>
                         </div>
                         <div id="periodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
+                        <button id="chartFullscreenBtn" class="chart-fullscreen-btn" type="button" title="横屏全屏查看" aria-label="横屏全屏查看"></button>
                     </div>
                     <div id="chartMessage" class="chart-message"></div>
                     <div id="chartHints" class="chart-hints" role="status" aria-live="polite" hidden>

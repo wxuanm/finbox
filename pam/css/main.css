@@ -7561,3 +7561,192 @@ select,
         border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     }
 }
+
+/* Returns chart full-screen toggle. */
+.chart-fullscreen-btn {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
+    border-radius: 12px;
+    color: var(--muted-text);
+    background: var(--surface-elevated);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.chart-fullscreen-btn:hover,
+.chart-fullscreen-btn:focus-visible {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Wider screens keep the period chips on the right, next to the button. */
+@media (min-width: 721px) {
+    .chart-panel .split-head > .period-switch {
+        margin-left: auto;
+    }
+}
+
+/* Phones: same 340px chart, tighter chrome around it. The title row carries the full-screen button
+   and the period chips keep their own full-width row. */
+@media (max-width: 720px) {
+    .chart-panel .split-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px 10px;
+        align-items: center;
+        padding: 12px 14px 8px;
+    }
+
+    .chart-panel .chart-panel-title {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .chart-panel .chart-fullscreen-btn {
+        grid-column: 2;
+        grid-row: 1;
+        width: 34px;
+        height: 34px;
+    }
+
+    .chart-panel .split-head > .period-switch {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .chart-panel .panel-head p {
+        margin-top: 2px;
+        overflow: hidden;
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chart-panel .period-chip {
+        min-height: 30px;
+    }
+
+    #chartMessage:empty {
+        display: none;
+    }
+
+    .performance-chart {
+        margin-top: 2px;
+    }
+
+    .chart-legend-mobile {
+        margin-bottom: 10px !important;
+    }
+}
+
+/* Full-screen view. Blurred ancestors would become the containing block of a fixed element, so the
+   blur is dropped while the view is open. */
+html.chart-fullscreen-open,
+html.chart-fullscreen-open body {
+    overflow: hidden;
+}
+
+html.chart-fullscreen-open .workspace,
+html.chart-fullscreen-open .chart-panel.is-fullscreen {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+.chart-panel.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding:
+        env(safe-area-inset-top, 0px)
+        env(safe-area-inset-right, 0px)
+        env(safe-area-inset-bottom, 0px)
+        env(safe-area-inset-left, 0px);
+    border: 0;
+    border-radius: 0;
+    background: var(--surface-color);
+    box-shadow: none;
+}
+
+.chart-panel.is-fullscreen::backdrop {
+    background: var(--surface-color);
+}
+
+.chart-panel.is-fullscreen .split-head {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 14px;
+}
+
+.chart-panel.is-fullscreen .chart-panel-title {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.chart-panel.is-fullscreen .panel-head p,
+.chart-panel.is-fullscreen .chart-legend-mobile {
+    display: none !important;
+}
+
+.chart-panel.is-fullscreen .split-head > .period-switch {
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    width: auto;
+    max-width: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.chart-panel.is-fullscreen .split-head > .period-switch::-webkit-scrollbar {
+    display: none;
+}
+
+.chart-panel.is-fullscreen .period-chip {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 4px 10px;
+}
+
+.chart-panel.is-fullscreen .chart-fullscreen-btn {
+    order: 3;
+}
+
+.chart-panel.is-fullscreen .performance-chart {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    margin: 4px 8px 8px;
+}
+
+/* A phone held upright gets the view rotated 90deg (content top toward the right edge, matching
+   landscape-primary). Native full screen is excluded: there the orientation lock does the turn. */
+@media (orientation: portrait) and (pointer: coarse) {
+    .chart-panel.is-fullscreen:not(:fullscreen) {
+        inset: auto;
+        top: 0;
+        left: 100vw;
+        width: 100vh;
+        width: 100dvh;
+        height: 100vw;
+        padding:
+            env(safe-area-inset-right, 0px)
+            env(safe-area-inset-bottom, 0px)
+            env(safe-area-inset-left, 0px)
+            env(safe-area-inset-top, 0px);
+        transform: rotate(90deg);
+        transform-origin: top left;
+    }
+}
