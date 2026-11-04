@@ -274,34 +274,33 @@ function renderHoldingRow(row) {
     `;
 }
 
-// Phones get divided rows like the allocation class list: name and value up front, P/L and weight
-// beneath, and prices, valuation date, and actions behind a tap.
+// Phones get two-line divided rows like the allocation class list: name and market value, then class,
+// code, and weight beside P/L; the weight bar underlines the row. Market, prices, valuation date, and
+// actions sit behind a tap.
 function renderHoldingListRow(row) {
     const priceStatus = getPriceStatusParts(row);
     const isOpen = expandedHoldings.has(row.id);
     const stale = isStalePrice(row);
     const detailsId = `holdingDetails-${row.id}`;
     const detail = (label, value, className = '') => `<div><dt>${label}</dt><dd class="${className}">${value}</dd></div>`;
+    const meta = [getAssetClassLabel(row.assetClass), row.symbol, formatWeight(row.weight)].filter(Boolean).map(escapeHtml).join(' · ');
     return `
-        <li class="holding-row${isOpen ? ' expanded' : ''}">
+        <li class="holding-row${isOpen ? ' expanded' : ''}" style="--weight:${formatWeightBar(row.weight)}">
             <button class="holding-row-toggle" type="button" data-holding-toggle="${row.id}" aria-expanded="${isOpen}" aria-controls="${detailsId}">
                 <span class="holding-row-name">
                     <strong>${stale ? `<span class="holding-row-stale" title="${escapeHtml(t('stale'))}">⚠</span> ` : ''}${escapeHtml(row.name)}</strong>
-                    <small>${formatHoldingMeta(row)}</small>
+                    <small>${meta}</small>
                 </span>
                 <span class="holding-row-figures">
                     <strong>${formatCurrency(row.marketValue, state.amountsHidden)}</strong>
                     <small class="${signedClass(row.unrealizedPnl)}">${formatSignedCurrency(row.unrealizedPnl)} · ${formatPercent(row.unrealizedPnlPct)}</small>
-                </span>
-                <span class="holding-row-weight">
-                    <span class="holding-row-bar" aria-hidden="true"><span style="width:${formatWeightBar(row.weight)}"></span></span>
-                    <small>${formatWeight(row.weight)}</small>
                 </span>
                 <svg class="holding-row-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div id="${detailsId}" class="holding-row-details"${isOpen ? '' : ' hidden'}>
                 <dl>
                     ${detail(t('quantity'), formatQuantity(row.quantity))}
+                    ${detail(t('market'), escapeHtml(getMarketLabel(row.market) || '-'))}
                     ${detail(t('costPrice'), formatPrice(row.costPrice, row.assetClass))}
                     ${detail(t('currentPrice'), formatPrice(row.currentPrice, row.assetClass))}
                     ${detail(t('priceTime'), `${priceStatus.label} · ${priceStatus.date}`, `valuation-status${stale ? ' stale' : ''}`)}

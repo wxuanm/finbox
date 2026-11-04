@@ -58,8 +58,8 @@ export function renderAccountList(metrics) {
     wrap.innerHTML = `${cards}${renderAccountSwitcherMobile(metrics)}`;
 }
 
-// Phones swap the one-card-at-a-time strip for a row of account chips and a flat summary of the selected
-// account, like the allocation stats, so every account is visible and switching is one tap.
+// Phones swap the one-card-at-a-time strip for a row of account chips and one compact card for the selected
+// account: name, update date, and menu on the first line, three figures in a divided row beneath.
 function renderAccountSwitcherMobile(metrics) {
     const selected = state.accounts.find(account => account.id === state.selectedAccountId) || state.accounts[0];
     const metric = metrics.find(item => item.account.id === selected.id);
@@ -78,6 +78,7 @@ function renderAccountSwitcherMobile(metrics) {
             <div class="account-summary-mobile">
                 <div class="account-summary-head">
                     <strong title="${escapeHtml(selected.name)}">${escapeHtml(selected.name)}</strong>
+                    <small>${t('recentlyUpdated')} ${latestSnapshot?.date || t('noSnapshot')}</small>
                     <details class="account-card-menu">
                         <summary aria-label="${t('accountMenu')}">...</summary>
                         <div>
@@ -90,7 +91,6 @@ function renderAccountSwitcherMobile(metrics) {
                     ${stat(t('totalAssets'), latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-')}
                     ${stat(t('cumulativeProfit'), metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-', signedClass(metric?.profitLoss))}
                     ${stat(t('annualizedReturn'), Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-', signedClass(annualizedReturn))}
-                    ${stat(t('recentlyUpdated'), latestSnapshot?.date || t('noSnapshot'))}
                 </dl>
             </div>
         </div>

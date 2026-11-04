@@ -5950,107 +5950,6 @@ select,
     .account-trend-table td {
         padding: 9px 10px;
     }
-
-    .list-pager {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .list-pager-actions {
-        justify-content: center;
-    }
-
-    /* Phones keep the snapshot table as one paged list, like the account trend list; the note column is dropped to fit. */
-    .management-panel .snapshot-table-wrap {
-        margin: 10px 8px 14px;
-        border-radius: 18px;
-    }
-
-    .snapshot-table {
-        table-layout: auto;
-    }
-
-    .snapshot-table th,
-    .snapshot-table td {
-        width: auto !important;
-        padding: 9px 4px;
-        white-space: nowrap;
-    }
-
-    .snapshot-table .snapshot-note-cell {
-        display: none;
-    }
-
-    .snapshot-table .snapshot-date-cell {
-        padding-left: 10px;
-    }
-
-    .snapshot-table .snapshot-actions-cell {
-        padding-right: 8px;
-    }
-
-    .snapshot-table .row-actions {
-        gap: 4px;
-    }
-
-    .snapshot-table .mini-btn.icon-btn {
-        flex-basis: 28px;
-        width: 28px;
-        height: 28px;
-        min-width: 28px;
-        min-height: 28px;
-        border-radius: 9px;
-    }
-
-    .snapshot-table .snapshot-source-badge {
-        display: flex;
-        width: fit-content;
-        margin: 3px 0 0;
-        padding: 0 5px;
-        font-size: 10px;
-    }
-
-    .snapshot-table-footer {
-        padding: 10px 10px 12px;
-    }
-}
-
-/* Narrow phones (360px class): shrink the snapshot list further so all four columns fit without sideways scrolling. */
-@media (max-width: 400px) {
-    .management-panel .snapshot-table-wrap {
-        margin-right: 6px;
-        margin-left: 6px;
-    }
-
-    .snapshot-table td {
-        font-size: 11px;
-    }
-
-    .snapshot-table th,
-    .snapshot-table td {
-        padding-right: 3px;
-        padding-left: 3px;
-    }
-
-    .snapshot-table .snapshot-date-cell {
-        padding-left: 8px;
-    }
-
-    .snapshot-table .snapshot-actions-cell {
-        padding-right: 6px;
-    }
-
-    .snapshot-table .row-actions {
-        gap: 3px;
-    }
-
-    .snapshot-table .mini-btn.icon-btn {
-        flex-basis: 26px;
-        width: 26px;
-        height: 26px;
-        min-width: 26px;
-        min-height: 26px;
-    }
 }
 
 /* Asset allocation: HTML bars and tables only, so the view works without ECharts. */
@@ -7236,7 +7135,8 @@ select,
 /* Account management on phones: account chips with a flat summary, and holdings as divided rows,
    both following the allocation view (one bordered list, figures right-aligned, details on tap). */
 .account-switcher-mobile,
-.holding-list {
+.holding-list,
+.snapshot-list {
     display: none;
 }
 
@@ -7304,25 +7204,40 @@ select,
         outline-offset: 1px;
     }
 
+    /* One card: name, update date, and menu on the head line; three figures in a divided row. */
     .account-summary-mobile {
         display: grid;
-        gap: 8px;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+        border-radius: var(--radius-lg);
+        background: var(--surface-color);
     }
 
     .account-summary-head {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
-        justify-content: space-between;
         min-width: 0;
+        padding: 6px 6px 6px 12px;
+        border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
     }
 
     .account-summary-head strong {
+        flex: 0 1 auto;
+        min-width: 0;
         overflow: hidden;
         color: var(--heading-color);
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 900;
         text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .account-summary-head small {
+        flex: 1 0 auto;
+        color: var(--muted-text);
+        font-size: 11px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
         white-space: nowrap;
     }
 
@@ -7333,34 +7248,41 @@ select,
         flex: 0 0 auto;
     }
 
+    .account-summary-head .account-card-menu summary {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Columns size to their figures, so a long total takes width from the shorter percentages. */
     .account-summary-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        display: flex;
         margin: 0;
     }
 
     .account-summary-stats > div {
         display: grid;
-        gap: 4px;
+        flex: 1 1 auto;
+        gap: 2px;
         min-width: 0;
-        padding: 10px 12px;
-        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
-        border-radius: var(--radius-lg);
-        background: var(--surface-color);
+        padding: 8px 10px 9px 12px;
+    }
+
+    .account-summary-stats > div + div {
+        border-left: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
     }
 
     .account-summary-stats dt {
         color: var(--muted-text);
         font-size: 11px;
         font-weight: 800;
+        white-space: nowrap;
     }
 
     .account-summary-stats dd {
         margin: 0;
         overflow: hidden;
         color: var(--heading-color);
-        font-size: 17px;
+        font-size: 15px;
         font-weight: 900;
         font-variant-numeric: tabular-nums;
         text-overflow: ellipsis;
@@ -7373,7 +7295,7 @@ select,
     }
 
     .management-panel .holding-table-wrap {
-        margin: 10px 10px 14px;
+        margin: 8px 10px 12px;
         overflow: visible;
         border: 0;
         border-radius: 0;
@@ -7395,17 +7317,36 @@ select,
         border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
     }
 
+    .holding-row {
+        position: relative;
+    }
+
+    /* Weight bar: a thin underline across the bottom of the row, as wide as the position. */
+    .holding-row::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: var(--weight, 0%);
+        height: 2px;
+        border-radius: 0 2px 2px 0;
+        background: color-mix(in srgb, var(--primary-color) 70%, transparent);
+        pointer-events: none;
+    }
+
+    .holding-row.expanded::after {
+        display: none;
+    }
+
     .holding-row-toggle {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto 14px;
-        grid-template-areas:
-            "name figures chevron"
-            "weight weight chevron";
-        gap: 6px 10px;
+        grid-template-areas: "name figures chevron";
+        gap: 10px;
         align-items: center;
         width: 100%;
-        min-height: 56px;
-        padding: 10px 12px 10px 14px;
+        min-height: 52px;
+        padding: 8px 10px 9px 12px;
         border: 0;
         border-radius: inherit;
         color: inherit;
@@ -7446,8 +7387,7 @@ select,
     }
 
     .holding-row-name small,
-    .holding-row-figures small,
-    .holding-row-weight small {
+    .holding-row-figures small {
         overflow: hidden;
         color: var(--muted-text);
         font-size: 11px;
@@ -7469,29 +7409,6 @@ select,
         color: var(--heading-color);
         font-size: 15px;
         font-weight: 900;
-    }
-
-    .holding-row-weight {
-        display: grid;
-        grid-area: weight;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .holding-row-bar {
-        height: 6px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--border-color) 60%, transparent);
-    }
-
-    .holding-row-bar > span {
-        display: block;
-        min-width: 2px;
-        height: 100%;
-        border-radius: 0 4px 4px 0;
-        background: color-mix(in srgb, var(--primary-color) 78%, transparent);
     }
 
     .holding-row-chevron {
@@ -7517,7 +7434,7 @@ select,
 
     .holding-row-details dl {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px 12px;
         margin: 0;
         padding-top: 10px;
@@ -7559,6 +7476,342 @@ select,
 
     .holding-list .holding-row:last-child .holding-row-details {
         border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+}
+
+/* 账户管理 panel heads on phones, like the returns page: the description sits inline after the title
+   (one ellipsized line). The trend period chips span the next row as an even grid with the compact
+   chart/list switch on their right. */
+@media (max-width: 720px) {
+    .asset-data-view .management-panel .split-head {
+        padding: 12px 14px 8px;
+    }
+
+    .account-trend-panel .split-head > div:first-child,
+    .asset-holdings-panel .split-head > div:first-child,
+    .table-panel .split-head > div:first-child {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        min-width: 0;
+    }
+
+    .account-trend-panel .panel-head h2,
+    .asset-holdings-panel .panel-head h2,
+    .table-panel .panel-head h2 {
+        display: flex;
+        flex: 0 1 auto;
+        gap: 6px;
+        align-items: center;
+        min-width: 0;
+        font-size: 17px;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .asset-data-view .management-panel .title-account-badge {
+        min-width: 0;
+        max-width: 34vw;
+        margin-left: 0;
+        overflow: hidden;
+        font-size: 12px !important;
+        text-overflow: ellipsis;
+        vertical-align: 0;
+    }
+
+    /* The trend and record descriptions repeat what the badge and controls already say, so phones drop
+       them; the holdings line stays because it carries the stale-price count. */
+    .account-trend-panel .panel-head p,
+    .table-panel .panel-head p {
+        display: none;
+    }
+
+    .account-trend-panel .title-account-badge,
+    .table-panel .title-account-badge {
+        max-width: none !important;
+    }
+
+    .asset-holdings-panel .panel-head p {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Row 1: title, description, and the chart/list switch; row 2: the seven period chips. */
+    .account-trend-panel .split-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .account-trend-panel .split-head > div:first-child {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .account-trend-toolbar {
+        display: contents;
+    }
+
+    .account-trend-panel .account-trend-period-switch {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 2px;
+        padding: 3px;
+        overflow: visible;
+        border-radius: 14px;
+    }
+
+    .account-trend-panel .account-trend-period-switch .period-chip {
+        min-width: 0;
+        min-height: 30px;
+        padding: 4px 0;
+        border-color: transparent;
+        background: transparent;
+    }
+
+    .account-trend-panel .account-trend-period-switch .period-chip.active {
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
+            linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    }
+
+    .account-trend-toolbar .account-trend-view-switch {
+        grid-column: 2;
+        grid-row: 1;
+        display: flex;
+        gap: 2px;
+        width: auto;
+        padding: 3px;
+        border-radius: 14px;
+    }
+
+    .account-trend-toolbar .account-trend-view-switch .period-chip {
+        min-height: 30px;
+        padding: 4px 9px;
+        font-size: 12px;
+    }
+
+    .account-trend-chart {
+        height: 240px;
+        margin: 2px 4px 10px;
+    }
+
+    .account-trend-list {
+        margin: 8px 10px 12px;
+    }
+
+    /* Holdings: summary figures directly under the head line; view switch and filters tighter. */
+    .asset-holdings-panel .split-head:has(.holding-summary:not(.hidden)) {
+        gap: 6px;
+    }
+
+    .holding-summary {
+        margin: 0;
+    }
+
+    .holding-toolbar {
+        gap: 8px;
+        margin: 8px 10px 0;
+    }
+
+    .holding-toolbar .holding-view-switch,
+    .management-panel .holding-toolbar .holding-view-switch {
+        padding: 3px;
+    }
+
+    .holding-toolbar .period-chip {
+        min-height: 30px;
+    }
+
+    .asset-holdings-panel .holding-toolbar .asset-tool-bar select {
+        min-height: 36px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+
+    /* Asset records: the table gives way to divided rows like the holdings list. */
+    .snapshot-table-wrap .snapshot-table {
+        display: none !important;
+    }
+
+    .management-panel .snapshot-table-wrap {
+        margin: 8px 10px 12px;
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .snapshot-list {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+        border-radius: var(--radius-lg);
+        background: var(--surface-color);
+    }
+
+    .snapshot-row + .snapshot-row {
+        border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    }
+
+    .snapshot-row-toggle {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto 14px;
+        grid-template-areas:
+            "date value chevron"
+            "meta meta chevron";
+        gap: 2px 10px;
+        align-items: center;
+        width: 100%;
+        min-height: 44px;
+        padding: 8px 10px 8px 12px;
+        border: 0;
+        border-radius: inherit;
+        color: inherit;
+        background: transparent;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .snapshot-row-toggle:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: -2px;
+    }
+
+    .snapshot-row.expanded .snapshot-row-toggle {
+        background: var(--primary-soft);
+    }
+
+    .snapshot-row-date {
+        display: flex;
+        grid-area: date;
+        gap: 6px;
+        align-items: center;
+        min-width: 0;
+        color: var(--heading-color);
+        font-size: 13px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .snapshot-row-date .snapshot-source-badge {
+        margin: 0;
+        padding: 0 5px;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .snapshot-row-value {
+        grid-area: value;
+        color: var(--heading-color);
+        font-size: 14px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .snapshot-row-meta {
+        display: flex;
+        grid-area: meta;
+        gap: 4px;
+        min-width: 0;
+        overflow: hidden;
+        color: var(--muted-text);
+        font-size: 11px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .snapshot-row-meta i {
+        font-style: normal;
+    }
+
+    .snapshot-row-note {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .snapshot-row-chevron {
+        grid-area: chevron;
+        color: var(--muted-text);
+        transition: transform 0.16s ease;
+    }
+
+    .snapshot-row.expanded .snapshot-row-chevron {
+        transform: rotate(90deg);
+    }
+
+    .snapshot-row-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 2px 12px 10px;
+        background: var(--primary-soft);
+    }
+
+    .snapshot-row-actions[hidden] {
+        display: none;
+    }
+
+    .snapshot-row-actions .ghost-btn {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        font-size: 12px;
+    }
+
+    .snapshot-list .snapshot-row:last-child .snapshot-row-actions {
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    /* Pager: the summary with previous/next on one line. */
+    .snapshot-table-footer {
+        padding: 8px 2px 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .list-pager,
+    .snapshot-table-footer .list-pager {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 2px 0;
+    }
+
+    .list-pager-actions {
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+
+    .list-pager .list-pager-edge,
+    .list-pager .list-pager-number,
+    .list-pager .list-pager-gap {
+        display: none;
+    }
+
+    .list-pager .list-pager-page {
+        min-height: 32px;
+        padding: 0 12px;
     }
 }
 
@@ -7865,22 +8118,11 @@ html {
     .holding-row-details dt,
     .cmp-row-details dt,
     .panel-kicker,
-    .account-card-heading > div > span,
-    .snapshot-table .snapshot-source-badge {
+    .account-card-heading > div > span {
         font-size: 11px;
     }
 
     .account-trend-panel .period-chip {
-        font-size: 12px;
-    }
-
-    .snapshot-table td {
-        font-size: 13px;
-    }
-}
-
-@media (max-width: 400px) {
-    .snapshot-table td {
         font-size: 12px;
     }
 }

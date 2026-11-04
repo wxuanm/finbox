@@ -2,6 +2,7 @@ import { t } from '../../config/i18n.js';
 import { escapeHtml } from '../../utils/formatter.js';
 
 // Shared by the paged lists in 账户管理. Buttons carry data-page; each list handles the click and re-renders.
+// Phones hide the edge and number buttons (CSS), leaving the summary with previous/next on one line.
 // Like the VSIX NAV list, desktop lists pair two records per table row; phones show one record per row.
 export const LIST_SINGLE_COLUMN_QUERY = '(max-width: 720px)';
 // Cell class that draws the divider between the left and right halves of a paired row.
@@ -39,13 +40,13 @@ export function renderPager(currentPage, pageCount, rowCount) {
         <div class="list-pager">
             <span>${escapeHtml(t('pagerSummary', { page: currentPage, pages: pageCount, count: rowCount }))}</span>
             <div class="list-pager-actions">
-                ${button(1, t('pagerFirst'), currentPage <= 1)}
+                ${button(1, t('pagerFirst'), currentPage <= 1, ' list-pager-edge')}
                 ${button(currentPage - 1, t('pagerPrev'), currentPage <= 1)}
                 ${buildPageNumbers(currentPage, pageCount).map(page => page === null
                     ? '<span class="list-pager-gap">...</span>'
-                    : button(page, page, page === currentPage, page === currentPage ? ' active' : '')).join('')}
+                    : button(page, page, page === currentPage, ` list-pager-number${page === currentPage ? ' active' : ''}`)).join('')}
                 ${button(currentPage + 1, t('pagerNext'), currentPage >= pageCount)}
-                ${button(pageCount, t('pagerLast'), currentPage >= pageCount)}
+                ${button(pageCount, t('pagerLast'), currentPage >= pageCount, ' list-pager-edge')}
             </div>
         </div>
     `;

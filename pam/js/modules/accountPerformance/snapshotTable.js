@@ -12,6 +12,8 @@ let currentPage = 1;
 let renderedColumnCount = 0;
 // Paging restarts when the account behind the table changes; edits and deletes keep the current page.
 let pageAccountId = '';
+// Expanded phone rows survive re-renders (privacy toggle, paging) but not a reload, like holdings.
+const expandedSnapshots = new Set();
 
 export function renderSnapshotTable() {
     const wrap = document.getElementById('snapshotTable');
@@ -65,6 +67,7 @@ export function renderSnapshotTable() {
                 `).join('')}
             </tbody>
         </table>
+        <ul class="snapshot-list">${visibleRows.map(renderListRow).join('')}</ul>
         ${pageCount > 1 ? `<div class="snapshot-table-footer">${renderPager(currentPage, pageCount, rows.length)}</div>` : ''}
     `;
 }
@@ -101,6 +104,36 @@ function renderCells(row, halfStart) {
     `;
 }
 
+// Phones get divided rows like the holdings list: date and total assets on one line, net flow and note
+// beneath only when they say something, and edit/delete behind a tap.
+function renderListRow(row) {
+    const isOpen = expandedSnapshots.has(row.id);
+    const detailsId = `snapshotDetails-${row.id}`;
+    const flow = Number(row.netFlow) || 0;
+    const meta = [];
+    if (flow !== 0) meta.push(`<span class="${flow > 0 ? 'positive' : 'negative'}">${escapeHtml(t('netFlow'))} ${formatSignedFlow(flow)}</span>`);
+    if (row.note) meta.push(`<span class="snapshot-row-note">${escapeHtml(row.note)}</span>`);
+    return `
+        <li class="snapshot-row${isOpen ? ' expanded' : ''}">
+            <button class="snapshot-row-toggle" type="button" data-snapshot-toggle="${row.id}" aria-expanded="${isOpen}" aria-controls="${detailsId}">
+                <span class="snapshot-row-date">${row.date}${renderSourceBadge(row)}</span>
+                <strong class="snapshot-row-value">${formatCurrency(row.totalValue, state.amountsHidden)}</strong>
+                ${meta.length ? `<span class="snapshot-row-meta">${meta.join('<i aria-hidden="true">·</i>')}</span>` : ''}
+                <svg class="snapshot-row-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div id="${detailsId}" class="snapshot-row-actions"${isOpen ? '' : ' hidden'}>
+                <button class="ghost-btn" type="button" data-action="edit-snapshot" data-snapshot-id="${row.id}">${editIcon()}<span>${escapeHtml(t('edit'))}</span></button>
+                <button class="ghost-btn" type="button" data-action="delete-snapshot" data-snapshot-id="${row.id}">${deleteIcon()}<span>${escapeHtml(t('delete'))}</span></button>
+            </div>
+        </li>
+    `;
+}
+
+function formatSignedFlow(value) {
+    if (state.amountsHidden) return formatCurrency(value, true);
+    return `${value > 0 ? '+' : ''}${formatCurrency(value)}`;
+}
+
 // Snapshots written by the scheduled job carry no note, so the source badge is the only localized hint.
 function renderSourceBadge(row) {
     if (row.source !== 'auto') return '';
@@ -116,6 +149,17 @@ export function bindSnapshotTable({ onEdit, onDelete }) {
             if (pageButton.disabled) return;
             currentPage = Number(pageButton.dataset.page) || 1;
             renderSnapshotTable();
+            return;
+        }
+        const toggle = event.target.closest('[data-snapshot-toggle]');
+        if (toggle) {
+            const id = toggle.dataset.snapshotToggle;
+            const isOpen = !expandedSnapshots.has(id);
+            if (isOpen) expandedSnapshots.add(id);
+            else expandedSnapshots.delete(id);
+            toggle.closest('.snapshot-row')?.classList.toggle('expanded', isOpen);
+            toggle.setAttribute('aria-expanded', String(isOpen));
+            document.getElementById(`snapshotDetails-${id}`)?.toggleAttribute('hidden', !isOpen);
             return;
         }
         const target = event.target.closest('[data-action]');
