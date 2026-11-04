@@ -3245,7 +3245,7 @@ select,
 
 @media (max-width: 720px) {
     .app-shell {
-        padding: 18px 12px 28px;
+        padding: 0 12px 28px;
     }
 
     .global-header,
@@ -3380,10 +3380,11 @@ select,
         width: 100%;
     }
 
-    /* Header stays pinned so the top "..." menu is always reachable while scrolling.
-       It shares the bottom bar's flat full-width look: no card radius, gradient, or side border. */
-    .global-header,
-    .hero {
+    /* Header sits flush at the top of the screen and stays pinned so the top "..." menu is always reachable while scrolling.
+       It shares the bottom bar's flat full-width look: no card radius, gradient, or side border.
+       The .app-shell > prefix outranks the base .global-header card rules declared later in this file. */
+    .app-shell > .global-header,
+    .app-shell > .hero {
         position: sticky;
         top: 0;
         z-index: 35;
