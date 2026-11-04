@@ -1,7 +1,7 @@
 import { state, PERIODS } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatChartAxisPercent, formatNumber, formatPercent } from '../../utils/formatter.js';
-import { withAlpha } from '../holdings/holdingsChartShared.js';
+import { initChart, isChartLocaleCurrent, withAlpha } from '../holdings/holdingsChartShared.js';
 
 let chartInstance = null;
 let chartContext = null;
@@ -87,9 +87,9 @@ export function renderPerformanceChart(metrics) {
     messageEl.textContent = '';
     messageEl.classList.remove('error');
     // Reuse the instance so unrelated re-renders (privacy toggle, edits, theme) update in place instead of flashing.
-    if (!chartInstance || chartInstance.isDisposed() || chartInstance.getDom() !== chartEl) {
+    if (!chartInstance || chartInstance.isDisposed() || chartInstance.getDom() !== chartEl || !isChartLocaleCurrent(chartInstance)) {
         disposeChart();
-        chartInstance = window.echarts.init(chartEl);
+        chartInstance = initChart(chartEl);
         bindChartEvents();
         bindWheelPassthrough(chartEl);
     }

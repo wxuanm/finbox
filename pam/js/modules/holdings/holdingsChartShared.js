@@ -49,10 +49,27 @@ export function holdingTooltipOption(formatter) {
     };
 }
 
+// ECharts fixes its locale (month names on time axes) at init from <html lang>, which is the page's
+// default, not the user's choice; pass it explicitly. A chart built for the other language must be
+// recreated, since an instance cannot change locale.
+export function getChartLocale() {
+    return state.currentLang === 'en' ? 'EN' : 'ZH';
+}
+
+export function initChart(el) {
+    const chart = window.echarts.init(el, null, { locale: getChartLocale() });
+    chart.__pamLocale = getChartLocale();
+    return chart;
+}
+
+export function isChartLocaleCurrent(chart) {
+    return chart?.__pamLocale === getChartLocale();
+}
+
 // getRow maps a clicked bar or axis label to its holding row; anything else is ignored.
 export function initHoldingChart(el, getRow) {
     disposeHoldingChart();
-    chartInstance = window.echarts.init(el);
+    chartInstance = initChart(el);
     if (!isTouchChart()) {
         chartInstance.on('click', params => {
             const row = getRow(params);

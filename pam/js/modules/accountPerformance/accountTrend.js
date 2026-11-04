@@ -1,7 +1,7 @@
 import { state, PERIODS } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatChartAxisPercent, formatCurrency, formatNumber, formatPercent, signedClass } from '../../utils/formatter.js';
-import { withAlpha } from '../holdings/holdingsChartShared.js';
+import { initChart, isChartLocaleCurrent, withAlpha } from '../holdings/holdingsChartShared.js';
 import { getPeriodStartDate } from './metrics.js';
 import { LIST_HALF_START_CLASS, clampPage, getListColumnCount, getPageCount, keepFirstRowPage, pairRows, renderPager } from './pager.js';
 
@@ -156,9 +156,9 @@ function renderChart(chartEl, messageEl, metric, rows) {
         disposeChart();
         return;
     }
-    if (!chartInstance || chartInstance.isDisposed() || chartInstance.getDom() !== chartEl) {
+    if (!chartInstance || chartInstance.isDisposed() || chartInstance.getDom() !== chartEl || !isChartLocaleCurrent(chartInstance)) {
         disposeChart();
-        chartInstance = window.echarts.init(chartEl);
+        chartInstance = initChart(chartEl);
     }
     chartInstance.setOption(buildChartOption(metric, rows), { replaceMerge: ['series'] });
 }
