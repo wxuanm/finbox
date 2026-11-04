@@ -20,7 +20,7 @@ export function renderAccountList(metrics) {
         return;
     }
 
-    wrap.innerHTML = state.accounts.map(account => {
+    const cards = state.accounts.map(account => {
         const metric = metrics.find(item => item.account.id === account.id);
         const active = account.id === state.selectedAccountId;
         const accountSnapshots = state.snapshots
@@ -55,6 +55,46 @@ export function renderAccountList(metrics) {
             </div>
         `;
     }).join('');
+    wrap.innerHTML = `${cards}${renderAccountSwitcherMobile(metrics)}`;
+}
+
+// Phones swap the one-card-at-a-time strip for a row of account chips and a flat summary of the selected
+// account, like the allocation stats, so every account is visible and switching is one tap.
+function renderAccountSwitcherMobile(metrics) {
+    const selected = state.accounts.find(account => account.id === state.selectedAccountId) || state.accounts[0];
+    const metric = metrics.find(item => item.account.id === selected.id);
+    const latestSnapshot = state.snapshots
+        .filter(snapshot => snapshot.accountId === selected.id)
+        .reduce((latest, snapshot) => (!latest || snapshot.date > latest.date ? snapshot : latest), null);
+    const annualizedReturn = calculateAnnualizedReturn(metric);
+    const chips = state.accounts.map(account => {
+        const active = account.id === selected.id;
+        return `<button class="account-chip${active ? ' active' : ''}" type="button" data-action="select-account" data-account-id="${account.id}" aria-pressed="${active}">${escapeHtml(account.name)}</button>`;
+    }).join('');
+    const stat = (label, value, className = '') => `<div><dt>${label}</dt><dd class="${className}">${value}</dd></div>`;
+    return `
+        <div class="account-switcher-mobile">
+            <div class="account-chip-row" role="group" aria-label="${escapeHtml(t('assetAccount'))}">${chips}</div>
+            <div class="account-summary-mobile">
+                <div class="account-summary-head">
+                    <strong title="${escapeHtml(selected.name)}">${escapeHtml(selected.name)}</strong>
+                    <details class="account-card-menu">
+                        <summary aria-label="${t('accountMenu')}">...</summary>
+                        <div>
+                            <button type="button" data-action="rename-account" data-account-id="${selected.id}">${t('renameAccount')}</button>
+                            <button type="button" data-action="delete-account" data-account-id="${selected.id}">${t('deleteAccount')}</button>
+                        </div>
+                    </details>
+                </div>
+                <dl class="account-summary-stats">
+                    ${stat(t('totalAssets'), latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-')}
+                    ${stat(t('cumulativeProfit'), metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-', signedClass(metric?.profitLoss))}
+                    ${stat(t('annualizedReturn'), Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-', signedClass(annualizedReturn))}
+                    ${stat(t('recentlyUpdated'), latestSnapshot?.date || t('noSnapshot'))}
+                </dl>
+            </div>
+        </div>
+    `;
 }
 
 function calculateAnnualizedReturn(metric) {
@@ -138,6 +178,7 @@ export function bindAccountList({ onSelect, onRename, onDelete, onAdd, onReorder
 export function scrollAccountCardIntoView(accountId, behavior = 'smooth') {
     const list = document.getElementById('accountList');
     if (!list || !accountId) return;
+    scrollAccountChipIntoView(list, accountId, behavior);
 
     const item = Array.from(list.querySelectorAll('.account-item'))
         .find(element => element.dataset.accountId === accountId);
@@ -151,6 +192,14 @@ export function scrollAccountCardIntoView(accountId, behavior = 'smooth') {
 
     if (Math.abs(nextScrollLeft - list.scrollLeft) < 1 && itemRect.left >= listRect.left && itemRect.right <= listRect.right) return;
     list.scrollTo({ left: nextScrollLeft, behavior });
+}
+
+function scrollAccountChipIntoView(list, accountId, behavior) {
+    const row = list.querySelector('.account-chip-row');
+    const chip = row && Array.from(row.querySelectorAll('.account-chip')).find(element => element.dataset.accountId === accountId);
+    if (!chip || row.clientWidth === 0) return;
+    const target = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
+    row.scrollTo({ left: Math.min(Math.max(0, target), row.scrollWidth - row.clientWidth), behavior });
 }
 
 function isDropAfter(event, item) {

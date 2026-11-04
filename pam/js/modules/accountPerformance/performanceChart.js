@@ -28,6 +28,8 @@ const CHART_MAX_VISIBLE_SYMBOLS = 12;
 const CHART_MIN_SYMBOL_GAP_PX = 16;
 const CHART_MARKER_COLLISION_PX = 64;
 const CHART_GRID_TOP = 46;
+// Phones hide the legend (the comparison list's colored dots name each line), so the plot starts near the top.
+const CHART_GRID_TOP_NARROW = 14;
 const CHART_GRID_BOTTOM = 64;
 const CHART_FLOOR_LABEL_CLEARANCE_PX = 20;
 const CHART_NARROW_WIDTH = 520;
@@ -124,16 +126,35 @@ export function resizeChart() {
     if (!chartContext) return;
     const chartParts = buildPerformanceChartParts(chartContext);
     // Merge mode keeps the legend's theme color while the font size follows the new width.
-    chartInstance.setOption({ legend: buildLegendDensity(), xAxis: chartParts.xAxisDensity, yAxis: chartParts.yAxisBounds, series: chartParts.series }, false);
+    chartInstance.setOption({
+        legend: { ...buildLegendDensity(), selected: buildLegendSelected(chartParts.legendData) },
+        grid: { top: getGridTop() },
+        xAxis: chartParts.xAxisDensity,
+        yAxis: chartParts.yAxisBounds,
+        series: chartParts.series
+    }, false);
     renderChartHints(chartParts);
 }
 
-// Phones fit more legend items per page with smaller swatches and tighter gaps.
+function isNarrowChart() {
+    return (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH;
+}
+
+function getGridTop() {
+    return isNarrowChart() ? CHART_GRID_TOP_NARROW : CHART_GRID_TOP;
+}
+
+// Phones drop the paged legend: it fit about three accounts per page, and the comparison list below
+// already pairs each account with its line color.
 function buildLegendDensity() {
-    const narrow = (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH;
-    return narrow
-        ? { itemWidth: 16, itemHeight: 9, itemGap: 8, left: 4, right: 4, textStyle: { fontSize: 11 } }
-        : { itemWidth: 25, itemHeight: 14, itemGap: 10, left: 'center', right: 'auto', textStyle: { fontSize: 12 } };
+    return isNarrowChart()
+        ? { show: false }
+        : { show: true, itemWidth: 25, itemHeight: 14, itemGap: 10, left: 'center', right: 'auto', textStyle: { fontSize: 12 } };
+}
+
+// Without a legend a hidden line could not be brought back, so phones always draw every series.
+function buildLegendSelected(legendData) {
+    return Object.fromEntries(legendData.map(name => [name, isNarrowChart() || legendSelected[name] !== false]));
 }
 
 // ECharts' inside dataZoom swallows every wheel event over the plot, even when zoomOnMouseWheel is 'ctrl'.
@@ -201,14 +222,14 @@ function buildChartOption(chartParts) {
             top: 0,
             ...buildLegendDensity(),
             data: chartParts.legendData,
-            selected: Object.fromEntries(chartParts.legendData.map(name => [name, legendSelected[name] !== false])),
+            selected: buildLegendSelected(chartParts.legendData),
             formatter: name => name === BENCHMARK_SERIES_ID ? t('benchmarkShort') : name,
             textStyle: { ...buildLegendDensity().textStyle, color: theme.text },
             pageIconColor: theme.primary,
             pageIconInactiveColor: theme.borderStrong,
             pageTextStyle: { color: theme.muted }
         },
-        grid: { top: CHART_GRID_TOP, right: CHART_GRID_RIGHT, bottom: CHART_GRID_BOTTOM, left: CHART_GRID_LEFT },
+        grid: { top: getGridTop(), right: CHART_GRID_RIGHT, bottom: CHART_GRID_BOTTOM, left: CHART_GRID_LEFT },
         xAxis: {
             type: 'time',
             boundaryGap: false,
@@ -417,7 +438,7 @@ function buildReturnMarkPoints(visibleData, pxPerMs, yAxisBounds, theme) {
 function isNearAxisFloor(value, yAxisBounds) {
     const span = yAxisBounds.max - yAxisBounds.min;
     if (!Number.isFinite(span) || span <= 0) return false;
-    const plotHeight = Math.max(120, (chartInstance?.getHeight() || 430) - CHART_GRID_TOP - CHART_GRID_BOTTOM);
+    const plotHeight = Math.max(120, (chartInstance?.getHeight() || 430) - getGridTop() - CHART_GRID_BOTTOM);
     return (value - yAxisBounds.min) / span * plotHeight < CHART_FLOOR_LABEL_CLEARANCE_PX;
 }
 
@@ -723,7 +744,7 @@ function isPointInZoom(point, zoomBounds) {
 }
 
 function isAccountVisible(metric) {
-    return legendSelected[metric.account.name] !== false;
+    return isNarrowChart() || legendSelected[metric.account.name] !== false;
 }
 
 function buildPerformanceChartParts(context, markerAccountId = state.selectedHighlightAccountId, focusAccountId = state.selectedHighlightAccountId) {
@@ -735,7 +756,7 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const hasSparseSeries = visibleAccountSeries.some(series => series.visiblePointCount < 2);
     const selectedMetric = context.metrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
     const maxDrawdownMetric = selectedMetric || (context.metrics.length === 1 ? context.metrics[0] : null);
-    const visibleBenchmarkSeries = legendSelected[BENCHMARK_SERIES_ID] === false ? [] : [benchmarkSeries];
+    const visibleBenchmarkSeries = !isNarrowChart() && legendSelected[BENCHMARK_SERIES_ID] === false ? [] : [benchmarkSeries];
     const yAxisBounds = buildYAxisBounds([...visibleAccountSeries, ...visibleBenchmarkSeries], zoomBounds);
     const pxPerMs = getPlotPxPerMs(context.metrics, zoomBounds);
     accountSeries.forEach(series => {
@@ -752,7 +773,7 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
         yAxisBounds,
         hasSparseSeries,
         // Fewer date ticks on phones so day labels do not run together.
-        xAxisDensity: (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH ? { splitNumber: 4 } : { splitNumber: 8 },
+        xAxisDensity: isNarrowChart() ? { splitNumber: 4 } : { splitNumber: 8 },
         ariaDescription: buildChartAriaDescription(context.metrics, visibleAccountSeries, zoomBounds),
         series: [...accountSeries, benchmarkSeries, maxDrawdownSeries]
     };

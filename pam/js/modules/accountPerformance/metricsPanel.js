@@ -17,7 +17,8 @@ export function renderOverviewCards(metrics) {
         card(t('latestTotalAssets'), formatCurrency(latestValue, state.amountsHidden), t('validAccountsTotal')),
         card(t('cumulativePnl'), formatCurrency(profitLoss, state.amountsHidden), t('estimatedByNetInput'), signedClass(profitLoss)),
         card(t('bestInPeriod'), best ? formatPercent(best.periodReturn) : '-', best ? best.account.name : t('waitingValidSnapshot'), signedClass(best?.periodReturn)),
-        card(t('dataStatus'), `${valid.length}/${state.accounts.length}`, latestDate ? `${syncedCount}/${valid.length} ${t('updatedTo')} ${latestDate}${laggedCount > 0 ? `, ${laggedCount} ${t('lagged')}` : ''}` : t('computableAllAccounts'))
+        // The date is kept unbroken so a narrow tile wraps before it, not at its hyphens.
+        card(t('dataStatus'), `${valid.length}/${state.accounts.length}`, latestDate ? `${syncedCount}/${valid.length} ${escapeHtml(t('updatedTo'))} <span class="nowrap">${escapeHtml(latestDate)}</span>${laggedCount > 0 ? `, ${laggedCount} ${escapeHtml(t('lagged'))}` : ''}` : escapeHtml(t('computableAllAccounts')), '', true)
     ].join('');
 }
 
@@ -83,14 +84,15 @@ export function bindAccountComparison({ onHighlight, onSort }) {
     });
     wrap.addEventListener('keydown', event => {
         if (event.key !== 'Enter' && event.key !== ' ') return;
-        const card = event.target.closest('.comparison-card[data-highlight-account]');
+        const card = event.target.closest('.cmp-row[data-highlight-account]');
         if (!card || event.target !== card) return;
         event.preventDefault();
         onHighlight(card.dataset.highlightAccount);
     });
 }
 
-// Phones get one card per account instead of a wide table that only fits one account column at a time.
+// Phones get a divided list like the allocation class rows instead of a wide table that only fits one
+// account column at a time. A tap highlights the account's line and opens its risk metrics in place.
 function renderComparisonMobile(sortedMetrics, rows, slotById) {
     const sortKey = state.comparisonSortKey || 'periodReturn';
     const ascending = state.comparisonSortOrder === 1;
@@ -109,52 +111,53 @@ function renderComparisonMobile(sortedMetrics, rows, slotById) {
                     <span aria-hidden="true">${ascending ? '↑' : '↓'}</span>${directionLabel}
                 </button>
             </div>
-            <div class="comparison-cards">
-                ${sortedMetrics.map(metric => renderComparisonCard(metric, slotById.get(metric.account.id) ?? 0)).join('')}
-            </div>
+            <ul class="cmp-list">
+                ${sortedMetrics.map(metric => renderComparisonListRow(metric, slotById.get(metric.account.id) ?? 0)).join('')}
+            </ul>
         </div>
     `;
 }
 
-function renderComparisonCard(metric, slot) {
+function renderComparisonListRow(metric, slot) {
     const active = state.selectedHighlightAccountId === metric.account.id;
+    // The dot doubles as the chart legend on phones, so it uses the same color slot as the line.
     const color = metric.valid ? `var(--chart-series-${(slot % 6) + 1})` : 'var(--border-strong)';
-    const head = `
-        <div class="comparison-card-head">
-            <i class="comparison-card-dot" style="background:${color}" aria-hidden="true"></i>
+    const attrs = `class="cmp-row${active ? ' active' : ''}${metric.valid ? '' : ' invalid'}" data-highlight-account="${metric.account.id}" role="button" tabindex="0" aria-pressed="${active}"`;
+    const name = `
+        <span class="cmp-row-dot" style="background:${color}" aria-hidden="true"></span>
+        <span class="cmp-row-name">
             <strong>${escapeHtml(metric.account.name)}</strong>
-            <small>${metric.valid ? escapeHtml(metric.latestDate || '-') : escapeHtml(metric.error || t('insufficientData'))}</small>
-        </div>
+            <small>${metric.valid ? `${t('comparisonRowAssets')} ${formatCurrency(metric.latestValue, state.amountsHidden)}` : escapeHtml(metric.error || t('insufficientData'))}</small>
+        </span>
     `;
-    const attrs = `class="comparison-card${active ? ' active' : ''}${metric.valid ? '' : ' invalid'}" data-highlight-account="${metric.account.id}" role="button" tabindex="0" aria-pressed="${active}"`;
-    if (!metric.valid) return `<article ${attrs}>${head}</article>`;
+    if (!metric.valid) return `<li ${attrs}><div class="cmp-row-main">${name}</div></li>`;
 
-    const stat = (label, value) => `<div><span>${label}</span><strong>${value}</strong></div>`;
+    const stat = (label, value) => `<div><dt>${label}</dt><dd>${value}</dd></div>`;
     return `
-        <article ${attrs}>
-            ${head}
-            <div class="comparison-card-hero">
-                <div class="comparison-card-return">
-                    <span>${t('periodReturn')}</span>
+        <li ${attrs} aria-expanded="${active}">
+            <div class="cmp-row-main">
+                ${name}
+                <span class="cmp-row-figures">
                     <strong>${formatMetricPercent(metric, 'periodReturn')}</strong>
-                </div>
-                <div class="comparison-card-money">
-                    ${stat(t('latestAssets'), formatMetricCurrency(metric, 'latestValue'))}
-                    ${stat(t('cumulativePnl'), formatMetricCurrency(metric, 'profitLoss'))}
-                </div>
+                    <small>${t('comparisonRowPnl')} ${formatMetricCurrency(metric, 'profitLoss')}</small>
+                </span>
+                <svg class="cmp-row-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
-            <div class="comparison-card-metrics">
-                ${stat(t('annualizedReturn'), formatMetricPercent(metric, 'annualizedReturn'))}
-                ${stat(t('maxDrawdown'), formatMetricPercent(metric, 'maxDrawdown'))}
-                ${stat(t('annualizedVolatility'), formatMetricPercent(metric, 'annualizedVolatility', false))}
-                ${stat(t('calmarRatio'), formatMetricRatio(metric, 'calmarRatio'))}
-            </div>
-        </article>
+            ${active ? `
+                <dl class="cmp-row-details">
+                    ${stat(t('annualizedReturn'), formatMetricPercent(metric, 'annualizedReturn'))}
+                    ${stat(t('maxDrawdown'), formatMetricPercent(metric, 'maxDrawdown'))}
+                    ${stat(t('annualizedVolatility'), formatMetricPercent(metric, 'annualizedVolatility', false))}
+                    ${stat(t('calmarRatio'), formatMetricRatio(metric, 'calmarRatio'))}
+                </dl>
+                <p class="cmp-row-date">${t('latestSnapshot')} ${escapeHtml(metric.latestDate || '-')}</p>
+            ` : ''}
+        </li>
     `;
 }
 
-function card(label, value, note, className = '') {
-    return `<div class="overview-card management-overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${escapeHtml(note)}</small></div>`;
+function card(label, value, note, className = '', noteIsHtml = false) {
+    return `<div class="overview-card management-overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${noteIsHtml ? note : escapeHtml(note)}</small></div>`;
 }
 
 function renderComparisonAccountHeader(metric) {

@@ -13,6 +13,9 @@ export const HOLDING_VIEWS = [
     ['contribution', 'holdingViewContribution']
 ];
 
+// Expanded mobile holding rows survive re-renders (privacy toggle, quote refresh) but not a reload.
+const expandedHoldings = new Set();
+
 const CHART_RENDERERS = {
     allocation: renderHoldingAllocation,
     contribution: renderHoldingContribution
@@ -109,6 +112,18 @@ export function bindHoldingsPanel({ onFilter, onAdd, onSubmit, onCancelEdit, onE
         const sortHeader = event.target.closest('[data-holding-sort]');
         if (sortHeader) {
             onSort(sortHeader.dataset.holdingSort);
+            return;
+        }
+
+        const toggle = event.target.closest('[data-holding-toggle]');
+        if (toggle) {
+            const id = toggle.dataset.holdingToggle;
+            const isOpen = !expandedHoldings.has(id);
+            if (isOpen) expandedHoldings.add(id);
+            else expandedHoldings.delete(id);
+            toggle.closest('.holding-row')?.classList.toggle('expanded', isOpen);
+            toggle.setAttribute('aria-expanded', String(isOpen));
+            document.getElementById(`holdingDetails-${id}`)?.toggleAttribute('hidden', !isOpen);
             return;
         }
 
@@ -232,6 +247,7 @@ function renderHoldingTable(rows) {
             <thead><tr>${columns.map(([key, label]) => `<th class="${key === 'name' || key === 'assetClass' ? '' : 'number-cell'}" data-holding-sort="${key}"><button type="button">${label}${sortIcon(key)}</button></th>`).join('')}<th>${t('actions')}</th></tr></thead>
             <tbody>${sortedRows.map(renderHoldingRow).join('')}</tbody>
         </table>
+        <ul class="holding-list">${sortedRows.map(renderHoldingListRow).join('')}</ul>
     `;
 }
 
@@ -247,7 +263,6 @@ function renderHoldingRow(row) {
                         <small>${formatHoldingMeta(row)}</small>
                     </div>
                 </div>
-                ${renderHoldingMobileCard(row, priceStatus)}
             </td>
             <td class="number-cell"><span class="holding-value-stack"><span class="holding-value-main">${formatCurrency(row.marketValue, state.amountsHidden)}</span><small>${formatQuantity(row.quantity)}</small></span></td>
             <td class="number-cell"><span class="price-pair"><span>${formatPrice(row.costPrice, row.assetClass)}</span><small>${formatPrice(row.currentPrice, row.assetClass)}</small></span></td>
@@ -259,42 +274,44 @@ function renderHoldingRow(row) {
     `;
 }
 
-function renderHoldingMobileCard(row, priceStatus) {
+// Phones get divided rows like the allocation class list: name and value up front, P/L and weight
+// beneath, and prices, valuation date, and actions behind a tap.
+function renderHoldingListRow(row) {
+    const priceStatus = getPriceStatusParts(row);
+    const isOpen = expandedHoldings.has(row.id);
+    const stale = isStalePrice(row);
+    const detailsId = `holdingDetails-${row.id}`;
+    const detail = (label, value, className = '') => `<div><dt>${label}</dt><dd class="${className}">${value}</dd></div>`;
     return `
-        <div class="holding-mobile-card">
-            <div class="holding-mobile-card-head">
-                <div>
-                    <strong>${escapeHtml(row.name)}</strong>
+        <li class="holding-row${isOpen ? ' expanded' : ''}">
+            <button class="holding-row-toggle" type="button" data-holding-toggle="${row.id}" aria-expanded="${isOpen}" aria-controls="${detailsId}">
+                <span class="holding-row-name">
+                    <strong>${stale ? `<span class="holding-row-stale" title="${escapeHtml(t('stale'))}">⚠</span> ` : ''}${escapeHtml(row.name)}</strong>
                     <small>${formatHoldingMeta(row)}</small>
+                </span>
+                <span class="holding-row-figures">
+                    <strong>${formatCurrency(row.marketValue, state.amountsHidden)}</strong>
+                    <small class="${signedClass(row.unrealizedPnl)}">${formatSignedCurrency(row.unrealizedPnl)} · ${formatPercent(row.unrealizedPnlPct)}</small>
+                </span>
+                <span class="holding-row-weight">
+                    <span class="holding-row-bar" aria-hidden="true"><span style="width:${formatWeightBar(row.weight)}"></span></span>
+                    <small>${formatWeight(row.weight)}</small>
+                </span>
+                <svg class="holding-row-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div id="${detailsId}" class="holding-row-details"${isOpen ? '' : ' hidden'}>
+                <dl>
+                    ${detail(t('quantity'), formatQuantity(row.quantity))}
+                    ${detail(t('costPrice'), formatPrice(row.costPrice, row.assetClass))}
+                    ${detail(t('currentPrice'), formatPrice(row.currentPrice, row.assetClass))}
+                    ${detail(t('priceTime'), `${priceStatus.label} · ${priceStatus.date}`, `valuation-status${stale ? ' stale' : ''}`)}
+                </dl>
+                <div class="holding-row-actions">
+                    <button class="ghost-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}">${editIcon()}<span>${t('edit')}</span></button>
+                    <button class="ghost-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}">${deleteIcon()}<span>${t('delete')}</span></button>
                 </div>
             </div>
-            <div class="holding-mobile-details">
-                <div>
-                    <span>${t('marketValue')} / ${t('quantity')}</span>
-                    <strong>${formatCurrency(row.marketValue, state.amountsHidden)} / ${formatQuantity(row.quantity)}</strong>
-                </div>
-                <div>
-                    <span>${t('latestPrice')}</span>
-                    <strong>${formatPrice(row.costPrice, row.assetClass)} / ${formatPrice(row.currentPrice, row.assetClass)}</strong>
-                </div>
-                <div>
-                    <span>${t('holdingPnl')}</span>
-                    <strong class="${signedClass(row.unrealizedPnl)}">${formatCurrency(row.unrealizedPnl, state.amountsHidden)} / ${formatPercent(row.unrealizedPnlPct)}</strong>
-                </div>
-                <div>
-                    <span>${t('weight')}</span>
-                    <strong class="holding-weight mobile-weight"><span style="--weight:${formatWeightBar(row.weight)}"></span>${formatWeight(row.weight)}</strong>
-                </div>
-                <div>
-                    <span>${t('priceTime')}</span>
-                    <strong class="valuation-status${isStalePrice(row) ? ' stale' : ''}">${priceStatus.label} · ${priceStatus.date}</strong>
-                </div>
-            </div>
-            <div class="holding-mobile-actions">
-                <button class="mini-btn icon-btn" type="button" data-holding-action="edit" data-holding-id="${row.id}" aria-label="${escapeHtml(t('edit'))}" title="${escapeHtml(t('edit'))}">${editIcon()}</button>
-                <button class="mini-btn icon-btn" type="button" data-holding-action="delete" data-holding-id="${row.id}" aria-label="${escapeHtml(t('delete'))}" title="${escapeHtml(t('delete'))}">${deleteIcon()}</button>
-            </div>
-        </div>
+        </li>
     `;
 }
 
