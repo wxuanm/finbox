@@ -3,42 +3,62 @@ import { t } from '../../config/i18n.js';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MIN_ANNUALIZED_DAYS = 30;
 
+// Every account shares one period start, counted back from the latest snapshot across all calculable accounts.
+// A lagging account therefore keeps the same window as the others, and per-account period P/L adds up to the
+// portfolio's period P/L.
 export function buildAccountMetrics(accounts, snapshots, periodKey) {
-    return accounts.map(account => {
-        const seriesResult = buildAccountSeries(account, snapshots);
-        if (seriesResult.error) {
-            return { account, valid: false, error: seriesResult.error, points: [] };
+    const seriesResults = accounts.map(account => ({ account, result: buildAccountSeries(account, snapshots) }));
+    const referenceDate = seriesResults.reduce((latest, { result }) => {
+        const date = result.points?.[result.points.length - 1]?.date || '';
+        return date > latest ? date : latest;
+    }, '');
+    const periodStartDate = getPeriodStartDate(referenceDate, periodKey);
+
+    return seriesResults.map(({ account, result }) => {
+        if (result.error) {
+            return { account, valid: false, error: result.error, points: [] };
         }
-
-        const points = seriesResult.points;
-        const latestPoint = points[points.length - 1];
-        const periodPoints = getPeriodPoints(points, periodKey);
-        const anchorPoint = periodPoints[0];
-        const periodReturn = anchorPoint ? (latestPoint.unitNav / anchorPoint.unitNav - 1) * 100 : null;
-        const annualizedReturn = anchorPoint ? calculateAnnualizedReturn(anchorPoint, latestPoint) : null;
-        const periodDrawdown = periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null;
-        const volatility = periodPoints.length > 2 ? calculateAnnualizedVolatility(periodPoints) : null;
-        const calmar = Number.isFinite(annualizedReturn) && Number.isFinite(periodDrawdown) && periodDrawdown < 0
-            ? annualizedReturn / Math.abs(periodDrawdown)
-            : null;
-
-        return {
-            account,
-            valid: true,
-            points,
-            periodPoints,
-            latestDate: latestPoint.date,
-            latestValue: latestPoint.totalValue,
-            netContribution: latestPoint.netContribution,
-            profitLoss: latestPoint.totalValue - latestPoint.netContribution,
-            cumulativeReturn: latestPoint.returnPct,
-            periodReturn,
-            annualizedReturn,
-            maxDrawdown: periodDrawdown,
-            annualizedVolatility: volatility,
-            calmarRatio: calmar
-        };
+        return { account, valid: true, ...summarizeSeries(result.points, periodStartDate) };
     });
+}
+
+// The portfolio is every calculable account treated as one account and run through the same share-based
+// NAV as a single account. On each snapshot date its total value is the sum of each account's latest snapshot
+// on or before that date, and its net flow is the sum of that day's net flows; an account's first snapshot
+// counts as a flow of its whole value, except on the portfolio's first date where it forms the opening value.
+// Returns null when no account is calculable.
+export function buildPortfolioMetrics(metrics) {
+    const valid = metrics.filter(metric => metric.valid && metric.points.length > 0);
+    if (valid.length === 0) return null;
+
+    const dates = [...new Set(valid.flatMap(metric => metric.points.map(point => point.date)))].sort();
+    const cursors = valid.map(() => -1);
+    const items = dates.map((date, dateIndex) => {
+        let totalValue = 0;
+        let netFlow = 0;
+        valid.forEach((metric, accountIndex) => {
+            const points = metric.points;
+            let cursor = cursors[accountIndex];
+            while (cursor + 1 < points.length && points[cursor + 1].date <= date) cursor += 1;
+            cursors[accountIndex] = cursor;
+            if (cursor < 0) return;
+            const point = points[cursor];
+            totalValue += point.totalValue;
+            if (point.date !== date || dateIndex === 0) return;
+            netFlow += cursor === 0 ? point.totalValue : point.netFlow;
+        });
+        return { date, totalValue, netFlow };
+    });
+
+    const result = buildSeriesFromItems(items);
+    if (result.error) return null;
+    const latestDate = dates[dates.length - 1];
+    const periodStartDate = valid[0].periodStartDate;
+    return {
+        ...summarizeSeries(result.points, periodStartDate),
+        accountCount: valid.length,
+        syncedCount: valid.filter(metric => metric.latestDate === latestDate).length
+    };
 }
 
 export function buildAccountSeries(account, snapshots) {
@@ -47,7 +67,43 @@ export function buildAccountSeries(account, snapshots) {
         .map(normalizeSnapshot)
         .filter(Boolean)
         .sort((a, b) => a.date.localeCompare(b.date));
+    return buildSeriesFromItems(items);
+}
 
+function summarizeSeries(points, periodStartDate) {
+    const latestPoint = points[points.length - 1];
+    const periodPoints = getPeriodPoints(points, periodStartDate);
+    const anchorPoint = periodPoints[0];
+    const periodReturn = anchorPoint ? (latestPoint.unitNav / anchorPoint.unitNav - 1) * 100 : null;
+    const annualizedReturn = anchorPoint ? calculateAnnualizedReturn(anchorPoint, latestPoint) : null;
+    const periodDrawdown = periodPoints.length > 1 ? calculateMaxDrawdown(periodPoints) : null;
+    const volatility = periodPoints.length > 2 ? calculateAnnualizedVolatility(periodPoints) : null;
+    const calmar = Number.isFinite(annualizedReturn) && Number.isFinite(periodDrawdown) && periodDrawdown < 0
+        ? annualizedReturn / Math.abs(periodDrawdown)
+        : null;
+    const profitLoss = latestPoint.totalValue - latestPoint.netContribution;
+    // Same definition as cumulative P/L: the change in (value - net contribution) since the period anchor.
+    const periodProfitLoss = anchorPoint ? profitLoss - (anchorPoint.totalValue - anchorPoint.netContribution) : null;
+
+    return {
+        points,
+        periodPoints,
+        periodStartDate,
+        latestDate: latestPoint.date,
+        latestValue: latestPoint.totalValue,
+        netContribution: latestPoint.netContribution,
+        profitLoss,
+        periodProfitLoss,
+        cumulativeReturn: latestPoint.returnPct,
+        periodReturn,
+        annualizedReturn,
+        maxDrawdown: periodDrawdown,
+        annualizedVolatility: volatility,
+        calmarRatio: calmar
+    };
+}
+
+function buildSeriesFromItems(items) {
     if (items.length < 2) return { error: t('needTwoSnapshots') };
     if (items[0].totalValue <= 0) return { error: t('firstSnapshotPositive') };
 
@@ -119,9 +175,7 @@ function buildPoint(item, unitNav, shares, netContribution, returnPct) {
     };
 }
 
-function getPeriodPoints(points, periodKey) {
-    const latest = points[points.length - 1];
-    const startDate = getPeriodStartDate(latest.date, periodKey);
+function getPeriodPoints(points, startDate) {
     if (!startDate) return points;
 
     let anchor = null;

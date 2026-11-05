@@ -6762,7 +6762,6 @@ select,
 
 /* Account returns view on phones: compact overview, full period row, and per-account comparison cards. */
 .comparison-mobile,
-.comparison-panel .comparison-desc-mobile,
 .chart-legend-mobile {
     display: none;
 }
@@ -6884,10 +6883,6 @@ select,
     /* Comparison: cards replace the wide table, which only fit one account column at a time. */
     .comparison-panel .comparison-desc-desktop {
         display: none;
-    }
-
-    .comparison-panel .comparison-desc-mobile {
-        display: block;
     }
 
     .comparison-panel .comparison-table-wrap {
@@ -7930,16 +7925,6 @@ select,
         font-size: 12px !important;
     }
 
-    .comparison-panel .comparison-desc-mobile {
-        flex: 1 1 auto;
-        min-width: 0;
-        margin: 0;
-        overflow: hidden;
-        font-size: 11px;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
     .comparison-panel .comparison-table-wrap {
         margin: 8px 10px 10px;
     }
@@ -8125,4 +8110,434 @@ html {
     .account-trend-panel .period-chip {
         font-size: 12px;
     }
+}
+
+/* Returns view, phone redesign (<=720px). The period bar sticks under the header and drives the whole view;
+   one headline replaces the four overview cards; the chart starts from the portfolio line with a readout
+   above it; the comparison list becomes a ranking with diverging period-return bars. Desktop is unchanged. */
+.returns-period-bar,
+.returns-hero,
+.chart-readout,
+.comparison-hint-mobile,
+.cmp-row-bar,
+.cmp-row-expand,
+.lag-badge {
+    display: none;
+}
+
+@media (max-width: 720px) {
+    /* overflow: clip still rounds and clips the corners but, unlike hidden, keeps the period bar sticky. */
+    .workspace {
+        overflow: clip;
+    }
+
+    #analysisView.workspace-view.active {
+        gap: 12px;
+        padding-top: 0;
+    }
+
+    .returns-period-bar {
+        position: sticky;
+        top: var(--pam-header-height, 0px);
+        z-index: 20;
+        display: block;
+        margin: 0 -12px;
+        padding: 10px 12px 8px;
+        border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+        background: var(--surface-elevated);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+    }
+
+    .returns-period-bar .period-switch {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 2px;
+        width: 100%;
+        padding: 3px;
+        border-radius: 12px;
+    }
+
+    .returns-period-bar .period-chip {
+        min-width: 0;
+        min-height: 32px;
+        padding: 4px 0;
+        border-color: transparent;
+        border-radius: 9px;
+        box-shadow: none;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .returns-period-bar .period-chip:not(.active) {
+        background: transparent;
+    }
+
+    .returns-period-bar .period-chip.active {
+        box-shadow: none;
+    }
+
+    #analysisView .overview-grid {
+        display: none;
+    }
+
+    /* Headline: total assets, then the portfolio's period P/L and return, then a status line. */
+    .returns-hero {
+        display: grid;
+        gap: 4px;
+        padding: 4px 4px 0;
+    }
+
+    .returns-hero-label {
+        color: var(--muted-text);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .returns-hero-value {
+        overflow: hidden;
+        color: var(--heading-color);
+        font-size: 30px;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .returns-hero-period {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 8px;
+        align-items: center;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .returns-hero-period strong {
+        font-size: 16px;
+        font-weight: 850;
+    }
+
+    .returns-hero-pill {
+        padding: 1px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .returns-hero-pill.positive {
+        background: var(--positive-bg);
+    }
+
+    .returns-hero-pill.negative {
+        background: var(--negative-bg);
+    }
+
+    .returns-hero-empty {
+        margin: 0;
+        color: var(--muted-text);
+        font-size: 12px;
+    }
+
+    .returns-hero-status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 6px;
+        align-items: center;
+        width: 100%;
+        margin-top: 6px;
+        padding: 8px 0 2px;
+        border: 0;
+        border-top: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+        color: var(--muted-text);
+        background: none;
+        font-size: 12px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .returns-hero-status b {
+        font-weight: 850;
+    }
+
+    .returns-hero-chevron {
+        margin-left: auto;
+        transition: transform 0.16s ease;
+    }
+
+    .returns-hero-status[aria-expanded="true"] .returns-hero-chevron {
+        transform: rotate(90deg);
+    }
+
+    .returns-hero-status-list {
+        display: grid;
+        gap: 4px;
+        margin: 2px 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .returns-hero-status-list li {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        min-width: 0;
+        color: var(--text-color);
+    }
+
+    .returns-hero-status-list li > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .returns-hero-status-date {
+        flex: 0 0 auto;
+        margin-left: auto;
+        color: var(--muted-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .returns-hero-status-list li.invalid .returns-hero-status-date {
+        color: var(--warning-color);
+    }
+
+    .lag-badge {
+        display: inline-block;
+        flex: 0 0 auto;
+        padding: 0 5px;
+        border-radius: 4px;
+        color: var(--warning-color);
+        background: color-mix(in srgb, var(--warning-color) 15%, transparent);
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 800;
+        line-height: 17px;
+        white-space: nowrap;
+    }
+
+    /* Chart: the period chips moved to the sticky bar, so the head is the title and the full-screen button. */
+    .chart-panel .split-head > .period-switch {
+        display: none;
+    }
+
+    .chart-panel .split-head {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .chart-panel .chart-panel-title {
+        grid-column: 1;
+    }
+
+    .chart-panel .chart-fullscreen-btn {
+        grid-row: 1;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+    }
+
+    .chart-readout {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 12px;
+        align-items: center;
+        min-height: 20px;
+        margin: 0 14px;
+        font-size: 12px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .chart-readout:empty {
+        display: none;
+    }
+
+    .chart-readout-date {
+        color: var(--muted-text);
+    }
+
+    .chart-readout-item {
+        display: inline-flex;
+        gap: 5px;
+        align-items: center;
+        color: var(--text-color);
+        white-space: nowrap;
+    }
+
+    .chart-readout-item i {
+        flex: 0 0 12px;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--line);
+    }
+
+    .chart-readout-item i.dashed {
+        height: 0;
+        border-top: 2px dashed var(--line);
+        border-radius: 0;
+        background: none;
+    }
+
+    .chart-readout-item b {
+        color: var(--heading-color);
+        font-weight: 850;
+    }
+
+    .chart-readout-item b.positive {
+        color: var(--positive-color);
+    }
+
+    .chart-readout-item b.negative {
+        color: var(--negative-color);
+    }
+
+    /* Ranking: one tap target per row (dot, name and assets, diverging bar, return and period P/L). */
+    .comparison-panel .comparison-table-wrap {
+        margin-bottom: 6px;
+    }
+
+    .comparison-hint-mobile {
+        display: block;
+        margin: 0 14px 12px !important;
+        color: var(--muted-text);
+        font-size: 11px !important;
+        font-weight: 700;
+    }
+
+    .cmp-row {
+        cursor: default;
+    }
+
+    .cmp-row-main {
+        grid-template-columns: 10px minmax(0, 1fr) 56px minmax(78px, auto);
+        width: 100%;
+        border: 0;
+        border-radius: inherit;
+        color: inherit;
+        background: none;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .cmp-row-main:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: -2px;
+    }
+
+    .cmp-row.invalid .cmp-row-main {
+        cursor: default;
+    }
+
+    .cmp-row.active .cmp-row-dot {
+        box-shadow: 0 0 0 2px var(--surface-color), 0 0 0 4px var(--border-strong);
+    }
+
+    .cmp-row-name strong {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .cmp-row-name strong > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cmp-row-bar {
+        position: relative;
+        display: block;
+        height: 12px;
+        background: linear-gradient(var(--border-strong), var(--border-strong)) center / 1px 12px no-repeat;
+    }
+
+    .cmp-row-bar i {
+        position: absolute;
+        top: 3px;
+        min-width: 2px;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--muted-text);
+    }
+
+    .cmp-row-bar i.positive {
+        background: var(--positive-color);
+    }
+
+    .cmp-row-bar i.negative {
+        background: var(--negative-color);
+    }
+
+    .cmp-row-figures small.positive {
+        color: var(--positive-color);
+    }
+
+    .cmp-row-figures small.negative {
+        color: var(--negative-color);
+    }
+
+    .cmp-row-expand {
+        display: block;
+        padding-bottom: 10px;
+    }
+
+    .cmp-row-expand[hidden] {
+        display: none;
+    }
+
+    .cmp-row-foot {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        margin: 8px 10px 0 30px;
+        color: var(--muted-text);
+        font-size: 11px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .cmp-row-goto {
+        flex: 0 0 auto;
+        min-height: 32px;
+        padding: 0 2px;
+        border: 0;
+        color: var(--primary-color);
+        background: none;
+        font-size: 12px;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .cmp-row-goto::after {
+        content: " \203A";
+    }
+}
+
+@media (max-width: 380px) {
+    .cmp-row-main {
+        grid-template-columns: 10px minmax(0, 1fr) 40px minmax(72px, auto);
+    }
+
+    .returns-hero-value {
+        font-size: 26px;
+    }
+}
+
+/* Full screen keeps every period chip and, wider than the narrow-chart breakpoint, the legend with every line. */
+.chart-panel.is-fullscreen .split-head > .period-switch {
+    display: flex !important;
+}
+
+.chart-panel.is-fullscreen .chart-readout {
+    display: none;
 }

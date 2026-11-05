@@ -7,6 +7,8 @@ export const state = {
     selectedAccountId: '',
     selectedPeriod: '3M',
     selectedHighlightAccountId: '',
+    // Accounts added to the phone returns chart from the ranking; the portfolio and benchmark are always drawn.
+    chartOverlayAccountIds: [],
     comparisonSortKey: 'periodReturn',
     comparisonSortOrder: -1,
     holdingFilters: { accountId: 'all', assetClass: 'all', market: 'all' },

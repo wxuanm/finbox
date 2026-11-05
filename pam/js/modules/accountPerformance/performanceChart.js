@@ -2,9 +2,12 @@ import { state, PERIODS } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatChartAxisPercent, formatNumber, formatPercent } from '../../utils/formatter.js';
 import { initChart, isChartLocaleCurrent, withAlpha } from '../holdings/holdingsChartShared.js';
+import { isChartFullscreenFromCompact, isChartFullscreenOpen } from './chartFullscreen.js';
 
 let chartInstance = null;
 let chartContext = null;
+// Series built for the latest render, read by the compact readout as a finger moves over the chart.
+let lastChartParts = null;
 let rebasingChart = false;
 // A manual zoom window (absolute times) survives re-renders until a period chip or the reset button clears it.
 let customZoomWindow = null;
@@ -33,27 +36,39 @@ const CHART_GRID_TOP_NARROW = 14;
 const CHART_GRID_BOTTOM = 64;
 const CHART_FLOOR_LABEL_CLEARANCE_PX = 20;
 const CHART_NARROW_WIDTH = 520;
+const PORTFOLIO_SERIES_ID = '__portfolio__';
+const PORTFOLIO_LINE_WIDTH = 2.8;
+// Phones (outside full screen) draw only the portfolio and benchmark, plus accounts tapped in the ranking
+// (`state.chartOverlayAccountIds`).
+const COMPACT_LAYOUT_QUERY = '(max-width: 720px)';
+
+// The chart head's switch serves desktop and full screen; phones use the sticky bar at the top of the view.
+const PERIOD_SWITCH_IDS = ['periodSwitch', 'returnsPeriodSwitch'];
 
 export function renderPeriodSwitch() {
-    const wrap = document.getElementById('periodSwitch');
-    if (!wrap) return;
-    wrap.innerHTML = PERIODS.map(([key]) => {
+    const html = PERIODS.map(([key]) => {
         const active = state.selectedPeriod === key && !customZoomWindow;
         return `
             <button class="period-chip${active ? ' active' : ''}" type="button" data-period="${key}" aria-pressed="${active}">${periodLabel(key)}</button>
         `;
     }).join('');
+    PERIOD_SWITCH_IDS.forEach(id => {
+        const wrap = document.getElementById(id);
+        if (wrap) wrap.innerHTML = html;
+    });
     renderChartRangeNote();
 }
 
 export function bindPeriodSwitch(onChange) {
-    const wrap = document.getElementById('periodSwitch');
-    if (!wrap) return;
-    wrap.addEventListener('click', event => {
-        const chip = event.target.closest('[data-period]');
-        if (!chip) return;
-        customZoomWindow = null;
-        onChange(chip.dataset.period);
+    PERIOD_SWITCH_IDS.forEach(id => {
+        document.getElementById(id)?.addEventListener('click', event => {
+            const chip = event.target.closest('[data-period]');
+            if (!chip) return;
+            customZoomWindow = null;
+            onChange(chip.dataset.period);
+            // The chips are re-rendered; keep keyboard focus on the chosen one.
+            document.querySelector(`#${id} [data-period="${chip.dataset.period}"]`)?.focus({ preventScroll: true });
+        });
     });
     document.getElementById('chartRangeReset')?.addEventListener('click', () => {
         customZoomWindow = null;
@@ -61,7 +76,7 @@ export function bindPeriodSwitch(onChange) {
     });
 }
 
-export function renderPerformanceChart(metrics) {
+export function renderPerformanceChart(metrics, portfolio = null) {
     const chartEl = document.getElementById('performanceChart');
     const messageEl = document.getElementById('chartMessage');
     if (!chartEl || !messageEl) return;
@@ -103,6 +118,7 @@ export function renderPerformanceChart(metrics) {
     else customZoomWindow = null;
     chartContext = {
         metrics: validMetrics,
+        portfolio: portfolio && portfolio.periodPoints.length >= 2 ? portfolio : null,
         slotById,
         isCustomRange: Boolean(customZoom),
         zoomRange: customZoom?.range || buildPerformanceZoomRange(validMetrics)
@@ -117,6 +133,7 @@ export function renderPerformanceChart(metrics) {
     }
     renderChartHints(chartParts);
     renderPeriodSwitch();
+    renderChartReadout(null);
 }
 
 export function resizeChart() {
@@ -127,25 +144,39 @@ export function resizeChart() {
     const chartParts = buildPerformanceChartParts(chartContext);
     // Merge mode keeps the legend's theme color while the font size follows the new width.
     chartInstance.setOption({
-        legend: { ...buildLegendDensity(), selected: buildLegendSelected(chartParts.legendData) },
+        legend: { ...buildLegendDensity(), data: chartParts.legendData, selected: buildLegendSelected(chartParts.legendData) },
         grid: { top: getGridTop() },
         xAxis: chartParts.xAxisDensity,
         yAxis: chartParts.yAxisBounds,
+        tooltip: buildTooltipMode(),
+        dataZoom: [{ id: 'performance-inside-zoom', moveOnMouseMove: !isCompactLayout() }],
         series: chartParts.series
-    }, false);
+    }, { replaceMerge: ['series'] });
     renderChartHints(chartParts);
+    renderChartReadout(null);
 }
 
 function isNarrowChart() {
     return (chartInstance?.getWidth() || 800) < CHART_NARROW_WIDTH;
 }
 
+// The compact phone chart: portfolio first, accounts only on request, readout above the plot instead of a tooltip.
+function isCompactLayout() {
+    return !isChartFullscreenOpen() && window.matchMedia?.(COMPACT_LAYOUT_QUERY)?.matches === true;
+}
+
+// The portfolio line belongs to the phone design: the compact chart and full screen opened from it.
+// Desktop keeps the per-account chart it had.
+function isPortfolioShown() {
+    return isCompactLayout() || isChartFullscreenFromCompact();
+}
+
 function getGridTop() {
     return isNarrowChart() ? CHART_GRID_TOP_NARROW : CHART_GRID_TOP;
 }
 
-// Phones drop the paged legend: it fit about three accounts per page, and the comparison list below
-// already pairs each account with its line color.
+// Phones drop the paged legend: it fit about three accounts per page, and the ranking below already pairs
+// each account with its line color. Full screen on a phone is wider than the breakpoint and keeps it.
 function buildLegendDensity() {
     return isNarrowChart()
         ? { show: false }
@@ -155,6 +186,15 @@ function buildLegendDensity() {
 // Without a legend a hidden line could not be brought back, so phones always draw every series.
 function buildLegendSelected(legendData) {
     return Object.fromEntries(legendData.map(name => [name, isNarrowChart() || legendSelected[name] !== false]));
+}
+
+// The compact chart reports values in #chartReadout while a finger moves, so its floating tooltip is hidden.
+function buildTooltipMode() {
+    const coarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches === true;
+    if (isCompactLayout()) {
+        return { triggerOn: 'mousemove|click', alwaysShowContent: false, showContent: false };
+    }
+    return { triggerOn: coarsePointer ? 'click' : 'mousemove|click', alwaysShowContent: coarsePointer, showContent: true };
 }
 
 // ECharts' inside dataZoom swallows every wheel event over the plot, even when zoomOnMouseWheel is 'ctrl'.
@@ -185,6 +225,8 @@ function getChartTheme() {
         surface: getCssVar('--surface-color') || '#ffffff',
         elevated: getCssVar('--surface-elevated') || '#ffffff',
         primary: getCssVar('--primary-color') || '#4f46e5',
+        // The portfolio line uses the heading ink so it never reads as one of the six account hues.
+        heading: getCssVar('--heading-color') || '#101427',
         primarySoft: getCssVar('--primary-soft') || 'rgba(79, 70, 229, 0.11)',
         positive: getCssVar('--positive-color') || '#ef4444',
         negative: getCssVar('--negative-color') || '#059669',
@@ -202,8 +244,7 @@ function buildChartOption(chartParts) {
         },
         tooltip: {
             trigger: 'axis',
-            triggerOn: coarsePointer ? 'click' : 'mousemove|click',
-            alwaysShowContent: coarsePointer,
+            ...buildTooltipMode(),
             enterable: true,
             hideDelay: coarsePointer ? 0 : 120,
             confine: true,
@@ -223,7 +264,7 @@ function buildChartOption(chartParts) {
             ...buildLegendDensity(),
             data: chartParts.legendData,
             selected: buildLegendSelected(chartParts.legendData),
-            formatter: name => name === BENCHMARK_SERIES_ID ? t('benchmarkShort') : name,
+            formatter: name => name === BENCHMARK_SERIES_ID ? t('benchmarkShort') : name === PORTFOLIO_SERIES_ID ? t('portfolioLine') : name,
             textStyle: { ...buildLegendDensity().textStyle, color: theme.text },
             pageIconColor: theme.primary,
             pageIconInactiveColor: theme.borderStrong,
@@ -262,9 +303,10 @@ function buildChartOption(chartParts) {
                 filterMode: 'none',
                 throttle: 60,
                 // Plain wheel scrolls the page; Ctrl + wheel, pinch, and drag still zoom or pan the chart.
+                // The compact phone chart gives a one-finger drag to the readout; pinch and the slider still zoom.
                 zoomOnMouseWheel: 'ctrl',
                 moveOnMouseWheel: false,
-                moveOnMouseMove: true,
+                moveOnMouseMove: !isCompactLayout(),
                 ...chartContext.zoomRange
             },
             {
@@ -322,7 +364,8 @@ function buildAccountChartSeries(context, markerAccountId, focusAccountId, zoomB
     return metrics.map(metric => {
         const focused = focusAccountId === metric.account.id;
         const dimmed = Boolean(focusAccountId) && !focused;
-        const showReturnMarkers = metrics.length === 1 || markerAccountId === metric.account.id;
+        // With the portfolio drawn, a lone account is no longer the only line, so the portfolio takes the markers.
+        const showReturnMarkers = (!(context.portfolio && isPortfolioShown()) && metrics.length === 1) || markerAccountId === metric.account.id;
         const style = getSeriesStyle(slotById?.get(metric.account.id) ?? 0, theme);
         const points = metric.points || metric.periodPoints;
         const basePoint = getMetricBasePoint(metric, context, zoomBounds);
@@ -477,6 +520,63 @@ function getLastSeriesPoint(data) {
     return null;
 }
 
+// The portfolio is drawn whenever it exists. Outside the compact layout it carries the high/low/latest markers
+// only when no account is selected, like a single-account chart.
+function buildPortfolioSeries(context, zoomBounds, theme, withMarkers) {
+    const portfolio = context.portfolio;
+    if (!portfolio || !isPortfolioShown()) return null;
+    const basePoint = context.isCustomRange && zoomBounds
+        ? findPerformanceAnchorPoint(portfolio.points, zoomBounds.startTime)
+        : portfolio.periodPoints[0];
+    const data = buildReturnSeries(portfolio.points, basePoint?.unitNav, t('portfolioLine'))
+        .map(point => ({ ...point, accountId: PORTFOLIO_SERIES_ID }));
+    const visibleData = filterPerformanceSeriesByZoom(data, zoomBounds);
+    return {
+        id: PORTFOLIO_SERIES_ID,
+        name: PORTFOLIO_SERIES_ID,
+        type: 'line',
+        showSymbol: false,
+        symbol: 'circle',
+        symbolSize: 5,
+        smooth: false,
+        z: 4,
+        emphasis: { focus: 'none' },
+        // A selected account (desktop table, full screen) is the focus, so the portfolio steps back a little.
+        lineStyle: { width: PORTFOLIO_LINE_WIDTH, color: theme.heading, opacity: !isCompactLayout() && state.selectedHighlightAccountId ? 0.55 : 1 },
+        itemStyle: { color: theme.heading, borderColor: theme.surface, borderWidth: 1 },
+        areaStyle: {
+            origin: 'start',
+            color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                    { offset: 0, color: withAlpha(theme.heading, 0.1) },
+                    { offset: 1, color: withAlpha(theme.heading, 0) }
+                ]
+            }
+        },
+        data,
+        markPoint: {
+            symbol: 'circle',
+            symbolSize: 8,
+            itemStyle: { color: theme.heading, borderColor: theme.surface, borderWidth: 2 },
+            label: {
+                formatter: params => formatPercent(Number(params.value), 2),
+                color: theme.text,
+                fontSize: 11,
+                fontWeight: 700,
+                textBorderColor: theme.surface,
+                textBorderWidth: 3
+            },
+            data: []
+        },
+        markerInput: withMarkers ? visibleData : null
+    };
+}
+
 function buildBenchmarkSeries(metrics, zoomBounds, theme) {
     const dates = [...new Set(metrics.flatMap(metric => (metric.points || metric.periodPoints).map(point => point.date)))].sort();
     const startTime = Number.isFinite(zoomBounds?.startTime) ? zoomBounds.startTime : parseDate(dates[0])?.getTime();
@@ -548,6 +648,16 @@ function bindChartEvents() {
         });
     });
 
+    // The compact readout follows the axis pointer: a finger moving over the plot, or a tap.
+    chartInstance.on('updateAxisPointer', params => {
+        if (!isCompactLayout()) return;
+        const time = Number(params.axesInfo?.find(info => info.axisDim === 'x')?.value);
+        renderChartReadout(Number.isFinite(time) ? time : null);
+    });
+    chartInstance.getZr().on('globalout', () => {
+        if (isCompactLayout()) renderChartReadout(null);
+    });
+
     chartInstance.on('datazoom', () => {
         if (!chartInstance || !chartContext || rebasingChart) return;
 
@@ -573,11 +683,59 @@ function rebaseChart() {
             aria: { label: { description: chartParts.ariaDescription } },
             yAxis: chartParts.yAxisBounds,
             series: chartParts.series
-        }, false);
+        }, { replaceMerge: ['series'] });
     } finally {
         rebasingChart = false;
     }
     renderChartHints(chartParts);
+    renderChartReadout(null);
+}
+
+// One line above the compact chart: the date under the finger (or the latest snapshot), then the portfolio,
+// the benchmark, and each overlaid account at that date. Each line reports its last snapshot on or before it.
+function renderChartReadout(time) {
+    const wrap = document.getElementById('chartReadout');
+    if (!wrap) return;
+    const parts = lastChartParts;
+    if (!parts || !chartContext || !isCompactLayout()) {
+        wrap.innerHTML = '';
+        return;
+    }
+    const theme = getChartTheme();
+    const lines = [
+        parts.portfolioSeries && { name: t('portfolioLine'), color: theme.heading, data: parts.portfolioSeries.data, signed: true },
+        { name: t('benchmarkShort'), color: theme.muted, data: parts.benchmarkSeries.data, dashed: true },
+        ...parts.accountSeries.map(series => ({ name: series.name, color: series.lineStyle.color, data: series.data, signed: true }))
+    ].filter(Boolean);
+    const latest = lines.reduce((max, line) => {
+        const last = getLastSeriesPoint(filterPerformanceSeriesByZoom(line.data, parts.zoomBounds));
+        const lastTime = last ? parseDate(last[0])?.getTime() : NaN;
+        return Number.isFinite(lastTime) && lastTime > max ? lastTime : max;
+    }, -Infinity);
+    const at = Number.isFinite(time) ? time : latest;
+    const dateText = Number.isFinite(time) ? formatTooltipDate(time) : t('chartReadoutLatest', { date: formatTooltipDate(latest) });
+    const items = lines.map(line => {
+        const value = valueAtOrBefore(filterPerformanceSeriesByZoom(line.data, parts.zoomBounds), at);
+        const tone = line.signed && Number.isFinite(value) ? (value > 0 ? 'positive' : value < 0 ? 'negative' : '') : '';
+        return `
+            <span class="chart-readout-item">
+                <i class="${line.dashed ? 'dashed' : ''}" style="--line:${line.color}" aria-hidden="true"></i>${escapeHtml(line.name)}
+                <b class="${tone}">${Number.isFinite(value) ? formatPercent(value, 2) : '-'}</b>
+            </span>
+        `;
+    }).join('');
+    wrap.innerHTML = `<span class="chart-readout-date">${escapeHtml(dateText)}</span>${items}`;
+}
+
+function valueAtOrBefore(data, time) {
+    let value = null;
+    for (const point of data || []) {
+        const pointTime = parseDate(point?.value?.[0])?.getTime();
+        if (!Number.isFinite(pointTime)) continue;
+        if (pointTime > time) break;
+        value = Number(point.value[1]);
+    }
+    return value;
 }
 
 function renderChartHints(chartParts = null) {
@@ -744,22 +902,37 @@ function isPointInZoom(point, zoomBounds) {
 }
 
 function isAccountVisible(metric) {
+    if (isCompactLayout()) return state.chartOverlayAccountIds.includes(metric.account.id);
     return isNarrowChart() || legendSelected[metric.account.name] !== false;
+}
+
+function isPortfolioVisible() {
+    return isNarrowChart() || legendSelected[PORTFOLIO_SERIES_ID] !== false;
 }
 
 function buildPerformanceChartParts(context, markerAccountId = state.selectedHighlightAccountId, focusAccountId = state.selectedHighlightAccountId) {
     const theme = getChartTheme();
+    const compact = isCompactLayout();
     const zoomBounds = getPerformanceZoomBounds(context.metrics, context.zoomRange);
-    const accountSeries = buildAccountChartSeries(context, markerAccountId, focusAccountId, zoomBounds, theme);
+    // The compact chart only builds the accounts the user overlaid; hidden series would still widen the y-axis.
+    const accountContext = compact
+        ? { ...context, metrics: context.metrics.filter(metric => isAccountVisible(metric)) }
+        : context;
+    const markerAccount = compact ? '' : markerAccountId;
+    const focusAccount = compact ? '' : focusAccountId;
+    const accountSeries = buildAccountChartSeries(accountContext, markerAccount, focusAccount, zoomBounds, theme);
+    const portfolioSeries = buildPortfolioSeries(context, zoomBounds, theme, compact || !markerAccount);
     const benchmarkSeries = buildBenchmarkSeries(context.metrics, zoomBounds, theme);
-    const visibleAccountSeries = accountSeries.filter((_, index) => isAccountVisible(context.metrics[index]));
-    const hasSparseSeries = visibleAccountSeries.some(series => series.visiblePointCount < 2);
-    const selectedMetric = context.metrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
-    const maxDrawdownMetric = selectedMetric || (context.metrics.length === 1 ? context.metrics[0] : null);
+    const visibleAccountSeries = accountSeries.filter((_, index) => isAccountVisible(accountContext.metrics[index]));
+    const visiblePortfolioSeries = portfolioSeries && isPortfolioVisible() ? [portfolioSeries] : [];
+    const hasSparseSeries = visibleAccountSeries.some(series => series.visiblePointCount < 2)
+        || visiblePortfolioSeries.some(series => filterPerformanceSeriesByZoom(series.data, zoomBounds).length < 2);
+    const selectedMetric = compact ? null : context.metrics.find(metric => metric.account.id === state.selectedHighlightAccountId);
+    const maxDrawdownMetric = selectedMetric || (!portfolioSeries && context.metrics.length === 1 ? context.metrics[0] : null);
     const visibleBenchmarkSeries = !isNarrowChart() && legendSelected[BENCHMARK_SERIES_ID] === false ? [] : [benchmarkSeries];
-    const yAxisBounds = buildYAxisBounds([...visibleAccountSeries, ...visibleBenchmarkSeries], zoomBounds);
+    const yAxisBounds = buildYAxisBounds([...visiblePortfolioSeries, ...visibleAccountSeries, ...visibleBenchmarkSeries], zoomBounds);
     const pxPerMs = getPlotPxPerMs(context.metrics, zoomBounds);
-    accountSeries.forEach(series => {
+    [...accountSeries, ...(portfolioSeries ? [portfolioSeries] : [])].forEach(series => {
         if (series.markerInput) series.markPoint.data = buildReturnMarkPoints(series.markerInput, pxPerMs, yAxisBounds, theme);
         delete series.markerInput;
         delete series.visiblePointCount;
@@ -767,24 +940,27 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const maxDrawdownSeries = (maxDrawdownMetric && isAccountVisible(maxDrawdownMetric)
         && buildAccountMaxDrawdownSeries(maxDrawdownMetric, context, zoomBounds, yAxisBounds, theme))
         || buildEmptyMaxDrawdownSeries();
+    lastChartParts = { portfolioSeries, accountSeries, benchmarkSeries, zoomBounds };
     return {
         accountSeries,
-        legendData: [...accountSeries.map(series => series.name), BENCHMARK_SERIES_ID],
+        portfolioSeries,
+        legendData: [...(portfolioSeries ? [PORTFOLIO_SERIES_ID] : []), ...accountSeries.map(series => series.name), BENCHMARK_SERIES_ID],
         yAxisBounds,
         hasSparseSeries,
         // Fewer date ticks on phones so day labels do not run together.
         xAxisDensity: isNarrowChart() ? { splitNumber: 4 } : { splitNumber: 8 },
-        ariaDescription: buildChartAriaDescription(context.metrics, visibleAccountSeries, zoomBounds),
-        series: [...accountSeries, benchmarkSeries, maxDrawdownSeries]
+        ariaDescription: buildChartAriaDescription(context.metrics, [...visiblePortfolioSeries, ...visibleAccountSeries], zoomBounds),
+        series: [...(portfolioSeries ? [portfolioSeries] : []), ...accountSeries, benchmarkSeries, maxDrawdownSeries]
     };
 }
 
-function buildChartAriaDescription(metrics, visibleAccountSeries, zoomBounds) {
+function buildChartAriaDescription(metrics, visibleSeries, zoomBounds) {
     const extent = zoomBounds || getPerformanceTimeExtent(metrics);
-    const accounts = visibleAccountSeries
+    const accounts = visibleSeries
         .map(series => {
             const lastPoint = getLastSeriesPoint(filterPerformanceSeriesByZoom(series.data, zoomBounds));
-            return lastPoint ? t('chartAriaAccount', { name: series.name, value: formatPercent(lastPoint[1], 2) }) : '';
+            const name = series.name === PORTFOLIO_SERIES_ID ? t('portfolioLine') : series.name;
+            return lastPoint ? t('chartAriaAccount', { name, value: formatPercent(lastPoint[1], 2) }) : '';
         })
         .filter(Boolean)
         .join('; ');
@@ -976,12 +1152,14 @@ function getMaxDrawdownSegment(data) {
 }
 
 function formatChartTooltip(params) {
+    // The portfolio row leads, then the selected account, then the rest by return.
+    const rank = item => item.seriesName === PORTFOLIO_SERIES_ID ? 2 : item.data?.accountId === state.selectedHighlightAccountId ? 1 : 0;
     const items = (Array.isArray(params) ? params : [params])
-        .filter(item => !String(item.seriesName || '').startsWith(INTERNAL_SERIES_PREFIX))
+        .filter(item => item.seriesName === PORTFOLIO_SERIES_ID || !String(item.seriesName || '').startsWith(INTERNAL_SERIES_PREFIX))
         .filter(item => item.seriesName !== t('annualizedBenchmark10'))
         .sort((left, right) => {
-            const leftSelected = left.data?.accountId === state.selectedHighlightAccountId ? 1 : 0;
-            const rightSelected = right.data?.accountId === state.selectedHighlightAccountId ? 1 : 0;
+            const leftSelected = rank(left);
+            const rightSelected = rank(right);
             if (leftSelected !== rightSelected) return rightSelected - leftSelected;
             const leftValue = Number(Array.isArray(left.value) ? left.value[1] : left.value);
             const rightValue = Number(Array.isArray(right.value) ? right.value[1] : right.value);
@@ -997,7 +1175,7 @@ function formatChartTooltip(params) {
         const dateNote = rowDate && rowDate !== title
             ? `<span style="margin-left:4px;opacity:0.62;font-size:11px;font-variant-numeric:tabular-nums;">${rowDate}</span>`
             : '';
-        const selected = item.data?.accountId === state.selectedHighlightAccountId;
+        const selected = rank(item) > 0;
         return `
             <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center;min-width:240px;line-height:1.35;">
                 <span>${item.marker || ''}</span>

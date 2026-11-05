@@ -3,12 +3,12 @@ import { i18n, t } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
 import { initializeCloudSync, replaceWithLatestCloud, retryCloudSync } from './core/cloudSync.js';
 import { loadAccounts, loadPreferences, loadSnapshots, saveAccounts, savePreferences, saveSnapshots } from './modules/accountPerformance/storage.js';
-import { buildAccountMetrics } from './modules/accountPerformance/metrics.js';
+import { buildAccountMetrics, buildPortfolioMetrics } from './modules/accountPerformance/metrics.js';
 import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindChartFullscreen, renderChartFullscreenButton } from './modules/accountPerformance/chartFullscreen.js';
-import { bindAccountComparison, renderAccountComparison, renderOverviewCards } from './modules/accountPerformance/metricsPanel.js';
+import { bindAccountComparison, bindReturnsHero, renderAccountComparison, renderOverviewCards, renderReturnsHero } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
@@ -490,12 +490,28 @@ function bindEvents() {
         renderApp();
     });
     bindChartFullscreen({ onResize: resizeChart });
+    bindReturnsHero();
     bindAccountComparison({
         onHighlight: accountId => {
             state.selectedHighlightAccountId = state.selectedHighlightAccountId === accountId ? '' : accountId;
             renderApp();
         },
-        onSort: sortAccountComparison
+        onOverlay: accountId => {
+            const ids = state.chartOverlayAccountIds;
+            state.chartOverlayAccountIds = ids.includes(accountId) ? ids.filter(id => id !== accountId) : [...ids, accountId];
+            renderApp();
+            // The list is re-rendered; keep keyboard focus on the tapped row.
+            document.querySelector(`[data-overlay-account="${CSS.escape(accountId)}"]`)?.focus({ preventScroll: true });
+        },
+        onSort: sortAccountComparison,
+        onGoToAccount: accountId => {
+            if (state.accounts.some(account => account.id === accountId)) state.selectedAccountId = accountId;
+            switchView('assetData');
+            requestAnimationFrame(() => {
+                window.scrollTo({ top: 0 });
+                scrollAccountCardIntoView(state.selectedAccountId, 'auto');
+            });
+        }
     });
 
     function sortAccountComparison(sortKey) {
@@ -541,6 +557,14 @@ function bindEvents() {
     window.addEventListener('resize', resizeAccountTrendChart, { passive: true });
     window.addEventListener('resize', resizeSnapshotTable, { passive: true });
     window.addEventListener('resize', keepAccountFloatingActionsInView, { passive: true });
+    window.addEventListener('resize', syncStickyHeaderOffset, { passive: true });
+}
+
+// The returns view's period bar sticks just below the phone header, whose height depends on the safe area.
+function syncStickyHeaderOffset() {
+    const header = document.querySelector('.app-shell > .global-header');
+    const height = header ? Math.round(header.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty('--pam-header-height', `${height}px`);
 }
 
 function bindAccountFloatingActions() {
@@ -672,15 +696,19 @@ function renderApp() {
     state.selectedAccountId = resolveSelectedAccount(state.selectedAccountId);
     syncSelectedHoldingFilter();
     const metrics = buildAccountMetrics(state.accounts, state.snapshots, state.selectedPeriod);
+    const portfolio = buildPortfolioMetrics(metrics);
+    const accountIds = new Set(state.accounts.map(account => account.id));
+    state.chartOverlayAccountIds = state.chartOverlayAccountIds.filter(id => accountIds.has(id));
     const holdingsMetrics = buildHoldingsMetrics(state.holdings, state.accounts, state.holdingFilters);
     renderActiveView();
     renderAmountPrivacyToggle();
+    renderReturnsHero(metrics, portfolio);
     renderOverviewCards(metrics);
     renderAccountList(metrics);
     renderSnapshotForm();
     renderPeriodSwitch();
     renderChartFullscreenButton();
-    renderPerformanceChart(metrics);
+    renderPerformanceChart(metrics, portfolio);
     renderAccountComparison(metrics);
     renderAccountTrend(metrics);
     renderSnapshotTable();
@@ -692,6 +720,7 @@ function renderApp() {
         excludedAccountIds: state.allocation.excludedAccountIds
     }));
     renderCloudSyncStatus();
+    syncStickyHeaderOffset();
 }
 
 function renderAppAndKeepSelectedAccountInView(behavior = 'smooth') {

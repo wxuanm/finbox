@@ -160,6 +160,10 @@
 
         <main class="workspace">
             <section id="analysisView" class="workspace-view active" data-workspace-view="analysis">
+                <div class="returns-period-bar">
+                    <div id="returnsPeriodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
+                </div>
+                <section id="returnsHero" class="returns-hero" aria-live="polite"></section>
                 <section id="overviewCards" class="overview-grid" aria-live="polite"></section>
 
                 <section id="performanceChartPanel" class="panel management-panel chart-panel focus-panel">
@@ -179,8 +183,9 @@
                         <span id="chartRangeText" class="chart-range-text"></span>
                         <button id="chartRangeReset" class="chart-range-reset" type="button"></button>
                     </div>
+                    <div id="chartReadout" class="chart-readout" aria-live="polite"></div>
                     <div id="performanceChart" class="performance-chart"></div>
-                    <p class="chart-legend-mobile"><i aria-hidden="true"></i><span data-i18n="chartLegendMobile">虚线为年化 10% 基准，颜色对应下方账户</span></p>
+                    <p class="chart-legend-mobile"><i aria-hidden="true"></i><span data-i18n="chartLegendMobile">粗线为组合，虚线为年化 10% 基准</span></p>
                 </section>
 
                 <section class="panel management-panel comparison-panel">
@@ -188,10 +193,10 @@
                         <div>
                             <h2 data-i18n="comparisonTitle">账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2>
                             <p class="comparison-desc-desktop" data-i18n="comparisonDesc">点击指标排序，点击账户列高亮走势图。</p>
-                            <p class="comparison-desc-mobile" data-i18n="comparisonDescMobile">点击账户高亮走势并查看风险指标。</p>
                         </div>
                     </div>
                     <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
+                    <p class="comparison-hint-mobile" data-i18n="comparisonDescMobile">点账户在走势图上叠加它的曲线，再点一次取消。</p>
                 </section>
             </section>
 

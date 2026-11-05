@@ -22,6 +22,64 @@ export function renderOverviewCards(metrics) {
     ].join('');
 }
 
+// Phones replace the four overview cards with one headline: total assets, the portfolio's period P/L and
+// return, then cumulative P/L and data freshness on one line that expands to each account's latest snapshot.
+let heroStatusOpen = false;
+
+export function renderReturnsHero(metrics, portfolio) {
+    const wrap = document.getElementById('returnsHero');
+    if (!wrap) return;
+    if (!portfolio) {
+        wrap.innerHTML = `
+            <span class="returns-hero-label">${escapeHtml(t('latestTotalAssets'))}</span>
+            <strong class="returns-hero-value">-</strong>
+            <p class="returns-hero-empty">${escapeHtml(t('waitingValidSnapshot'))}</p>
+        `;
+        return;
+    }
+
+    const masked = state.amountsHidden;
+    const statusRows = metrics.map(metric => {
+        const lagging = metric.valid && metric.latestDate !== portfolio.latestDate;
+        const detail = metric.valid ? escapeHtml(metric.latestDate) : escapeHtml(metric.error || t('insufficientData'));
+        return `
+            <li${metric.valid ? '' : ' class="invalid"'}>
+                <span>${escapeHtml(metric.account.name)}</span>
+                ${lagging ? `<em class="lag-badge">${escapeHtml(t('laggedBadge'))}</em>` : ''}
+                <span class="returns-hero-status-date">${detail}</span>
+            </li>
+        `;
+    }).join('');
+
+    wrap.innerHTML = `
+        <span class="returns-hero-label">${escapeHtml(t('returnsHeroTotal', { count: portfolio.accountCount }))}</span>
+        <strong class="returns-hero-value">${formatCurrency(portfolio.latestValue, masked)}</strong>
+        <div class="returns-hero-period">
+            <span class="title-period-badge">${escapeHtml(currentPeriodLabel())}</span>
+            <strong class="${signedClass(portfolio.periodProfitLoss)}">${formatSignedCurrency(portfolio.periodProfitLoss, masked)}</strong>
+            <span class="returns-hero-pill ${signedClass(portfolio.periodReturn)}">${formatPercent(portfolio.periodReturn)}</span>
+        </div>
+        <button class="returns-hero-status" type="button" data-hero-status aria-expanded="${heroStatusOpen}" aria-controls="returnsHeroStatusList">
+            <span>${escapeHtml(t('cumulativePnl'))} <b class="${signedClass(portfolio.profitLoss)}">${formatSignedCurrency(portfolio.profitLoss, masked)}</b></span>
+            <span aria-hidden="true">·</span>
+            <span>${escapeHtml(t('returnsHeroStatus', { synced: portfolio.syncedCount, count: portfolio.accountCount, date: portfolio.latestDate }))}</span>
+            <svg class="returns-hero-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <ul id="returnsHeroStatusList" class="returns-hero-status-list"${heroStatusOpen ? '' : ' hidden'}>${statusRows}</ul>
+    `;
+}
+
+export function bindReturnsHero() {
+    document.getElementById('returnsHero')?.addEventListener('click', event => {
+        const toggle = event.target.closest('[data-hero-status]');
+        if (!toggle) return;
+        heroStatusOpen = !heroStatusOpen;
+        toggle.setAttribute('aria-expanded', String(heroStatusOpen));
+        const list = document.getElementById('returnsHeroStatusList');
+        if (list) list.hidden = !heroStatusOpen;
+    });
+}
+
 export function renderAccountComparison(metrics) {
     const wrap = document.getElementById('accountComparison');
     const periodLabel = document.getElementById('comparisonPeriodLabel');
@@ -59,16 +117,26 @@ export function renderAccountComparison(metrics) {
                 ${rows.map(([key, label, renderValue]) => renderComparisonMetricRow(key, label, sortedMetrics, renderValue)).join('')}
             </tbody>
         </table>
-        ${renderComparisonMobile(sortedMetrics, rows, slotById)}
+        ${renderComparisonMobile(sortedMetrics, slotById)}
     `;
 }
 
-export function bindAccountComparison({ onHighlight, onSort }) {
+export function bindAccountComparison({ onHighlight, onOverlay, onSort, onGoToAccount }) {
     const wrap = document.getElementById('accountComparison');
     if (!wrap) return;
     wrap.addEventListener('click', event => {
         // The mobile sort <select> lives inside the wrap; its own change event drives sorting.
         if (event.target.closest('select')) return;
+        const goTo = event.target.closest('[data-goto-account]');
+        if (goTo) {
+            onGoToAccount?.(goTo.dataset.gotoAccount);
+            return;
+        }
+        const overlay = event.target.closest('[data-overlay-account]');
+        if (overlay) {
+            onOverlay(overlay.dataset.overlayAccount);
+            return;
+        }
         const sortHeader = event.target.closest('[data-comparison-sort]');
         if (sortHeader) {
             onSort(sortHeader.dataset.comparisonSort);
@@ -82,23 +150,37 @@ export function bindAccountComparison({ onHighlight, onSort }) {
         const select = event.target.closest('[data-comparison-sort-select]');
         if (select) onSort(select.value);
     });
-    wrap.addEventListener('keydown', event => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        const card = event.target.closest('.cmp-row[data-highlight-account]');
-        if (!card || event.target !== card) return;
-        event.preventDefault();
-        onHighlight(card.dataset.highlightAccount);
-    });
 }
 
-// Phones get a divided list like the allocation class rows instead of a wide table that only fits one
-// account column at a time. A tap highlights the account's line and opens its risk metrics in place.
-function renderComparisonMobile(sortedMetrics, rows, slotById) {
+// Phones rank accounts in a divided list like the allocation class rows instead of a wide table that only fits
+// one account column at a time. Each row carries a diverging bar of its period return, scaled to the largest
+// absolute return in the list. A tap adds the account's line to the portfolio chart and opens its risk metrics.
+const MOBILE_SORT_KEYS = ['periodReturn', 'periodProfitLoss', 'latestValue', 'annualizedReturn', 'maxDrawdown', 'annualizedVolatility', 'calmarRatio', 'profitLoss', 'latestDate', 'name'];
+
+function mobileSortLabel(key) {
+    return {
+        periodReturn: t('periodReturn'),
+        periodProfitLoss: t('periodPnl'),
+        latestValue: t('latestAssets'),
+        annualizedReturn: t('annualizedReturn'),
+        maxDrawdown: t('maxDrawdown'),
+        annualizedVolatility: t('annualizedVolatility'),
+        calmarRatio: t('calmarRatio'),
+        profitLoss: t('cumulativePnl'),
+        latestDate: t('latestSnapshot'),
+        name: t('account')
+    }[key];
+}
+
+function renderComparisonMobile(sortedMetrics, slotById) {
     const sortKey = state.comparisonSortKey || 'periodReturn';
     const ascending = state.comparisonSortOrder === 1;
-    const options = [['name', t('account')], ...rows.map(([key, label]) => [key, label])]
-        .map(([key, label]) => `<option value="${key}"${key === sortKey ? ' selected' : ''}>${escapeHtml(label)}</option>`)
+    const options = MOBILE_SORT_KEYS
+        .map(key => `<option value="${key}"${key === sortKey ? ' selected' : ''}>${escapeHtml(mobileSortLabel(key))}</option>`)
         .join('');
+    const valid = sortedMetrics.filter(metric => metric.valid);
+    const latestDate = valid.reduce((latest, metric) => metric.latestDate > latest ? metric.latestDate : latest, '');
+    const barScale = Math.max(0.5, ...valid.map(metric => Math.abs(Number(metric.periodReturn) || 0)));
     const directionLabel = ascending ? t('sortAscending') : t('sortDescending');
     return `
         <div class="comparison-mobile">
@@ -112,48 +194,64 @@ function renderComparisonMobile(sortedMetrics, rows, slotById) {
                 </button>
             </div>
             <ul class="cmp-list">
-                ${sortedMetrics.map(metric => renderComparisonListRow(metric, slotById.get(metric.account.id) ?? 0)).join('')}
+                ${sortedMetrics.map(metric => renderComparisonListRow(metric, slotById.get(metric.account.id) ?? 0, latestDate, barScale)).join('')}
             </ul>
         </div>
     `;
 }
 
-function renderComparisonListRow(metric, slot) {
-    const active = state.selectedHighlightAccountId === metric.account.id;
+function renderComparisonListRow(metric, slot, latestDate, barScale) {
+    // Phones overlay any number of accounts on the portfolio chart, so a row is open while its line is drawn.
+    const active = state.chartOverlayAccountIds.includes(metric.account.id);
     // The dot doubles as the chart legend on phones, so it uses the same color slot as the line.
     const color = metric.valid ? `var(--chart-series-${(slot % 6) + 1})` : 'var(--border-strong)';
-    const attrs = `class="cmp-row${active ? ' active' : ''}${metric.valid ? '' : ' invalid'}" data-highlight-account="${metric.account.id}" role="button" tabindex="0" aria-pressed="${active}"`;
+    const lagging = metric.valid && latestDate && metric.latestDate !== latestDate;
     const name = `
         <span class="cmp-row-dot" style="background:${color}" aria-hidden="true"></span>
         <span class="cmp-row-name">
-            <strong>${escapeHtml(metric.account.name)}</strong>
-            <small>${metric.valid ? `${t('comparisonRowAssets')} ${formatCurrency(metric.latestValue, state.amountsHidden)}` : escapeHtml(metric.error || t('insufficientData'))}</small>
+            <strong><span>${escapeHtml(metric.account.name)}</span>${lagging ? `<em class="lag-badge">${escapeHtml(t('laggedBadge'))}</em>` : ''}</strong>
+            <small>${metric.valid ? formatCurrency(metric.latestValue, state.amountsHidden) : escapeHtml(metric.error || t('insufficientData'))}</small>
         </span>
     `;
-    if (!metric.valid) return `<li ${attrs}><div class="cmp-row-main">${name}</div></li>`;
+    if (!metric.valid) return `<li class="cmp-row invalid"><div class="cmp-row-main">${name}</div></li>`;
 
+    const periodReturn = Number(metric.periodReturn);
+    const tone = signedClass(periodReturn) || 'flat';
+    const barWidth = Number.isFinite(periodReturn) ? Math.min(50, Math.abs(periodReturn) / barScale * 50) : 0;
+    const barSide = periodReturn < 0 ? 'right' : 'left';
     const stat = (label, value) => `<div><dt>${label}</dt><dd>${value}</dd></div>`;
+    const detailsId = `cmpRowDetails-${metric.account.id}`;
     return `
-        <li ${attrs} aria-expanded="${active}">
-            <div class="cmp-row-main">
+        <li class="cmp-row${active ? ' active' : ''}">
+            <button class="cmp-row-main" type="button" data-overlay-account="${metric.account.id}" aria-expanded="${active}" aria-controls="${detailsId}">
                 ${name}
+                <span class="cmp-row-bar" aria-hidden="true"><i class="${tone}" style="${barSide}:50%;width:${barWidth.toFixed(1)}%"></i></span>
                 <span class="cmp-row-figures">
                     <strong>${formatMetricPercent(metric, 'periodReturn')}</strong>
-                    <small>${t('comparisonRowPnl')} ${formatMetricCurrency(metric, 'profitLoss')}</small>
+                    <small class="${signedClass(metric.periodProfitLoss)}">${formatSignedCurrency(metric.periodProfitLoss, state.amountsHidden)}</small>
                 </span>
-                <svg class="cmp-row-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            ${active ? `
+            </button>
+            <div id="${detailsId}" class="cmp-row-expand"${active ? '' : ' hidden'}>
                 <dl class="cmp-row-details">
                     ${stat(t('annualizedReturn'), formatMetricPercent(metric, 'annualizedReturn'))}
                     ${stat(t('maxDrawdown'), formatMetricPercent(metric, 'maxDrawdown'))}
                     ${stat(t('annualizedVolatility'), formatMetricPercent(metric, 'annualizedVolatility', false))}
                     ${stat(t('calmarRatio'), formatMetricRatio(metric, 'calmarRatio'))}
                 </dl>
-                <p class="cmp-row-date">${t('latestSnapshot')} ${escapeHtml(metric.latestDate || '-')}</p>
-            ` : ''}
+                <div class="cmp-row-foot">
+                    <span>${t('cumulativePnl')} ${formatMetricCurrency(metric, 'profitLoss')} · ${escapeHtml(metric.latestDate || '-')}</span>
+                    <button class="cmp-row-goto" type="button" data-goto-account="${metric.account.id}">${escapeHtml(t('goToAccount'))}</button>
+                </div>
+            </div>
         </li>
     `;
+}
+
+function formatSignedCurrency(value, masked) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '-';
+    if (masked) return formatCurrency(num, true);
+    return `${num > 0 ? '+' : ''}${formatCurrency(num)}`;
 }
 
 function card(label, value, note, className = '', noteIsHtml = false) {

@@ -2,7 +2,6 @@ import { state, PERIODS } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatChartAxisPercent, formatCurrency, formatNumber, formatPercent, signedClass } from '../../utils/formatter.js';
 import { initChart, isChartLocaleCurrent, withAlpha } from '../holdings/holdingsChartShared.js';
-import { getPeriodStartDate } from './metrics.js';
 import { LIST_HALF_START_CLASS, clampPage, getListColumnCount, getPageCount, keepFirstRowPage, pairRows, renderPager } from './pager.js';
 
 // Mirrors the single-fund trend view in the VSIX: the same period drives a return curve or a paged NAV list.
@@ -125,7 +124,7 @@ function buildTrendRows(metric) {
     const { points, periodPoints } = metric;
     const anchor = periodPoints[0];
     const offset = points.length - periodPoints.length;
-    const startDate = getPeriodStartDate(metric.latestDate, state.selectedPeriod);
+    const startDate = metric.periodStartDate;
     return periodPoints.map((point, index) => {
         const previous = points[offset + index - 1];
         return {

@@ -14,6 +14,8 @@ const ENTER_ICON = '<svg width="18" height="18" fill="none" stroke="currentColor
 const EXIT_ICON = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4"/><path d="M15 4v5h5"/><path d="M9 20v-5H4"/><path d="M15 20v-5h5"/></svg>';
 
 let open = false;
+// Full screen opened from the phone layout keeps the phone chart's portfolio line, alongside every account.
+let openedFromCompact = false;
 let nativeFullscreen = false;
 let onResize = () => {};
 
@@ -31,6 +33,14 @@ export function bindChartFullscreen(options = {}) {
     renderChartFullscreenButton();
 }
 
+export function isChartFullscreenOpen() {
+    return open;
+}
+
+export function isChartFullscreenFromCompact() {
+    return open && openedFromCompact;
+}
+
 export function renderChartFullscreenButton() {
     const button = document.getElementById(BUTTON_ID);
     if (!button) return;
@@ -44,6 +54,7 @@ function openChartFullscreen() {
     const panel = document.getElementById(PANEL_ID);
     if (!panel || open) return;
     open = true;
+    openedFromCompact = window.matchMedia?.('(max-width: 720px)')?.matches === true;
     document.documentElement.classList.add(ROOT_OPEN_CLASS);
     panel.classList.add(PANEL_OPEN_CLASS);
     renderChartFullscreenButton();
