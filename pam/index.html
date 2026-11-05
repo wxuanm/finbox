@@ -172,7 +172,7 @@
                             <h2 data-i18n="performanceTitle">收益走势</h2>
                             <p data-i18n="performanceDesc">现金流调整后收益率，非资产规模变化。</p>
                         </div>
-                        <button id="chartCollapseBtn" class="chart-collapse-btn" type="button" aria-controls="performanceChartBody" aria-expanded="false">
+                        <button id="chartCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="performanceChartBody" aria-expanded="false">
                             <span data-i18n="performanceTitle">收益走势</span>
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
@@ -204,6 +204,9 @@
             </section>
 
             <section id="assetDataView" class="workspace-view asset-data-view" data-workspace-view="assetData">
+                <div class="account-switch-bar" hidden>
+                    <div id="accountSwitchBar" class="period-switch account-switch" role="group" data-i18n-aria-label="assetAccount" aria-label="资产账户"></div>
+                </div>
                 <section class="account-card-strip-panel">
                     <div id="accountList" class="account-list account-card-strip"></div>
                 </section>
@@ -382,6 +385,10 @@
                             <h2><span data-i18n="accountTrendTitle">账户走势</span> <span id="accountTrendBadge" class="title-account-badge" hidden></span></h2>
                             <p data-i18n="accountTrendDesc">现金流调整后的单位净值走势，区间与账户收益页同步。</p>
                         </div>
+                        <button id="accountTrendCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="accountTrendChart accountTrendList" aria-expanded="true">
+                            <span data-i18n="accountTrendTitle">账户走势</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
                         <div class="account-trend-toolbar">
                             <div id="accountTrendPeriodSwitch" class="period-switch account-trend-period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
                             <div id="accountTrendViewSwitch" class="period-switch account-trend-view-switch hidden" role="group" data-i18n-aria-label="accountTrendViewLabel" aria-label="走势展示方式"></div>
@@ -412,12 +419,16 @@
                     <div id="holdingChartView" class="holding-chart-view hidden"></div>
                 </section>
 
-                <section class="panel management-panel table-panel">
+                <section id="assetRecordPanel" class="panel management-panel table-panel">
                     <div class="panel-head split-head">
                         <div>
                             <h2 data-i18n="assetRecordTitle">资产记录 <span id="snapshotTableContext" class="title-account-badge"></span></h2>
                             <p data-i18n="assetRecordDesc">当前账户的历史总资产快照。</p>
                         </div>
+                        <button id="assetRecordCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="snapshotTable" aria-expanded="true">
+                            <span data-i18n="assetRecordLabel">资产记录</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
                     </div>
                     <div id="snapshotTable" class="snapshot-table-wrap"></div>
                 </section>

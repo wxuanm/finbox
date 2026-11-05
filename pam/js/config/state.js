@@ -9,6 +9,9 @@ export const state = {
     selectedHighlightAccountId: '',
     // Phones show the returns chart only after the user opens it; desktop always shows it.
     returnsChartOpen: false,
+    // Phones can fold the 账户管理 trend and record panels under their titles; both start open.
+    accountTrendOpen: true,
+    assetRecordOpen: true,
     comparisonSortKey: 'periodReturn',
     comparisonSortOrder: -1,
     holdingFilters: { accountId: 'all', assetClass: 'all', market: 'all' },

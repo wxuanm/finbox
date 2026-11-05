@@ -7,6 +7,7 @@ export function renderAccountList(metrics) {
     if (!wrap) return;
     const panel = wrap.closest('.account-card-strip-panel');
     panel?.classList.toggle('is-empty', state.accounts.length === 0);
+    renderAccountSwitchBar();
 
     if (state.accounts.length === 0) {
         wrap.innerHTML = `
@@ -58,8 +59,24 @@ export function renderAccountList(metrics) {
     wrap.innerHTML = `${cards}${renderAccountSwitcherMobile(metrics)}`;
 }
 
-// Phones swap the one-card-at-a-time strip for a row of account chips and one compact card for the selected
-// account: name, update date, and menu on the first line, three figures in a divided row beneath.
+// Phones pick the account from a bar pinned under the header, like the returns view's period bar; CSS shows it
+// only at <=720px. It is hidden while there are no accounts.
+function renderAccountSwitchBar() {
+    const wrap = document.getElementById('accountSwitchBar');
+    if (!wrap) return;
+    const bar = wrap.closest('.account-switch-bar');
+    if (bar) bar.hidden = state.accounts.length === 0;
+    const selectedId = state.accounts.some(account => account.id === state.selectedAccountId)
+        ? state.selectedAccountId
+        : state.accounts[0]?.id;
+    wrap.innerHTML = state.accounts.map(account => {
+        const active = account.id === selectedId;
+        return `<button class="period-chip account-chip${active ? ' active' : ''}" type="button" data-action="select-account" data-account-id="${account.id}" aria-pressed="${active}">${escapeHtml(account.name)}</button>`;
+    }).join('');
+}
+
+// Phones swap the one-card-at-a-time strip for one compact card for the selected account (the account bar above
+// switches between them): name, update date, and menu on the first line, three figures in a divided row beneath.
 function renderAccountSwitcherMobile(metrics) {
     const selected = state.accounts.find(account => account.id === state.selectedAccountId) || state.accounts[0];
     const metric = metrics.find(item => item.account.id === selected.id);
@@ -67,14 +84,9 @@ function renderAccountSwitcherMobile(metrics) {
         .filter(snapshot => snapshot.accountId === selected.id)
         .reduce((latest, snapshot) => (!latest || snapshot.date > latest.date ? snapshot : latest), null);
     const annualizedReturn = calculateAnnualizedReturn(metric);
-    const chips = state.accounts.map(account => {
-        const active = account.id === selected.id;
-        return `<button class="account-chip${active ? ' active' : ''}" type="button" data-action="select-account" data-account-id="${account.id}" aria-pressed="${active}">${escapeHtml(account.name)}</button>`;
-    }).join('');
     const stat = (label, value, className = '') => `<div><dt>${label}</dt><dd class="${className}">${value}</dd></div>`;
     return `
         <div class="account-switcher-mobile">
-            <div class="account-chip-row" role="group" aria-label="${escapeHtml(t('assetAccount'))}">${chips}</div>
             <div class="account-summary-mobile">
                 <div class="account-summary-head">
                     <strong title="${escapeHtml(selected.name)}">${escapeHtml(selected.name)}</strong>
@@ -113,6 +125,14 @@ export function bindAccountList({ onSelect, onRename, onDelete, onAdd, onReorder
     if (!panel) return;
     const list = panel.querySelector('#accountList');
     let draggedAccountId = '';
+
+    document.getElementById('accountSwitchBar')?.addEventListener('click', event => {
+        const chip = event.target.closest('[data-action="select-account"]');
+        if (!chip) return;
+        onSelect(chip.dataset.accountId);
+        // The chips are re-rendered; keep keyboard focus on the chosen one.
+        document.querySelector(`#accountSwitchBar [data-account-id="${CSS.escape(chip.dataset.accountId)}"]`)?.focus({ preventScroll: true });
+    });
 
     panel.addEventListener('click', event => {
         const target = event.target.closest('[data-action]');
@@ -178,7 +198,7 @@ export function bindAccountList({ onSelect, onRename, onDelete, onAdd, onReorder
 export function scrollAccountCardIntoView(accountId, behavior = 'smooth') {
     const list = document.getElementById('accountList');
     if (!list || !accountId) return;
-    scrollAccountChipIntoView(list, accountId, behavior);
+    scrollAccountChipIntoView(accountId, behavior);
 
     const item = Array.from(list.querySelectorAll('.account-item'))
         .find(element => element.dataset.accountId === accountId);
@@ -194,8 +214,8 @@ export function scrollAccountCardIntoView(accountId, behavior = 'smooth') {
     list.scrollTo({ left: nextScrollLeft, behavior });
 }
 
-function scrollAccountChipIntoView(list, accountId, behavior) {
-    const row = list.querySelector('.account-chip-row');
+function scrollAccountChipIntoView(accountId, behavior) {
+    const row = document.getElementById('accountSwitchBar');
     const chip = row && Array.from(row.querySelectorAll('.account-chip')).find(element => element.dataset.accountId === accountId);
     if (!chip || row.clientWidth === 0) return;
     const target = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;

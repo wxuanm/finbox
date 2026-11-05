@@ -428,7 +428,9 @@ function shouldShowSnapshotSymbols(visibleData, zoomBounds, metrics) {
     return minimumGap >= CHART_MIN_SYMBOL_GAP_PX;
 }
 
-function buildReturnMarkPoints(visibleData, pxPerMs, yAxisBounds, theme) {
+// The compact phone chart labels like the account trend chart: the latest label opens to the left, away from the
+// y-axis labels on the right edge, and high/low labels close enough to it to collide are dropped.
+function buildReturnMarkPoints(visibleData, pxPerMs, yAxisBounds, theme, compact = false) {
     const lowPoint = getLowestSeriesPoint(visibleData);
     const highPoint = getHighestSeriesPoint(visibleData);
     const lastPoint = getLastSeriesPoint(visibleData);
@@ -439,7 +441,9 @@ function buildReturnMarkPoints(visibleData, pxPerMs, yAxisBounds, theme) {
         return Number.isFinite(time) && Number.isFinite(lastTime) && Math.abs(lastTime - time) * pxPerMs < CHART_MARKER_COLLISION_PX;
     };
 
-    if (lowPoint && (!lastPoint || lowPoint[1] !== lastPoint[1])) {
+    const isLabelled = point => !lastPoint || (point[1] !== lastPoint[1] && !(compact && isNearLast(point)));
+
+    if (lowPoint && isLabelled(lowPoint)) {
         markPointData.push({
             name: 'Low',
             coord: lowPoint,
@@ -449,7 +453,7 @@ function buildReturnMarkPoints(visibleData, pxPerMs, yAxisBounds, theme) {
         });
     }
 
-    if (highPoint && (!lastPoint || highPoint[1] !== lastPoint[1])) {
+    if (highPoint && isLabelled(highPoint)) {
         markPointData.push({
             name: 'High',
             coord: highPoint,
@@ -465,7 +469,8 @@ function buildReturnMarkPoints(visibleData, pxPerMs, yAxisBounds, theme) {
             coord: lastPoint,
             value: lastPoint[1],
             label: {
-                position: 'top',
+                position: compact ? 'left' : 'top',
+                ...(compact ? { distance: 8, backgroundColor: withAlpha(theme.surface, 0.86), padding: [2, 5], borderRadius: 3 } : {}),
                 color: lastPoint[1] > 0 ? theme.positive : lastPoint[1] < 0 ? theme.negative : theme.text
             }
         });
@@ -874,7 +879,7 @@ function buildPerformanceChartParts(context, markerAccountId = state.selectedHig
     const yAxisBounds = buildYAxisBounds([...visiblePortfolioSeries, ...visibleAccountSeries, ...visibleBenchmarkSeries], zoomBounds);
     const pxPerMs = getPlotPxPerMs(context.metrics, zoomBounds);
     [...accountSeries, ...(portfolioSeries ? [portfolioSeries] : [])].forEach(series => {
-        if (series.markerInput) series.markPoint.data = buildReturnMarkPoints(series.markerInput, pxPerMs, yAxisBounds, theme);
+        if (series.markerInput) series.markPoint.data = buildReturnMarkPoints(series.markerInput, pxPerMs, yAxisBounds, theme, compact);
         delete series.markerInput;
         delete series.visiblePointCount;
     });

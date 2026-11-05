@@ -7152,51 +7152,6 @@ select,
 
     .account-switcher-mobile {
         display: grid;
-        gap: 10px;
-    }
-
-    .account-chip-row {
-        display: flex;
-        gap: 6px;
-        margin: 0 -10px;
-        padding: 0 10px 2px;
-        overflow-x: auto;
-        scroll-padding-inline: 10px;
-        scrollbar-width: none;
-    }
-
-    .account-chip-row::-webkit-scrollbar {
-        display: none;
-    }
-
-    .account-chip {
-        flex: 0 0 auto;
-        max-width: 64vw;
-        min-height: 34px;
-        padding: 0 14px;
-        overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
-        border-radius: 999px;
-        color: var(--text-color);
-        background: var(--surface-color);
-        font: inherit;
-        font-size: 13px;
-        font-weight: 800;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .account-chip.active {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        background: var(--primary-soft);
-    }
-
-    .account-chip:focus-visible {
-        outline: 2px solid var(--primary-color);
-        outline-offset: 1px;
     }
 
     /* One card: name, update date, and menu on the head line; three figures in a divided row. */
@@ -8118,7 +8073,7 @@ html {
    Desktop is unchanged. */
 .returns-period-bar,
 .returns-hero,
-.chart-collapse-btn,
+.panel-collapse-btn,
 .cmp-row-bar,
 .cmp-row-expand {
     display: none;
@@ -8239,7 +8194,7 @@ html {
         display: none;
     }
 
-    .chart-collapse-btn {
+    .panel-collapse-btn {
         display: inline-flex;
         flex: 1 1 auto;
         gap: 6px;
@@ -8257,17 +8212,17 @@ html {
         -webkit-tap-highlight-color: transparent;
     }
 
-    .chart-collapse-btn svg {
+    .panel-collapse-btn svg {
         flex: 0 0 auto;
         color: var(--muted-text);
         transition: transform 0.16s ease;
     }
 
-    .chart-collapse-btn[aria-expanded="true"] svg {
+    .panel-collapse-btn[aria-expanded="true"] svg {
         transform: rotate(180deg);
     }
 
-    .chart-collapse-btn:focus-visible {
+    .panel-collapse-btn:focus-visible {
         outline: 2px solid var(--primary-color);
         outline-offset: 2px;
         border-radius: 6px;
@@ -8411,7 +8366,7 @@ html {
 }
 
 /* Full screen keeps the title, every period chip, and, wider than the narrow-chart breakpoint, the legend. */
-.chart-panel.is-fullscreen .chart-collapse-btn {
+.chart-panel.is-fullscreen .panel-collapse-btn {
     display: none;
 }
 
@@ -8433,4 +8388,138 @@ html {
 .chart-panel.is-fullscreen .performance-chart {
     height: auto !important;
     margin: 4px 8px 8px !important;
+}
+
+/* 账户管理 on phones (<=720px). The account bar sticks under the header like the returns view's period bar
+   and picks the account for the whole view, so the trend, holdings, and record heads drop their account badge.
+   The trend and record panels fold under their titles like the returns chart. Desktop is unchanged. */
+.account-switch-bar {
+    display: none;
+}
+
+@media (max-width: 720px) {
+    #assetDataView.workspace-view.active {
+        padding-top: 0;
+    }
+
+    .account-switch-bar {
+        position: sticky;
+        top: var(--pam-header-height, 0px);
+        z-index: 20;
+        display: block;
+        /* A grid item sizes to its content by default; the chips would widen the whole view instead of scrolling. */
+        min-width: 0;
+        margin: 0 -12px;
+        padding: 10px 12px 8px;
+        border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+        background: var(--surface-elevated);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+    }
+
+    /* Few accounts share the bar evenly; more scroll sideways. */
+    .account-switch-bar .account-switch {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 2px;
+        justify-content: flex-start;
+        width: 100%;
+        min-width: 0;
+        padding: 3px;
+        overflow-x: auto;
+        border-radius: 12px;
+        scrollbar-width: none;
+    }
+
+    .account-switch-bar .account-switch::-webkit-scrollbar {
+        display: none;
+    }
+
+    .account-switch-bar .period-chip {
+        flex: 1 0 auto;
+        max-width: 64vw;
+        min-height: 32px;
+        padding: 4px 12px;
+        overflow: hidden;
+        border-color: transparent;
+        border-radius: 9px;
+        box-shadow: none;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .account-switch-bar .period-chip:not(.active) {
+        background: transparent;
+    }
+
+    .account-switch-bar .period-chip.active {
+        box-shadow: none;
+    }
+
+    .account-switch-bar .period-chip:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: -2px;
+    }
+
+    .asset-data-view .management-panel .title-account-badge {
+        display: none !important;
+    }
+
+    /* Holdings: no filter-count line and no success notices; errors still show. */
+    .asset-holdings-panel .panel-head p,
+    #holdingMessage:not(.error) {
+        display: none;
+    }
+
+    /* Fold toggles carry the same accent bar as the panel titles. */
+    .panel-collapse-btn::before {
+        content: "";
+        flex: 0 0 auto;
+        width: 7px;
+        height: 18px;
+        margin-right: 2px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--primary-color), var(--accent-color));
+    }
+
+    /* Same head as the returns chart toggle: one row, title toggle left. */
+    .asset-data-view .account-trend-panel .split-head,
+    .asset-data-view .table-panel .split-head {
+        padding: 8px 14px;
+    }
+
+    .asset-data-view .table-panel .split-head {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .account-trend-panel .split-head > div:first-child,
+    .table-panel .split-head > div:first-child {
+        display: none;
+    }
+
+    .account-trend-panel .panel-collapse-btn {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .account-trend-panel.is-collapsed .account-trend-toolbar > *,
+    .account-trend-panel.is-collapsed .chart-message,
+    .account-trend-panel.is-collapsed .account-trend-chart,
+    .account-trend-panel.is-collapsed .account-trend-list,
+    .table-panel.is-collapsed .snapshot-table-wrap {
+        display: none;
+    }
+
+    .account-trend-panel.is-collapsed .split-head,
+    .table-panel.is-collapsed .split-head {
+        border-bottom: 0;
+    }
+
+    /* The returns comparison already follows the sticky period bar, so its head drops the period badge. */
+    .comparison-panel .title-period-badge {
+        display: none !important;
+    }
 }

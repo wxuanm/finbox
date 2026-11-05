@@ -111,6 +111,8 @@ async function initializeWorkspace(user) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
+    state.accountTrendOpen = preferences.accountTrendOpen !== false;
+    state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);
     state.holdingFilters = preferences.holdingFilters || state.holdingFilters;
     state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
@@ -498,6 +500,19 @@ function bindEvents() {
         // The chart was display:none while folded, so it has to be measured again.
         requestAnimationFrame(resizeChart);
     });
+    // The trend chart is not drawn while its panel is folded, so opening re-renders rather than resizes.
+    document.getElementById('accountTrendCollapseBtn')?.addEventListener('click', () => {
+        state.accountTrendOpen = !state.accountTrendOpen;
+        persistPreferences();
+        renderApp();
+    });
+    document.getElementById('assetRecordCollapseBtn')?.addEventListener('click', () => {
+        state.assetRecordOpen = !state.assetRecordOpen;
+        persistPreferences();
+        renderPanelCollapse('assetRecordPanel', 'assetRecordCollapseBtn', state.assetRecordOpen, 'assetRecordExpand', 'assetRecordCollapse');
+    });
+    // Folding only applies on phones; crossing the breakpoint redraws a trend chart that was skipped while folded.
+    window.matchMedia?.('(max-width: 720px)')?.addEventListener?.('change', () => renderApp());
     bindAccountComparison({
         onHighlight: accountId => {
             state.selectedHighlightAccountId = state.selectedHighlightAccountId === accountId ? '' : accountId;
@@ -560,17 +575,27 @@ function bindEvents() {
     window.addEventListener('resize', syncStickyHeaderOffset, { passive: true });
 }
 
-// Phones fold the returns chart under its title until the user opens it; CSS ignores the state on desktop.
-function renderReturnsChartCollapse() {
-    const panel = document.getElementById('performanceChartPanel');
-    const button = document.getElementById('chartCollapseBtn');
+// Phones fold the returns chart, the account trend, and the asset records under their titles; CSS ignores the
+// state on desktop.
+function renderPanelCollapse(panelId, buttonId, open, expandKey, collapseKey) {
+    const panel = document.getElementById(panelId);
+    const button = document.getElementById(buttonId);
     if (!panel || !button) return;
-    const open = Boolean(state.returnsChartOpen);
     panel.classList.toggle('is-collapsed', !open);
     button.setAttribute('aria-expanded', String(open));
-    const label = t(open ? 'chartCollapse' : 'chartExpand');
+    const label = t(open ? collapseKey : expandKey);
     button.setAttribute('aria-label', label);
     button.title = label;
+}
+
+function renderPanelCollapses() {
+    renderPanelCollapse('performanceChartPanel', 'chartCollapseBtn', Boolean(state.returnsChartOpen), 'chartExpand', 'chartCollapse');
+    renderPanelCollapse('accountTrendPanel', 'accountTrendCollapseBtn', state.accountTrendOpen !== false, 'accountTrendExpand', 'accountTrendCollapse');
+    renderPanelCollapse('assetRecordPanel', 'assetRecordCollapseBtn', state.assetRecordOpen !== false, 'assetRecordExpand', 'assetRecordCollapse');
+}
+
+function renderReturnsChartCollapse() {
+    renderPanelCollapse('performanceChartPanel', 'chartCollapseBtn', Boolean(state.returnsChartOpen), 'chartExpand', 'chartCollapse');
 }
 
 // The returns view's period bar sticks just below the phone header, whose height depends on the safe area.
@@ -719,7 +744,8 @@ function renderApp() {
     renderSnapshotForm();
     renderPeriodSwitch();
     renderChartFullscreenButton();
-    renderReturnsChartCollapse();
+    // Before the trend renders, so an opened panel can be measured.
+    renderPanelCollapses();
     renderPerformanceChart(metrics, portfolio);
     renderAccountComparison(metrics);
     renderAccountTrend(metrics);
@@ -1525,6 +1551,8 @@ function applyImportedData(data) {
     state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
     state.amountsHidden = Boolean(data.preferences.amountsHidden);
     state.returnsChartOpen = data.preferences.returnsChartOpen === true;
+    state.accountTrendOpen = data.preferences.accountTrendOpen !== false;
+    state.assetRecordOpen = data.preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(data.preferences.currentLang || state.currentLang);
     state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
     state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
@@ -2227,6 +2255,8 @@ function getCurrentPreferences() {
         accountTrendView: state.accountTrendView,
         allocationRebalanceMode: state.allocationRebalanceMode,
         returnsChartOpen: state.returnsChartOpen,
+        accountTrendOpen: state.accountTrendOpen,
+        assetRecordOpen: state.assetRecordOpen,
         currentLang: state.currentLang
     };
 }
@@ -2256,6 +2286,8 @@ function applyCloudData(data) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
+    state.accountTrendOpen = preferences.accountTrendOpen !== false;
+    state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);
     state.holdingFilters = preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
     state.holdingSortKey = preferences.holdingSortKey || 'marketValue';
