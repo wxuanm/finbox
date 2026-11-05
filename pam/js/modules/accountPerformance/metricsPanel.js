@@ -22,62 +22,20 @@ export function renderOverviewCards(metrics) {
     ].join('');
 }
 
-// Phones replace the four overview cards with one headline: total assets, the portfolio's period P/L and
-// return, then cumulative P/L and data freshness on one line that expands to each account's latest snapshot.
-let heroStatusOpen = false;
-
-export function renderReturnsHero(metrics, portfolio) {
+// Phones replace the four overview cards with one summary card in the style of the 账户管理 account summary:
+// total assets, period P/L, and period return in a divided row.
+export function renderReturnsHero(portfolio) {
     const wrap = document.getElementById('returnsHero');
     if (!wrap) return;
-    if (!portfolio) {
-        wrap.innerHTML = `
-            <span class="returns-hero-label">${escapeHtml(t('latestTotalAssets'))}</span>
-            <strong class="returns-hero-value">-</strong>
-            <p class="returns-hero-empty">${escapeHtml(t('waitingValidSnapshot'))}</p>
-        `;
-        return;
-    }
-
     const masked = state.amountsHidden;
-    const statusRows = metrics.map(metric => {
-        const lagging = metric.valid && metric.latestDate !== portfolio.latestDate;
-        const detail = metric.valid ? escapeHtml(metric.latestDate) : escapeHtml(metric.error || t('insufficientData'));
-        return `
-            <li${metric.valid ? '' : ' class="invalid"'}>
-                <span>${escapeHtml(metric.account.name)}</span>
-                ${lagging ? `<em class="lag-badge">${escapeHtml(t('laggedBadge'))}</em>` : ''}
-                <span class="returns-hero-status-date">${detail}</span>
-            </li>
-        `;
-    }).join('');
-
+    const stat = (label, value, className = '') => `<div><dt>${escapeHtml(label)}</dt><dd class="${className}">${value}</dd></div>`;
     wrap.innerHTML = `
-        <span class="returns-hero-label">${escapeHtml(t('returnsHeroTotal', { count: portfolio.accountCount }))}</span>
-        <strong class="returns-hero-value">${formatCurrency(portfolio.latestValue, masked)}</strong>
-        <div class="returns-hero-period">
-            <span class="title-period-badge">${escapeHtml(currentPeriodLabel())}</span>
-            <strong class="${signedClass(portfolio.periodProfitLoss)}">${formatSignedCurrency(portfolio.periodProfitLoss, masked)}</strong>
-            <span class="returns-hero-pill ${signedClass(portfolio.periodReturn)}">${formatPercent(portfolio.periodReturn)}</span>
-        </div>
-        <button class="returns-hero-status" type="button" data-hero-status aria-expanded="${heroStatusOpen}" aria-controls="returnsHeroStatusList">
-            <span>${escapeHtml(t('cumulativePnl'))} <b class="${signedClass(portfolio.profitLoss)}">${formatSignedCurrency(portfolio.profitLoss, masked)}</b></span>
-            <span aria-hidden="true">·</span>
-            <span>${escapeHtml(t('returnsHeroStatus', { synced: portfolio.syncedCount, count: portfolio.accountCount, date: portfolio.latestDate }))}</span>
-            <svg class="returns-hero-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <ul id="returnsHeroStatusList" class="returns-hero-status-list"${heroStatusOpen ? '' : ' hidden'}>${statusRows}</ul>
+        <dl class="returns-summary-stats">
+            ${stat(t('totalAssets'), portfolio ? formatCurrency(portfolio.latestValue, masked) : '-')}
+            ${stat(t('periodPnl'), portfolio ? formatSignedCurrency(portfolio.periodProfitLoss, masked) : '-', signedClass(portfolio?.periodProfitLoss))}
+            ${stat(t('periodReturn'), portfolio ? formatPercent(portfolio.periodReturn) : '-', signedClass(portfolio?.periodReturn))}
+        </dl>
     `;
-}
-
-export function bindReturnsHero() {
-    document.getElementById('returnsHero')?.addEventListener('click', event => {
-        const toggle = event.target.closest('[data-hero-status]');
-        if (!toggle) return;
-        heroStatusOpen = !heroStatusOpen;
-        toggle.setAttribute('aria-expanded', String(heroStatusOpen));
-        const list = document.getElementById('returnsHeroStatusList');
-        if (list) list.hidden = !heroStatusOpen;
-    });
 }
 
 export function renderAccountComparison(metrics) {
@@ -121,7 +79,10 @@ export function renderAccountComparison(metrics) {
     `;
 }
 
-export function bindAccountComparison({ onHighlight, onOverlay, onSort, onGoToAccount }) {
+// Expanded rows in the phone ranking; they survive re-renders but not a reload, like holdings rows.
+const expandedComparisonRows = new Set();
+
+export function bindAccountComparison({ onHighlight, onSort, onGoToAccount }) {
     const wrap = document.getElementById('accountComparison');
     if (!wrap) return;
     wrap.addEventListener('click', event => {
@@ -132,9 +93,9 @@ export function bindAccountComparison({ onHighlight, onOverlay, onSort, onGoToAc
             onGoToAccount?.(goTo.dataset.gotoAccount);
             return;
         }
-        const overlay = event.target.closest('[data-overlay-account]');
-        if (overlay) {
-            onOverlay(overlay.dataset.overlayAccount);
+        const toggle = event.target.closest('[data-expand-account]');
+        if (toggle) {
+            toggleComparisonRow(toggle);
             return;
         }
         const sortHeader = event.target.closest('[data-comparison-sort]');
@@ -154,8 +115,8 @@ export function bindAccountComparison({ onHighlight, onOverlay, onSort, onGoToAc
 
 // Phones rank accounts in a divided list like the allocation class rows instead of a wide table that only fits
 // one account column at a time. Each row carries a diverging bar of its period return, scaled to the largest
-// absolute return in the list. A tap adds the account's line to the portfolio chart and opens its risk metrics.
-const MOBILE_SORT_KEYS = ['periodReturn', 'periodProfitLoss', 'latestValue', 'annualizedReturn', 'maxDrawdown', 'annualizedVolatility', 'calmarRatio', 'profitLoss', 'latestDate', 'name'];
+// absolute return in the list; a tap opens the account's risk metrics and a link to 账户管理.
+const MOBILE_SORT_KEYS = ['periodReturn', 'periodProfitLoss', 'latestValue', 'annualizedReturn', 'maxDrawdown', 'annualizedVolatility', 'calmarRatio', 'profitLoss', 'name'];
 
 function mobileSortLabel(key) {
     return {
@@ -167,19 +128,17 @@ function mobileSortLabel(key) {
         annualizedVolatility: t('annualizedVolatility'),
         calmarRatio: t('calmarRatio'),
         profitLoss: t('cumulativePnl'),
-        latestDate: t('latestSnapshot'),
         name: t('account')
     }[key];
 }
 
 function renderComparisonMobile(sortedMetrics, slotById) {
-    const sortKey = state.comparisonSortKey || 'periodReturn';
+    const sortKey = MOBILE_SORT_KEYS.includes(state.comparisonSortKey) ? state.comparisonSortKey : 'periodReturn';
     const ascending = state.comparisonSortOrder === 1;
     const options = MOBILE_SORT_KEYS
         .map(key => `<option value="${key}"${key === sortKey ? ' selected' : ''}>${escapeHtml(mobileSortLabel(key))}</option>`)
         .join('');
     const valid = sortedMetrics.filter(metric => metric.valid);
-    const latestDate = valid.reduce((latest, metric) => metric.latestDate > latest ? metric.latestDate : latest, '');
     const barScale = Math.max(0.5, ...valid.map(metric => Math.abs(Number(metric.periodReturn) || 0)));
     const directionLabel = ascending ? t('sortAscending') : t('sortDescending');
     return `
@@ -194,22 +153,20 @@ function renderComparisonMobile(sortedMetrics, slotById) {
                 </button>
             </div>
             <ul class="cmp-list">
-                ${sortedMetrics.map(metric => renderComparisonListRow(metric, slotById.get(metric.account.id) ?? 0, latestDate, barScale)).join('')}
+                ${sortedMetrics.map(metric => renderComparisonListRow(metric, slotById.get(metric.account.id) ?? 0, barScale)).join('')}
             </ul>
         </div>
     `;
 }
 
-function renderComparisonListRow(metric, slot, latestDate, barScale) {
-    // Phones overlay any number of accounts on the portfolio chart, so a row is open while its line is drawn.
-    const active = state.chartOverlayAccountIds.includes(metric.account.id);
-    // The dot doubles as the chart legend on phones, so it uses the same color slot as the line.
+function renderComparisonListRow(metric, slot, barScale) {
+    const open = expandedComparisonRows.has(metric.account.id);
+    // The dot uses the account's chart color slot, so it matches the account's line in full screen.
     const color = metric.valid ? `var(--chart-series-${(slot % 6) + 1})` : 'var(--border-strong)';
-    const lagging = metric.valid && latestDate && metric.latestDate !== latestDate;
     const name = `
         <span class="cmp-row-dot" style="background:${color}" aria-hidden="true"></span>
         <span class="cmp-row-name">
-            <strong><span>${escapeHtml(metric.account.name)}</span>${lagging ? `<em class="lag-badge">${escapeHtml(t('laggedBadge'))}</em>` : ''}</strong>
+            <strong>${escapeHtml(metric.account.name)}</strong>
             <small>${metric.valid ? formatCurrency(metric.latestValue, state.amountsHidden) : escapeHtml(metric.error || t('insufficientData'))}</small>
         </span>
     `;
@@ -222,8 +179,8 @@ function renderComparisonListRow(metric, slot, latestDate, barScale) {
     const stat = (label, value) => `<div><dt>${label}</dt><dd>${value}</dd></div>`;
     const detailsId = `cmpRowDetails-${metric.account.id}`;
     return `
-        <li class="cmp-row${active ? ' active' : ''}">
-            <button class="cmp-row-main" type="button" data-overlay-account="${metric.account.id}" aria-expanded="${active}" aria-controls="${detailsId}">
+        <li class="cmp-row${open ? ' active' : ''}">
+            <button class="cmp-row-main" type="button" data-expand-account="${metric.account.id}" aria-expanded="${open}" aria-controls="${detailsId}">
                 ${name}
                 <span class="cmp-row-bar" aria-hidden="true"><i class="${tone}" style="${barSide}:50%;width:${barWidth.toFixed(1)}%"></i></span>
                 <span class="cmp-row-figures">
@@ -231,7 +188,7 @@ function renderComparisonListRow(metric, slot, latestDate, barScale) {
                     <small class="${signedClass(metric.periodProfitLoss)}">${formatSignedCurrency(metric.periodProfitLoss, state.amountsHidden)}</small>
                 </span>
             </button>
-            <div id="${detailsId}" class="cmp-row-expand"${active ? '' : ' hidden'}>
+            <div id="${detailsId}" class="cmp-row-expand"${open ? '' : ' hidden'}>
                 <dl class="cmp-row-details">
                     ${stat(t('annualizedReturn'), formatMetricPercent(metric, 'annualizedReturn'))}
                     ${stat(t('maxDrawdown'), formatMetricPercent(metric, 'maxDrawdown'))}
@@ -239,12 +196,24 @@ function renderComparisonListRow(metric, slot, latestDate, barScale) {
                     ${stat(t('calmarRatio'), formatMetricRatio(metric, 'calmarRatio'))}
                 </dl>
                 <div class="cmp-row-foot">
-                    <span>${t('cumulativePnl')} ${formatMetricCurrency(metric, 'profitLoss')} · ${escapeHtml(metric.latestDate || '-')}</span>
+                    <span>${t('cumulativePnl')} ${formatMetricCurrency(metric, 'profitLoss')}</span>
                     <button class="cmp-row-goto" type="button" data-goto-account="${metric.account.id}">${escapeHtml(t('goToAccount'))}</button>
                 </div>
             </div>
         </li>
     `;
+}
+
+// Toggled in place, like the allocation class rows, so the list does not re-render under the finger.
+function toggleComparisonRow(button) {
+    const accountId = button.dataset.expandAccount;
+    const open = !expandedComparisonRows.has(accountId);
+    if (open) expandedComparisonRows.add(accountId);
+    else expandedComparisonRows.delete(accountId);
+    button.setAttribute('aria-expanded', String(open));
+    button.closest('.cmp-row')?.classList.toggle('active', open);
+    const details = document.getElementById(button.getAttribute('aria-controls'));
+    if (details) details.hidden = !open;
 }
 
 function formatSignedCurrency(value, masked) {

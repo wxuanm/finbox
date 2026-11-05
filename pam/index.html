@@ -172,9 +172,14 @@
                             <h2 data-i18n="performanceTitle">收益走势</h2>
                             <p data-i18n="performanceDesc">现金流调整后收益率，非资产规模变化。</p>
                         </div>
+                        <button id="chartCollapseBtn" class="chart-collapse-btn" type="button" aria-controls="performanceChartBody" aria-expanded="false">
+                            <span data-i18n="performanceTitle">收益走势</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
                         <div id="periodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
                         <button id="chartFullscreenBtn" class="chart-fullscreen-btn" type="button" title="横屏全屏查看" aria-label="横屏全屏查看"></button>
                     </div>
+                    <div id="performanceChartBody" class="chart-panel-body">
                     <div id="chartMessage" class="chart-message"></div>
                     <div id="chartHints" class="chart-hints" role="status" aria-live="polite" hidden>
                         <span id="chartSparseHint" class="chart-hint chart-hint-warning" hidden></span>
@@ -183,9 +188,8 @@
                         <span id="chartRangeText" class="chart-range-text"></span>
                         <button id="chartRangeReset" class="chart-range-reset" type="button"></button>
                     </div>
-                    <div id="chartReadout" class="chart-readout" aria-live="polite"></div>
                     <div id="performanceChart" class="performance-chart"></div>
-                    <p class="chart-legend-mobile"><i aria-hidden="true"></i><span data-i18n="chartLegendMobile">粗线为组合，虚线为年化 10% 基准</span></p>
+                    </div>
                 </section>
 
                 <section class="panel management-panel comparison-panel">
@@ -196,7 +200,6 @@
                         </div>
                     </div>
                     <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
-                    <p class="comparison-hint-mobile" data-i18n="comparisonDescMobile">点账户在走势图上叠加它的曲线，再点一次取消。</p>
                 </section>
             </section>
 

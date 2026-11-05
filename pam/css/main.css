@@ -8112,16 +8112,15 @@ html {
     }
 }
 
-/* Returns view, phone redesign (<=720px). The period bar sticks under the header and drives the whole view;
-   one headline replaces the four overview cards; the chart starts from the portfolio line with a readout
-   above it; the comparison list becomes a ranking with diverging period-return bars. Desktop is unchanged. */
+/* Returns view on phones (<=720px). The period bar sticks under the header and drives the whole view; one
+   summary card in the 账户管理 style replaces the four overview cards; the returns chart folds under its title
+   and, opened, matches the account trend chart; the comparison list is a ranking with period-return bars.
+   Desktop is unchanged. */
 .returns-period-bar,
 .returns-hero,
-.chart-readout,
-.comparison-hint-mobile,
+.chart-collapse-btn,
 .cmp-row-bar,
-.cmp-row-expand,
-.lag-badge {
+.cmp-row-expand {
     display: none;
 }
 
@@ -8181,235 +8180,125 @@ html {
         display: none;
     }
 
-    /* Headline: total assets, then the portfolio's period P/L and return, then a status line. */
+    /* Summary card: the same divided row of three figures as the 账户管理 account summary. */
     .returns-hero {
+        display: block;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+        border-radius: var(--radius-lg);
+        background: var(--surface-color);
+    }
+
+    .returns-summary-stats {
+        display: flex;
+        margin: 0;
+    }
+
+    .returns-summary-stats > div {
         display: grid;
-        gap: 4px;
-        padding: 4px 4px 0;
+        flex: 1 1 auto;
+        gap: 2px;
+        min-width: 0;
+        padding: 9px 10px 10px 12px;
     }
 
-    .returns-hero-label {
+    .returns-summary-stats > div + div {
+        border-left: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    }
+
+    .returns-summary-stats dt {
         color: var(--muted-text);
-        font-size: 12px;
-        font-weight: 700;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
-    .returns-hero-value {
+    .returns-summary-stats dd {
+        margin: 0;
         overflow: hidden;
         color: var(--heading-color);
-        font-size: 30px;
-        font-weight: 850;
+        font-size: 15px;
+        font-weight: 900;
         font-variant-numeric: tabular-nums;
-        letter-spacing: -0.02em;
-        line-height: 1.15;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .returns-hero-period {
+    /* Returns chart: the title is a fold toggle; the description, legend, and period chips stay out of it. */
+    /* Earlier phone rules stack this head as a column or grid; here it is one row: toggle left, button right. */
+    .chart-panel .split-head {
         display: flex;
-        flex-wrap: wrap;
-        gap: 6px 8px;
+        flex-direction: row;
+        gap: 8px;
         align-items: center;
-        font-variant-numeric: tabular-nums;
+        justify-content: space-between;
+        padding: 8px 10px 8px 14px;
     }
 
-    .returns-hero-period strong {
-        font-size: 16px;
-        font-weight: 850;
+    .chart-panel .chart-panel-title,
+    .chart-panel .split-head > .period-switch {
+        display: none;
     }
 
-    .returns-hero-pill {
-        padding: 1px 8px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 850;
-    }
-
-    .returns-hero-pill.positive {
-        background: var(--positive-bg);
-    }
-
-    .returns-hero-pill.negative {
-        background: var(--negative-bg);
-    }
-
-    .returns-hero-empty {
-        margin: 0;
-        color: var(--muted-text);
-        font-size: 12px;
-    }
-
-    .returns-hero-status {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2px 6px;
+    .chart-collapse-btn {
+        display: inline-flex;
+        flex: 1 1 auto;
+        gap: 6px;
         align-items: center;
-        width: 100%;
-        margin-top: 6px;
-        padding: 8px 0 2px;
+        min-width: 0;
+        min-height: 36px;
+        padding: 0;
         border: 0;
-        border-top: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
-        color: var(--muted-text);
+        color: var(--heading-color);
         background: none;
-        font-size: 12px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
+        font-size: 15px;
+        font-weight: 900;
         text-align: left;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
     }
 
-    .returns-hero-status b {
-        font-weight: 850;
-    }
-
-    .returns-hero-chevron {
-        margin-left: auto;
+    .chart-collapse-btn svg {
+        flex: 0 0 auto;
+        color: var(--muted-text);
         transition: transform 0.16s ease;
     }
 
-    .returns-hero-status[aria-expanded="true"] .returns-hero-chevron {
-        transform: rotate(90deg);
+    .chart-collapse-btn[aria-expanded="true"] svg {
+        transform: rotate(180deg);
     }
 
-    .returns-hero-status-list {
-        display: grid;
-        gap: 4px;
-        margin: 2px 0 0;
-        padding: 0;
-        list-style: none;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .returns-hero-status-list li {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        min-width: 0;
-        color: var(--text-color);
-    }
-
-    .returns-hero-status-list li > span:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .returns-hero-status-date {
-        flex: 0 0 auto;
-        margin-left: auto;
-        color: var(--muted-text);
-        font-variant-numeric: tabular-nums;
-    }
-
-    .returns-hero-status-list li.invalid .returns-hero-status-date {
-        color: var(--warning-color);
-    }
-
-    .lag-badge {
-        display: inline-block;
-        flex: 0 0 auto;
-        padding: 0 5px;
-        border-radius: 4px;
-        color: var(--warning-color);
-        background: color-mix(in srgb, var(--warning-color) 15%, transparent);
-        font-size: 11px;
-        font-style: normal;
-        font-weight: 800;
-        line-height: 17px;
-        white-space: nowrap;
-    }
-
-    /* Chart: the period chips moved to the sticky bar, so the head is the title and the full-screen button. */
-    .chart-panel .split-head > .period-switch {
-        display: none;
-    }
-
-    .chart-panel .split-head {
-        grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .chart-panel .chart-panel-title {
-        grid-column: 1;
+    .chart-collapse-btn:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+        border-radius: 6px;
     }
 
     .chart-panel .chart-fullscreen-btn {
-        grid-row: 1;
         width: 34px;
         height: 34px;
         border-radius: 10px;
     }
 
-    .chart-readout {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2px 12px;
-        align-items: center;
-        min-height: 20px;
-        margin: 0 14px;
-        font-size: 12px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .chart-readout:empty {
+    .chart-panel.is-collapsed:not(.is-fullscreen) .chart-panel-body {
         display: none;
     }
 
-    .chart-readout-date {
-        color: var(--muted-text);
+    .chart-panel.is-collapsed:not(.is-fullscreen) .split-head {
+        border-bottom: 0;
     }
 
-    .chart-readout-item {
-        display: inline-flex;
-        gap: 5px;
-        align-items: center;
-        color: var(--text-color);
-        white-space: nowrap;
+    /* Same plot height as the account trend chart on phones. */
+    .chart-panel .performance-chart {
+        height: 240px;
+        margin: 2px 4px 10px;
+        padding: 0;
     }
 
-    .chart-readout-item i {
-        flex: 0 0 12px;
-        height: 3px;
-        border-radius: 2px;
-        background: var(--line);
-    }
-
-    .chart-readout-item i.dashed {
-        height: 0;
-        border-top: 2px dashed var(--line);
-        border-radius: 0;
-        background: none;
-    }
-
-    .chart-readout-item b {
-        color: var(--heading-color);
-        font-weight: 850;
-    }
-
-    .chart-readout-item b.positive {
-        color: var(--positive-color);
-    }
-
-    .chart-readout-item b.negative {
-        color: var(--negative-color);
+    .chart-legend-mobile {
+        display: none !important;
     }
 
     /* Ranking: one tap target per row (dot, name and assets, diverging bar, return and period P/L). */
-    .comparison-panel .comparison-table-wrap {
-        margin-bottom: 6px;
-    }
-
-    .comparison-hint-mobile {
-        display: block;
-        margin: 0 14px 12px !important;
-        color: var(--muted-text);
-        font-size: 11px !important;
-        font-weight: 700;
-    }
-
     .cmp-row {
         cursor: default;
     }
@@ -8434,23 +8323,6 @@ html {
 
     .cmp-row.invalid .cmp-row-main {
         cursor: default;
-    }
-
-    .cmp-row.active .cmp-row-dot {
-        box-shadow: 0 0 0 2px var(--surface-color), 0 0 0 4px var(--border-strong);
-    }
-
-    .cmp-row-name strong {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        min-width: 0;
-    }
-
-    .cmp-row-name strong > span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     .cmp-row-bar {
@@ -8528,16 +8400,37 @@ html {
         grid-template-columns: 10px minmax(0, 1fr) 40px minmax(72px, auto);
     }
 
-    .returns-hero-value {
-        font-size: 26px;
+    .returns-summary-stats > div {
+        padding-right: 8px;
+        padding-left: 10px;
+    }
+
+    .returns-summary-stats dd {
+        font-size: 14px;
     }
 }
 
-/* Full screen keeps every period chip and, wider than the narrow-chart breakpoint, the legend with every line. */
+/* Full screen keeps the title, every period chip, and, wider than the narrow-chart breakpoint, the legend. */
+.chart-panel.is-fullscreen .chart-collapse-btn {
+    display: none;
+}
+
+.chart-panel.is-fullscreen .chart-panel-title {
+    display: block !important;
+}
+
 .chart-panel.is-fullscreen .split-head > .period-switch {
     display: flex !important;
 }
 
-.chart-panel.is-fullscreen .chart-readout {
-    display: none;
+.chart-panel.is-fullscreen .chart-panel-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.chart-panel.is-fullscreen .performance-chart {
+    height: auto !important;
+    margin: 4px 8px 8px !important;
 }

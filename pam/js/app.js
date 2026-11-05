@@ -8,7 +8,7 @@ import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from '.
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindChartFullscreen, renderChartFullscreenButton } from './modules/accountPerformance/chartFullscreen.js';
-import { bindAccountComparison, bindReturnsHero, renderAccountComparison, renderOverviewCards, renderReturnsHero } from './modules/accountPerformance/metricsPanel.js';
+import { bindAccountComparison, renderAccountComparison, renderOverviewCards, renderReturnsHero } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
@@ -110,6 +110,7 @@ async function initializeWorkspace(user) {
     state.assetDataAction = normalizeAssetDataAction(preferences.assetDataAction);
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
+    state.returnsChartOpen = preferences.returnsChartOpen === true;
     state.currentLang = normalizeLang(preferences.currentLang);
     state.holdingFilters = preferences.holdingFilters || state.holdingFilters;
     state.holdingSortKey = preferences.holdingSortKey || state.holdingSortKey;
@@ -490,18 +491,17 @@ function bindEvents() {
         renderApp();
     });
     bindChartFullscreen({ onResize: resizeChart });
-    bindReturnsHero();
+    document.getElementById('chartCollapseBtn')?.addEventListener('click', () => {
+        state.returnsChartOpen = !state.returnsChartOpen;
+        persistPreferences();
+        renderReturnsChartCollapse();
+        // The chart was display:none while folded, so it has to be measured again.
+        requestAnimationFrame(resizeChart);
+    });
     bindAccountComparison({
         onHighlight: accountId => {
             state.selectedHighlightAccountId = state.selectedHighlightAccountId === accountId ? '' : accountId;
             renderApp();
-        },
-        onOverlay: accountId => {
-            const ids = state.chartOverlayAccountIds;
-            state.chartOverlayAccountIds = ids.includes(accountId) ? ids.filter(id => id !== accountId) : [...ids, accountId];
-            renderApp();
-            // The list is re-rendered; keep keyboard focus on the tapped row.
-            document.querySelector(`[data-overlay-account="${CSS.escape(accountId)}"]`)?.focus({ preventScroll: true });
         },
         onSort: sortAccountComparison,
         onGoToAccount: accountId => {
@@ -558,6 +558,19 @@ function bindEvents() {
     window.addEventListener('resize', resizeSnapshotTable, { passive: true });
     window.addEventListener('resize', keepAccountFloatingActionsInView, { passive: true });
     window.addEventListener('resize', syncStickyHeaderOffset, { passive: true });
+}
+
+// Phones fold the returns chart under its title until the user opens it; CSS ignores the state on desktop.
+function renderReturnsChartCollapse() {
+    const panel = document.getElementById('performanceChartPanel');
+    const button = document.getElementById('chartCollapseBtn');
+    if (!panel || !button) return;
+    const open = Boolean(state.returnsChartOpen);
+    panel.classList.toggle('is-collapsed', !open);
+    button.setAttribute('aria-expanded', String(open));
+    const label = t(open ? 'chartCollapse' : 'chartExpand');
+    button.setAttribute('aria-label', label);
+    button.title = label;
 }
 
 // The returns view's period bar sticks just below the phone header, whose height depends on the safe area.
@@ -697,17 +710,16 @@ function renderApp() {
     syncSelectedHoldingFilter();
     const metrics = buildAccountMetrics(state.accounts, state.snapshots, state.selectedPeriod);
     const portfolio = buildPortfolioMetrics(metrics);
-    const accountIds = new Set(state.accounts.map(account => account.id));
-    state.chartOverlayAccountIds = state.chartOverlayAccountIds.filter(id => accountIds.has(id));
     const holdingsMetrics = buildHoldingsMetrics(state.holdings, state.accounts, state.holdingFilters);
     renderActiveView();
     renderAmountPrivacyToggle();
-    renderReturnsHero(metrics, portfolio);
+    renderReturnsHero(portfolio);
     renderOverviewCards(metrics);
     renderAccountList(metrics);
     renderSnapshotForm();
     renderPeriodSwitch();
     renderChartFullscreenButton();
+    renderReturnsChartCollapse();
     renderPerformanceChart(metrics, portfolio);
     renderAccountComparison(metrics);
     renderAccountTrend(metrics);
@@ -1512,6 +1524,7 @@ function applyImportedData(data) {
     state.assetDataAction = normalizeAssetDataAction(data.preferences.assetDataAction || (data.preferences.activeView === 'holdings' ? 'holding' : 'snapshot'));
     state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
     state.amountsHidden = Boolean(data.preferences.amountsHidden);
+    state.returnsChartOpen = data.preferences.returnsChartOpen === true;
     state.currentLang = normalizeLang(data.preferences.currentLang || state.currentLang);
     state.holdingFilters = data.preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
     state.holdingSortKey = data.preferences.holdingSortKey || 'marketValue';
@@ -2213,6 +2226,7 @@ function getCurrentPreferences() {
         holdingView: state.holdingView,
         accountTrendView: state.accountTrendView,
         allocationRebalanceMode: state.allocationRebalanceMode,
+        returnsChartOpen: state.returnsChartOpen,
         currentLang: state.currentLang
     };
 }
@@ -2241,6 +2255,7 @@ function applyCloudData(data) {
     state.assetDataAction = normalizeAssetDataAction(preferences.assetDataAction);
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
+    state.returnsChartOpen = preferences.returnsChartOpen === true;
     state.currentLang = normalizeLang(preferences.currentLang);
     state.holdingFilters = preferences.holdingFilters || { accountId: 'all', assetClass: 'all', market: 'all' };
     state.holdingSortKey = preferences.holdingSortKey || 'marketValue';
