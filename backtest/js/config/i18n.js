@@ -64,7 +64,24 @@ export const i18n = {
         noticeLateStart: '{assets} 数据起始较晚，回测起点调整为 {date}。',
         noticeEarlyEnd: '部分资产数据截至 {date}。',
         scoped: '{name}：{message}',
-        listSeparator: '、'
+        listSeparator: '、',
+        benchmark: '基准指数',
+        benchmarkNone: '不对比',
+        benchmarkTag: '基准 · 价格指数',
+        addPortfolio: '添加对比组合（{count}/{max}）',
+        duplicatePortfolio: '复制',
+        removePortfolio: '删除',
+        copySuffix: '副本',
+        colBestYear: '最好年份',
+        colWorstYear: '最差年份',
+        colYear: '年份',
+        chartDrawdownTitle: '回撤',
+        chartYearlyTitle: '年度收益',
+        yearlyTableTitle: '逐年收益',
+        partialYearHint: '标 * 的年份未覆盖完整自然年。',
+        noticeAligned: '为便于对比，所有组合与基准统一从 {date} 开始计算。',
+        errPortfolioSkipped: '含获取失败的资产，已跳过。',
+        errBenchmark: '基准 {name} 数据不可用。'
     },
     en: {
         title: 'Portfolio Backtest',
@@ -131,7 +148,24 @@ export const i18n = {
         noticeLateStart: '{assets} start later; backtest starts on {date}.',
         noticeEarlyEnd: 'Some asset data ends on {date}.',
         scoped: '{name}: {message}',
-        listSeparator: ', '
+        listSeparator: ', ',
+        benchmark: 'Benchmark',
+        benchmarkNone: 'None',
+        benchmarkTag: 'Benchmark · price index',
+        addPortfolio: 'Add portfolio to compare ({count}/{max})',
+        duplicatePortfolio: 'Duplicate',
+        removePortfolio: 'Remove',
+        copySuffix: 'copy',
+        colBestYear: 'Best year',
+        colWorstYear: 'Worst year',
+        colYear: 'Year',
+        chartDrawdownTitle: 'Drawdown',
+        chartYearlyTitle: 'Annual returns',
+        yearlyTableTitle: 'Returns by year',
+        partialYearHint: 'Years marked * do not cover a full calendar year.',
+        noticeAligned: 'For comparison, all portfolios and the benchmark start on {date}.',
+        errPortfolioSkipped: 'contains assets that failed to load; skipped.',
+        errBenchmark: 'Benchmark {name} is unavailable.'
     }
 };
 

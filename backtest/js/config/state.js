@@ -2,6 +2,17 @@ import { CONFIG_KEY, PREFERENCES_KEY, readPayload, writePayload } from '../utils
 import { REBALANCE_MODES } from '../engine/backtestEngine.js';
 
 const MARKETS = ['CN', 'Fund'];
+export const MAX_PORTFOLIOS = 3;
+
+// Must stay within the INDEX_SECIDS allowlist in functions/api/history.js.
+export const BENCHMARKS = [
+    { code: '000300', zh: '沪深300', en: 'CSI 300' },
+    { code: '000905', zh: '中证500', en: 'CSI 500' },
+    { code: '000852', zh: '中证1000', en: 'CSI 1000' },
+    { code: '000016', zh: '上证50', en: 'SSE 50' },
+    { code: '000001', zh: '上证指数', en: 'SSE Composite' },
+    { code: '399006', zh: '创业板指', en: 'ChiNext' }
+];
 
 export function defaultParams() {
     const end = new Date();
@@ -11,13 +22,18 @@ export function defaultParams() {
         start: toDateKey(start),
         end: toDateKey(end),
         initialAmount: 100000,
-        riskFree: 0
+        riskFree: 0,
+        benchmark: '000300'
     };
+}
+
+export function newPortfolioId() {
+    return `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
 export function defaultPortfolio(index = 1) {
     return {
-        id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+        id: newPortfolioId(),
         name: '',
         rebalance: 'quarterly',
         assets: [
@@ -56,13 +72,31 @@ function sanitizeParams(params) {
         start: isDateKey(params.start) ? params.start : fallback.start,
         end: isDateKey(params.end) ? params.end : fallback.end,
         initialAmount: Number(params.initialAmount) > 0 ? Number(params.initialAmount) : fallback.initialAmount,
-        riskFree: Number.isFinite(Number(params.riskFree)) ? Number(params.riskFree) : 0
+        riskFree: Number.isFinite(Number(params.riskFree)) ? Number(params.riskFree) : 0,
+        benchmark: sanitizeBenchmark(params.benchmark, fallback.benchmark)
     };
+}
+
+export function sanitizeBenchmark(value, fallback = '') {
+    if (value === '') return '';
+    return BENCHMARKS.some(item => item.code === value) ? value : fallback;
+}
+
+export function benchmarkLabel(code, lang) {
+    const item = BENCHMARKS.find(entry => entry.code === code);
+    return item ? item[lang] || item.zh : code;
+}
+
+// Keeps `index` (used for default names and series colours) in sync with list order.
+export function reindexPortfolios() {
+    state.portfolios.forEach((portfolio, i) => {
+        portfolio.index = i + 1;
+    });
 }
 
 function sanitizePortfolios(portfolios) {
     if (!Array.isArray(portfolios) || portfolios.length === 0) return [defaultPortfolio(1)];
-    const result = portfolios.slice(0, 3).map((portfolio, i) => ({
+    const result = portfolios.slice(0, MAX_PORTFOLIOS).map((portfolio, i) => ({
         id: typeof portfolio?.id === 'string' ? portfolio.id : defaultPortfolio(i + 1).id,
         name: typeof portfolio?.name === 'string' ? portfolio.name.slice(0, 40) : '',
         rebalance: REBALANCE_MODES.includes(portfolio?.rebalance) ? portfolio.rebalance : 'none',

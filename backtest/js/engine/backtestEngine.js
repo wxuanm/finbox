@@ -24,26 +24,34 @@ export function runBacktest({ assets, prices, start, end, initialAmount, rebalan
     if (!(totalWeight > 0)) throw new BacktestError('noAssets');
     const weights = assets.map(asset => asset.weight / totalWeight);
 
+    // Each asset keeps its in-range points plus, when available, the last value before
+    // `start` as a carry-in. The carry-in lets a later, shared start date (used to align
+    // several portfolios) price an asset that has no point on exactly that day.
     const seriesList = assets.map(asset => {
-        const points = (prices[asset.key] || [])
-            .filter(([date, value]) => date >= start && date <= end && value > 0);
-        if (points.length === 0) throw new BacktestError('noData', { key: asset.key });
-        return points;
+        const all = (prices[asset.key] || []).filter(([date, value]) => date <= end && value > 0);
+        const firstInRange = all.findIndex(([date]) => date >= start);
+        if (firstInRange === -1) throw new BacktestError('noData', { key: asset.key });
+        return {
+            points: all.slice(firstInRange),
+            carry: firstInRange > 0 ? all[firstInRange - 1][1] : null
+        };
     });
 
-    const firstDates = seriesList.map(points => points[0][0]);
-    const lastDates = seriesList.map(points => points[points.length - 1][0]);
-    const effectiveStart = maxDate(firstDates);
+    const firstDates = seriesList.map(({ points, carry }) => (carry !== null ? start : points[0][0]));
+    const lastDates = seriesList.map(({ points }) => points[points.length - 1][0]);
+    const startBound = maxDate(firstDates);
     const effectiveEnd = minDate(lastDates);
-    if (effectiveStart >= effectiveEnd) throw new BacktestError('noOverlap');
+    if (startBound >= effectiveEnd) throw new BacktestError('noOverlap');
 
     const lateAssets = assets
         .filter((asset, index) => daysBetween(start, firstDates[index]) > LATE_START_TOLERANCE_DAYS
-            && firstDates[index] === effectiveStart)
+            && firstDates[index] === startBound)
         .map(asset => asset.key);
 
-    const calendar = buildCalendar(seriesList, effectiveStart, effectiveEnd);
-    const priceMatrix = seriesList.map(points => forwardFill(points, calendar));
+    const calendar = buildCalendar(seriesList.map(item => item.points), startBound, effectiveEnd);
+    if (calendar.length < 2) throw new BacktestError('noOverlap');
+    const effectiveStart = calendar[0];
+    const priceMatrix = seriesList.map(({ points, carry }) => forwardFill(points, calendar, carry));
 
     const dates = [];
     const values = [];
@@ -72,6 +80,8 @@ export function runBacktest({ assets, prices, start, end, initialAmount, rebalan
     const lastPrices = priceMatrix.map(column => column[column.length - 1]);
     const lastValue = values[values.length - 1];
 
+    // effectiveStart is the first trading day actually simulated (a carry-in can make
+    // the requested start valid even when it is a weekend or holiday).
     return {
         dates,
         values,
@@ -116,10 +126,10 @@ function buildCalendar(seriesList, from, to) {
 
 // Aligns a series to the calendar, carrying the last known value over missing days
 // (holidays that differ between markets, QDII funds, suspended stocks).
-function forwardFill(points, calendar) {
+function forwardFill(points, calendar, initial = null) {
     const column = [];
     let pointer = 0;
-    let last = null;
+    let last = initial;
     calendar.forEach(date => {
         while (pointer < points.length && points[pointer][0] <= date) {
             last = points[pointer][1];

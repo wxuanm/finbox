@@ -44,13 +44,28 @@ export function validatePortfolio(portfolio, lang) {
     return errors;
 }
 
-export function renderPortfolioEditor(container, portfolio) {
+export const SERIES_COLOR_VARS = ['--chart-series-1', '--chart-series-2', '--chart-series-3'];
+
+export function seriesColorVar(portfolio) {
+    return SERIES_COLOR_VARS[(portfolio.index - 1) % SERIES_COLOR_VARS.length];
+}
+
+/** @param {{ canAdd: boolean, canRemove: boolean }} options */
+export function renderPortfolioEditor(container, portfolio, { canAdd = false, canRemove = false } = {}) {
     const lang = state.lang;
     const total = weightTotal(portfolio);
     const totalOk = Math.abs(total - 100) <= 0.01;
 
     container.innerHTML = `
-        <div class="portfolio-card" data-portfolio-id="${escapeHtml(portfolio.id)}">
+        <div class="portfolio-card" data-portfolio-id="${escapeHtml(portfolio.id)}" style="--card-accent: var(${seriesColorVar(portfolio)})">
+            <div class="portfolio-card-title">
+                <span class="series-dot" aria-hidden="true"></span>
+                <strong>${escapeHtml(portfolioDisplayName(portfolio, lang))}</strong>
+                <span class="card-tools">
+                    <button type="button" class="text-btn" data-action="duplicate-portfolio" ${canAdd ? '' : 'disabled'}>${escapeHtml(t(lang, 'duplicatePortfolio'))}</button>
+                    <button type="button" class="text-btn danger" data-action="remove-portfolio" ${canRemove ? '' : 'disabled'}>${escapeHtml(t(lang, 'removePortfolio'))}</button>
+                </span>
+            </div>
             <div class="portfolio-card-head">
                 <label class="field grow">
                     <span>${escapeHtml(t(lang, 'portfolioName'))}</span>
@@ -107,7 +122,7 @@ function renderAssetRow(asset, index, lang) {
  * Wires delegated events once. `getPortfolio(id)` resolves the edited portfolio,
  * `onChange(portfolio, { structural })` persists and re-renders when rows change.
  */
-export function bindPortfolioEditor(root, { getPortfolio, onChange }) {
+export function bindPortfolioEditor(root, { getPortfolio, onChange, onPortfolioAction }) {
     root.addEventListener('input', event => {
         const target = event.target;
         const { portfolio, assetIndex } = locate(target, getPortfolio);
@@ -116,6 +131,8 @@ export function bindPortfolioEditor(root, { getPortfolio, onChange }) {
 
         if (field === 'name') {
             portfolio.name = target.value.slice(0, 40);
+            const title = target.closest('.portfolio-card')?.querySelector('.portfolio-card-title strong');
+            if (title) title.textContent = portfolioDisplayName(portfolio, state.lang);
         } else if (field === 'code' && assetIndex !== null) {
             const code = target.value.replace(/\D/g, '').slice(0, 6);
             if (code !== target.value) target.value = code;
@@ -146,11 +163,19 @@ export function bindPortfolioEditor(root, { getPortfolio, onChange }) {
 
     root.addEventListener('click', event => {
         const button = event.target.closest('[data-action]');
-        if (!button || !root.contains(button)) return;
+        if (!button || !root.contains(button) || button.disabled) return;
+        const action = button.dataset.action;
+        if (action === 'add-portfolio') {
+            onPortfolioAction('add', null);
+            return;
+        }
         const { portfolio, assetIndex } = locate(button, getPortfolio);
         if (!portfolio) return;
+        if (action === 'duplicate-portfolio' || action === 'remove-portfolio') {
+            onPortfolioAction(action === 'duplicate-portfolio' ? 'duplicate' : 'remove', portfolio);
+            return;
+        }
 
-        const action = button.dataset.action;
         if (action === 'add-asset' && portfolio.assets.length < MAX_ASSETS) {
             portfolio.assets.push({ market: 'Fund', code: '', weight: 0 });
         } else if (action === 'remove-asset' && assetIndex !== null) {

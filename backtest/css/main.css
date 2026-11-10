@@ -225,11 +225,78 @@ select:focus {
     gap: 12px;
 }
 
+.field.span-2 {
+    grid-column: 1 / -1;
+}
+
 .portfolio-card {
     padding: 12px;
     border: 1px solid var(--border-color);
+    border-left: 3px solid var(--card-accent, var(--border-color));
     border-radius: var(--radius-md);
     background: var(--surface-muted);
+}
+
+.portfolio-card-title {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    margin-bottom: 10px;
+}
+
+.portfolio-card-title strong {
+    overflow: hidden;
+    color: var(--heading-color);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.card-tools {
+    display: flex;
+    gap: 2px;
+    margin-left: auto;
+}
+
+.text-btn {
+    padding: 2px 8px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted-text);
+    cursor: pointer;
+}
+
+.text-btn:hover:not(:disabled) {
+    color: var(--primary-color);
+    background: var(--primary-soft);
+}
+
+.text-btn.danger:hover:not(:disabled) {
+    color: var(--positive-color);
+    background: var(--positive-bg);
+}
+
+.text-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.add-portfolio-btn {
+    height: 40px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.add-portfolio-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-soft);
 }
 
 .portfolio-card-head {
@@ -460,11 +527,52 @@ select:focus {
 
 .series-dot {
     display: inline-block;
+    flex: none;
     width: 10px;
     height: 10px;
     margin-right: 6px;
     border-radius: 50%;
     vertical-align: 0;
+    background: var(--dot, var(--card-accent, var(--muted-text)));
+}
+
+.series-dot.dashed {
+    background: transparent;
+    border: 2px dashed var(--dot);
+}
+
+.benchmark-row th,
+.benchmark-row td {
+    background: var(--surface-muted);
+}
+
+.row-sub-inline {
+    font-size: 11px;
+    color: var(--muted-text);
+}
+
+.table-note {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--muted-text);
+}
+
+.chart-short {
+    height: 260px;
+}
+
+.yearly-table td,
+.yearly-table th {
+    min-width: 88px;
+}
+
+details.asset-detail summary {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    font-weight: 700;
+    color: var(--heading-color);
+    cursor: pointer;
 }
 
 .result-block {
