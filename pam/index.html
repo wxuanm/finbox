@@ -125,6 +125,11 @@
                 <button class="module-tab" type="button" data-view="allocation" data-i18n="tabAssetAllocation">资产配置</button>
                 <button class="module-tab" type="button" disabled data-i18n="tabTransactions">交易记录</button>
             </div>
+            <div class="context-actions returns-zoom-actions" data-context-actions="analysis" data-i18n-aria-label="returnsZoomActions" aria-label="收益走势缩放">
+                <button id="returnsZoomOutBtn" class="context-action returns-zoom-btn" type="button" data-i18n-title="returnsZoomOut" title="缩小" aria-label="缩小">−</button>
+                <button id="returnsZoomResetBtn" class="context-action returns-zoom-value" type="button" data-i18n-title="returnsZoomReset" title="恢复 100%" aria-label="恢复 100%">100%</button>
+                <button id="returnsZoomInBtn" class="context-action returns-zoom-btn" type="button" data-i18n-title="returnsZoomIn" title="放大" aria-label="放大">+</button>
+            </div>
             <div class="context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataBatchActions" aria-label="账户管理批量操作">
                 <button id="generateSnapshotsBtn" class="context-action" type="button" data-i18n-title="generateSnapshotsTitle" title="为全部账户生成快照" aria-label="为全部账户生成快照">
                     <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span data-i18n="generate">生成</span>

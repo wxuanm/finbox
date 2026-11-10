@@ -7765,9 +7765,9 @@ select,
     }
 }
 
-/* Returns chart full-screen toggle. */
+/* Returns chart full-screen toggle. Phone only: hidden above 720px, shown by the phone rule below. */
 .chart-fullscreen-btn {
-    display: inline-grid;
+    display: none;
     flex: 0 0 auto;
     place-items: center;
     width: 36px;
@@ -7825,6 +7825,7 @@ select,
     }
 
     .chart-panel .chart-fullscreen-btn {
+        display: inline-grid;
         grid-column: 2;
         grid-row: 2;
         width: 38px;
@@ -8522,4 +8523,22 @@ html {
     .comparison-panel .title-period-badge {
         display: none !important;
     }
+}
+
+/* Desktop zoom for 账户收益. CSS zoom reflows the cards, chart, and comparison table at the chosen scale; the
+   value is set on #analysisView from state.returnsZoom. Phones keep 100%, and the controls are hidden there. */
+@media (min-width: 721px) {
+    #analysisView.workspace-view.active {
+        zoom: var(--returns-zoom, 1);
+    }
+}
+
+.returns-zoom-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.returns-zoom-value {
+    min-width: 64px;
+    font-variant-numeric: tabular-nums;
 }

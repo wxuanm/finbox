@@ -8,6 +8,7 @@ import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from '.
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindChartFullscreen, renderChartFullscreenButton } from './modules/accountPerformance/chartFullscreen.js';
+import { bindReturnsZoom, normalizeReturnsZoom, renderReturnsZoom } from './modules/accountPerformance/returnsZoom.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards, renderReturnsHero } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
@@ -111,6 +112,7 @@ async function initializeWorkspace(user) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
+    state.returnsZoom = normalizeReturnsZoom(preferences.returnsZoom);
     state.accountTrendOpen = preferences.accountTrendOpen !== false;
     state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);
@@ -493,6 +495,12 @@ function bindEvents() {
         renderApp();
     });
     bindChartFullscreen({ onResize: resizeChart });
+    bindReturnsZoom(zoom => {
+        state.returnsZoom = zoom;
+        persistPreferences();
+        renderReturnsZoom();
+        requestAnimationFrame(resizeChart);
+    });
     document.getElementById('chartCollapseBtn')?.addEventListener('click', () => {
         state.returnsChartOpen = !state.returnsChartOpen;
         persistPreferences();
@@ -744,6 +752,7 @@ function renderApp() {
     renderSnapshotForm();
     renderPeriodSwitch();
     renderChartFullscreenButton();
+    renderReturnsZoom();
     // Before the trend renders, so an opened panel can be measured.
     renderPanelCollapses();
     renderPerformanceChart(metrics, portfolio);
@@ -1551,6 +1560,7 @@ function applyImportedData(data) {
     state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
     state.amountsHidden = Boolean(data.preferences.amountsHidden);
     state.returnsChartOpen = data.preferences.returnsChartOpen === true;
+    state.returnsZoom = normalizeReturnsZoom(data.preferences.returnsZoom);
     state.accountTrendOpen = data.preferences.accountTrendOpen !== false;
     state.assetRecordOpen = data.preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(data.preferences.currentLang || state.currentLang);
@@ -2255,6 +2265,7 @@ function getCurrentPreferences() {
         accountTrendView: state.accountTrendView,
         allocationRebalanceMode: state.allocationRebalanceMode,
         returnsChartOpen: state.returnsChartOpen,
+        returnsZoom: state.returnsZoom,
         accountTrendOpen: state.accountTrendOpen,
         assetRecordOpen: state.assetRecordOpen,
         currentLang: state.currentLang
@@ -2286,6 +2297,7 @@ function applyCloudData(data) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
+    state.returnsZoom = normalizeReturnsZoom(preferences.returnsZoom);
     state.accountTrendOpen = preferences.accountTrendOpen !== false;
     state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);
