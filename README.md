@@ -53,6 +53,26 @@ Key features:
 - Username/password login with Access-key bootstrap and recovery, D1-backed cloud persistence, and a `pam:v1:*` browser cache.
 - Dark mode.
 
+### Portfolio Backtest
+
+Portfolio Backtest (组合回测) is a standalone browser tool for backtesting target-weight portfolios of A-shares and funds.
+
+Production URL:
+
+`https://finbox.pages.dev/backtest/`
+
+Key features:
+
+- Independent `/backtest/` static tool, separate from `fundmonitor` and `pam`.
+- A-shares use back-adjusted (后复权) prices; funds use a dividend-reinvested NAV series.
+- Rebalancing: none, monthly, quarterly, or yearly to target weights.
+- Compare up to 3 portfolios on one shared period, against an index benchmark (沪深300, 中证500, 中证1000, 上证50, 上证指数, 创业板指).
+- Metrics: final value, total return, CAGR, max drawdown, volatility, Sharpe, Calmar, best and worst year.
+- Cumulative return, drawdown, and annual return charts, plus returns-by-year and per-asset weight tables.
+- Notices when an asset starts later than the requested start date.
+- Chinese and English UI, dark mode, and a phone layout.
+- Portfolios and parameters persisted in `localStorage`.
+
 ## Data Proxies
 
 Fund Monitor uses Cloudflare Pages Functions at:
@@ -106,15 +126,39 @@ Notes:
 - Unsupported markets remain manually priced in PAM.
 - `/api/quotes` accepts up to 40 unique `market:symbol` items and returns `failedItems` for unsupported or failed quotes.
 
+Portfolio Backtest uses:
+
+```text
+/api/history?items=CN:600519,Fund:110011,Index:000300&start=2020-01-01
+```
+
+Notes:
+
+- Accepts up to 25 unique items. `CN` and `Fund` take 6-digit codes; `Index` takes an allowlisted index code.
+- `CN` returns back-adjusted daily closes; `Index` returns unadjusted closes; `Fund` returns a series chained from Eastmoney's daily growth rate, so dividends and unit splits are handled.
+- `start` defaults to 10 years ago. Partial failures are returned in `failedItems`.
+
 ## Project Structure
 
 ```text
 finbox/
 ├─ functions/
 │  └─ api/
+│     ├─ _lib/                  # Shared modules (not routed)
 │     ├─ fundgz.js              # Cloudflare Pages API proxy
 │     ├─ fundnav.js             # Fund NAV trend proxy
+│     ├─ history.js             # Backtest daily price history
 │     └─ quotes.js              # PAM A-share/fund quote proxy
+├─ backtest/
+│  ├─ index.html                # Portfolio Backtest page
+│  ├─ css/                      # Theme variables and layout
+│  └─ js/
+│     ├─ app.js                 # Bootstrap and run orchestration
+│     ├─ api/historyApi.js      # /api/history client
+│     ├─ config/                # i18n and runtime state
+│     ├─ engine/                # Pure backtest engine and metrics
+│     ├─ ui/                    # Portfolio editor and results
+│     └─ utils/                 # Formatting and storage helpers
 ├─ fundmonitor/
 │  ├─ index.html                # Fund Monitor page
 │  ├─ css/
@@ -157,6 +201,7 @@ finbox/
 │        └─ formatter.js        # Formatting helpers
 ├─ docs/
 │  └─ specs/
+│     ├─ backtest/              # Portfolio Backtest SDD specs and implementation tasks
 │     ├─ fundmonitor/           # Fund Monitor SDD specs and implementation tasks
 │     └─ pam/                   # PAM SDD specs and implementation tasks
 └─ README.md
@@ -177,12 +222,13 @@ Then open the local URL printed by Wrangler and navigate to:
 ```text
 /fundmonitor/
 /pam/
+/backtest/
 ```
 
 Why use Wrangler locally:
 
 - Static files are served correctly.
-- `/api/fundgz`, `/api/fundnav`, and `/api/quotes` are available locally through the Pages Function runtime.
+- `/api/fundgz`, `/api/fundnav`, `/api/history`, and `/api/quotes` are available locally through the Pages Function runtime.
 - The app can test the same proxy path used in production.
 
 ## Persistence
@@ -206,6 +252,8 @@ PAM stores authenticated business data in Cloudflare D1 and keeps these browser 
 PAM preferences include selected account, selected period, highlighted comparison account, comparison sort, active view, account-management action state, hide-amount state, theme, and language.
 
 Each PAM user is isolated by a server-derived owner ID. Daily sign-in uses a username and password. Passwords are protected with a per-user salt, PBKDF2-SHA-256, and the server-side pepper; D1 stores no raw password. Operator-issued access keys remain available for first-time password setup and account recovery, while raw session tokens remain in HttpOnly cookies.
+
+Portfolio Backtest stores its portfolios and parameters in `backtest:v1:config` and its theme and language in `backtest:v1:preferences`. Price history is kept in memory only.
 
 ## Browser Support
 

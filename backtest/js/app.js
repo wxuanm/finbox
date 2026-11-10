@@ -212,9 +212,10 @@ async function run() {
         Object.entries(series).forEach(([key, item]) => {
             state.names[key] = item.name;
         });
-        state.lastRun = buildRun({ series, failed, benchmarkKey, start, end, initialAmount, riskFree, lang });
+        const inputs = { series, failed, benchmarkKey, start, end, initialAmount, riskFree };
+        state.lastRun = { ...buildRun({ ...inputs, lang }), inputs, configSnapshot: snapshotConfig() };
     } catch (error) {
-        state.lastRun = { results: [], notices: [], errors: [t(lang, 'errFetch', { message: error.message })] };
+        state.lastRun = { results: [], notices: [], errors: [t(lang, 'errFetch', { message: error.message })], fetchError: error.message };
     } finally {
         setRunning(false);
     }
@@ -345,19 +346,34 @@ function labelForKey(key) {
     return name ? `${name}(${code})` : code;
 }
 
-// Names and labels are baked into results at run time; refresh them on language switch.
-// Messages are not re-translated; they refresh on the next run.
+// Names, labels and messages are baked into results at run time. On a language switch,
+// rebuild the run from its cached inputs (pure and fast; no refetch). Portfolio edits made
+// since the run would leak into the rebuild, so only relabel in that case.
 function relabelLastRun() {
-    if (!state.lastRun) return;
-    state.lastRun.results.forEach(result => {
+    const lastRun = state.lastRun;
+    if (!lastRun) return;
+    const lang = state.lang;
+    if (lastRun.fetchError) {
+        lastRun.errors = [t(lang, 'errFetch', { message: lastRun.fetchError })];
+        return;
+    }
+    if (lastRun.inputs && lastRun.configSnapshot === snapshotConfig()) {
+        Object.assign(lastRun, buildRun({ ...lastRun.inputs, lang }));
+        return;
+    }
+    lastRun.results.forEach(result => {
         if (result.isBenchmark) {
-            result.name = benchmarkLabel(result.benchmarkCode, state.lang);
+            result.name = benchmarkLabel(result.benchmarkCode, lang);
             return;
         }
         const portfolio = state.portfolios.find(item => item.id === result.id);
-        if (portfolio) result.name = portfolioDisplayName(portfolio, state.lang);
-        result.rebalanceLabel = t(state.lang, REBALANCE_LABEL_KEYS[result.rebalance]);
+        if (portfolio) result.name = portfolioDisplayName(portfolio, lang);
+        result.rebalanceLabel = t(lang, REBALANCE_LABEL_KEYS[result.rebalance]);
     });
+}
+
+function snapshotConfig() {
+    return JSON.stringify(state.portfolios.map(({ id, name, rebalance, assets }) => ({ id, name, rebalance, assets })));
 }
 
 function setRunning(running) {

@@ -145,7 +145,7 @@ export const i18n = {
         errFailedItems: 'Failed to load: {items}',
         errNoOverlap: 'The selected assets share no trading days in this range.',
         errNoData: 'No data for {code} in this range.',
-        noticeLateStart: '{assets} start later; backtest starts on {date}.',
+        noticeLateStart: 'Data for {assets} begins later; backtest starts on {date}.',
         noticeEarlyEnd: 'Some asset data ends on {date}.',
         scoped: '{name}: {message}',
         listSeparator: ', ',

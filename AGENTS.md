@@ -9,16 +9,17 @@
 
 ## App Boundaries
 
-- `fundmonitor/` and `pam/` are separate standalone browser tools. Do not import code between them unless explicitly requested.
+- `fundmonitor/`, `pam/`, and `backtest/` are separate standalone browser tools. Do not import code between them unless explicitly requested.
 - Fund Monitor entrypoints: `fundmonitor/index.html`, `fundmonitor/css/main.css`, `fundmonitor/css/variables.css`, `fundmonitor/js/app.js`.
 - PAM entrypoints: `pam/index.html`, `pam/css/main.css`, `pam/css/variables.css`, `pam/js/app.js`.
+- Backtest entrypoints: `backtest/index.html`, `backtest/css/main.css`, `backtest/css/variables.css`, `backtest/js/app.js`.
 - VSIX entrypoints: `vsix/package.json`, `vsix/src/extension.ts`, `vsix/src/views/`, `vsix/src/services/`, `vsix/src/state/`, and `vsix/media/`.
-- Cloudflare Pages Functions live under `functions/api/`: `fundgz.js`, `fundnav.js`, `quotes.js`, and `pam/[[path]].js`. Underscore-prefixed files and folders (`functions/api/_lib/`, `functions/api/pam/_autoSnapshot.js`) are shared modules that Pages does not route.
+- Cloudflare Pages Functions live under `functions/api/`: `fundgz.js`, `fundnav.js`, `history.js`, `quotes.js`, and `pam/[[path]].js`. Underscore-prefixed files and folders (`functions/api/_lib/`, `functions/api/pam/_autoSnapshot.js`) are shared modules that Pages does not route.
 
 ## SDD Workflow
 
 - This project uses SDD docs under `docs/specs/` as the product/design record for implemented modules.
-- Fund Monitor specs are in `docs/specs/fundmonitor/`; PAM specs are in `docs/specs/pam/`.
+- Fund Monitor specs are in `docs/specs/fundmonitor/`; PAM specs are in `docs/specs/pam/`; Backtest specs are in `docs/specs/backtest/`.
 - For feature work that changes product behavior, update the relevant SDD, technical design, or task file when the code change makes the current spec stale.
 - Prefer executable source over prose if specs and implementation conflict, then reconcile the stale spec if the task scope includes behavior changes.
 
@@ -43,6 +44,14 @@
 - Snapshot sync is full replace guarded by `revision`. Anything else that writes snapshots must bump `revision` the same way, or a stale browser will delete its rows. When the cloud revision has moved, the browser always loads the latest cloud data and discards its unsynced edits, telling the user when snapshots, holdings, or accounts were lost.
 - PAM imports ECharts from CDN in `pam/index.html`; handle ECharts absence without blocking account/holding management.
 
+## Backtest Notes
+
+- `backtest/js/engine/backtestEngine.js` and `backtest/js/engine/metrics.js` are pure: keep them free of DOM, `state`, i18n, and local-timezone helpers. Dates are `YYYY-MM-DD` strings compared lexically; they can be tested directly in Node.
+- Storage keys are `backtest:v1:config` and `backtest:v1:preferences`, wrapped as `{ schemaVersion: 1, data }`. Price history is only cached in memory.
+- When several portfolios run, they and the benchmark are re-simulated on one shared period (latest effective start to earliest effective end). Keep that alignment when adding metrics so rows stay comparable.
+- The benchmark list in `backtest/js/config/state.js` must stay within `INDEX_SECIDS` in `functions/api/history.js`.
+- ECharts is loaded at runtime (cdnjs, then unpkg); tables must keep rendering without it.
+
 ## VSIX Notes
 
 - VSIX source is isolated under `vsix/`; do not require a root `package.json` for extension work.
@@ -59,6 +68,7 @@
 - `/api/fundgz` proxies Eastmoney fund comparison scripts. For `t=0` and more than 10 codes, it chunks requests by 10 and merges `fundinfo`; `t=1` stays a single request path.
 - `/api/fundnav` accepts up to 10 valid six-digit codes and returns `{ range, source, updatedAt, funds, failedCodes }` with cache headers.
 - `/api/quotes` accepts up to 40 `market:symbol` items and currently supports A-share `CN` and funds `Fund`. Fetching lives in `functions/api/_lib/quoteSources.js`.
+- `/api/history` accepts up to 25 `market:symbol` items (`CN`, `Fund`, allowlisted `Index`) plus an optional `start`. `CN` is back-adjusted (`fqt=2`); `Fund` is chained from `equityReturn` because unit NAV jumps on dividend and split days. Eastmoney script parsing is shared with `fundnav.js` through `functions/api/_lib/eastmoneyScript.js`.
 - `POST /api/pam/jobs/auto-snapshot` accepts only `Authorization: Bearer <PAM_JOB_SECRET>` (session cookies are ignored) and a `{ "phase": "early" | "final" }` body. Deploy Pages before the Worker: `npx wrangler deploy -c workers/pam-auto-snapshot/wrangler.toml`. See `docs/specs/pam/cloud-deployment.md`.
 
 ## Verification

@@ -594,6 +594,88 @@ details.asset-detail summary {
     margin-top: 12px;
 }
 
+/* Metric cards (phone only) */
+.metric-cards {
+    display: none;
+    gap: 10px;
+}
+
+.metric-card {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--dot);
+    border-radius: var(--radius-md);
+    background: var(--surface-color);
+}
+
+.metric-card.benchmark {
+    border-left-style: dashed;
+    background: var(--surface-muted);
+}
+
+.metric-card header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 0;
+}
+
+.metric-card header strong {
+    color: var(--heading-color);
+}
+
+.metric-card-sub {
+    width: 100%;
+    font-size: 11px;
+    color: var(--muted-text);
+}
+
+.metric-card-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    margin: 6px 0 8px;
+}
+
+.metric-card-hero span {
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-card-hero small,
+.metric-stat small {
+    font-size: 11px;
+    color: var(--muted-text);
+}
+
+.metric-card dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 12px;
+    margin: 0;
+}
+
+.metric-stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+    font-size: 12px;
+}
+
+.metric-stat dt {
+    color: var(--muted-text);
+}
+
+.metric-stat dd {
+    margin: 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 /* Responsive */
 @media (max-width: 960px) {
     .workspace {
@@ -630,5 +712,40 @@ details.asset-detail summary {
 
     .chart {
         height: 300px;
+    }
+
+    .chart-short {
+        height: 240px;
+    }
+
+    .metric-cards {
+        display: grid;
+    }
+
+    .metrics-scroll {
+        display: none;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 7px 8px;
+    }
+
+    /* Keep the row label visible while the year/asset columns scroll. */
+    .yearly-table tbody th,
+    .yearly-table thead th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: var(--surface-color);
+    }
+
+    .yearly-table thead th:first-child {
+        background: var(--surface-muted);
+    }
+
+    .yearly-table td,
+    .yearly-table th {
+        min-width: 76px;
     }
 }

@@ -35,18 +35,20 @@ export function renderResults(container) {
     }
 
     const hasECharts = typeof globalThis.echarts !== 'undefined';
-    const chartBlock = (id, titleKey, extraClass = '') => `
+    // Without ECharts, chart sections are dropped and one notice is shown instead.
+    const chartBlock = (id, titleKey, extraClass = '') => (hasECharts ? `
         <section class="result-block">
             <h3>${escapeHtml(t(lang, titleKey))}</h3>
-            ${hasECharts
-                ? `<div class="chart ${extraClass}" id="${id}" role="img" aria-label="${escapeHtml(t(lang, titleKey))}"></div>`
-                : `<p class="message notice">${escapeHtml(t(lang, 'chartUnavailable'))}</p>`}
-        </section>`;
+            <div class="chart ${extraClass}" id="${id}" role="img" aria-label="${escapeHtml(t(lang, titleKey))}"></div>
+        </section>` : '');
+    const chartNotice = hasECharts ? '' : `<p class="message notice">${escapeHtml(t(lang, 'chartUnavailable'))}</p>`;
     const portfolios = results.filter(result => !result.isBenchmark);
 
     container.innerHTML = `
         ${messages}
-        <div class="table-scroll">
+        ${chartNotice}
+        <div class="metric-cards">${results.map(result => renderMetricCard(result, lang)).join('')}</div>
+        <div class="table-scroll metrics-scroll">
             <table class="data-table metrics-table">
                 <thead>
                     <tr>
@@ -113,6 +115,44 @@ function renderMetricsRow(result, lang) {
             ${yearCell(metrics.bestYear)}
             ${yearCell(metrics.worstYear)}
         </tr>`;
+}
+
+// Phone layout: one card per result instead of the wide metrics table (toggled by CSS).
+function renderMetricCard(result, lang) {
+    const { metrics, run } = result;
+    const finalValue = run.values[run.values.length - 1];
+    const sub = result.isBenchmark
+        ? t(lang, 'benchmarkTag')
+        : `${result.rebalanceLabel}${run.rebalanceDates.length ? ` · ${t(lang, 'rebalanceCount', { count: run.rebalanceDates.length })}` : ''}`;
+    const stat = (labelKey, value, cls = '') => `
+        <div class="metric-stat">
+            <dt>${escapeHtml(t(lang, labelKey))}</dt>
+            <dd class="${cls}">${value}</dd>
+        </div>`;
+    const year = item => (item ? `${formatPercent(item.return)} <small>${escapeHtml(item.year)}</small>` : '--');
+
+    return `
+        <article class="metric-card ${result.isBenchmark ? 'benchmark' : ''}" style="--dot: var(${result.colorVar})">
+            <header>
+                <span class="series-dot ${result.isBenchmark ? 'dashed' : ''}"></span>
+                <strong>${escapeHtml(result.name)}</strong>
+                <span class="metric-card-sub">${escapeHtml(sub)}</span>
+            </header>
+            <div class="metric-card-hero">
+                <span class="${trendClass(metrics.totalReturn)}">${formatPercent(metrics.totalReturn)}</span>
+                <small>${escapeHtml(metrics.startDate)} → ${escapeHtml(metrics.endDate)}</small>
+            </div>
+            <dl>
+                ${stat('colCagr', formatPercent(metrics.cagr), trendClass(metrics.cagr))}
+                ${stat('colMaxDrawdown', formatPercent(metrics.maxDrawdown, { signed: false }), 'down')}
+                ${stat('colFinalValue', escapeHtml(formatMoney(finalValue, lang)))}
+                ${stat('colVolatility', formatPercent(metrics.volatility, { signed: false }))}
+                ${stat('colSharpe', formatRatio(metrics.sharpe))}
+                ${stat('colCalmar', formatRatio(metrics.calmar))}
+                ${stat('colBestYear', year(metrics.bestYear), trendClass(metrics.bestYear?.return))}
+                ${stat('colWorstYear', year(metrics.worstYear), trendClass(metrics.worstYear?.return))}
+            </dl>
+        </article>`;
 }
 
 function renderYearlyTable(results, lang) {
