@@ -23,7 +23,6 @@ export function toggleTheme() {
         holdingSortOrder: state.holdingSortOrder,
         holdingView: state.holdingView,
         accountTrendView: state.accountTrendView,
-        returnsZoom: state.returnsZoom,
         currentLang: state.currentLang
     });
 }

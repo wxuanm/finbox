@@ -9,8 +9,9 @@ export const state = {
     selectedHighlightAccountId: '',
     // Phones show the returns chart only after the user opens it; desktop always shows it.
     returnsChartOpen: false,
-    // Desktop zoom for the 账户收益 view (modules/accountPerformance/returnsZoom.js).
-    returnsZoom: 1,
+    // Desktop folds (above 720px) keep their own saved choice, so phone and desktop do not share state.
+    desktopReturnsChartOpen: true,
+    desktopComparisonOpen: true,
     // Phones can fold the 账户管理 trend and record panels under their titles; both start open.
     accountTrendOpen: true,
     assetRecordOpen: true,

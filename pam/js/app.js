@@ -8,7 +8,6 @@ import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from '.
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindChartFullscreen, renderChartFullscreenButton } from './modules/accountPerformance/chartFullscreen.js';
-import { bindReturnsZoom, normalizeReturnsZoom, renderReturnsZoom } from './modules/accountPerformance/returnsZoom.js';
 import { bindAccountComparison, renderAccountComparison, renderOverviewCards, renderReturnsHero } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
@@ -112,7 +111,8 @@ async function initializeWorkspace(user) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
-    state.returnsZoom = normalizeReturnsZoom(preferences.returnsZoom);
+    state.desktopReturnsChartOpen = preferences.desktopReturnsChartOpen !== false;
+    state.desktopComparisonOpen = preferences.desktopComparisonOpen !== false;
     state.accountTrendOpen = preferences.accountTrendOpen !== false;
     state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);
@@ -495,11 +495,17 @@ function bindEvents() {
         renderApp();
     });
     bindChartFullscreen({ onResize: resizeChart });
-    bindReturnsZoom(zoom => {
-        state.returnsZoom = zoom;
+    document.getElementById('returnsChartDesktopFoldBtn')?.addEventListener('click', () => {
+        state.desktopReturnsChartOpen = !state.desktopReturnsChartOpen;
         persistPreferences();
-        renderReturnsZoom();
+        renderDesktopFolds();
+        // A folded chart keeps zero height, so the next open needs a measure.
         requestAnimationFrame(resizeChart);
+    });
+    document.getElementById('comparisonDesktopFoldBtn')?.addEventListener('click', () => {
+        state.desktopComparisonOpen = !state.desktopComparisonOpen;
+        persistPreferences();
+        renderDesktopFolds();
     });
     document.getElementById('chartCollapseBtn')?.addEventListener('click', () => {
         state.returnsChartOpen = !state.returnsChartOpen;
@@ -600,6 +606,22 @@ function renderPanelCollapses() {
     renderPanelCollapse('performanceChartPanel', 'chartCollapseBtn', Boolean(state.returnsChartOpen), 'chartExpand', 'chartCollapse');
     renderPanelCollapse('accountTrendPanel', 'accountTrendCollapseBtn', state.accountTrendOpen !== false, 'accountTrendExpand', 'accountTrendCollapse');
     renderPanelCollapse('assetRecordPanel', 'assetRecordCollapseBtn', state.assetRecordOpen !== false, 'assetRecordExpand', 'assetRecordCollapse');
+}
+
+// Desktop folds: the button state and a class on each panel that CSS uses above 720px only.
+function renderDesktopFolds() {
+    renderDesktopFold(document.getElementById('performanceChartPanel'), 'returnsChartDesktopFoldBtn', state.desktopReturnsChartOpen !== false, 'chartExpand', 'chartCollapse');
+    renderDesktopFold(document.querySelector('.comparison-panel'), 'comparisonDesktopFoldBtn', state.desktopComparisonOpen !== false, 'comparisonExpand', 'comparisonCollapse');
+}
+
+function renderDesktopFold(panel, buttonId, open, expandKey, collapseKey) {
+    const button = document.getElementById(buttonId);
+    if (!panel || !button) return;
+    panel.classList.toggle('is-desktop-folded', !open);
+    button.setAttribute('aria-expanded', String(open));
+    const label = t(open ? collapseKey : expandKey);
+    button.setAttribute('aria-label', label);
+    button.title = label;
 }
 
 function renderReturnsChartCollapse() {
@@ -752,9 +774,9 @@ function renderApp() {
     renderSnapshotForm();
     renderPeriodSwitch();
     renderChartFullscreenButton();
-    renderReturnsZoom();
     // Before the trend renders, so an opened panel can be measured.
     renderPanelCollapses();
+    renderDesktopFolds();
     renderPerformanceChart(metrics, portfolio);
     renderAccountComparison(metrics);
     renderAccountTrend(metrics);
@@ -1560,7 +1582,8 @@ function applyImportedData(data) {
     state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
     state.amountsHidden = Boolean(data.preferences.amountsHidden);
     state.returnsChartOpen = data.preferences.returnsChartOpen === true;
-    state.returnsZoom = normalizeReturnsZoom(data.preferences.returnsZoom);
+    state.desktopReturnsChartOpen = data.preferences.desktopReturnsChartOpen !== false;
+    state.desktopComparisonOpen = data.preferences.desktopComparisonOpen !== false;
     state.accountTrendOpen = data.preferences.accountTrendOpen !== false;
     state.assetRecordOpen = data.preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(data.preferences.currentLang || state.currentLang);
@@ -2265,7 +2288,8 @@ function getCurrentPreferences() {
         accountTrendView: state.accountTrendView,
         allocationRebalanceMode: state.allocationRebalanceMode,
         returnsChartOpen: state.returnsChartOpen,
-        returnsZoom: state.returnsZoom,
+        desktopReturnsChartOpen: state.desktopReturnsChartOpen,
+        desktopComparisonOpen: state.desktopComparisonOpen,
         accountTrendOpen: state.accountTrendOpen,
         assetRecordOpen: state.assetRecordOpen,
         currentLang: state.currentLang
@@ -2297,7 +2321,8 @@ function applyCloudData(data) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
-    state.returnsZoom = normalizeReturnsZoom(preferences.returnsZoom);
+    state.desktopReturnsChartOpen = preferences.desktopReturnsChartOpen !== false;
+    state.desktopComparisonOpen = preferences.desktopComparisonOpen !== false;
     state.accountTrendOpen = preferences.accountTrendOpen !== false;
     state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);

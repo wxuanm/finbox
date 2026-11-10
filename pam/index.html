@@ -125,11 +125,6 @@
                 <button class="module-tab" type="button" data-view="allocation" data-i18n="tabAssetAllocation">资产配置</button>
                 <button class="module-tab" type="button" disabled data-i18n="tabTransactions">交易记录</button>
             </div>
-            <div class="context-actions returns-zoom-actions" data-context-actions="analysis" data-i18n-aria-label="returnsZoomActions" aria-label="收益走势缩放">
-                <button id="returnsZoomOutBtn" class="context-action returns-zoom-btn" type="button" data-i18n-title="returnsZoomOut" title="缩小" aria-label="缩小">−</button>
-                <button id="returnsZoomResetBtn" class="context-action returns-zoom-value" type="button" data-i18n-title="returnsZoomReset" title="恢复 100%" aria-label="恢复 100%">100%</button>
-                <button id="returnsZoomInBtn" class="context-action returns-zoom-btn" type="button" data-i18n-title="returnsZoomIn" title="放大" aria-label="放大">+</button>
-            </div>
             <div class="context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataBatchActions" aria-label="账户管理批量操作">
                 <button id="generateSnapshotsBtn" class="context-action" type="button" data-i18n-title="generateSnapshotsTitle" title="为全部账户生成快照" aria-label="为全部账户生成快照">
                     <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span data-i18n="generate">生成</span>
@@ -183,6 +178,9 @@
                         </button>
                         <div id="periodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
                         <button id="chartFullscreenBtn" class="chart-fullscreen-btn" type="button" title="横屏全屏查看" aria-label="横屏全屏查看"></button>
+                        <button id="returnsChartDesktopFoldBtn" class="desktop-fold-btn" type="button" aria-controls="performanceChartBody" aria-expanded="true" data-i18n-title="chartCollapse" title="收起收益走势" aria-label="收起收益走势">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
                     </div>
                     <div id="performanceChartBody" class="chart-panel-body">
                     <div id="chartMessage" class="chart-message"></div>
@@ -203,8 +201,13 @@
                             <h2 data-i18n="comparisonTitle">账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2>
                             <p class="comparison-desc-desktop" data-i18n="comparisonDesc">点击指标排序，点击账户列高亮走势图。</p>
                         </div>
+                        <button id="comparisonDesktopFoldBtn" class="desktop-fold-btn" type="button" aria-controls="comparisonBody" aria-expanded="true" data-i18n-title="comparisonCollapse" title="收起账户对比" aria-label="收起账户对比">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
                     </div>
-                    <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
+                    <div id="comparisonBody" class="comparison-body">
+                        <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
+                    </div>
                 </section>
             </section>
 

@@ -8525,20 +8525,50 @@ html {
     }
 }
 
-/* Desktop zoom for 账户收益. CSS zoom reflows the cards, chart, and comparison table at the chosen scale; the
-   value is set on #analysisView from state.returnsZoom. Phones keep 100%, and the controls are hidden there. */
+/* Desktop folds (above 720px) for 收益走势 and 账户对比. The buttons sit at the right of the head; a folded
+   panel keeps its head and hides its body. Phones use their own fold rules above and are not affected. */
+.desktop-fold-btn {
+    display: none;
+}
+
 @media (min-width: 721px) {
-    #analysisView.workspace-view.active {
-        zoom: var(--returns-zoom, 1);
+    .desktop-fold-btn {
+        display: inline-grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
+        border-radius: 12px;
+        color: var(--muted-text);
+        background: var(--surface-elevated);
+        cursor: pointer;
+        transition: transform 0.16s ease, color 0.16s ease, border-color 0.16s ease;
     }
-}
 
-.returns-zoom-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
+    .desktop-fold-btn:hover,
+    .desktop-fold-btn:focus-visible {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
 
-.returns-zoom-value {
-    min-width: 64px;
-    font-variant-numeric: tabular-nums;
+    .desktop-fold-btn[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+
+    .desktop-fold-btn svg {
+        transition: transform 0.16s ease;
+    }
+
+    /* Folded: the body and the description go; the head stays with the chevron. */
+    .chart-panel.is-desktop-folded .chart-panel-body,
+    .comparison-panel.is-desktop-folded .comparison-body {
+        display: none;
+    }
+
+    .chart-panel.is-desktop-folded .split-head,
+    .comparison-panel.is-desktop-folded .split-head {
+        border-bottom: 0;
+    }
 }
