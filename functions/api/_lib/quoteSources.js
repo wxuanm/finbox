@@ -226,7 +226,7 @@ async function fetchFundQuoteChunk(items) {
   return { quotes, failedItems };
 }
 
-function getAshareExchangePrefix(symbol) {
+export function getAshareExchangePrefix(symbol) {
   if (['000016', '000300', '000688', '000852', '000905'].includes(symbol)) return '1';
   return /^[56]/.test(symbol) ? '1' : '0';
 }

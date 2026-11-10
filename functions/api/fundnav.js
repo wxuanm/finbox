@@ -1,3 +1,5 @@
+import { extractJsonVar, extractStringVar, formatShanghaiDate as formatDate } from './_lib/eastmoneyScript.js';
+
 const MAX_CODES = 10;
 const THREE_YEARS_MS = 365 * 3 * 24 * 60 * 60 * 1000;
 
@@ -188,69 +190,6 @@ function normalizeAccPoint(point) {
     accNav,
     dailyReturn: null
   };
-}
-
-function extractStringVar(script, name) {
-  const match = script.match(new RegExp(`var\\s+${name}\\s*=\\s*"([^"]*)"`));
-  return match ? match[1] : '';
-}
-
-function extractJsonVar(script, name) {
-  const match = script.match(new RegExp(`var\\s+${name}\\s*=\\s*`));
-  if (!match) return null;
-
-  const valueStart = match.index + match[0].length;
-  const firstChar = script[valueStart];
-  const closingChar = firstChar === '[' ? ']' : firstChar === '{' ? '}' : '';
-  if (!closingChar) return null;
-
-  let depth = 0;
-  let inString = false;
-  let escapeNext = false;
-
-  for (let index = valueStart; index < script.length; index += 1) {
-    const char = script[index];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-
-    if (char === '\\' && inString) {
-      escapeNext = true;
-      continue;
-    }
-
-    if (char === '"') {
-      inString = !inString;
-      continue;
-    }
-
-    if (inString) continue;
-
-    if (char === firstChar) depth += 1;
-    if (char === closingChar) depth -= 1;
-
-    if (depth === 0) {
-      try {
-        return JSON.parse(script.slice(valueStart, index + 1));
-      } catch (error) {
-        return null;
-      }
-    }
-  }
-
-  return null;
-}
-
-function formatDate(timestamp) {
-  const value = toNumber(timestamp);
-  if (value === null) return '';
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-
-  return date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' });
 }
 
 function toNumber(value) {
