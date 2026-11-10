@@ -8839,3 +8839,358 @@ html {
         letter-spacing: 0;
     }
 }
+
+/* ==========================================================================
+   Desktop design system (>=721px). One type scale and one set of component sizes for every desktop screen and
+   dialog, set last so it wins over the per-panel values above. It mirrors the phone scale one step larger:
+   figures lead, labels step back by colour rather than weight, weights stay within the loaded Inter range
+   (400-700), and figures use tabular numerals.
+   Type: display 28/700 · title 18/700 · section 15/700 · figure 14/600 · body 13/400 · control 13/600 ·
+   caption 12/500. Controls: 32 compact · 36 standard · 40 primary, radius 10. Cards 18, panels 24.
+   Phones use the scale above and are not affected.
+   ========================================================================== */
+@media (min-width: 721px) {
+    .app-shell,
+    .asset-dialog {
+        --d-display: 28px;
+        --d-title: 18px;
+        --d-section: 15px;
+        --d-figure: 14px;
+        --d-body: 13px;
+        --d-control: 13px;
+        --d-caption: 12px;
+        --d-control-sm: 32px;
+        --d-control-md: 36px;
+        --d-control-lg: 40px;
+        --d-control-radius: 10px;
+        --d-card-radius: 18px;
+        --d-panel-radius: 24px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- Headings ---- */
+    /* The global heading rule sets 900 with negative tracking; desktop now uses 700 like phones. */
+    .brand-copy h1,
+    .hero h1,
+    .panel h2,
+    .asset-dialog-header h2,
+    .account-card-heading strong,
+    .overview-card strong,
+    .form-card-head h3,
+    .confirm-dialog-copy strong,
+    .holding-mobile-card-head strong {
+        font-weight: 700 !important;
+        letter-spacing: -0.01em !important;
+    }
+
+    html body .app-shell .brand-copy h1 {
+        font-size: 30px;
+        line-height: 1.15;
+    }
+
+    html body .app-shell .panel h2,
+    html body .asset-dialog .asset-dialog-header h2 {
+        font-size: var(--d-title);
+        line-height: 1.3;
+    }
+
+    html body .app-shell .alloc-section-title,
+    html body .app-shell .panel h3,
+    html body .asset-dialog .form-card-head h3 {
+        font-size: var(--d-section);
+        font-weight: 700;
+        letter-spacing: 0;
+    }
+
+    /* ---- Body copy ---- */
+    html body .app-shell .brand-copy p,
+    html body .app-shell .panel p,
+    html body .app-shell .alloc-notice p,
+    html body .app-shell .alloc-footnote,
+    html body .app-shell .alloc-target-prompt p,
+    html body .app-shell .empty-state,
+    html body .app-shell .form-message,
+    html body .app-shell .chart-message,
+    html body .asset-dialog p {
+        font-size: var(--d-body);
+        font-weight: 400;
+        line-height: 1.55;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .alloc-notice p strong {
+        font-weight: 600;
+    }
+
+    /* ---- Display figures: one size for every headline figure ---- */
+    html body .app-shell .overview-card strong,
+    html body .app-shell .alloc-stats dd strong,
+    html body .app-shell .holding-summary dd,
+    html body .app-shell .holding-chart-stats dd strong {
+        font-size: var(--d-display);
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+    }
+
+    /* Several account cards sit side by side, so their figures use the section size: 15px keeps a 7-digit
+       total whole in a card's three columns. */
+    html body .app-shell .account-card-metrics strong {
+        font-size: var(--d-section);
+        font-weight: 700;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .account-card-heading strong {
+        font-size: var(--d-section);
+    }
+
+    /* ---- Figures in rows and tables ---- */
+    html body .app-shell .comparison-table td,
+    html body .app-shell .holding-table td,
+    html body .app-shell .snapshot-table td,
+    html body .app-shell .alloc-table td,
+    html body .app-shell .alloc-table tbody th,
+    html body .app-shell .account-trend-table td,
+    html body .app-shell .alloc-class-figures strong,
+    html body .app-shell .alloc-class-name,
+    html body .app-shell .holding-value-main,
+    html body .app-shell .holding-asset-cell strong {
+        font-size: var(--d-figure);
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .comparison-table td:first-child,
+    html body .app-shell .comparison-table th:first-child {
+        font-weight: 600;
+    }
+
+    html body .app-shell .alloc-table td.alloc-muted {
+        font-weight: 400;
+    }
+
+    /* ---- Captions: labels, table heads, sub-lines, badges ---- */
+    html body .app-shell .overview-card span,
+    html body .app-shell .overview-card small,
+    html body .app-shell .alloc-stats dt,
+    html body .app-shell .holding-summary dt,
+    html body .app-shell .holding-chart-stats dt,
+    html body .app-shell .holding-chart-stats small,
+    html body .app-shell .account-card-metrics span,
+    html body .app-shell .account-card-heading span,
+    html body .app-shell .account-card-heading small,
+    html body .app-shell .comparison-table th,
+    html body .app-shell .holding-table th,
+    html body .app-shell .snapshot-table th,
+    html body .app-shell .alloc-table thead th,
+    html body .app-shell .account-trend-table th,
+    html body .app-shell .alloc-class-name small,
+    html body .app-shell .alloc-class-figures small,
+    html body .app-shell .alloc-notice-names,
+    html body .app-shell .alloc-notice-names small,
+    html body .app-shell .holding-value-stack small,
+    html body .app-shell .holding-asset-cell small,
+    html body .app-shell .price-pair,
+    html body .app-shell .price-pair small,
+    html body .app-shell .list-pager > span,
+    html body .app-shell .valuation-status,
+    html body .app-shell .holding-weight,
+    html body .app-shell .holding-weight span,
+    html body .asset-dialog label > span,
+    html body .asset-dialog small,
+    html body .asset-dialog .form-guide {
+        font-size: var(--d-caption) !important;
+        font-weight: 500 !important;
+        letter-spacing: 0 !important;
+        text-transform: none;
+    }
+
+    html body .app-shell .overview-card span,
+    html body .app-shell .alloc-stats dt,
+    html body .app-shell .holding-summary dt,
+    html body .app-shell .holding-chart-stats dt,
+    html body .app-shell .account-card-metrics span,
+    html body .app-shell .comparison-table th,
+    html body .app-shell .holding-table th,
+    html body .app-shell .snapshot-table th,
+    html body .app-shell .alloc-table thead th,
+    html body .app-shell .account-trend-table th {
+        color: var(--muted-text);
+    }
+
+    /* Signed figures in captions keep their rise/fall colour and a step more weight. */
+    html body .app-shell .price-pair .positive,
+    html body .app-shell .price-pair .negative,
+    html body .app-shell .holding-value-stack .positive,
+    html body .app-shell .holding-value-stack .negative {
+        font-weight: 600 !important;
+    }
+
+    /* Badges beside titles, the sync pill, and the header eyebrow. */
+    html body .app-shell .title-account-badge,
+    html body .app-shell .title-period-badge,
+    html body .app-shell .cloud-sync-status,
+    html body .app-shell .hero-badge,
+    html body .asset-dialog .dialog-eyebrow,
+    html body .asset-dialog .form-card-head > span {
+        font-size: var(--d-caption) !important;
+        font-weight: 600 !important;
+        letter-spacing: 0 !important;
+    }
+
+    /* ---- Controls: one type style, three heights, one radius ---- */
+    html body .app-shell .module-tab,
+    html body .app-shell .period-chip,
+    html body .app-shell .context-action,
+    html body .app-shell .ghost-btn,
+    html body .app-shell .primary-btn,
+    html body .app-shell .mini-btn,
+    html body .app-shell select,
+    html body .app-shell .account-card-menu summary,
+    html body .app-shell .account-card-menu button,
+    html body .app-shell .icon-btn,
+    html body .asset-dialog .primary-btn,
+    html body .asset-dialog .ghost-btn,
+    html body .asset-dialog .asset-dialog-close {
+        font-size: var(--d-control);
+        /* The global control rule sets 800 !important. */
+        font-weight: 600 !important;
+        letter-spacing: 0;
+        border-radius: var(--d-control-radius);
+    }
+
+    html body .app-shell .module-tab.active,
+    html body .app-shell .period-chip.active {
+        font-weight: 700 !important;
+    }
+
+    /* Form fields: values at figure weight, numbers one step bolder. */
+    html body .asset-dialog input:not([type="checkbox"]):not([type="radio"]),
+    html body .asset-dialog select,
+    html body .asset-dialog textarea {
+        font-size: var(--d-figure);
+        font-weight: 500;
+    }
+
+    html body .asset-dialog input[type="number"],
+    html body .asset-dialog .metric-input input {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    /* Text inside controls follows the control instead of setting its own weight. */
+    html body .app-shell .ghost-btn > span,
+    html body .app-shell .context-action > span,
+    html body .app-shell .icon-btn > span {
+        font-size: inherit;
+        font-weight: inherit;
+    }
+
+    /* Sortable table heads are captions that can be clicked; the account column heads are figures. */
+    html body .app-shell .comparison-table th button,
+    html body .app-shell .holding-table th button {
+        font-size: var(--d-caption);
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .comparison-account-heading strong,
+    html body .app-shell .alloc-cell,
+    html body .app-shell .price-pair > span,
+    html body .app-shell .holding-asset-mark {
+        font-size: var(--d-figure);
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .price-pair > span {
+        font-size: var(--d-caption) !important;
+    }
+
+    html body .app-shell .holding-asset-mark {
+        font-size: var(--d-caption);
+    }
+
+    /* Standard (36): header icon buttons, chips, toolbar actions, selects. */
+    html body .app-shell .hero-actions .icon-btn,
+    html body .app-shell .period-chip,
+    html body .app-shell .context-actions:not(.account-context-actions) .context-action,
+    html body .app-shell .ghost-btn,
+    html body .app-shell .panel select,
+    html body .asset-dialog .asset-dialog-close {
+        min-height: var(--d-control-md);
+    }
+
+    html body .app-shell .hero-actions .icon-btn,
+    html body .asset-dialog .asset-dialog-close {
+        width: var(--d-control-md);
+        height: var(--d-control-md);
+        min-width: var(--d-control-md);
+    }
+
+    /* The sync pill is a status, not a button: it shares the header row height. */
+    html body .app-shell .cloud-sync-status {
+        min-height: var(--d-control-md);
+        border-radius: 999px;
+    }
+
+    /* Compact (32): row actions, pager, card menus. */
+    html body .app-shell .mini-btn,
+    html body .app-shell .row-actions .icon-btn,
+    html body .app-shell .account-card-menu summary {
+        width: var(--d-control-sm);
+        height: var(--d-control-sm);
+        min-width: var(--d-control-sm);
+        min-height: var(--d-control-sm);
+    }
+
+    html body .app-shell .list-pager .mini-btn {
+        width: auto;
+        min-width: var(--d-control-sm);
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    html body .app-shell .account-card-menu button {
+        height: var(--d-control-sm);
+        min-height: var(--d-control-sm);
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    /* Primary (40): module tabs and the main submit buttons. */
+    html body .app-shell .module-tab,
+    html body .asset-dialog .primary-btn {
+        min-height: var(--d-control-lg);
+    }
+
+    /* ---- Surfaces: panels 24, cards 18, inner boxes 14 ---- */
+    html body .app-shell .panel,
+    html body .app-shell .overview-grid,
+    html body .app-shell .account-card-strip-panel {
+        border-radius: var(--d-panel-radius);
+    }
+
+    html body .app-shell .overview-card,
+    html body .app-shell .account-item,
+    html body .app-shell .alloc-stats > div {
+        border-radius: var(--d-card-radius);
+    }
+
+    /* ---- Tables: one style ---- */
+    html body .app-shell .comparison-table th,
+    html body .app-shell .holding-table th,
+    html body .app-shell .snapshot-table th,
+    html body .app-shell .alloc-table th,
+    html body .app-shell .account-trend-table th,
+    html body .app-shell .comparison-table td,
+    html body .app-shell .holding-table td,
+    html body .app-shell .snapshot-table td,
+    html body .app-shell .alloc-table td,
+    html body .app-shell .account-trend-table td {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+}
