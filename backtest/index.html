@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组合回测</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e8fae'/%3E%3Cpath d='M12 46h40M14 40l9-12 8 6 9-14 10 6' fill='none' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <script>
+        // Apply the saved theme before first paint to avoid a light flash in dark mode.
+        try {
+            const saved = JSON.parse(localStorage.getItem('backtest:v1:preferences') || 'null');
+            if (saved && saved.data && saved.data.theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        } catch (error) { /* ignore */ }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="global-header">
+            <div class="brand-area">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M7 15l3-4 3 2 3-5 3 2"></path></svg>
+                </div>
+                <div class="brand-copy">
+                    <span class="hero-badge" data-i18n="heroBadge">A股 · 基金</span>
+                    <h1 data-i18n="heroTitle">组合回测</h1>
+                    <p data-i18n="heroDesc">按目标权重回测 A 股与基金组合的历史表现。</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="themeBtn" class="action-btn" type="button"></button>
+                <button id="langBtn" class="action-btn" type="button">EN</button>
+            </div>
+        </header>
+
+        <main class="workspace">
+            <section class="panel config-panel" aria-labelledby="paramsTitle">
+                <div class="panel-head">
+                    <h2 id="paramsTitle" data-i18n="paramsTitle">回测参数</h2>
+                </div>
+                <div class="params-grid">
+                    <label class="field">
+                        <span data-i18n="startDate">开始日期</span>
+                        <input id="startDate" type="date" min="2000-01-01">
+                    </label>
+                    <label class="field">
+                        <span data-i18n="endDate">结束日期</span>
+                        <input id="endDate" type="date" min="2000-01-01">
+                    </label>
+                    <label class="field">
+                        <span data-i18n="initialAmount">初始金额</span>
+                        <input id="initialAmount" type="number" min="1" step="1000">
+                    </label>
+                    <label class="field">
+                        <span data-i18n="riskFree">无风险利率 (%)</span>
+                        <input id="riskFree" type="number" min="0" max="20" step="0.1">
+                    </label>
+                </div>
+                <div id="presetGroup" class="preset-group" role="group">
+                    <button type="button" class="chip-btn" data-preset="1y">1Y</button>
+                    <button type="button" class="chip-btn" data-preset="3y">3Y</button>
+                    <button type="button" class="chip-btn" data-preset="5y">5Y</button>
+                    <button type="button" class="chip-btn" data-preset="10y">10Y</button>
+                    <button type="button" class="chip-btn" data-preset="max" data-i18n="presetMax">最长</button>
+                </div>
+
+                <div class="panel-head sub">
+                    <h2 data-i18n="portfolioTitle">组合配置</h2>
+                </div>
+                <div id="portfolioList" class="portfolio-list"></div>
+
+                <div class="run-bar">
+                    <p id="runError" class="message error" role="alert" hidden></p>
+                    <button id="runBtn" class="primary-btn" type="button">开始回测</button>
+                </div>
+            </section>
+
+            <section class="panel results-panel" aria-labelledby="resultsTitle">
+                <div class="panel-head">
+                    <h2 id="resultsTitle" data-i18n="resultsTitle">回测结果</h2>
+                </div>
+                <div id="resultsBody" aria-live="polite"></div>
+            </section>
+        </main>
+    </div>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

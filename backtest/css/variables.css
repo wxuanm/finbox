@@ -1,0 +1,62 @@
+:root {
+    color-scheme: light;
+    --primary-color: #4f46e5;
+    --primary-hover: #3730a3;
+    --primary-soft: rgba(79, 70, 229, 0.11);
+    --primary-ring: rgba(79, 70, 229, 0.22);
+    /* Chinese market convention: red = up, green = down. */
+    --positive-color: #dc2626;
+    --positive-bg: rgba(220, 38, 38, 0.09);
+    --negative-color: #059669;
+    --negative-bg: rgba(5, 150, 105, 0.1);
+    --warning-color: #b45309;
+    --warning-bg: rgba(245, 158, 11, 0.12);
+    /* Portfolio series: no red/green hues, which are reserved for rise/fall. */
+    --chart-series-1: #2a78d6;
+    --chart-series-2: #c08000;
+    --chart-series-3: #d55181;
+    --chart-benchmark: #6a7190;
+    --background-color: #f1f4ff;
+    --surface-color: #ffffff;
+    --surface-muted: #f7f8ff;
+    --input-bg: #f8faff;
+    --text-color: #2b3150;
+    --heading-color: #101427;
+    --muted-text: #6a7190;
+    --border-color: #dce2f3;
+    --border-strong: #b6bfd8;
+    --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+    --shadow-md: 0 14px 34px -22px rgb(15 23 42 / 0.38), 0 5px 16px -12px rgb(15 23 42 / 0.22);
+    --radius-sm: 7px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+    --primary-color: #a78bfa;
+    --primary-hover: #8b5cf6;
+    --primary-soft: rgba(167, 139, 250, 0.14);
+    --primary-ring: rgba(167, 139, 250, 0.3);
+    --positive-color: #f87171;
+    --positive-bg: rgba(248, 113, 113, 0.14);
+    --negative-color: #34d399;
+    --negative-bg: rgba(52, 211, 153, 0.14);
+    --warning-color: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.12);
+    --chart-series-1: #3987e5;
+    --chart-series-2: #c98500;
+    --chart-series-3: #d55181;
+    --chart-benchmark: #93a4ba;
+    --background-color: #070817;
+    --surface-color: #11142a;
+    --surface-muted: #0d1026;
+    --input-bg: #0d1026;
+    --text-color: #d8e0ec;
+    --heading-color: #f8fafc;
+    --muted-text: #93a4ba;
+    --border-color: #2a2f55;
+    --border-strong: #565d8a;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.34);
+    --shadow-md: 0 16px 38px -22px rgb(0 0 0 / 0.72), 0 6px 16px -12px rgb(0 0 0 / 0.58);
+}
