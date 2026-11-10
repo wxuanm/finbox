@@ -4464,6 +4464,22 @@ select {
     letter-spacing: -0.02em !important;
 }
 
+/* Phones use the type scale at the end of this file: headings at 700 with no negative tracking. */
+@media (max-width: 720px) {
+    .brand-copy h1,
+    .hero h1,
+    .panel h2,
+    .asset-dialog-header h2,
+    .account-card-heading strong,
+    .overview-card strong,
+    .form-card-head h3,
+    .confirm-dialog-copy strong,
+    .holding-mobile-card-head strong {
+        font-weight: 700 !important;
+        letter-spacing: 0 !important;
+    }
+}
+
 .panel h2,
 .management-panel .panel-head h2 {
     font-size: 18px;
@@ -8593,5 +8609,233 @@ html {
        records have nothing to act on while folded, so their head controls go with the body. */
     .asset-holdings-panel.is-desktop-folded .holding-summary {
         display: none;
+    }
+}
+
+/* ==========================================================================
+   Phone type scale (<=720px). One scale for every phone screen, set last so it wins over the per-panel sizes
+   above. Figures lead and labels step back by colour, not weight; weights stay within what Inter loads
+   (400-700), so nothing is synthesized. Figures use tabular numerals so columns align. Desktop is unchanged.
+   Display 19/700 · Title 16/700 · Figure 15/700 · Body 14/400-600 · Control 13/600 · Caption 12/500.
+   Form fields keep the 16px iOS anti-zoom rule above.
+   ========================================================================== */
+@media (max-width: 720px) {
+    .app-shell,
+    .asset-dialog {
+        --type-display: 19px;
+        --type-title: 16px;
+        --type-figure: 15px;
+        --type-body: 14px;
+        --type-control: 13px;
+        --type-caption: 12px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Page title in the header. */
+    html body .app-shell .brand-copy h1 {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0;
+    }
+
+    /* Title: every panel title, fold toggle, and dialog title. */
+    html body .app-shell .panel h2,
+    html body .app-shell .panel-collapse-btn,
+    html body .app-shell .panel-collapse-btn > span,
+    html body .asset-dialog .asset-dialog-header h2 {
+        font-size: var(--type-title);
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: 0;
+    }
+
+    /* Section heads inside a panel or dialog, one step under a title. */
+    html body .app-shell .alloc-section-title,
+    html body .asset-dialog .form-card-head h3 {
+        font-size: var(--type-figure);
+        font-weight: 700;
+        letter-spacing: 0;
+    }
+
+    /* Badges beside titles. */
+    html body .app-shell .title-account-badge,
+    html body .app-shell .title-period-badge {
+        font-size: var(--type-caption) !important;
+        font-weight: 600 !important;
+    }
+
+    /* Body: descriptions, notices, footnotes, empty states, dialog copy. */
+    html body .app-shell .panel p,
+    html body .app-shell .alloc-notice p,
+    html body .app-shell .alloc-footnote,
+    html body .app-shell .alloc-target-prompt p,
+    html body .app-shell .empty-state,
+    html body .app-shell .form-message,
+    html body .app-shell .chart-message,
+    html body .asset-dialog p {
+        font-size: var(--type-body);
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    html body .app-shell .alloc-notice p strong {
+        font-weight: 600;
+    }
+
+    /* Display: the hero row and the allocation headline stats. The three-figure hero rows share one line, so
+       their size follows the card width (cqi): about 16px on a 360px phone, up to 19px. That keeps a 7-digit
+       total whole at 360px; the card is a size container, so long figures can never widen the page. The
+       ellipsis stays only as a last resort. */
+    html body .app-shell .alloc-stats dd strong {
+        font-size: var(--type-display);
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .returns-hero,
+    html body .app-shell .account-summary-mobile {
+        container-type: inline-size;
+    }
+
+    html body .app-shell .returns-summary-stats > div,
+    html body .app-shell .account-summary-stats > div {
+        padding-right: 8px;
+        padding-left: 10px;
+    }
+
+    html body .app-shell .returns-summary-stats dd,
+    html body .app-shell .account-summary-stats dd {
+        font-size: clamp(14px, 5cqi, var(--type-display));
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: 0;
+    }
+
+    /* Figure: row names and primary figures, holdings summary values. */
+    html body .app-shell .cmp-row-name strong,
+    html body .app-shell .cmp-row-figures strong,
+    html body .app-shell .holding-row-name strong,
+    html body .app-shell .holding-row-figures strong,
+    html body .app-shell .snapshot-row-value,
+    html body .app-shell .alloc-class-name,
+    html body .app-shell .alloc-class-figures strong,
+    html body .app-shell .holding-summary dd,
+    html body .app-shell .account-summary-head strong {
+        font-size: var(--type-figure);
+        font-weight: 700;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .cmp-row-figures strong span {
+        font-size: inherit;
+        font-weight: inherit;
+    }
+
+    /* Secondary figures in expanded rows and tables. */
+    html body .app-shell .cmp-row-details dd,
+    html body .app-shell .cmp-row-details dd span,
+    html body .app-shell .holding-row-details dd,
+    html body .app-shell .alloc-table td,
+    html body .app-shell .alloc-table tbody th,
+    html body .app-shell .alloc-cell,
+    html body .app-shell .account-trend-table td,
+    html body .app-shell .snapshot-row-date {
+        font-size: var(--type-body);
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .alloc-table td.alloc-muted,
+    html body .app-shell .snapshot-row-date {
+        font-weight: 500;
+    }
+
+    /* Caption: labels, row sub-lines, dates, secondary amounts. Muted colour carries the hierarchy. */
+    html body .app-shell .returns-summary-stats dt,
+    html body .app-shell .account-summary-stats dt,
+    html body .app-shell .alloc-stats dt,
+    html body .app-shell .holding-summary dt,
+    html body .app-shell .cmp-row-details dt,
+    html body .app-shell .holding-row-details dt,
+    html body .app-shell .alloc-table thead th,
+    html body .app-shell .account-trend-table th,
+    html body .app-shell .cmp-row-name small,
+    html body .app-shell .cmp-row-figures small,
+    html body .app-shell .cmp-row-foot,
+    html body .app-shell .cmp-row-foot span,
+    html body .app-shell .holding-row-name small,
+    html body .app-shell .holding-row-figures small,
+    html body .app-shell .snapshot-row-meta,
+    html body .app-shell .snapshot-row-note,
+    html body .app-shell .alloc-class-name small,
+    html body .app-shell .alloc-class-figures small,
+    html body .app-shell .alloc-notice-names,
+    html body .app-shell .alloc-notice-names small,
+    html body .app-shell .account-summary-head small,
+    html body .app-shell .list-pager,
+    html body .app-shell .list-pager > span,
+    html body .app-shell .chart-legend-mobile,
+    html body .app-shell .comparison-sort-select > span,
+    html body .asset-dialog .form-guide,
+    html body .asset-dialog small {
+        font-size: var(--type-caption) !important;
+        font-weight: 500 !important;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .returns-summary-stats dt,
+    html body .app-shell .account-summary-stats dt,
+    html body .app-shell .alloc-stats dt,
+    html body .app-shell .holding-summary dt,
+    html body .app-shell .cmp-row-details dt,
+    html body .app-shell .holding-row-details dt,
+    html body .app-shell .alloc-table thead th,
+    html body .app-shell .account-trend-table th {
+        color: var(--muted-text);
+    }
+
+    /* Signed secondary amounts keep their rise/fall colour and a step more weight. */
+    html body .app-shell .cmp-row-foot .positive,
+    html body .app-shell .cmp-row-foot .negative,
+    html body .app-shell .cmp-row-figures small.positive,
+    html body .app-shell .cmp-row-figures small.negative,
+    html body .app-shell .holding-row-figures small.positive,
+    html body .app-shell .holding-row-figures small.negative {
+        font-weight: 600 !important;
+    }
+
+    /* Control: chips, tabs, sort controls, action buttons, menus. */
+    html body .app-shell .period-chip,
+    html body .app-shell .module-tab,
+    html body .app-shell .comparison-sort-direction,
+    html body .app-shell .ghost-btn,
+    html body .app-shell .ghost-btn span,
+    html body .app-shell .cmp-row-goto,
+    html body .app-shell .header-action-menu button,
+    html body .app-shell .header-action-menu button span,
+    html body .app-shell .account-card-menu button,
+    html body .app-shell .list-pager button,
+    html body .app-shell .context-action,
+    html body .asset-dialog .primary-btn,
+    html body .asset-dialog .secondary-btn,
+    html body .asset-dialog .ghost-btn {
+        font-size: var(--type-control) !important;
+        font-weight: 600 !important;
+        letter-spacing: 0;
+    }
+
+    html body .app-shell .period-chip.active,
+    html body .app-shell .module-tab.active {
+        font-weight: 700 !important;
+    }
+
+    /* Form labels, step numbers, and the eyebrow in dialogs. */
+    html body .asset-dialog label > span,
+    html body .asset-dialog .form-card-head > span,
+    html body .asset-dialog .dialog-eyebrow {
+        font-size: var(--type-caption) !important;
+        font-weight: 600 !important;
+        letter-spacing: 0;
     }
 }
