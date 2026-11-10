@@ -111,8 +111,7 @@ async function initializeWorkspace(user) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
-    state.desktopReturnsChartOpen = preferences.desktopReturnsChartOpen !== false;
-    state.desktopComparisonOpen = preferences.desktopComparisonOpen !== false;
+    state.desktopFolded = normalizeDesktopFolded(preferences);
     state.accountTrendOpen = preferences.accountTrendOpen !== false;
     state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);
@@ -495,17 +494,13 @@ function bindEvents() {
         renderApp();
     });
     bindChartFullscreen({ onResize: resizeChart });
-    document.getElementById('returnsChartDesktopFoldBtn')?.addEventListener('click', () => {
-        state.desktopReturnsChartOpen = !state.desktopReturnsChartOpen;
-        persistPreferences();
-        renderDesktopFolds();
-        // A folded chart keeps zero height, so the next open needs a measure.
-        requestAnimationFrame(resizeChart);
-    });
-    document.getElementById('comparisonDesktopFoldBtn')?.addEventListener('click', () => {
-        state.desktopComparisonOpen = !state.desktopComparisonOpen;
-        persistPreferences();
-        renderDesktopFolds();
+    // Desktop folds: the chevron or the title next to it toggles the panel.
+    document.querySelectorAll('.desktop-fold-title').forEach(title => {
+        title.addEventListener('click', event => {
+            const key = title.querySelector('[data-desktop-fold]')?.dataset.desktopFold;
+            if (!key || event.target.closest('a, input, select')) return;
+            toggleDesktopFold(key);
+        });
     });
     document.getElementById('chartCollapseBtn')?.addEventListener('click', () => {
         state.returnsChartOpen = !state.returnsChartOpen;
@@ -608,20 +603,41 @@ function renderPanelCollapses() {
     renderPanelCollapse('assetRecordPanel', 'assetRecordCollapseBtn', state.assetRecordOpen !== false, 'assetRecordExpand', 'assetRecordCollapse');
 }
 
-// Desktop folds: the button state and a class on each panel that CSS uses above 720px only.
-function renderDesktopFolds() {
-    renderDesktopFold(document.getElementById('performanceChartPanel'), 'returnsChartDesktopFoldBtn', state.desktopReturnsChartOpen !== false, 'chartExpand', 'chartCollapse');
-    renderDesktopFold(document.querySelector('.comparison-panel'), 'comparisonDesktopFoldBtn', state.desktopComparisonOpen !== false, 'comparisonExpand', 'comparisonCollapse');
+// Desktop folds (above 720px). Each key's panel takes .is-desktop-folded, which CSS applies above 720px only, so
+// phones keep their own .is-collapsed folds. Keys are listed in state.desktopFolded and saved as a preference.
+const DESKTOP_FOLDS = {
+    returnsChart: { expandKey: 'chartExpand', collapseKey: 'chartCollapse' },
+    comparison: { expandKey: 'comparisonExpand', collapseKey: 'comparisonCollapse' },
+    accountTrend: { expandKey: 'accountTrendExpand', collapseKey: 'accountTrendCollapse' },
+    holdings: { expandKey: 'holdingsExpand', collapseKey: 'holdingsCollapse' },
+    assetRecord: { expandKey: 'assetRecordExpand', collapseKey: 'assetRecordCollapse' }
+};
+
+function normalizeDesktopFolded(preferences) {
+    const folded = Array.isArray(preferences?.desktopFolded) ? preferences.desktopFolded : [];
+    return folded.filter((key, index) => Object.hasOwn(DESKTOP_FOLDS, key) && folded.indexOf(key) === index);
 }
 
-function renderDesktopFold(panel, buttonId, open, expandKey, collapseKey) {
-    const button = document.getElementById(buttonId);
-    if (!panel || !button) return;
-    panel.classList.toggle('is-desktop-folded', !open);
-    button.setAttribute('aria-expanded', String(open));
-    const label = t(open ? collapseKey : expandKey);
-    button.setAttribute('aria-label', label);
-    button.title = label;
+function toggleDesktopFold(key) {
+    state.desktopFolded = state.desktopFolded.includes(key)
+        ? state.desktopFolded.filter(item => item !== key)
+        : [...state.desktopFolded, key];
+    persistPreferences();
+    // Charts inside a folded panel have zero size and are skipped or need measuring again.
+    renderApp();
+}
+
+function renderDesktopFolds() {
+    document.querySelectorAll('[data-desktop-fold]').forEach(button => {
+        const fold = DESKTOP_FOLDS[button.dataset.desktopFold];
+        if (!fold) return;
+        const open = !state.desktopFolded.includes(button.dataset.desktopFold);
+        button.closest('.panel')?.classList.toggle('is-desktop-folded', !open);
+        button.setAttribute('aria-expanded', String(open));
+        const label = t(open ? fold.collapseKey : fold.expandKey);
+        button.setAttribute('aria-label', label);
+        button.title = label;
+    });
 }
 
 function renderReturnsChartCollapse() {
@@ -1582,8 +1598,7 @@ function applyImportedData(data) {
     state.assetDataMaintenanceOpen = Boolean(data.preferences.assetDataMaintenanceOpen);
     state.amountsHidden = Boolean(data.preferences.amountsHidden);
     state.returnsChartOpen = data.preferences.returnsChartOpen === true;
-    state.desktopReturnsChartOpen = data.preferences.desktopReturnsChartOpen !== false;
-    state.desktopComparisonOpen = data.preferences.desktopComparisonOpen !== false;
+    state.desktopFolded = normalizeDesktopFolded(data.preferences);
     state.accountTrendOpen = data.preferences.accountTrendOpen !== false;
     state.assetRecordOpen = data.preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(data.preferences.currentLang || state.currentLang);
@@ -2288,8 +2303,7 @@ function getCurrentPreferences() {
         accountTrendView: state.accountTrendView,
         allocationRebalanceMode: state.allocationRebalanceMode,
         returnsChartOpen: state.returnsChartOpen,
-        desktopReturnsChartOpen: state.desktopReturnsChartOpen,
-        desktopComparisonOpen: state.desktopComparisonOpen,
+        desktopFolded: state.desktopFolded,
         accountTrendOpen: state.accountTrendOpen,
         assetRecordOpen: state.assetRecordOpen,
         currentLang: state.currentLang
@@ -2321,8 +2335,7 @@ function applyCloudData(data) {
     state.assetDataMaintenanceOpen = false;
     state.amountsHidden = Boolean(preferences.amountsHidden);
     state.returnsChartOpen = preferences.returnsChartOpen === true;
-    state.desktopReturnsChartOpen = preferences.desktopReturnsChartOpen !== false;
-    state.desktopComparisonOpen = preferences.desktopComparisonOpen !== false;
+    state.desktopFolded = normalizeDesktopFolded(preferences);
     state.accountTrendOpen = preferences.accountTrendOpen !== false;
     state.assetRecordOpen = preferences.assetRecordOpen !== false;
     state.currentLang = normalizeLang(preferences.currentLang);

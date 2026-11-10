@@ -169,7 +169,7 @@
                 <section id="performanceChartPanel" class="panel management-panel chart-panel focus-panel">
                     <div class="panel-head split-head">
                         <div class="chart-panel-title">
-                            <h2 data-i18n="performanceTitle">收益走势</h2>
+                            <div class="desktop-fold-title"><h2 data-i18n="performanceTitle">收益走势</h2><button class="desktop-fold-btn" type="button" data-desktop-fold="returnsChart" aria-controls="performanceChartBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
                             <p data-i18n="performanceDesc">现金流调整后收益率，非资产规模变化。</p>
                         </div>
                         <button id="chartCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="performanceChartBody" aria-expanded="false">
@@ -178,11 +178,8 @@
                         </button>
                         <div id="periodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
                         <button id="chartFullscreenBtn" class="chart-fullscreen-btn" type="button" title="横屏全屏查看" aria-label="横屏全屏查看"></button>
-                        <button id="returnsChartDesktopFoldBtn" class="desktop-fold-btn" type="button" aria-controls="performanceChartBody" aria-expanded="true" data-i18n-title="chartCollapse" title="收起收益走势" aria-label="收起收益走势">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
                     </div>
-                    <div id="performanceChartBody" class="chart-panel-body">
+                    <div id="performanceChartBody" class="chart-panel-body desktop-fold-body">
                     <div id="chartMessage" class="chart-message"></div>
                     <div id="chartHints" class="chart-hints" role="status" aria-live="polite" hidden>
                         <span id="chartSparseHint" class="chart-hint chart-hint-warning" hidden></span>
@@ -198,14 +195,11 @@
                 <section class="panel management-panel comparison-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2 data-i18n="comparisonTitle">账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2>
+                            <div class="desktop-fold-title"><h2 data-i18n="comparisonTitle">账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2><button class="desktop-fold-btn" type="button" data-desktop-fold="comparison" aria-controls="comparisonBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
                             <p class="comparison-desc-desktop" data-i18n="comparisonDesc">点击指标排序，点击账户列高亮走势图。</p>
                         </div>
-                        <button id="comparisonDesktopFoldBtn" class="desktop-fold-btn" type="button" aria-controls="comparisonBody" aria-expanded="true" data-i18n-title="comparisonCollapse" title="收起账户对比" aria-label="收起账户对比">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
                     </div>
-                    <div id="comparisonBody" class="comparison-body">
+                    <div id="comparisonBody" class="desktop-fold-body">
                         <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
                     </div>
                 </section>
@@ -390,7 +384,7 @@
                 <section id="accountTrendPanel" class="panel management-panel account-trend-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2><span data-i18n="accountTrendTitle">账户走势</span> <span id="accountTrendBadge" class="title-account-badge" hidden></span></h2>
+                            <div class="desktop-fold-title"><h2><span data-i18n="accountTrendTitle">账户走势</span> <span id="accountTrendBadge" class="title-account-badge" hidden></span></h2><button class="desktop-fold-btn" type="button" data-desktop-fold="accountTrend" aria-controls="accountTrendBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
                             <p data-i18n="accountTrendDesc">现金流调整后的单位净值走势，区间与账户收益页同步。</p>
                         </div>
                         <button id="accountTrendCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="accountTrendChart accountTrendList" aria-expanded="true">
@@ -402,19 +396,22 @@
                             <div id="accountTrendViewSwitch" class="period-switch account-trend-view-switch hidden" role="group" data-i18n-aria-label="accountTrendViewLabel" aria-label="走势展示方式"></div>
                         </div>
                     </div>
-                    <div id="accountTrendMessage" class="chart-message" hidden></div>
-                    <div id="accountTrendChart" class="account-trend-chart" hidden></div>
-                    <div id="accountTrendList" class="account-trend-list" hidden></div>
+                    <div id="accountTrendBody" class="desktop-fold-body">
+                        <div id="accountTrendMessage" class="chart-message" hidden></div>
+                        <div id="accountTrendChart" class="account-trend-chart" hidden></div>
+                        <div id="accountTrendList" class="account-trend-list" hidden></div>
+                    </div>
                 </section>
 
                 <section class="panel management-panel asset-holdings-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2 data-i18n="holdingsTitle">持仓明细 <span id="holdingAccountBadge" class="title-account-badge"></span></h2>
+                            <div class="desktop-fold-title"><h2 data-i18n="holdingsTitle">持仓明细 <span id="holdingAccountBadge" class="title-account-badge"></span></h2><button class="desktop-fold-btn" type="button" data-desktop-fold="holdings" aria-controls="holdingsBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
                             <p id="holdingContext" data-i18n="holdingsDesc">当前账户的持仓、市值占比和持仓盈亏。</p>
                         </div>
                         <dl id="holdingSummary" class="holding-summary hidden" aria-live="polite"></dl>
                     </div>
+                    <div id="holdingsBody" class="desktop-fold-body">
                     <div id="holdingMessage" class="form-message" role="status" aria-live="polite"></div>
                     <div class="holding-toolbar">
                         <div id="holdingViewSwitch" class="period-switch holding-view-switch hidden" role="group" data-i18n-aria-label="holdingViewLabel" aria-label="持仓展示方式"></div>
@@ -425,12 +422,13 @@
                     </div>
                     <div id="holdingTable" class="holding-table-wrap"></div>
                     <div id="holdingChartView" class="holding-chart-view hidden"></div>
+                    </div>
                 </section>
 
                 <section id="assetRecordPanel" class="panel management-panel table-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <h2 data-i18n="assetRecordTitle">资产记录 <span id="snapshotTableContext" class="title-account-badge"></span></h2>
+                            <div class="desktop-fold-title"><h2 data-i18n="assetRecordTitle">资产记录 <span id="snapshotTableContext" class="title-account-badge"></span></h2><button class="desktop-fold-btn" type="button" data-desktop-fold="assetRecord" aria-controls="assetRecordBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
                             <p data-i18n="assetRecordDesc">当前账户的历史总资产快照。</p>
                         </div>
                         <button id="assetRecordCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="snapshotTable" aria-expanded="true">
@@ -438,7 +436,9 @@
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
                     </div>
-                    <div id="snapshotTable" class="snapshot-table-wrap"></div>
+                    <div id="assetRecordBody" class="desktop-fold-body">
+                        <div id="snapshotTable" class="snapshot-table-wrap"></div>
+                    </div>
                 </section>
 
                 <dialog id="accountDialog" class="asset-dialog narrow-dialog" aria-labelledby="accountDialogTitle">

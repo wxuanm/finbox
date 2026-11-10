@@ -8525,50 +8525,73 @@ html {
     }
 }
 
-/* Desktop folds (above 720px) for 收益走势 and 账户对比. The buttons sit at the right of the head; a folded
-   panel keeps its head and hides its body. Phones use their own fold rules above and are not affected. */
+/* Desktop folds (above 720px). The phone fold toggle's look on desktop: the chevron sits right after the panel
+   title, muted, with no border, and points up while open. The title and chevron together toggle the panel; the
+   description stays. Phones keep their own fold toggle, so the button and the fold class do nothing there. */
+.desktop-fold-title {
+    display: contents;
+}
+
 .desktop-fold-btn {
     display: none;
 }
 
 @media (min-width: 721px) {
+    .desktop-fold-title {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        max-width: 100%;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .desktop-fold-title h2 {
+        margin: 0;
+    }
+
     .desktop-fold-btn {
         display: inline-grid;
         flex: 0 0 auto;
         place-items: center;
-        width: 36px;
-        height: 36px;
+        width: 24px;
+        height: 24px;
         padding: 0;
-        border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
-        border-radius: 12px;
+        border: 0;
+        border-radius: 6px;
         color: var(--muted-text);
-        background: var(--surface-elevated);
+        background: none;
         cursor: pointer;
-        transition: transform 0.16s ease, color 0.16s ease, border-color 0.16s ease;
-    }
-
-    .desktop-fold-btn:hover,
-    .desktop-fold-btn:focus-visible {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-    }
-
-    .desktop-fold-btn[aria-expanded="true"] svg {
-        transform: rotate(180deg);
     }
 
     .desktop-fold-btn svg {
         transition: transform 0.16s ease;
     }
 
-    /* Folded: the body and the description go; the head stays with the chevron. */
-    .chart-panel.is-desktop-folded .chart-panel-body,
-    .comparison-panel.is-desktop-folded .comparison-body {
+    .desktop-fold-btn[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+
+    .desktop-fold-title:hover .desktop-fold-btn {
+        color: var(--primary-color);
+    }
+
+    .desktop-fold-btn:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+
+    .panel.is-desktop-folded .desktop-fold-body {
         display: none;
     }
 
-    .chart-panel.is-desktop-folded .split-head,
-    .comparison-panel.is-desktop-folded .split-head {
+    .panel.is-desktop-folded .split-head {
         border-bottom: 0;
+    }
+
+    /* The returns chart keeps its period chips; the account trend keeps its chips and view switch. Holdings and
+       records have nothing to act on while folded, so their head controls go with the body. */
+    .asset-holdings-panel.is-desktop-folded .holding-summary {
+        display: none;
     }
 }
