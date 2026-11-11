@@ -355,6 +355,8 @@ Snapshot sync is full replace, so a stale browser must never PATCH over rows ano
 
 ## Asset Allocation
 
+`风险敞口` details live in `docs/specs/pam/risk-exposure.md`. `app.js` builds risk metrics on every render from `buildHoldingsMetrics(...).allRows` filtered by `riskScope`, plus the scope's share-based NAV series (`buildAccountSeries` for one account, `buildPortfolioMetrics` over `ALL` for every account), and passes them to `renderRiskPanel`. `activeView` accepts `risk`. `riskScope` and `riskSettings` are preferences; `stopPrice` lives on holdings. The holdings sync write is an upsert that keeps `stop_price` when the key is missing, so clients that predate stops cannot clear them. `riskExposure.js` stays free of DOM, `state`, i18n, and local-date helpers.
+
 `资产配置` details live in `docs/specs/pam/allocation.md`. `app.js` builds allocation metrics on every render from `buildHoldingsMetrics(...).allRows`, tagging each row with `isStalePrice`, and passes them to `renderAllocationPanel`. `activeView` accepts `allocation`. The account exclusion list, target weights, and tolerance band form the `allocation` sync domain, not a preference, so a conflict that discards them shows the loss message; `allocationRebalanceMode` is a preference. The Pages Function imports `normalizeTargets` and `normalizeBand` from `allocationMetrics.js` to validate writes, so that module must stay free of DOM, `state`, i18n, and local-date helpers.
 
 ## Verification

@@ -63,9 +63,12 @@ The current holdings capability lets users maintain current positions under each
   priceSource: "manual",
   priceUpdatedAt: "2026-08-05T10:00:00.000Z",
   asOfDate: "2026-08-05",
-  note: ""
+  note: "",
+  stopPrice: null
 }
 ```
+
+`stopPrice` is optional: a positive stop price, or `null` when unset (cash is always `null`). It is edited in the holding dialog and used only by the `风险敞口` module; see `docs/specs/pam/risk-exposure.md`. Editing only the stop keeps the price source and quote time.
 
 ## Asset Classes
 

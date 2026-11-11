@@ -123,6 +123,7 @@
                 <button class="module-tab active" type="button" data-view="analysis" data-i18n="tabAnalysis">账户收益</button>
                 <button class="module-tab" type="button" data-view="assetData" data-i18n="tabAssetData">账户管理</button>
                 <button class="module-tab" type="button" data-view="allocation" data-i18n="tabAssetAllocation">资产配置</button>
+                <button class="module-tab" type="button" data-view="risk" data-i18n="tabRisk">风险敞口</button>
                 <button class="module-tab" type="button" disabled data-i18n="tabTransactions">交易记录</button>
             </div>
             <div class="context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataBatchActions" aria-label="账户管理批量操作">
@@ -326,6 +327,7 @@
                                         <label class="metric-input"><span data-i18n="costPrice">成本价</span><input id="holdingCostPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" data-i18n-placeholder="costPricePlaceholder" placeholder="买入均价" required></label>
                                         <label class="metric-input"><span id="holdingCurrentPriceLabel" data-i18n="currentPrice">当前价</span><input id="holdingCurrentPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" data-i18n-placeholder="latestValuationPlaceholder" placeholder="最新估值" required></label>
                                         <label><span data-i18n="valuationDate">估值日期</span><input id="holdingAsOfDateInput" type="date" required></label>
+                                        <label class="metric-input holding-stop-field"><span data-i18n="stopPrice">止损价</span><input id="holdingStopPriceInput" type="number" inputmode="decimal" min="0" step="0.0001" data-i18n-placeholder="stopPricePlaceholder" placeholder="可选，未设按默认估算"></label>
                                     </div>
                                     <p class="holding-cash-hint" data-i18n="cashModeHint">现金模式：只需填写名称和现金余额，系统会自动将数量设为 1，并用余额同步成本与当前价。</p>
                                 </div>
@@ -463,6 +465,25 @@
                 </dialog>
             </section>
 
+            <section id="riskView" class="workspace-view risk-view" data-workspace-view="risk">
+                <section class="panel management-panel risk-panel">
+                    <div class="panel-head split-head">
+                        <div>
+                            <h2 data-i18n="riskTitle">风险敞口</h2>
+                            <p data-i18n="riskDesc">持仓全部按止损价退出时，本金和净值会少多少。</p>
+                        </div>
+                        <div class="alloc-head-actions">
+                            <div id="riskScopeSwitch" class="risk-scope" hidden></div>
+                            <button id="riskSettingsBtn" class="ghost-btn alloc-head-action" type="button">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke-linecap="round"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+                                <span data-i18n="riskSettings">预警设置</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="riskContent" class="alloc-content risk-content" aria-live="polite"></div>
+                </section>
+            </section>
+
             <section id="allocationView" class="workspace-view allocation-view" data-workspace-view="allocation">
                 <section class="panel management-panel allocation-panel">
                     <div class="panel-head split-head">
@@ -541,6 +562,68 @@
                             <button id="allocationTargetsSaveBtn" class="primary-btn" type="submit" data-i18n="allocationSaveTargets">保存目标</button>
                             <button class="ghost-btn" type="button" data-allocation-targets-close data-i18n="cancel">取消</button>
                             <button id="allocationClearTargetsBtn" class="ghost-btn alloc-clear-targets" type="button" data-i18n="allocationClearTargets">清除目标</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="riskStopDialog" class="asset-dialog narrow-dialog" aria-labelledby="riskStopTitle">
+            <div class="asset-dialog-shell">
+                <div class="asset-dialog-header">
+                    <div class="asset-dialog-heading">
+                        <span class="dialog-eyebrow" data-i18n="riskStopEyebrow">Stop Price</span>
+                        <h2 id="riskStopTitle" data-i18n="riskStopTitle">设置止损价</h2>
+                        <p id="riskStopDesc"></p>
+                    </div>
+                    <button class="asset-dialog-close" type="button" data-risk-stop-close data-i18n-title="close" title="关闭" aria-label="关闭">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+                <div class="asset-dialog-body">
+                    <form id="riskStopForm" class="alloc-targets-form" novalidate>
+                        <label class="risk-dialog-field"><span data-i18n="stopPrice">止损价</span><input id="riskStopInput" type="number" inputmode="decimal" min="0" step="0.0001" data-i18n-placeholder="stopPricePlaceholder" placeholder="可选，未设按默认估算"></label>
+                        <p id="riskStopPreview" class="alloc-band-help"></p>
+                        <p id="riskStopMessage" class="form-message error" role="alert"></p>
+                        <div class="form-actions alloc-targets-actions">
+                            <button class="primary-btn" type="submit" data-i18n="riskSave">保存</button>
+                            <button class="ghost-btn" type="button" data-risk-stop-close data-i18n="cancel">取消</button>
+                            <button id="riskStopClearBtn" class="ghost-btn alloc-clear-targets" type="button" data-i18n="riskStopClear">清除止损</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="riskSettingsDialog" class="asset-dialog narrow-dialog" aria-labelledby="riskSettingsTitle">
+            <div class="asset-dialog-shell">
+                <div class="asset-dialog-header">
+                    <div class="asset-dialog-heading">
+                        <span class="dialog-eyebrow" data-i18n="riskSettingsEyebrow">Risk Limits</span>
+                        <h2 id="riskSettingsTitle" data-i18n="riskSettingsTitle">预警设置</h2>
+                        <p data-i18n="riskSettingsDesc">两条预警线和默认止损距离，对全部账户生效。</p>
+                    </div>
+                    <button class="asset-dialog-close" type="button" data-risk-settings-close data-i18n-title="close" title="关闭" aria-label="关闭">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+                <div class="asset-dialog-body">
+                    <form id="riskSettingsForm" class="alloc-targets-form" novalidate>
+                        <fieldset class="alloc-band-fields">
+                            <legend data-i18n="riskSettingsLines">预警线</legend>
+                            <label><span data-i18n="riskSettingPrincipal">本金风险上限（%）</span><input name="principalLimit" type="number" inputmode="decimal" min="0.5" max="50" step="0.5" required></label>
+                            <label><span data-i18n="riskSettingDrawdown">较高点回撤上限（%）</span><input name="drawdownLimit" type="number" inputmode="decimal" min="1" max="80" step="0.5" required></label>
+                        </fieldset>
+                        <fieldset class="alloc-band-fields">
+                            <legend data-i18n="riskSettingsEstimate">估算口径</legend>
+                            <label><span data-i18n="riskSettingDefaultStop">未设止损按现价下方（%）</span><input name="defaultStopPct" type="number" inputmode="decimal" min="0.5" max="50" step="0.5" required></label>
+                            <label><span data-i18n="riskSettingRiskPerTrade">单笔风险 1R（净值的 %）</span><input name="riskPerTradePct" type="number" inputmode="decimal" min="0.1" max="10" step="0.1" required></label>
+                        </fieldset>
+                        <p id="riskSettingsMessage" class="form-message error" role="alert"></p>
+                        <div class="form-actions alloc-targets-actions">
+                            <button class="primary-btn" type="submit" data-i18n="riskSave">保存</button>
+                            <button class="ghost-btn" type="button" data-risk-settings-close data-i18n="cancel">取消</button>
+                            <button id="riskSettingsResetBtn" class="ghost-btn alloc-clear-targets" type="button" data-i18n="riskSettingsReset">恢复默认</button>
                         </div>
                     </form>
                 </div>

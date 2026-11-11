@@ -142,6 +142,17 @@ P2: Targets and rebalancing
 - [x] Validate targets and bands on the server with the shared normalizers from `allocationMetrics.js`.
 - [x] Verify: calculations against hand-checked examples (minimum new money, no overshoot below it, trades summing to 0, blocked class); through `wrangler pages dev`, server acceptance of P1- and P2-shaped data and rejection of broken targets/bands; dialog validation, drift and status, both modes, mode and targets across reload and cloud, privacy, English, dark theme, 1000px stacking, and 390/360px phones with no page scroll or clipping.
 
+## Phase 14: Risk Exposure
+
+Spec: `docs/specs/pam/risk-exposure.md`.
+
+- [x] Add optional holding `stopPrice`: D1 migration `0005`, server read/validate, upsert that keeps stops on writes from older clients, local cache, JSON import/export, demo stops.
+- [x] Implement pure `riskExposure.js`: per-position exposure and principal loss, default stop estimate, triggered stops, unit-NAV peak drawdown, line status, and the new-position calculator.
+- [x] Add the `风险敞口` tab with scope select, two warning lines, figures, notices, position table and phone list, calculator, stop dialog, and settings dialog; stop input in the holding dialog.
+- [x] Check the math against the article's examples and the upsert SQL against SQLite in Node.
+- [ ] Verify through `wrangler pages dev` with a local D1 user: stop round trip, old-client write keeps stops, import/export, privacy, English, dark theme, and 390/360px phones.
+- [ ] Production: apply migration `0005_pam_holding_stop_price.sql` before deploying Pages.
+
 ## Recommended Future Hardening
 
 - [ ] Replace full-replace snapshot sync with a row diff and drop the redundant `idx_pam_snapshots_owner_account_date` index. Daily auto snapshots grow the table, and each full replace rewrites every snapshot row; with several accounts the 1 MB PATCH body limit is reached in a few years and heavy editing can approach the D1 free daily write quota.

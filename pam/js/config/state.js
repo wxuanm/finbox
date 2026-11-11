@@ -4,6 +4,10 @@ export const state = {
     holdings: [],
     allocation: { excludedAccountIds: [], updatedAt: '', targets: null, band: { absolute: 5, relative: 25 } },
     allocationRebalanceMode: 'cashIn',
+    // 风险敞口: 'all' or an account id, plus thresholds normalized by normalizeRiskSettings.
+    riskScope: 'all',
+    riskSettings: { defaultStopPct: 5, principalLimit: 5, drawdownLimit: 10, riskPerTradePct: 1 },
+    editingStopHoldingId: '',
     selectedAccountId: '',
     selectedPeriod: '3M',
     selectedHighlightAccountId: '',

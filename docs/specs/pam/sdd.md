@@ -228,6 +228,10 @@ Empty state:
 
 See `docs/specs/pam/holdings.md` for detailed holdings requirements, data model, quote scope, and acceptance criteria.
 
+### Risk Exposure
+
+See `docs/specs/pam/risk-exposure.md` for the `风险敞口` module: per-holding stop prices (a default distance below price when unset), planned principal loss against net contribution (survival line), projected drawdown from the unit-NAV peak after every stop-out (quality line), per-position risk, and a new-position calculator sized by 1R and the room under the survival line.
+
 ### Asset Allocation
 
 See `docs/specs/pam/allocation.md` for the `资产配置` module. It covers cross-account allocation by holding asset class, coverage and stale-price share, per-account mix, account inclusion, target weights with a 5/25 tolerance band, drift and status, and class-level rebalancing amounts (buy-only new money or buy and sell). Allocation history (P3) is planned.

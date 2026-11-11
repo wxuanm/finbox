@@ -1071,6 +1071,10 @@ button:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.holding-form.cash-mode .holding-stop-field {
+    display: none;
+}
+
 .holding-form.cash-mode .holding-instrument-grid {
     grid-template-columns: 1fr;
 }
@@ -6773,6 +6777,519 @@ select,
     .alloc-table th,
     .alloc-table td {
         padding: 7px 8px;
+    }
+}
+
+/* Risk exposure: HTML only like allocation, so the view works without ECharts. Warning tone marks
+   near/over limits; P/L red/green stays out because exposure is not a profit or loss. */
+.risk-scope-label {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.risk-scope-label select {
+    min-height: 36px;
+    max-width: 14em;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--heading-color);
+    background: var(--surface-color);
+    font: inherit;
+    font-weight: 750;
+}
+
+.risk-lines {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.risk-line {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+}
+
+.risk-line.near,
+.risk-line.over {
+    border-color: color-mix(in srgb, var(--warning-color) 50%, var(--border-color));
+}
+
+.risk-line.over {
+    background: color-mix(in srgb, var(--warning-color) 7%, var(--surface-color));
+}
+
+.risk-line-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.risk-line-head h3 {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.risk-line-value {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    align-items: baseline;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.risk-line-value strong {
+    color: var(--heading-color);
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.risk-line-value span {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* The track runs to 125% of the limit so the limit tick sits inside it and overshoot stays visible. */
+.risk-meter {
+    position: relative;
+    display: block;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--border-color) 60%, transparent);
+}
+
+.risk-meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background: color-mix(in srgb, var(--primary-color) 70%, transparent);
+}
+
+.risk-line.near .risk-meter-fill,
+.risk-line.over .risk-meter-fill {
+    background: var(--warning-color);
+}
+
+.risk-meter-limit {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--heading-color);
+}
+
+.risk-line-hint {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.risk-figures {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+}
+
+.risk-figures > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+}
+
+.risk-figures dt {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.risk-figures dd {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    align-items: baseline;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.risk-figures strong {
+    color: var(--heading-color);
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.risk-figures strong.warning {
+    color: var(--warning-color);
+}
+
+.risk-figures small {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.risk-notice {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.risk-main {
+    display: grid;
+    gap: 18px;
+    min-width: 0;
+}
+
+@container (min-width: 1040px) {
+    .risk-main {
+        grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+        align-items: start;
+    }
+}
+
+.risk-table td {
+    vertical-align: middle;
+}
+
+.risk-name-cell {
+    display: grid;
+    gap: 2px;
+    min-width: 9em;
+    white-space: normal;
+}
+
+.risk-name-cell > span {
+    color: var(--heading-color);
+    font-weight: 800;
+}
+
+.risk-name-cell small {
+    font-size: 11px;
+}
+
+.risk-stack {
+    display: inline-grid;
+    gap: 2px;
+    justify-items: end;
+}
+
+.risk-stack > span {
+    color: var(--heading-color);
+    font-weight: 800;
+}
+
+.risk-stack small {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.risk-tag {
+    padding: 0 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--muted-text);
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.risk-tag.warning {
+    border-color: color-mix(in srgb, var(--warning-color) 55%, var(--border-color));
+    color: var(--heading-color);
+    background: color-mix(in srgb, var(--warning-color) 16%, transparent);
+}
+
+.risk-empty-line {
+    margin: 0;
+    padding: 16px;
+    color: var(--muted-text);
+    font-size: 13px;
+}
+
+.risk-list {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.risk-item + .risk-item {
+    border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+}
+
+.risk-item-toggle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.risk-item-name {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.risk-item-name > span {
+    overflow-wrap: anywhere;
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.risk-item-name small {
+    font-size: 11px;
+}
+
+.risk-item-figures {
+    display: grid;
+    gap: 2px;
+    justify-items: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.risk-item-figures strong {
+    color: var(--heading-color);
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.risk-item-figures small,
+.risk-item-meta {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.risk-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    gap: 6px;
+    align-items: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.risk-item-details {
+    display: grid;
+    gap: 10px;
+    padding: 0 12px 12px;
+}
+
+.risk-item-details dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+}
+
+.risk-item-details dt {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.risk-item-details dd {
+    margin: 2px 0 0;
+    color: var(--heading-color);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.risk-item-details .ghost-btn {
+    justify-self: start;
+}
+
+.risk-trial-card {
+    display: grid;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+}
+
+.risk-trial-inputs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.risk-trial-inputs label,
+.risk-dialog-field {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.risk-trial-inputs label > span,
+.risk-dialog-field > span {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.risk-trial-inputs input,
+.risk-dialog-field input {
+    width: 100%;
+    min-height: 38px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--heading-color);
+    background: var(--surface-muted);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.risk-trial-inputs input::placeholder {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.risk-trial-status {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.risk-trial-status.warning::before {
+    content: "⚠ ";
+    color: var(--warning-color);
+}
+
+.risk-trial-result {
+    display: grid;
+    gap: 0;
+    margin: 0;
+}
+
+.risk-trial-result > div {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+}
+
+.risk-trial-result dt {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.risk-trial-result dd {
+    display: grid;
+    justify-items: end;
+    margin: 0;
+    color: var(--heading-color);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.risk-trial-result dd strong {
+    font-size: 18px;
+}
+
+.risk-trial-result dd small {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.risk-trial-result dd.warning {
+    color: var(--warning-color);
+}
+
+@container (max-width: 560px) {
+    .risk-table {
+        display: none;
+    }
+
+    .risk-list {
+        display: block;
+    }
+}
+
+@media (max-width: 720px) {
+    .risk-panel .split-head {
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .risk-panel .alloc-head-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .risk-panel #riskSettingsBtn {
+        margin-left: auto;
+    }
+
+    .risk-lines {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .risk-line {
+        padding: 12px;
+    }
+
+    .risk-line-value strong {
+        font-size: 22px;
+    }
+
+    .risk-figures {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .risk-figures > div:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .risk-figures > div {
+        padding: 10px 12px;
+    }
+
+    .risk-trial-card {
+        padding: 12px;
     }
 }
 

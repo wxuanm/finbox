@@ -34,6 +34,8 @@ npx wrangler d1 migrations apply PAM_DB --remote
 
 Migration `0001_pam_cloud_sync.sql` creates owner-scoped business tables. Migration `0002_pam_key_auth.sql` creates users, recovery credentials, and sessions. Migration `0003_pam_password_auth.sql` adds per-user password hash metadata. Migration `0004_pam_allocation.sql` adds the owner-scoped `pam_allocation` document table for the `资产配置` module.
 
+Migration `0005_pam_holding_stop_price.sql` adds the nullable `pam_holdings.stop_price` column for `风险敞口`. Apply it before deploying that release: the data load selects the column and the holdings write sets it, so a release without the column fails every load and holdings sync.
+
 Apply `0004` before deploying the Pages release that adds `资产配置`: `GET /api/pam/data` reads `pam_allocation` in the same batch as every other table, so a release without the table fails every data load.
 
 ## Production Pepper

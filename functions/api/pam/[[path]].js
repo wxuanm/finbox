@@ -85,7 +85,7 @@ async function loadData(db, identity) {
     db.prepare(`SELECT id, account_id, snapshot_date, total_value, net_flow, note, source
       FROM pam_snapshots WHERE owner_id = ? ORDER BY snapshot_date, id`).bind(identity.ownerId),
     db.prepare(`SELECT id, account_id, symbol, name, asset_class, market, quantity, cost_price,
-      current_price, currency, price_source, price_updated_at, as_of_date, note
+      current_price, currency, price_source, price_updated_at, as_of_date, note, stop_price
       FROM pam_holdings WHERE owner_id = ? ORDER BY id`).bind(identity.ownerId),
     db.prepare('SELECT data FROM pam_preferences WHERE owner_id = ?').bind(identity.ownerId),
     db.prepare('SELECT data FROM pam_allocation WHERE owner_id = ?').bind(identity.ownerId)
@@ -127,7 +127,8 @@ async function loadData(db, identity) {
         priceSource: row.price_source,
         priceUpdatedAt: row.price_updated_at,
         asOfDate: row.as_of_date,
-        note: row.note
+        note: row.note,
+        stopPrice: row.stop_price ?? null
       })),
       allocation: parseJsonObject(allocationResult.results?.[0]?.data),
       preferences: parseJsonObject(preferencesResult.results?.[0]?.data)
@@ -217,20 +218,35 @@ function appendDomainStatements(statements, db, domain, value, context) {
   }
 
   if (domain === 'holdings') {
-    statements.push(db.prepare(`DELETE FROM pam_holdings WHERE owner_id = ? AND ${ownsWrite}`)
-      .bind(ownerId, ownerId, writeToken));
+    // Upsert instead of delete-and-insert so a browser that predates `stopPrice` (it never sends the key)
+    // keeps the stored stop. A sent `null` clears it. The missing-key case is carried through the insert
+    // as -1, which no valid stop can be, and resolved in the conflict clause and the cleanup below.
+    statements.push(db.prepare(`DELETE FROM pam_holdings WHERE owner_id = ?
+      AND id NOT IN (SELECT json_extract(value, '$.id') FROM json_each(?)) AND ${ownsWrite}`)
+      .bind(ownerId, JSON.stringify(value), ownerId, writeToken));
     statements.push(db.prepare(`INSERT INTO pam_holdings
       (owner_id, id, account_id, symbol, name, asset_class, market, quantity, cost_price,
-       current_price, currency, price_source, price_updated_at, as_of_date, note)
+       current_price, currency, price_source, price_updated_at, as_of_date, note, stop_price)
       SELECT ?, json_extract(value, '$.id'), json_extract(value, '$.accountId'),
         json_extract(value, '$.symbol'), json_extract(value, '$.name'),
         json_extract(value, '$.assetClass'), json_extract(value, '$.market'),
         json_extract(value, '$.quantity'), json_extract(value, '$.costPrice'),
         json_extract(value, '$.currentPrice'), json_extract(value, '$.currency'),
         json_extract(value, '$.priceSource'), json_extract(value, '$.priceUpdatedAt'),
-        json_extract(value, '$.asOfDate'), json_extract(value, '$.note')
-      FROM json_each(?) WHERE ${ownsWrite}`)
+        json_extract(value, '$.asOfDate'), json_extract(value, '$.note'),
+        CASE WHEN json_type(value, '$.stopPrice') IS NULL THEN -1 ELSE json_extract(value, '$.stopPrice') END
+      FROM json_each(?) WHERE ${ownsWrite}
+      ON CONFLICT(owner_id, id) DO UPDATE SET
+        account_id = excluded.account_id, symbol = excluded.symbol, name = excluded.name,
+        asset_class = excluded.asset_class, market = excluded.market, quantity = excluded.quantity,
+        cost_price = excluded.cost_price, current_price = excluded.current_price,
+        currency = excluded.currency, price_source = excluded.price_source,
+        price_updated_at = excluded.price_updated_at, as_of_date = excluded.as_of_date, note = excluded.note,
+        stop_price = CASE WHEN excluded.stop_price = -1 THEN pam_holdings.stop_price ELSE excluded.stop_price END`)
       .bind(ownerId, JSON.stringify(value), ownerId, writeToken));
+    statements.push(db.prepare(`UPDATE pam_holdings SET stop_price = NULL
+      WHERE owner_id = ? AND stop_price = -1 AND ${ownsWrite}`)
+      .bind(ownerId, ownerId, writeToken));
     return;
   }
 
@@ -309,7 +325,8 @@ function isHolding(item) {
     && ['manual', 'quote'].includes(item.priceSource)
     && isBoundedString(item.priceUpdatedAt, 60)
     && isBoundedString(item.asOfDate, 20)
-    && isBoundedString(item.note, 500);
+    && isBoundedString(item.note, 500)
+    && (item.stopPrice === undefined || item.stopPrice === null || isFiniteNumber(item.stopPrice, Number.MIN_VALUE));
 }
 
 function isAllocation(value) {

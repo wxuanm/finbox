@@ -218,6 +218,7 @@ function renderHoldingForm() {
     document.getElementById('holdingCostPriceInput').value = editing.costPrice;
     document.getElementById('holdingCurrentPriceInput').value = editing.currentPrice;
     document.getElementById('holdingAsOfDateInput').value = editing.asOfDate || todayKey();
+    document.getElementById('holdingStopPriceInput').value = Number(editing.stopPrice) > 0 ? editing.stopPrice : '';
     document.getElementById('holdingNoteInput').value = editing.note || '';
 }
 
@@ -349,8 +350,15 @@ export function readHoldingForm() {
         costPrice: isCash ? currentPrice : Number(document.getElementById('holdingCostPriceInput').value),
         currentPrice,
         asOfDate: document.getElementById('holdingAsOfDateInput').value || todayKey(),
+        // Empty means no stop; validation rejects anything else that is not a positive number.
+        stopPrice: isCash ? null : readOptionalNumber(document.getElementById('holdingStopPriceInput').value),
         note: document.getElementById('holdingNoteInput').value.trim()
     };
+}
+
+function readOptionalNumber(value) {
+    const text = String(value ?? '').trim();
+    return text === '' ? null : Number(text);
 }
 
 function updateCashMode(preferredMarket = '') {
@@ -362,6 +370,7 @@ function updateCashMode(preferredMarket = '') {
     const costInput = document.getElementById('holdingCostPriceInput');
     const currentInput = document.getElementById('holdingCurrentPriceInput');
     const nameInput = document.getElementById('holdingNameInput');
+    const stopInput = document.getElementById('holdingStopPriceInput');
     const currentPriceLabel = document.getElementById('holdingCurrentPriceLabel');
     if (!form || !assetSelect || !marketSelect || !symbolInput || !quantityInput || !costInput || !currentInput || !nameInput || !currentPriceLabel) return;
 
@@ -384,6 +393,7 @@ function updateCashMode(preferredMarket = '') {
     }
 
     marketSelect.value = 'Cash';
+    if (stopInput) stopInput.value = '';
     currentPriceLabel.textContent = t('cashBalance');
     nameInput.placeholder = t('assetCash');
     currentInput.placeholder = t('cashPlaceholder');

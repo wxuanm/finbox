@@ -3,7 +3,7 @@ import { i18n, t } from './config/i18n.js';
 import { applyTheme, toggleTheme } from './core/theme.js';
 import { initializeCloudSync, replaceWithLatestCloud, retryCloudSync } from './core/cloudSync.js';
 import { loadAccounts, loadPreferences, loadSnapshots, saveAccounts, savePreferences, saveSnapshots } from './modules/accountPerformance/storage.js';
-import { buildAccountMetrics, buildPortfolioMetrics } from './modules/accountPerformance/metrics.js';
+import { buildAccountMetrics, buildAccountSeries, buildPortfolioMetrics } from './modules/accountPerformance/metrics.js';
 import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
@@ -20,7 +20,9 @@ import { resizeHoldingChart } from './modules/holdings/holdingsChartShared.js';
 import { ALLOCATION_CLASSES, buildAllocationMetrics, isTargetSumValid, normalizeAllocation, normalizeBand, normalizeTargets, suggestTargets } from './modules/allocation/allocationMetrics.js';
 import { REBALANCE_MODES, bindAllocationPanel, renderAllocationPanel } from './modules/allocation/allocationPanel.js';
 import { loadAllocation, saveAllocation } from './modules/allocation/storage.js';
-import { escapeHtml, formatCurrency, formatWeight, todayKey } from './utils/formatter.js';
+import { DEFAULT_RISK_SETTINGS, buildPositionRisk, buildRiskMetrics, normalizeRiskSettings, normalizeStopPrice } from './modules/risk/riskExposure.js';
+import { bindRiskPanel, renderRiskPanel } from './modules/risk/riskPanel.js';
+import { escapeHtml, formatCurrency, formatPrice, formatWeight, todayKey } from './utils/formatter.js';
 
 let quoteRefreshInProgress = false;
 let snapshotGenerationInProgress = false;
@@ -122,6 +124,7 @@ async function initializeWorkspace(user) {
     state.accountTrendView = normalizeAccountTrendView(preferences.accountTrendView);
     state.allocationRebalanceMode = normalizeRebalanceMode(preferences.allocationRebalanceMode);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
+    applyRiskPreferences(preferences);
 
     applyTheme(state.theme);
     applyLanguage();
@@ -466,6 +469,28 @@ function bindEvents() {
         event.preventDefault();
         closeAllocationTargetsDialog();
     });
+    bindRiskPanel({
+        onScopeChange: scope => {
+            state.riskScope = normalizeRiskScope(scope);
+            persistPreferences();
+            renderApp();
+        },
+        onEditStop: openRiskStopDialog,
+        onGoToAssetData: () => switchView('assetData'),
+        onRender: renderApp
+    });
+    document.getElementById('riskStopForm')?.addEventListener('submit', saveRiskStop);
+    document.getElementById('riskStopForm')?.addEventListener('input', updateRiskStopPreview);
+    document.getElementById('riskStopClearBtn')?.addEventListener('click', clearRiskStop);
+    document.querySelectorAll('[data-risk-stop-close]').forEach(button => {
+        button.addEventListener('click', () => closeDialog('riskStopDialog'));
+    });
+    document.getElementById('riskSettingsBtn')?.addEventListener('click', openRiskSettingsDialog);
+    document.getElementById('riskSettingsForm')?.addEventListener('submit', saveRiskSettings);
+    document.getElementById('riskSettingsResetBtn')?.addEventListener('click', () => fillRiskSettingsForm(DEFAULT_RISK_SETTINGS));
+    document.querySelectorAll('[data-risk-settings-close]').forEach(button => {
+        button.addEventListener('click', () => closeDialog('riskSettingsDialog'));
+    });
     bindAllocationPanel({
         onOpenInclusion: openAllocationInclusionDialog,
         onOpenTargets: openAllocationTargetsDialog,
@@ -804,6 +829,7 @@ function renderApp() {
         rows: holdingsMetrics.allRows.map(row => ({ ...row, stale: isStalePrice(row) })),
         excludedAccountIds: state.allocation.excludedAccountIds
     }));
+    renderRiskPanel(currentRiskMetrics(holdingsMetrics.allRows));
     renderCloudSyncStatus();
     syncStickyHeaderOffset();
 }
@@ -1441,6 +1467,8 @@ function addDemoData() {
         [tactical.id, '159915', t('demoChiNextEtf'), 'fund', 'Fund', 25000, 1.85, 1.76],
         [tactical.id, '', t('demoTacticalCash'), 'cash', 'Cash', 1, 18000, 18000]
     ].map(([accountId, symbol, name, assetClass, market, quantity, costPrice, currentPrice]) => ({
+        // A few example stops: a trailing stop above cost, one below cost, the rest on the default estimate.
+        stopPrice: { 600519: 1600, 300750: 178, 159915: 1.7 }[symbol] ?? null,
         id: createId('holding'),
         accountId,
         symbol,
@@ -1530,6 +1558,8 @@ function exportData() {
                 holdingView: state.holdingView,
                 accountTrendView: state.accountTrendView,
                 allocationRebalanceMode: state.allocationRebalanceMode,
+                riskScope: state.riskScope,
+                riskSettings: state.riskSettings,
                 currentLang: state.currentLang
             }
         }
@@ -1609,6 +1639,7 @@ function applyImportedData(data) {
     state.accountTrendView = normalizeAccountTrendView(data.preferences.accountTrendView);
     state.allocationRebalanceMode = normalizeRebalanceMode(data.preferences.allocationRebalanceMode);
     state.selectedAccountId = resolveSelectedAccount(data.preferences.selectedAccountId);
+    applyRiskPreferences(data.preferences);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';
     state.editingHoldingId = '';
@@ -1692,7 +1723,9 @@ function normalizeImportedHolding(holding) {
         priceSource: holding.priceSource === 'quote' ? 'quote' : 'manual',
         priceUpdatedAt: holding.priceUpdatedAt || '',
         asOfDate: holding.asOfDate || todayKey(),
-        note: String(holding.note || '').trim()
+        note: String(holding.note || '').trim(),
+        // Always present (null when unset) so the cloud can tell "cleared" from a client that predates stops.
+        stopPrice: holding.assetClass === 'cash' ? null : normalizeStopPrice(holding.stopPrice)
     };
 }
 
@@ -1899,6 +1932,7 @@ function validateHolding(payload) {
     if (!payload.name) return t('holdingNameRequired');
     if (![payload.quantity, payload.costPrice, payload.currentPrice].every(Number.isFinite)) return t('holdingNumbersRequired');
     if (payload.quantity < 0 || payload.costPrice < 0 || payload.currentPrice < 0) return t('holdingNumbersPositive');
+    if (payload.stopPrice !== null && payload.stopPrice !== undefined && !(Number.isFinite(payload.stopPrice) && payload.stopPrice > 0)) return t('riskStopInvalid');
     return '';
 }
 
@@ -2264,6 +2298,7 @@ function runPendingConfirmAction() {
 function normalizeActiveView(view) {
     if (view === 'data' || view === 'holdings' || view === 'assetData') return 'assetData';
     if (view === 'allocation') return 'allocation';
+    if (view === 'risk') return 'risk';
     return 'analysis';
 }
 
@@ -2302,6 +2337,8 @@ function getCurrentPreferences() {
         holdingView: state.holdingView,
         accountTrendView: state.accountTrendView,
         allocationRebalanceMode: state.allocationRebalanceMode,
+        riskScope: state.riskScope,
+        riskSettings: state.riskSettings,
         returnsChartOpen: state.returnsChartOpen,
         desktopFolded: state.desktopFolded,
         accountTrendOpen: state.accountTrendOpen,
@@ -2346,6 +2383,7 @@ function applyCloudData(data) {
     state.accountTrendView = normalizeAccountTrendView(preferences.accountTrendView);
     state.allocationRebalanceMode = normalizeRebalanceMode(preferences.allocationRebalanceMode);
     state.selectedAccountId = resolveSelectedAccount(preferences.selectedAccountId);
+    applyRiskPreferences(preferences);
     state.selectedHighlightAccountId = '';
     state.editingSnapshotId = '';
     state.editingHoldingId = '';
@@ -2426,6 +2464,166 @@ function showCloudConflictDialog() {
         confirmLabel: t('cloudLoadLatest'),
         onConfirm: replaceWithLatestCloud
     });
+}
+
+function applyRiskPreferences(preferences) {
+    state.riskSettings = normalizeRiskSettings(preferences?.riskSettings);
+    state.riskScope = normalizeRiskScope(preferences?.riskScope);
+}
+
+function normalizeRiskScope(scope) {
+    return scope && state.accounts.some(account => account.id === scope) ? scope : 'all';
+}
+
+// Scope is one account or all of them. Its NAV series is the share-based series of that account, or the
+// combined portfolio series, so the peak and principal never count deposits as gains.
+function currentRiskMetrics(allRows) {
+    state.riskScope = normalizeRiskScope(state.riskScope);
+    const scope = state.riskScope;
+    const rows = allRows
+        .filter(row => scope === 'all' || row.accountId === scope)
+        .map(row => ({ ...row, stale: isStalePrice(row) }));
+    let series = null;
+    if (scope === 'all') {
+        const portfolio = buildPortfolioMetrics(buildAccountMetrics(state.accounts, state.snapshots, 'ALL'));
+        series = portfolio ? { points: portfolio.points } : null;
+    } else {
+        const account = state.accounts.find(item => item.id === scope);
+        const result = account ? buildAccountSeries(account, state.snapshots) : null;
+        series = result?.points ? result : null;
+    }
+    return buildRiskMetrics({ rows, series, settings: state.riskSettings });
+}
+
+function openDialog(id) {
+    const dialog = document.getElementById(id);
+    if (!dialog) return null;
+    if (!dialog.open && typeof dialog.showModal === 'function') dialog.showModal();
+    else if (!dialog.open) dialog.setAttribute('open', '');
+    return dialog;
+}
+
+function closeDialog(id) {
+    const dialog = document.getElementById(id);
+    if (!dialog?.open) return;
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+}
+
+function riskStopHolding() {
+    return state.holdings.find(holding => holding.id === state.editingStopHoldingId) || null;
+}
+
+function openRiskStopDialog(holdingId) {
+    const holding = state.holdings.find(item => item.id === holdingId);
+    if (!holding) return;
+    state.editingStopHoldingId = holdingId;
+    const stop = normalizeStopPrice(holding.stopPrice);
+    document.getElementById('riskStopDesc').textContent = t('riskStopDesc', {
+        name: holding.name,
+        price: formatPrice(holding.currentPrice, holding.assetClass)
+    });
+    const input = document.getElementById('riskStopInput');
+    input.value = stop === null ? '' : String(stop);
+    document.getElementById('riskStopClearBtn').hidden = stop === null;
+    document.getElementById('riskStopMessage').textContent = '';
+    updateRiskStopPreview();
+    openDialog('riskStopDialog');
+    requestAnimationFrame(() => input.focus());
+}
+
+function readRiskStopInput() {
+    const text = document.getElementById('riskStopInput').value.trim();
+    if (text === '') return { value: null, valid: true };
+    const num = Number(text);
+    return { value: num, valid: Number.isFinite(num) && num > 0 };
+}
+
+function updateRiskStopPreview() {
+    const holding = riskStopHolding();
+    const preview = document.getElementById('riskStopPreview');
+    if (!holding || !preview) return;
+    const { value, valid } = readRiskStopInput();
+    if (!valid) {
+        preview.textContent = '';
+        return;
+    }
+    if (value === null) {
+        preview.textContent = t('riskStopPreviewDefault', { pct: state.riskSettings.defaultStopPct });
+        return;
+    }
+    const quantity = Number(holding.quantity);
+    const currentPrice = Number(holding.currentPrice);
+    const position = buildPositionRisk({ ...holding, quantity, currentPrice, marketValue: quantity * currentPrice, stopPrice: value }, state.riskSettings);
+    if (!position) {
+        preview.textContent = '';
+        return;
+    }
+    preview.textContent = position.triggered
+        ? t('riskStopPreviewTriggered')
+        : t('riskStopPreviewSet', {
+            exposure: formatCurrency(position.exposure, state.amountsHidden),
+            principal: formatCurrency(position.principalLoss, state.amountsHidden)
+        });
+}
+
+function saveRiskStop(event) {
+    event.preventDefault();
+    const { value, valid } = readRiskStopInput();
+    if (!valid) {
+        document.getElementById('riskStopMessage').textContent = t('riskStopInvalid');
+        return;
+    }
+    applyRiskStop(value);
+    showAppMessage(value === null ? t('riskStopCleared') : t('riskStopSaved'));
+}
+
+function clearRiskStop() {
+    applyRiskStop(null);
+    showAppMessage(t('riskStopCleared'));
+}
+
+// Only the stop changes, so the price source and quote time stay as they are.
+function applyRiskStop(stopPrice) {
+    const id = state.editingStopHoldingId;
+    state.holdings = state.holdings.map(holding => (holding.id === id ? { ...holding, stopPrice } : holding));
+    state.editingStopHoldingId = '';
+    closeDialog('riskStopDialog');
+    saveHoldings(state.holdings);
+    renderApp();
+}
+
+const RISK_SETTING_KEYS = ['principalLimit', 'drawdownLimit', 'defaultStopPct', 'riskPerTradePct'];
+
+function fillRiskSettingsForm(settings) {
+    const form = document.getElementById('riskSettingsForm');
+    if (!form) return;
+    RISK_SETTING_KEYS.forEach(key => {
+        form.elements[key].value = settings[key];
+    });
+    document.getElementById('riskSettingsMessage').textContent = '';
+}
+
+function openRiskSettingsDialog() {
+    fillRiskSettingsForm(state.riskSettings);
+    openDialog('riskSettingsDialog');
+}
+
+// Out-of-range values are rejected rather than silently replaced by defaults.
+function saveRiskSettings(event) {
+    event.preventDefault();
+    const form = event.target;
+    const values = Object.fromEntries(RISK_SETTING_KEYS.map(key => [key, Number(form.elements[key].value)]));
+    const normalized = normalizeRiskSettings(values);
+    if (RISK_SETTING_KEYS.some(key => normalized[key] !== values[key])) {
+        document.getElementById('riskSettingsMessage').textContent = t('riskSettingsInvalid');
+        return;
+    }
+    state.riskSettings = normalized;
+    closeDialog('riskSettingsDialog');
+    persistPreferences();
+    renderApp();
+    showAppMessage(t('riskSettingsSaved'));
 }
 
 function createId(prefix) {
