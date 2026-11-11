@@ -118,6 +118,7 @@ function handlePortfolioAction(action, portfolio) {
         const copy = {
             ...portfolio,
             id: newPortfolioId(),
+            collapsed: false, // open the copy so it can be edited right away
             name: portfolio.name ? `${portfolio.name} ${t(state.lang, 'copySuffix')}`.slice(0, 40) : '',
             assets: portfolio.assets.map(asset => ({ ...asset }))
         };
@@ -198,6 +199,12 @@ async function run() {
     for (const portfolio of state.portfolios) {
         const errors = validatePortfolio(portfolio, lang);
         if (errors.length) {
+            // Open a collapsed portfolio so the rows that need fixing are visible.
+            if (portfolio.collapsed) {
+                portfolio.collapsed = false;
+                saveConfig();
+                renderPortfolios();
+            }
             return setRunError(t(lang, 'scoped', { name: portfolioDisplayName(portfolio, lang), message: errors.join(' ') }));
         }
     }

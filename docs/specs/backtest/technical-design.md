@@ -102,6 +102,7 @@ state = {
 
 - `renderPortfolioEditor` builds one card. `bindPortfolioEditor` installs delegated `input`, `change`, and `click` handlers once on the list container.
 - Typing in a name, code, or weight updates the DOM in place, so focus is kept. Changing a market or adding or removing rows re-renders the list.
+- The title is a `toggle-collapse` button (`aria-expanded`). Toggling flips `portfolio.collapsed` and re-renders; a collapsed card renders a summary and a `hidden` body.
 - `cashWeight(portfolio)` = `100 − weightTotal`, floored at 0. It drives the read-only cash row; `app.js` `buildRun` appends it as a `cash: true` asset (key `Cash`) when positive. Cash is never persisted.
 
 ## API Design: `/api/history`

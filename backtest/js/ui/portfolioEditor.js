@@ -61,17 +61,26 @@ export function renderPortfolioEditor(container, portfolio, { canAdd = false, ca
     const lang = state.lang;
     const total = weightTotal(portfolio);
     const totalOk = total <= 100 + 0.01;
+    const collapsed = Boolean(portfolio.collapsed);
+    const bodyId = `portfolio-body-${portfolio.id}`;
 
     container.innerHTML = `
-        <div class="portfolio-card" data-portfolio-id="${escapeHtml(portfolio.id)}" style="--card-accent: var(${seriesColorVar(portfolio)})">
+        <div class="portfolio-card ${collapsed ? 'is-collapsed' : ''}" data-portfolio-id="${escapeHtml(portfolio.id)}" style="--card-accent: var(${seriesColorVar(portfolio)})">
             <div class="portfolio-card-title">
-                <span class="series-dot" aria-hidden="true"></span>
-                <strong>${escapeHtml(portfolioDisplayName(portfolio, lang))}</strong>
+                <button type="button" class="collapse-btn" data-action="toggle-collapse"
+                    aria-expanded="${collapsed ? 'false' : 'true'}" aria-controls="${escapeHtml(bodyId)}"
+                    title="${escapeHtml(t(lang, collapsed ? 'expandPortfolio' : 'collapsePortfolio'))}">
+                    <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"></path></svg>
+                    <span class="series-dot" aria-hidden="true"></span>
+                    <strong>${escapeHtml(portfolioDisplayName(portfolio, lang))}</strong>
+                </button>
                 <span class="card-tools">
                     <button type="button" class="text-btn" data-action="duplicate-portfolio" ${canAdd ? '' : 'disabled'}>${escapeHtml(t(lang, 'duplicatePortfolio'))}</button>
                     <button type="button" class="text-btn danger" data-action="remove-portfolio" ${canRemove ? '' : 'disabled'}>${escapeHtml(t(lang, 'removePortfolio'))}</button>
                 </span>
             </div>
+            ${collapsed ? renderSummary(portfolio, total, totalOk, lang) : ''}
+            <div class="portfolio-card-body" id="${escapeHtml(bodyId)}" ${collapsed ? 'hidden' : ''}>
             <div class="portfolio-card-head">
                 <label class="field grow">
                     <span>${escapeHtml(t(lang, 'portfolioName'))}</span>
@@ -103,6 +112,27 @@ export function renderPortfolioEditor(container, portfolio, { canAdd = false, ca
                 </div>
                 <span class="weight-total ${totalOk ? 'ok' : 'bad'}" data-role="weight-total">${escapeHtml(t(lang, 'weightTotal', { total }))}</span>
             </div>
+            </div>
+        </div>`;
+}
+
+// One-line overview shown instead of the editor body while a card is collapsed.
+function renderSummary(portfolio, total, totalOk, lang) {
+    const assets = portfolio.assets
+        .map(asset => {
+            const name = state.names[itemKey(asset.market, asset.code)];
+            return `${asset.code || '—'}${name ? ` ${name}` : ''} ${Number(asset.weight) || 0}%`;
+        })
+        .join(t(lang, 'listSeparator'));
+    const meta = [
+        t(lang, 'summaryAssets', { count: portfolio.assets.length }),
+        t(lang, REBALANCE_LABEL_KEYS[portfolio.rebalance] || 'rebalanceNone'),
+        t(lang, 'summaryCash', { cash: cashWeight(portfolio) })
+    ].join(' · ');
+    return `
+        <div class="portfolio-summary">
+            <span class="summary-meta ${totalOk ? '' : 'bad'}">${escapeHtml(totalOk ? meta : t(lang, 'errWeightOver', { total }))}</span>
+            ${assets ? `<span class="summary-assets" title="${escapeHtml(assets)}">${escapeHtml(assets)}</span>` : ''}
         </div>`;
 }
 
@@ -194,7 +224,9 @@ export function bindPortfolioEditor(root, { getPortfolio, onChange, onPortfolioA
             return;
         }
 
-        if (action === 'add-asset' && portfolio.assets.length < MAX_ASSETS) {
+        if (action === 'toggle-collapse') {
+            portfolio.collapsed = !portfolio.collapsed;
+        } else if (action === 'add-asset' && portfolio.assets.length < MAX_ASSETS) {
             portfolio.assets.push({ market: 'Fund', code: '', weight: 0 });
         } else if (action === 'remove-asset' && assetIndex !== null) {
             portfolio.assets.splice(assetIndex, 1);

@@ -35,7 +35,8 @@ Show how a target-weight portfolio of A-shares and funds would have performed hi
 ### In Scope
 
 - Backtest parameters: start date, end date, period presets (1Y/3Y/5Y/10Y/Max), initial amount, annual risk-free rate, and benchmark.
-- Portfolio editor: name, rebalance mode, asset rows (type, 6-digit code, weight %), equal-weight button, running asset weight total, a read-only cash row, add/duplicate/remove portfolio.
+- Portfolio editor: name, rebalance mode, asset rows (type, 6-digit code, weight %), equal-weight button, running asset weight total, a read-only cash row, add/duplicate/remove portfolio, and collapse/expand per portfolio.
+- Collapse: clicking a portfolio title hides its editor and shows a summary (asset count, rebalance mode, cash %, and the asset list). The state persists with the config. A collapsed portfolio that fails validation is expanded on run; a duplicate starts expanded.
 - Cash: any part of 100% not covered by asset rows is held as cash. It is derived at run time (never stored), earns no interest, and is listed in asset details.
 - Results:
   - Metrics: final value, total return, CAGR, max drawdown, annualized volatility, Sharpe, Calmar, best year, worst year.
@@ -81,6 +82,7 @@ Show how a target-weight portfolio of A-shares and funds would have performed hi
   name: '',                 // optional; empty shows "组合 N" / "Portfolio N"
   rebalance: 'none' | 'monthly' | 'quarterly' | 'yearly',
   assets: [{ market: 'CN' | 'Fund', code: '600519', weight: 50 }],
+  collapsed: false,         // editor UI only; does not affect the backtest
   index: 1                  // 1-based position; drives default name and series colour
 }
 ```

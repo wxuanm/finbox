@@ -107,6 +107,7 @@ function sanitizePortfolios(portfolios) {
                 weight: Number.isFinite(Number(asset?.weight)) ? Number(asset.weight) : 0
             }))
             : [],
+        collapsed: portfolio?.collapsed === true, // editor UI only; not part of the backtest
         index: i + 1
     }));
     return result;
