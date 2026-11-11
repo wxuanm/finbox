@@ -1,6 +1,9 @@
-// Client for /api/history. Caches series in memory for the session, keyed by item + start.
+// Client for /api/history. Caches series in memory for the session, one entry per item.
+// The API returns every point from `start` onwards, and values do not depend on `start`
+// (A-shares are back-adjusted absolutes, fund series are chained from inception), so a
+// cached series fetched from an earlier start can serve any later start by slicing.
 const MAX_ITEMS_PER_REQUEST = 25;
-const cache = new Map();
+const cache = new Map(); // item key -> { start, name, adjust, points }
 
 export function itemKey(market, symbol) {
     return `${market}:${symbol}`;
@@ -13,7 +16,8 @@ export function itemKey(market, symbol) {
  */
 export async function fetchHistory(keys, start) {
     const unique = [...new Set(keys)];
-    const missing = unique.filter(key => !cache.has(cacheKey(key, start)));
+    // Refetch only items never loaded, or loaded from a later start than requested.
+    const missing = unique.filter(key => !covers(cache.get(key), start));
     const failed = [];
 
     for (let i = 0; i < missing.length; i += MAX_ITEMS_PER_REQUEST) {
@@ -30,7 +34,8 @@ export async function fetchHistory(keys, start) {
             throw new Error(payload?.error || `HTTP ${response.status}`);
         }
         (payload.series || []).forEach(item => {
-            cache.set(cacheKey(itemKey(item.market, item.symbol), start), {
+            cache.set(itemKey(item.market, item.symbol), {
+                start,
                 name: item.name,
                 adjust: item.adjust,
                 points: item.points
@@ -43,12 +48,19 @@ export async function fetchHistory(keys, start) {
 
     const series = {};
     unique.forEach(key => {
-        const hit = cache.get(cacheKey(key, start));
-        if (hit) series[key] = hit;
+        const hit = cache.get(key);
+        if (!covers(hit, start)) return;
+        // Slice to exactly what a fresh request from `start` would return.
+        series[key] = {
+            name: hit.name,
+            adjust: hit.adjust,
+            points: hit.start === start ? hit.points : hit.points.filter(([date]) => date >= start)
+        };
     });
     return { series, failed };
 }
 
-function cacheKey(key, start) {
-    return `${key}@${start}`;
+// YYYY-MM-DD strings compare lexically.
+function covers(entry, start) {
+    return Boolean(entry) && entry.start <= start;
 }

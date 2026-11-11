@@ -56,7 +56,7 @@ state = {
 | `backtest:v1:preferences` | `{ schemaVersion: 1, data: { lang, theme } }` |
 
 - Loaded values are sanitized: at most 3 portfolios and 20 assets each, only known markets and rebalance modes, and a benchmark from the allowlist (or empty).
-- Price series are kept only in the session's memory cache, keyed by `market:symbol@start`.
+- Price series are kept only in the session's memory cache, one entry per `market:symbol` together with the start it was fetched from. A later start is served by slicing the cached points (values do not depend on `start`); only an earlier start, or an item not yet loaded, triggers a fetch.
 
 ## Boot Flow
 
@@ -80,7 +80,8 @@ state = {
   - `dates`, `values`, `nav`, `rebalanceDates`
   - `effectiveStart`, `effectiveEnd`, `lateAssets`
   - `startWeights`, `endWeights`, `assetReturns`
-- Throws `BacktestError` with code `noAssets`, `badRebalance`, `noData`, or `noOverlap`.
+- An asset with `cash: true` has a constant price of 1 and no series; only priced assets build the calendar and bound the period.
+- Throws `BacktestError` with code `noAssets` (also for cash-only), `badRebalance`, `noData`, or `noOverlap`.
 - `periodKey(date, mode)` decides rebalance boundaries by string slicing, never `Date` in local time.
 
 ### `metrics.js`
@@ -101,6 +102,7 @@ state = {
 
 - `renderPortfolioEditor` builds one card. `bindPortfolioEditor` installs delegated `input`, `change`, and `click` handlers once on the list container.
 - Typing in a name, code, or weight updates the DOM in place, so focus is kept. Changing a market or adding or removing rows re-renders the list.
+- `cashWeight(portfolio)` = `100 − weightTotal`, floored at 0. It drives the read-only cash row; `app.js` `buildRun` appends it as a `cash: true` asset (key `Cash`) when positive. Cash is never persisted.
 
 ## API Design: `/api/history`
 

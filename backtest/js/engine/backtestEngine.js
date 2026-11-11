@@ -9,7 +9,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * @param {object} input
- * @param {{key: string, weight: number}[]} input.assets  weights in percent or fractions; normalised internally
+ * @param {{key?: string, weight: number, cash?: boolean}[]} input.assets  weights in percent or fractions; normalised internally.
+ *        A `cash: true` asset has a constant price of 1 and needs no key or price series.
  * @param {Record<string, [string, number][]>} input.prices  ascending [date, value] per asset key
  * @param {string} input.start  requested start date (inclusive)
  * @param {string} input.end    requested end date (inclusive)
@@ -24,10 +25,16 @@ export function runBacktest({ assets, prices, start, end, initialAmount, rebalan
     if (!(totalWeight > 0)) throw new BacktestError('noAssets');
     const weights = assets.map(asset => asset.weight / totalWeight);
 
-    // Each asset keeps its in-range points plus, when available, the last value before
+    // Cash has a constant price of 1 and no series. It adds no trading dates and does not
+    // limit the period, so only priced assets take part in the start and end checks below.
+    const pricedIndexes = assets.map((asset, index) => index).filter(index => !assets[index].cash);
+    if (pricedIndexes.length === 0) throw new BacktestError('noAssets');
+
+    // Each priced asset keeps its in-range points plus, when available, the last value before
     // `start` as a carry-in. The carry-in lets a later, shared start date (used to align
     // several portfolios) price an asset that has no point on exactly that day.
-    const seriesList = assets.map(asset => {
+    const seriesList = pricedIndexes.map(index => {
+        const asset = assets[index];
         const all = (prices[asset.key] || []).filter(([date, value]) => date <= end && value > 0);
         const firstInRange = all.findIndex(([date]) => date >= start);
         if (firstInRange === -1) throw new BacktestError('noData', { key: asset.key });
@@ -43,15 +50,19 @@ export function runBacktest({ assets, prices, start, end, initialAmount, rebalan
     const effectiveEnd = minDate(lastDates);
     if (startBound >= effectiveEnd) throw new BacktestError('noOverlap');
 
-    const lateAssets = assets
-        .filter((asset, index) => daysBetween(start, firstDates[index]) > LATE_START_TOLERANCE_DAYS
-            && firstDates[index] === startBound)
-        .map(asset => asset.key);
+    const lateAssets = pricedIndexes
+        .filter((assetIndex, k) => daysBetween(start, firstDates[k]) > LATE_START_TOLERANCE_DAYS
+            && firstDates[k] === startBound)
+        .map(assetIndex => assets[assetIndex].key);
 
     const calendar = buildCalendar(seriesList.map(item => item.points), startBound, effectiveEnd);
     if (calendar.length < 2) throw new BacktestError('noOverlap');
     const effectiveStart = calendar[0];
-    const priceMatrix = seriesList.map(({ points, carry }) => forwardFill(points, calendar, carry));
+    // One price column per asset, in the original asset order; cash stays at 1.
+    const priceMatrix = assets.map(asset => (asset.cash ? calendar.map(() => 1) : null));
+    pricedIndexes.forEach((assetIndex, k) => {
+        priceMatrix[assetIndex] = forwardFill(seriesList[k].points, calendar, seriesList[k].carry);
+    });
 
     const dates = [];
     const values = [];

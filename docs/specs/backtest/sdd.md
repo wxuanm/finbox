@@ -35,7 +35,8 @@ Show how a target-weight portfolio of A-shares and funds would have performed hi
 ### In Scope
 
 - Backtest parameters: start date, end date, period presets (1Y/3Y/5Y/10Y/Max), initial amount, annual risk-free rate, and benchmark.
-- Portfolio editor: name, rebalance mode, asset rows (type, 6-digit code, weight %), equal-weight button, running weight total, add/duplicate/remove portfolio.
+- Portfolio editor: name, rebalance mode, asset rows (type, 6-digit code, weight %), equal-weight button, running asset weight total, a read-only cash row, add/duplicate/remove portfolio.
+- Cash: any part of 100% not covered by asset rows is held as cash. It is derived at run time (never stored), earns no interest, and is listed in asset details.
 - Results:
   - Metrics: final value, total return, CAGR, max drawdown, annualized volatility, Sharpe, Calmar, best year, worst year.
   - Charts: cumulative return (with zoom), drawdown, annual returns.
@@ -45,7 +46,7 @@ Show how a target-weight portfolio of A-shares and funds would have performed hi
 
 ### Out Of Scope
 
-- Regular contributions (DCA), transaction costs, taxes, slippage, and cash drag.
+- Regular contributions (DCA), transaction costs, taxes, slippage, and interest on cash.
 - Intraday or non-close execution.
 - Markets other than A-shares and on-feed funds (HK, US, bonds as individual securities).
 - Total-return benchmark indices.
@@ -115,6 +116,7 @@ Show how a target-weight portfolio of A-shares and funds would have performed hi
 3. **Carry-in**: when the start is moved later (for example, to align portfolios), an asset with no point on that exact day uses its last earlier value.
 4. **Effective end**: the earliest last-available date across assets.
 5. **Day 0**: units = `initialAmount × weight / price`. Weights are normalized to sum to 1.
+   - Cash (weight `100 − Σ asset weights`, when positive) is an asset with a constant price of 1. It adds no calendar dates and does not affect the effective start or end. A portfolio of only cash is rejected.
 6. **Rebalancing**: on the first calendar trading day of a new month, quarter, or year, units are reset to target weights at that day's close.
 7. **Value**: `Σ units × price` each day; NAV = value / initialAmount.
 
@@ -140,7 +142,7 @@ Show how a target-weight portfolio of A-shares and funds would have performed hi
 
 - Start date not before end date → blocked with an inline error.
 - Initial amount ≤ 0 → blocked.
-- Weight total not 100% (±0.01), a zero weight, a non-6-digit code, or a duplicate asset in one portfolio → blocked, naming the portfolio.
+- Asset weight total above 100% (+0.01 tolerance), a zero weight, a non-6-digit code, or a duplicate asset in one portfolio → blocked, naming the portfolio. A total below 100% is valid; the rest is cash.
 - An asset that fails to load → listed in an error; any portfolio containing it is skipped; other portfolios still run.
 - Assets that share no trading days → an error for that portfolio.
 - Benchmark failure → error message; portfolios still render.

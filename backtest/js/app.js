@@ -21,6 +21,7 @@ import {
     bindPortfolioEditor,
     portfolioDisplayName,
     renderPortfolioEditor,
+    cashWeight,
     seriesColorVar,
     validatePortfolio
 } from './ui/portfolioEditor.js';
@@ -40,6 +41,7 @@ const REBALANCE_LABEL_KEYS = {
     yearly: 'rebalanceYearly'
 };
 const PRESET_YEARS = { '1y': 1, '3y': 3, '5y': 5, '10y': 10, max: 25 };
+const CASH_KEY = 'Cash'; // synthetic asset key; cash is never fetched
 
 const els = {};
 
@@ -245,6 +247,8 @@ function buildRun({ series, failed, benchmarkKey, start, end, initialAmount, ris
             const key = itemKey(asset.market, asset.code);
             return { key, code: asset.code, name: state.names[key] || '', weight: Number(asset.weight) };
         });
+        const cash = cashWeight(portfolio);
+        if (cash > 0) assets.push({ key: CASH_KEY, code: '', name: t(lang, 'cashLabel'), weight: cash, cash: true });
         if (assets.some(asset => failedKeys.has(asset.key))) {
             errors.push(t(lang, 'scoped', { name, message: t(lang, 'errPortfolioSkipped') }));
             return;
@@ -369,6 +373,9 @@ function relabelLastRun() {
         const portfolio = state.portfolios.find(item => item.id === result.id);
         if (portfolio) result.name = portfolioDisplayName(portfolio, lang);
         result.rebalanceLabel = t(lang, REBALANCE_LABEL_KEYS[result.rebalance]);
+        result.assets.forEach(asset => {
+            if (asset.cash) asset.name = t(lang, 'cashLabel');
+        });
     });
 }
 

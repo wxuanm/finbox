@@ -16,8 +16,15 @@ export function portfolioDisplayName(portfolio, lang) {
     return portfolio.name.trim() || t(lang, 'defaultPortfolioName', { n: portfolio.index });
 }
 
+// Total of the asset rows only (may be below 100; the rest is cash).
 export function weightTotal(portfolio) {
     return Math.round(portfolio.assets.reduce((sum, asset) => sum + (Number(asset.weight) || 0), 0) * 100) / 100;
+}
+
+// Cash is whatever part of 100% the asset rows do not cover. Derived at run time, never stored.
+export function cashWeight(portfolio) {
+    const cash = Math.round((100 - weightTotal(portfolio)) * 100) / 100;
+    return cash > 0 ? cash : 0;
 }
 
 /** Returns a list of translated error messages; empty when the portfolio can run. */
@@ -38,9 +45,8 @@ export function validatePortfolio(portfolio, lang) {
         seen.add(key);
     });
     const total = weightTotal(portfolio);
-    if (Math.abs(total - 100) > 0.01 || portfolio.assets.some(asset => !(Number(asset.weight) > 0))) {
-        errors.push(t(lang, 'errWeightTotal', { total }));
-    }
+    if (total > 100 + 0.01) errors.push(t(lang, 'errWeightOver', { total }));
+    if (portfolio.assets.some(asset => !(Number(asset.weight) > 0))) errors.push(t(lang, 'errZeroWeight'));
     return errors;
 }
 
@@ -54,7 +60,7 @@ export function seriesColorVar(portfolio) {
 export function renderPortfolioEditor(container, portfolio, { canAdd = false, canRemove = false } = {}) {
     const lang = state.lang;
     const total = weightTotal(portfolio);
-    const totalOk = Math.abs(total - 100) <= 0.01;
+    const totalOk = total <= 100 + 0.01;
 
     container.innerHTML = `
         <div class="portfolio-card" data-portfolio-id="${escapeHtml(portfolio.id)}" style="--card-accent: var(${seriesColorVar(portfolio)})">
@@ -88,6 +94,7 @@ export function renderPortfolioEditor(container, portfolio, { canAdd = false, ca
                     <span role="columnheader" class="sr-only">${escapeHtml(t(lang, 'removeAsset'))}</span>
                 </div>
                 ${portfolio.assets.map((asset, index) => renderAssetRow(asset, index, lang)).join('')}
+                ${renderCashRow(cashWeight(portfolio), lang)}
             </div>
             <div class="portfolio-card-foot">
                 <div class="foot-actions">
@@ -96,6 +103,17 @@ export function renderPortfolioEditor(container, portfolio, { canAdd = false, ca
                 </div>
                 <span class="weight-total ${totalOk ? 'ok' : 'bad'}" data-role="weight-total">${escapeHtml(t(lang, 'weightTotal', { total }))}</span>
             </div>
+        </div>`;
+}
+
+// Read-only row showing the derived cash weight; it has no inputs.
+function renderCashRow(cash, lang) {
+    return `
+        <div class="asset-row cash-row" role="row">
+            <span class="cash-label" role="cell">${escapeHtml(t(lang, 'cashLabel'))}</span>
+            <span class="cash-note" role="cell">${escapeHtml(t(lang, 'cashAuto'))}</span>
+            <span class="cash-weight" role="cell" data-role="cash-weight">${cash}%</span>
+            <span aria-hidden="true"></span>
         </div>`;
 }
 
@@ -205,9 +223,12 @@ function updateWeightTotal(card, portfolio) {
     const el = card?.querySelector('[data-role="weight-total"]');
     if (!el) return;
     const total = weightTotal(portfolio);
+    const ok = total <= 100 + 0.01;
     el.textContent = t(state.lang, 'weightTotal', { total });
-    el.classList.toggle('ok', Math.abs(total - 100) <= 0.01);
-    el.classList.toggle('bad', Math.abs(total - 100) > 0.01);
+    el.classList.toggle('ok', ok);
+    el.classList.toggle('bad', !ok);
+    const cashEl = card.querySelector('[data-role="cash-weight"]');
+    if (cashEl) cashEl.textContent = `${cashWeight(portfolio)}%`;
 }
 
 function locate(element, getPortfolio) {
