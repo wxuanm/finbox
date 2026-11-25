@@ -9994,6 +9994,24 @@ html {
         box-shadow: var(--shadow-md) !important;
     }
 
+    /* Floating menu items: white tiles with primary text and a border, replacing the white-on-gradient tiles. */
+    html body .app-shell .account-context-actions .context-action {
+        border: 1px solid var(--border-color) !important;
+        color: var(--primary-color) !important;
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+
+    html body .app-shell .account-context-actions .context-action:hover:not(:disabled) {
+        transform: none;
+        border-color: var(--primary-color) !important;
+        background: var(--primary-soft) !important;
+    }
+
+    html body .app-shell .account-context-actions .context-action::after {
+        content: none !important;
+    }
+
     html body .app-shell .primary-btn,
     html body .asset-dialog .primary-btn {
         background: var(--primary-color) !important;
@@ -10033,6 +10051,281 @@ html {
     }
 
     /* The eyebrow is a tag that hugs its text, like Backtest's hero badge. */
+    html body .asset-dialog .dialog-eyebrow {
+        display: inline-block;
+        width: fit-content;
+        padding: 1px 8px;
+        border-radius: 999px;
+    }
+}
+
+/* ==========================================================================
+   Phone surfaces (<=720px), aligned with the Backtest tool and the desktop surfaces above. Set last so it wins
+   over the layered glass, gradient, and inset-highlight treatments in the phone blocks above. Layout,
+   interaction (sticky bars, bottom tabs, folds, full screen), the phone type scale, and data colours are
+   unchanged. The page is a flat background; panels are one surface each; the header, sticky bars, and bottom
+   tabs are solid so content scrolling under them stays legible without blur; selection is a tint, not a
+   gradient. Desktop is not affected.
+   ========================================================================== */
+@media (max-width: 720px) {
+    body {
+        background: var(--background-color) !important;
+    }
+
+    body::before,
+    html body .app-shell .workspace::before,
+    html body .app-shell .module-tabs::before,
+    html body .app-shell .overview-card::after,
+    html body .app-shell .panel h2::before,
+    html body .app-shell .context-action::after,
+    html body .app-shell .panel-collapse-btn::before,
+    html body .app-shell .holding-table tr::before,
+    html body .asset-dialog .asset-dialog-header h2::before {
+        content: none !important;
+        display: none !important;
+    }
+
+    /* ---- Header, sticky bars, bottom tabs: solid, one hairline ---- */
+    html body .app-shell .global-header,
+    html body .app-shell .returns-period-bar,
+    html body .app-shell .account-switch-bar {
+        background: var(--surface-color) !important;
+        box-shadow: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .module-tabs {
+        background: var(--surface-color) !important;
+        box-shadow: 0 -1px 0 var(--border-color), 0 -8px 20px -16px rgb(15 23 42 / 0.3) !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .global-header .brand-mark {
+        border: 0;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--chart-series-1), var(--primary-color)) !important;
+        box-shadow: none !important;
+    }
+
+    /* Bottom tabs: the active tab is a tint with primary text, like the desktop segmented control. */
+    html body .app-shell .module-tab {
+        border: 0;
+        border-radius: var(--radius-md);
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .module-tab.active {
+        color: var(--primary-color) !important;
+        background: var(--primary-soft) !important;
+    }
+
+    /* ---- Workspace: the page itself, not a card around the panels ---- */
+    html body .app-shell .workspace {
+        border: 0;
+        border-radius: 0;
+        background: none !important;
+        box-shadow: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    /* The view keeps no side padding: the 12px shell gutter is the page margin, and the sticky bars bleed
+       past it to the screen edge. */
+    html body .app-shell .workspace-view.active {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    html body .app-shell .returns-period-bar,
+    html body .app-shell .account-switch-bar {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    /* ---- Panels: one surface each ---- */
+    html body .app-shell .panel,
+    html body .app-shell .management-panel,
+    html body .app-shell .account-card-strip-panel {
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-sm) !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    /* Full screen fills the viewport edge to edge, as before. */
+    html body .app-shell .chart-panel.is-fullscreen {
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .management-panel .panel-head,
+    html body .app-shell .panel-head {
+        background: none !important;
+    }
+
+    html body .app-shell .overview-grid {
+        border: 0 !important;
+        background: none !important;
+        box-shadow: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .overview-card,
+    html body .app-shell .alloc-stats > div,
+    html body .app-shell .account-item {
+        border: 1px solid var(--border-color);
+        background: var(--surface-muted) !important;
+        box-shadow: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .account-item.active {
+        border-color: var(--border-color);
+    }
+
+    /* ---- Tables and lists: flat boxes with a muted head row ---- */
+    html body .app-shell th {
+        background-image: none !important;
+        box-shadow: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell thead th {
+        background-color: var(--surface-muted) !important;
+    }
+
+    /* ---- Controls: flat, bordered, no shadow ---- */
+    html body .app-shell .icon-btn,
+    html body .app-shell .context-action,
+    html body .app-shell .ghost-btn,
+    html body .app-shell .mini-btn,
+    html body .app-shell select,
+    html body .app-shell .panel-collapse-btn,
+    html body .app-shell .cloud-sync-status {
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .icon-btn,
+    html body .app-shell .ghost-btn,
+    html body .app-shell .mini-btn,
+    html body .app-shell .panel select {
+        background-color: var(--surface-color) !important;
+    }
+
+    html body .app-shell .panel-collapse-btn {
+        background-color: transparent !important;
+    }
+
+    html body .app-shell .privacy-toggle[aria-pressed="true"] {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        background-color: var(--primary-soft) !important;
+    }
+
+    /* Segmented switches (period bar, account bar, chart and holdings view switches): a muted track, and the
+       selected segment is a white tile with primary text instead of a gradient. */
+    html body .app-shell .period-switch {
+        border: 1px solid var(--border-color);
+        background: var(--surface-muted) !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .period-chip {
+        border-color: transparent !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* The holdings filter row is a plain row of selects, not a framed box. */
+    html body .app-shell .asset-tool-bar {
+        padding: 0;
+        border: 0;
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .period-chip.active {
+        color: var(--primary-color) !important;
+        border-color: var(--border-color) !important;
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-sm) !important;
+    }
+
+    /* Small marks: flat tint instead of gradient tiles. */
+    html body .app-shell .holding-asset-mark,
+    html body .app-shell .account-card-mark {
+        border: 0;
+        color: var(--primary-color);
+        background: var(--primary-soft) !important;
+        box-shadow: none !important;
+    }
+
+    /* Floating add button and its menu: solid primary, flat menu items. */
+    html body .app-shell .account-floating-toggle {
+        background: var(--primary-color) !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+
+    /* Floating menu items: white tiles with primary text and a border, replacing the white-on-gradient tiles. */
+    html body .app-shell .account-context-actions .context-action {
+        border: 1px solid var(--border-color) !important;
+        color: var(--primary-color) !important;
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+
+    html body .app-shell .account-context-actions .context-action:hover:not(:disabled) {
+        transform: none;
+        border-color: var(--primary-color) !important;
+        background: var(--primary-soft) !important;
+    }
+
+    html body .app-shell .account-context-actions .context-action::after {
+        content: none !important;
+    }
+
+    html body .app-shell .primary-btn,
+    html body .asset-dialog .primary-btn {
+        background: var(--primary-color) !important;
+        box-shadow: none !important;
+    }
+
+    [data-theme="dark"] body .app-shell .primary-btn,
+    [data-theme="dark"] body .asset-dialog .primary-btn,
+    [data-theme="dark"] body .app-shell .account-floating-toggle {
+        color: #0b0d1f;
+    }
+
+    /* ---- Dialogs and the header menu: one surface ---- */
+    html body .asset-dialog,
+    html body .app-message-card,
+    html body .app-shell .header-action-menu {
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-md) !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .asset-dialog .asset-dialog-header,
+    html body .asset-dialog .asset-dialog-body,
+    html body .asset-dialog .form-card,
+    html body .asset-dialog .form-card-head,
+    html body .asset-dialog input,
+    html body .asset-dialog select,
+    html body .asset-dialog textarea {
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
     html body .asset-dialog .dialog-eyebrow {
         display: inline-block;
         width: fit-content;
