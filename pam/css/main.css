@@ -9711,3 +9711,332 @@ html {
         padding-bottom: 10px;
     }
 }
+
+/* ==========================================================================
+   Desktop surfaces (>=721px), aligned with the Backtest tool. Set last so it wins over the layered glass,
+   gradient, and inset-highlight treatments above. The page is a flat background; the header and tab row sit
+   on it directly; each panel is one white surface with one border, one radius, and one soft shadow; controls
+   are flat with a border and no shadow. Rise/fall colours, the type scale above, and layout are unchanged.
+   Phones are not affected.
+   ========================================================================== */
+@media (min-width: 721px) {
+    body {
+        background: var(--background-color) !important;
+    }
+
+    body::before,
+    html body .app-shell .workspace::before,
+    html body .app-shell .module-tabs::before,
+    html body .app-shell .overview-card::after,
+    html body .app-shell .panel h2::before,
+    html body .asset-dialog .asset-dialog-header h2::before {
+        content: none !important;
+        display: none !important;
+    }
+
+    html body .app-shell {
+        padding: 24px 24px 48px;
+    }
+
+    /* ---- Header: on the page, not in a card ---- */
+    html body .app-shell .global-header {
+        margin-bottom: 20px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .global-header .brand-mark {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--chart-series-1), var(--primary-color)) !important;
+        box-shadow: var(--shadow-sm) !important;
+    }
+
+    html body .app-shell .brand-copy h1 {
+        font-size: 22px;
+        line-height: 1.25;
+    }
+
+    html body .app-shell .brand-copy p {
+        margin-top: 4px;
+    }
+
+    html body .app-shell .hero-badge {
+        padding: 1px 8px;
+        border: 0;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .hero-badge::before {
+        box-shadow: none !important;
+    }
+
+    /* ---- Tab row: a segmented control on the page ---- */
+    html body .app-shell .module-tabs {
+        margin-bottom: 20px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .module-tab-list {
+        gap: 2px;
+        padding: 3px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--surface-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    html body .app-shell .module-tab {
+        min-height: 34px;
+        padding: 6px 16px;
+        border: 0;
+        border-radius: var(--radius-sm);
+        color: var(--muted-text);
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .module-tab.active {
+        color: var(--primary-color);
+        background: var(--primary-soft) !important;
+    }
+
+    html body .app-shell .module-tab:not(.active):not(:disabled):hover {
+        color: var(--heading-color);
+        background: var(--surface-muted) !important;
+    }
+
+    /* ---- Workspace: a plain stack of panels ---- */
+    html body .app-shell .workspace {
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .workspace-view.active {
+        gap: 20px;
+        padding: 0;
+    }
+
+    /* ---- Panels: one surface each ---- */
+    html body .app-shell .panel,
+    html body .app-shell .management-panel,
+    html body .app-shell .account-card-strip-panel {
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-md) !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .management-panel .panel-head {
+        padding: 16px 18px 12px;
+        border-bottom-color: var(--border-color);
+        background: none !important;
+    }
+
+    html body .app-shell .panel h2 {
+        font-size: 16px;
+    }
+
+    /* Overview figures: the grid is just layout; each card is its own surface. */
+    html body .app-shell .overview-grid {
+        padding: 0;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .overview-card,
+    html body .app-shell .account-item,
+    html body .app-shell .alloc-stats > div {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-sm) !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell .overview-card {
+        min-height: 0;
+        box-shadow: var(--shadow-md) !important;
+    }
+
+    /* Cards inside a panel step down to the muted surface, like Backtest's portfolio cards. */
+    html body .app-shell .account-item,
+    html body .app-shell .alloc-stats > div,
+    html body .app-shell .management-panel .overview-card {
+        background: var(--surface-muted) !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .overview-card:hover {
+        transform: none;
+        border-color: var(--border-strong);
+    }
+
+    html body .app-shell .account-item.active {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-soft) !important;
+    }
+
+    /* ---- Tables: a bordered box with a muted head row ---- */
+    html body .app-shell .comparison-table-wrap,
+    html body .app-shell .holding-table-wrap,
+    html body .app-shell .snapshot-table-wrap {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md) !important;
+        background: var(--surface-color) !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell th {
+        background-image: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .app-shell thead th {
+        background-color: var(--surface-muted) !important;
+    }
+
+    /* ---- Controls: flat, bordered, no shadow ---- */
+    html body .app-shell .icon-btn,
+    html body .app-shell .context-action,
+    html body .app-shell .ghost-btn,
+    html body .app-shell .mini-btn,
+    html body .app-shell .cloud-sync-status,
+    html body .app-shell .asset-tool-bar,
+    html body .app-shell .desktop-fold-btn {
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .icon-btn,
+    html body .app-shell .context-action,
+    html body .app-shell .ghost-btn,
+    html body .app-shell .mini-btn {
+        background-color: var(--surface-color) !important;
+    }
+
+    html body .app-shell .icon-btn:hover:not(:disabled),
+    html body .app-shell .ghost-btn:hover:not(:disabled),
+    html body .app-shell .mini-btn:hover:not(:disabled),
+    html body .app-shell .context-actions:not(.account-context-actions) .context-action:hover:not(:disabled) {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        background-color: var(--surface-color) !important;
+    }
+
+    html body .app-shell .privacy-toggle[aria-pressed="true"] {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        background-color: var(--primary-soft) !important;
+    }
+
+    /* Period and view switches: chip rows like Backtest's presets. */
+    html body .app-shell .period-switch {
+        padding: 0;
+        border: 0;
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .period-chip {
+        min-height: 32px;
+        padding: 4px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 999px !important;
+        color: var(--text-color);
+        background: var(--surface-muted) !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .period-chip:not(.active):hover {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    html body .app-shell .period-chip.active {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        background: var(--primary-soft) !important;
+    }
+
+    /* Small marks: flat tint instead of gradient tiles. */
+    html body .app-shell .holding-asset-mark,
+    html body .app-shell .account-card-mark {
+        border: 0;
+        color: var(--primary-color);
+        background: var(--primary-soft) !important;
+        box-shadow: none !important;
+    }
+
+    /* Floating add button: solid primary, one shadow. */
+    html body .app-shell .account-floating-toggle {
+        background: var(--primary-color) !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+
+    html body .app-shell .primary-btn,
+    html body .asset-dialog .primary-btn {
+        background: var(--primary-color) !important;
+        box-shadow: none !important;
+    }
+
+    html body .app-shell .primary-btn:hover:not(:disabled),
+    html body .asset-dialog .primary-btn:hover:not(:disabled) {
+        background: var(--primary-hover) !important;
+    }
+
+    [data-theme="dark"] body .app-shell .primary-btn,
+    [data-theme="dark"] body .asset-dialog .primary-btn,
+    [data-theme="dark"] body .app-shell .account-floating-toggle {
+        color: #0b0d1f;
+    }
+
+    /* ---- Dialogs: one surface, same as panels ---- */
+    html body .asset-dialog,
+    html body .app-message-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+        box-shadow: var(--shadow-md) !important;
+        backdrop-filter: none !important;
+    }
+
+    html body .asset-dialog .asset-dialog-header,
+    html body .asset-dialog .form-card,
+    html body .asset-dialog .form-card-head,
+    html body .asset-dialog .asset-dialog-body,
+    html body .asset-dialog input,
+    html body .asset-dialog select,
+    html body .asset-dialog textarea {
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    /* The eyebrow is a tag that hugs its text, like Backtest's hero badge. */
+    html body .asset-dialog .dialog-eyebrow {
+        display: inline-block;
+        width: fit-content;
+        padding: 1px 8px;
+        border-radius: 999px;
+    }
+}
