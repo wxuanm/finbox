@@ -353,15 +353,7 @@ button:disabled {
     background: var(--primary-soft);
 }
 
-.panel-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
 .primary-btn,
-.secondary-btn,
 .ghost-btn,
 .icon-btn {
     min-height: 40px;
@@ -386,7 +378,6 @@ button:disabled {
     box-shadow: 0 12px 22px rgb(37 99 235 / 0.22);
 }
 
-.secondary-btn,
 .ghost-btn,
 .icon-btn {
     color: var(--text-color);
@@ -395,7 +386,6 @@ button:disabled {
     box-shadow: var(--shadow-sm);
 }
 
-.secondary-btn,
 .ghost-btn {
     padding: 8px 14px;
 }
@@ -427,14 +417,12 @@ button:disabled {
 }
 
 .primary-btn:hover,
-.secondary-btn:hover,
 .ghost-btn:hover,
 .icon-btn:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
-.secondary-btn:hover,
 .ghost-btn:hover,
 .icon-btn:hover {
     border-color: var(--primary-color);
@@ -509,14 +497,6 @@ button:disabled {
     background: var(--surface-elevated);
     font-size: 13px;
     font-weight: 750;
-}
-
-.context-actions-title {
-    color: var(--muted-text);
-    font-size: 12px;
-    font-weight: 850;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
 }
 
 .context-action:hover,
@@ -610,12 +590,6 @@ button:disabled {
     backdrop-filter: none;
 }
 
-.asset-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 10px;
-}
-
 .overview-card,
 .panel {
     border: 1px solid var(--border-color);
@@ -669,8 +643,7 @@ button:disabled {
     box-shadow: var(--shadow-md);
 }
 
-.overview-card span,
-.metric-label {
+.overview-card span {
     position: relative;
     z-index: 1;
     color: var(--muted-text);
@@ -714,20 +687,6 @@ button:disabled {
 
 .management-overview-card strong {
     font-variant-numeric: tabular-nums;
-}
-
-.layout-grid {
-    display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
-    gap: 14px;
-    align-items: start;
-}
-
-.data-layout-grid {
-    display: grid;
-    grid-template-columns: 300px minmax(0, 1fr);
-    gap: 14px;
-    align-items: start;
 }
 
 .panel {
@@ -813,14 +772,9 @@ button:disabled {
     max-width: 560px;
 }
 
-.holding-filter-bar,
 .holding-form {
     display: grid;
     gap: 8px;
-}
-
-.holding-filter-bar {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .holding-form {
@@ -1030,7 +984,6 @@ button:disabled {
     min-height: 42px;
 }
 
-.holding-filter-bar label,
 .holding-form label {
     display: grid;
     gap: 6px;
@@ -1090,20 +1043,8 @@ button:disabled {
     display: block;
 }
 
-.holding-layout-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
-    gap: 14px;
-    align-items: start;
-}
-
 .asset-data-view {
     gap: 0;
-}
-
-.asset-data-hero-panel {
-    display: grid;
-    gap: 12px;
 }
 
 .account-card-strip-panel {
@@ -1355,68 +1296,6 @@ button:disabled {
     right: -2px;
 }
 
-.account-add-card {
-    min-height: 156px;
-    display: grid;
-    place-items: center;
-    align-content: center;
-    gap: 8px;
-    padding: 15px;
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius-lg);
-    color: var(--muted-text);
-    background: var(--surface-glass);
-    text-align: center;
-    scroll-snap-align: start;
-    transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
-}
-
-.account-add-card-fixed {
-    min-height: 0;
-    align-self: stretch;
-    gap: 6px;
-    padding: 10px 4px;
-}
-
-.account-add-card-fixed strong,
-.account-add-card-fixed small {
-    display: none;
-}
-
-.account-add-card-mobile {
-    display: none;
-}
-
-.account-add-card:hover {
-    transform: translateY(-1px);
-    border-color: var(--primary-color);
-    background: var(--primary-soft);
-}
-
-.account-add-card span {
-    display: grid;
-    width: 30px;
-    height: 30px;
-    place-items: center;
-    border-radius: 50%;
-    color: #ffffff;
-    background: var(--primary-color);
-    font-size: 20px;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.account-add-card strong {
-    color: var(--heading-color);
-    font-size: 15px;
-}
-
-.account-add-card small {
-    max-width: 180px;
-    font-size: 12px;
-    line-height: 1.4;
-}
-
 .account-empty-state {
     display: grid;
     min-height: 156px;
@@ -1462,10 +1341,6 @@ button:disabled {
 
 .account-card-strip-panel.is-empty {
     grid-template-columns: minmax(0, 1fr);
-}
-
-.account-card-strip-panel.is-empty .account-add-card-fixed {
-    display: none;
 }
 
 .asset-dialog {
@@ -1822,16 +1697,6 @@ button:disabled {
     min-width: 0;
 }
 
-.panel-kicker {
-    display: block;
-    margin-bottom: 4px;
-    color: var(--primary-color);
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
-
 .management-panel .panel-head h2 {
     margin-bottom: 0;
     font-size: 18px;
@@ -1882,33 +1747,6 @@ button:disabled {
     line-height: 1;
 }
 
-.management-panel .allocation-columns {
-    gap: 20px;
-}
-
-.management-panel .allocation-columns > div {
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 46%),
-        var(--surface-elevated);
-}
-
-.management-panel .allocation-columns h3 {
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.management-panel .allocation-bar {
-    height: 7px;
-    background: var(--surface-color);
-}
-
-.management-panel .table-context {
-    margin-top: 12px;
-}
-
 .management-panel .holding-table-wrap,
 .management-panel .snapshot-table-wrap {
     margin-top: 12px;
@@ -1947,8 +1785,7 @@ button:disabled {
 }
 
 .holding-table .valuation-status,
-.snapshot-table .valuation-status,
-.holding-mobile-details .valuation-status {
+.snapshot-table .valuation-status {
     padding: 0 !important;
     border: 0 !important;
     border-radius: 0 !important;
@@ -1984,73 +1821,6 @@ button:disabled {
     color: var(--muted-text);
     font-size: 13px;
     font-weight: 800;
-}
-
-.allocation-columns {
-    display: grid;
-    gap: 16px;
-}
-
-.allocation-panel .allocation-columns {
-    grid-template-columns: 1fr;
-}
-
-.allocation-columns h3 {
-    margin: 0 0 8px;
-    color: var(--heading-color);
-    font-size: 14px;
-}
-
-.allocation-list {
-    display: grid;
-    gap: 8px;
-}
-
-.allocation-row {
-    display: grid;
-    grid-template-columns: 1fr minmax(90px, 0.8fr) auto;
-    gap: 8px;
-    align-items: center;
-}
-
-.allocation-row:nth-child(1) .allocation-bar i {
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-}
-
-.allocation-row:nth-child(2) .allocation-bar i {
-    background: linear-gradient(90deg, #0891b2, #22d3ee);
-}
-
-.allocation-row:nth-child(3) .allocation-bar i {
-    background: linear-gradient(90deg, #f59e0b, #fbbf24);
-}
-
-.allocation-row:nth-child(4) .allocation-bar i {
-    background: linear-gradient(90deg, #6366f1, #8b5cf6);
-}
-
-.allocation-row strong,
-.allocation-row span {
-    display: block;
-    font-size: 12px;
-}
-
-.allocation-row span {
-    color: var(--muted-text);
-}
-
-.allocation-bar {
-    height: 8px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: var(--surface-muted);
-}
-
-.allocation-bar i {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, #64748b, #94a3b8);
 }
 
 .account-form {
@@ -2263,39 +2033,6 @@ select:focus {
     background: var(--primary-soft);
 }
 
-.account-meta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
-}
-
-.status-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    border-radius: 999px;
-    color: var(--muted-text);
-    background: var(--surface-muted);
-    font-size: 11px;
-    font-weight: 900;
-}
-
-.status-pill.ready {
-    color: var(--primary-color);
-    background: var(--primary-soft);
-}
-
-.status-pill.warning {
-    color: var(--warning-color);
-    background: rgba(245, 158, 11, 0.12);
-}
-
-.account-actions {
-    display: flex;
-    gap: 6px;
-}
-
 .mini-btn {
     padding: 5px 8px;
     border: 1px solid var(--border-color);
@@ -2330,51 +2067,12 @@ select:focus {
     pointer-events: none;
 }
 
-.main-stack {
-    display: grid;
-    gap: 14px;
-    min-width: 0;
-}
-
-.input-guide,
-.method-note {
-    padding: 7px 11px;
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    background: var(--surface-elevated);
-    box-shadow: var(--shadow-sm);
-    color: var(--muted-text);
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.5;
-}
-
-.input-guide,
-.method-note {
-    margin: 0 24px 10px;
-}
-
 .snapshot-form label {
     display: grid;
     gap: 6px;
     color: var(--muted-text);
     font-size: 13px;
     font-weight: 800;
-}
-
-.table-account-switch {
-    display: grid;
-    min-width: 220px;
-    gap: 6px;
-    color: var(--muted-text);
-    font-size: 13px;
-    font-weight: 800;
-}
-
-.table-context {
-    margin: -4px 0 8px;
-    color: var(--muted-text);
-    font-size: 13px;
 }
 
 .form-message,
@@ -2879,20 +2577,6 @@ select:focus {
     transform: translateY(-1px);
 }
 
-.asset-class-pill {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    padding: 3px 8px;
-    border: 1px solid color-mix(in srgb, var(--accent-color) 28%, var(--border-color));
-    border-radius: 999px;
-    color: var(--accent-color);
-    background: color-mix(in srgb, var(--accent-color) 8%, transparent);
-    font-size: 12px;
-    font-weight: 850;
-    white-space: nowrap;
-}
-
 .snapshot-source-badge {
     display: inline-flex;
     align-items: center;
@@ -2916,37 +2600,14 @@ select:focus {
     font-weight: 750;
 }
 
-.holding-mobile-card {
-    display: none;
-}
-
-.comparison-row,
 .comparison-account-heading,
 .comparison-account-cell {
     cursor: pointer;
 }
 
-.comparison-row:hover,
-.comparison-row.active,
 .comparison-account-heading:hover,
 .comparison-account-cell:hover {
     background: var(--primary-soft);
-}
-
-.comparison-row.invalid {
-    color: var(--muted-text);
-}
-
-.comparison-row td:first-child strong {
-    display: block;
-    color: var(--heading-color);
-}
-
-.comparison-row td:first-child small {
-    display: block;
-    margin-top: 3px;
-    color: var(--muted-text);
-    font-size: 12px;
 }
 
 .number-cell {
@@ -3064,12 +2725,9 @@ select:focus {
 }
 
 .overview-card span,
-.metric-label,
 .account-card-metrics span,
 .management-form label,
-.asset-tool-bar label,
-.table-account-switch,
-.holding-mobile-details span {
+.asset-tool-bar label {
     color: var(--muted-text);
     font-size: 11px;
     font-weight: 800;
@@ -3098,7 +2756,6 @@ select:focus {
 }
 
 .primary-btn,
-.secondary-btn,
 .ghost-btn,
 .icon-btn,
 .mini-btn,
@@ -3110,7 +2767,6 @@ select:focus {
     box-shadow: var(--shadow-sm);
 }
 
-.secondary-btn,
 .ghost-btn,
 .icon-btn,
 .mini-btn,
@@ -3181,11 +2837,9 @@ select,
 
 .title-account-badge,
 .title-period-badge,
-.status-pill,
 .valuation-status,
 .hero-badge,
-.dialog-eyebrow,
-.panel-kicker {
+.dialog-eyebrow {
     border-color: color-mix(in srgb, var(--primary-color) 20%, var(--border-color));
     color: var(--primary-color);
     background: var(--primary-soft);
@@ -3232,13 +2886,7 @@ select,
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .layout-grid,
-    .data-layout-grid,
-    .holding-layout-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .holding-valuation-grid {
+.holding-valuation-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -3301,7 +2949,6 @@ select,
 
     .account-form,
     .compact-account-form,
-    .holding-filter-bar,
     .asset-tool-bar {
         grid-template-columns: 1fr;
         width: 100%;
@@ -3379,12 +3026,7 @@ select,
         display: block;
     }
 
-    .panel-actions {
-        display: grid;
-        width: 100%;
-    }
-
-    /* Header sits flush at the top of the screen and stays pinned so the top "..." menu is always reachable while scrolling.
+/* Header sits flush at the top of the screen and stays pinned so the top "..." menu is always reachable while scrolling.
        It shares the bottom bar's flat full-width look: no card radius, gradient, or side border.
        The .app-shell > prefix outranks the base .global-header card rules declared later in this file. */
     .app-shell > .global-header,
@@ -3509,25 +3151,12 @@ select,
         padding: 16px 18px 8px;
     }
 
-    .method-note {
-        margin: 0 18px 10px;
-        border-radius: 14px;
-    }
-
-    .module-tab-list {
+.module-tab-list {
         flex: 1 1 auto;
         min-width: 0;
     }
 
-    .asset-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .asset-summary-grid .overview-card:first-child {
-        grid-column: 1 / -1;
-    }
-
-    .account-card-strip {
+.account-card-strip {
         padding: 2px 1px 4px;
     }
 
@@ -3805,11 +3434,7 @@ select,
         display: none;
     }
 
-    .comparison-table .desktop-only {
-        display: none;
-    }
-
-    .comparison-table td[data-mobile-label]::before {
+.comparison-table td[data-mobile-label]::before {
         content: attr(data-mobile-label);
     }
 
@@ -4091,133 +3716,7 @@ select,
         display: none;
     }
 
-    .holding-mobile-card {
-        display: grid;
-        gap: 12px;
-        padding: 16px;
-    }
-
-    .holding-mobile-card-head {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 12px;
-        align-items: start;
-    }
-
-    .holding-mobile-card-head strong {
-        display: block;
-        overflow: hidden;
-        color: var(--heading-color);
-        font-size: 17px;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-        line-height: 1.25;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .holding-mobile-card-head small {
-        display: inline-flex;
-        max-width: 100%;
-        margin-top: 8px;
-        padding: 5px 9px;
-        overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--primary-color) 20%, var(--border-color));
-        border-radius: 999px;
-        color: var(--muted-text);
-        background: color-mix(in srgb, var(--surface-color) 76%, var(--primary-soft));
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
-        font-size: 11px;
-        font-weight: 800;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .holding-mobile-card-head + .holding-mobile-details {
-        margin-top: 2px;
-    }
-
-    .holding-mobile-details span {
-        color: var(--muted-text);
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0;
-        text-transform: none;
-    }
-
-    .holding-mobile-details {
-        display: grid;
-        gap: 1px;
-        overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--border-color) 76%, transparent);
-        border-radius: 18px;
-        background: var(--border-color);
-    }
-
-    .holding-mobile-details > div {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 11px 12px;
-        background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
-    }
-
-    .holding-mobile-details > div:first-child strong {
-        color: var(--heading-color);
-        font-size: 15px;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-    }
-
-    .holding-mobile-details strong {
-        min-width: 0;
-        color: var(--heading-color);
-        font-size: 13px;
-        font-weight: 850;
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .holding-mobile-details .holding-weight {
-        width: 96px;
-    }
-
-    .holding-mobile-details .valuation-status {
-        display: inline-flex;
-        padding: 5px 8px;
-        border: 1px solid color-mix(in srgb, var(--accent-color) 18%, var(--border-color));
-        border-radius: 999px;
-        color: var(--accent-color);
-        background: color-mix(in srgb, var(--accent-color) 8%, var(--surface-color));
-    }
-
-    .holding-mobile-details .valuation-status.stale {
-        border-color: color-mix(in srgb, var(--warning-color) 28%, var(--border-color));
-        color: var(--warning-color);
-        background: rgba(245, 158, 11, 0.12);
-    }
-
-    .holding-mobile-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 9px;
-        padding-top: 2px;
-    }
-
-    .holding-mobile-actions .mini-btn.icon-btn {
-        width: 100%;
-        height: 42px;
-        min-height: 42px;
-        border-radius: 14px;
-        color: var(--primary-color);
-        border-color: color-mix(in srgb, var(--primary-color) 18%, var(--border-color));
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.6), transparent 66%),
-            var(--surface-elevated);
-    }
-
-    .holding-table-wrap .holding-table > tbody > tr > td:not(:first-child) {
+.holding-table-wrap .holding-table > tbody > tr > td:not(:first-child) {
         display: none !important;
     }
 
@@ -4268,45 +3767,7 @@ select,
         background: rgba(245, 158, 11, 0.12);
     }
 
-    .holding-mobile-card .holding-mobile-details strong,
-    .holding-mobile-card .holding-mobile-details .valuation-status {
-        color: var(--heading-color) !important;
-        font-size: 12px !important;
-        font-weight: 800 !important;
-        line-height: 1.35 !important;
-        letter-spacing: 0 !important;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .holding-mobile-card .holding-mobile-details > div:first-child strong {
-        font-size: 13px !important;
-        font-weight: 850 !important;
-        letter-spacing: -0.01em !important;
-    }
-
-    .holding-mobile-card .holding-mobile-details strong.positive {
-        color: var(--positive-color) !important;
-    }
-
-    .holding-mobile-card .holding-mobile-details strong.negative {
-        color: var(--negative-color) !important;
-    }
-
-    .holding-mobile-card .holding-mobile-details .valuation-status {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: flex-end;
-        width: auto !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        font-size: 12px !important;
-        font-weight: 800 !important;
-    }
-
-    .holding-table-wrap .holding-table tr {
+.holding-table-wrap .holding-table tr {
         border-color: color-mix(in srgb, var(--primary-color) 18%, var(--border-color));
         background:
             radial-gradient(circle at 0 0, var(--primary-soft), transparent 38%),
@@ -4322,89 +3783,7 @@ select,
         opacity: 0.62;
     }
 
-    .holding-mobile-card {
-        gap: 13px;
-        padding: 15px;
-    }
-
-    .holding-mobile-card-head {
-        margin: -15px -15px 0;
-        padding: 15px 15px 13px;
-        border-bottom: 1px solid var(--border-color);
-        background:
-            linear-gradient(90deg, var(--wealth-gold-soft), transparent 62%),
-            radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 34%),
-            linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
-    }
-
-    .holding-mobile-card-head strong {
-        color: var(--heading-color);
-        font-size: 17px;
-        font-weight: 900;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
-    }
-
-    .holding-mobile-card-head small {
-        border-color: color-mix(in srgb, var(--primary-color) 18%, var(--border-color));
-        color: var(--muted-text);
-        background: color-mix(in srgb, var(--surface-elevated) 80%, var(--primary-soft));
-        box-shadow: none;
-    }
-
-    .holding-mobile-details {
-        border-color: var(--border-color);
-        border-radius: 16px;
-        background: var(--border-color);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .holding-mobile-details > div {
-        min-height: 42px;
-        padding: 10px 12px;
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 58%),
-            var(--surface-elevated);
-    }
-
-    .holding-mobile-details span {
-        color: var(--muted-text);
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0;
-    }
-
-    .holding-mobile-details strong,
-    .holding-mobile-details .valuation-status {
-        font-size: 12px !important;
-        font-weight: 800 !important;
-        line-height: 1.35;
-    }
-
-    .holding-mobile-actions {
-        margin: 0 -1px;
-        padding-top: 0;
-    }
-
-    .holding-mobile-actions .mini-btn.icon-btn {
-        height: 40px;
-        min-height: 40px;
-        border-radius: 13px;
-        color: var(--muted-text);
-        border-color: var(--border-color);
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.44), transparent),
-            var(--surface-elevated);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .holding-mobile-actions .mini-btn.icon-btn:hover {
-        color: var(--primary-color);
-        border-color: color-mix(in srgb, var(--primary-color) 34%, var(--border-color));
-        background: var(--primary-soft);
-    }
-
-    .performance-chart {
+.performance-chart {
         height: 310px;
     }
 }
@@ -4415,22 +3794,17 @@ select,
     }
 
     .primary-btn,
-    .secondary-btn,
     .ghost-btn,
     .icon-btn {
         min-height: 38px;
     }
 
-    .asset-summary-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 .positive,
 .holding-table .positive,
 .snapshot-table .positive,
 .comparison-table .positive,
-.holding-mobile-details .positive,
 .account-card-metrics .positive,
 .overview-card .positive {
     color: var(--positive-color) !important;
@@ -4440,7 +3814,6 @@ select,
 .holding-table .negative,
 .snapshot-table .negative,
 .comparison-table .negative,
-.holding-mobile-details .negative,
 .account-card-metrics .negative,
 .overview-card .negative {
     color: var(--negative-color) !important;
@@ -4460,8 +3833,7 @@ select {
 .account-card-heading strong,
 .overview-card strong,
 .form-card-head h3,
-.confirm-dialog-copy strong,
-.holding-mobile-card-head strong {
+.confirm-dialog-copy strong {
     color: var(--heading-color);
     font-weight: 900 !important;
     line-height: 1.2;
@@ -4477,8 +3849,7 @@ select {
     .account-card-heading strong,
     .overview-card strong,
     .form-card-head h3,
-    .confirm-dialog-copy strong,
-    .holding-mobile-card-head strong {
+    .confirm-dialog-copy strong {
         font-weight: 700 !important;
         letter-spacing: 0 !important;
     }
@@ -4493,8 +3864,7 @@ select {
     font-size: 20px;
 }
 
-.account-card-heading strong,
-.holding-mobile-card-head strong {
+.account-card-heading strong {
     font-size: 17px;
 }
 
@@ -4506,9 +3876,6 @@ select {
 .confirm-dialog-copy p,
 .account-card-heading small,
 .overview-card small,
-.input-guide,
-.method-note,
-.table-context,
 .form-message,
 .chart-message,
 .empty-state {
@@ -4520,27 +3887,21 @@ select {
 }
 
 .dialog-eyebrow,
-.panel-kicker,
 .hero-badge,
 .title-account-badge,
 .title-period-badge,
-.status-pill,
 .management-form label,
 .management-form label > span,
-.holding-filter-bar label,
 .holding-form label,
 .asset-tool-bar label,
-.table-account-switch,
 .overview-card span,
-.metric-label,
 .account-card-metrics span,
 .comparison-table th,
 .holding-table th,
 .snapshot-table th,
 .comparison-table td::before,
 .holding-table td::before,
-.snapshot-table td::before,
-.holding-mobile-details span {
+.snapshot-table td::before {
     font-size: 11px !important;
     font-weight: 800 !important;
     line-height: 1.35;
@@ -4552,7 +3913,6 @@ select {
 .holding-table td,
 .snapshot-table td,
 .account-card-metrics strong,
-.holding-mobile-details strong,
 .valuation-status,
 .price-pair > span,
 .price-pair small {
@@ -4563,8 +3923,7 @@ select {
     font-variant-numeric: tabular-nums;
 }
 
-.holding-table td:first-child strong,
-.comparison-row td:first-child strong {
+.holding-table td:first-child strong {
     font-size: 14px;
     font-weight: 900;
     letter-spacing: -0.01em;
@@ -4576,14 +3935,12 @@ select {
 }
 
 .primary-btn,
-.secondary-btn,
 .ghost-btn,
 .icon-btn,
 .mini-btn,
 .context-action,
 .module-tab,
-.period-chip,
-.account-add-card strong {
+.period-chip {
     font-size: 13px;
     font-weight: 800 !important;
     letter-spacing: 0;
@@ -4598,8 +3955,7 @@ select,
     letter-spacing: 0;
 }
 
-.metric-input input,
-.holding-mobile-card .holding-mobile-details > div:first-child strong {
+.metric-input input {
     font-weight: 850 !important;
 }
 
@@ -4690,17 +4046,6 @@ select,
 
 .overview-card strong {
     margin-top: 8px;
-}
-
-.focus-panel .method-note {
-    display: inline-flex;
-    width: fit-content;
-    max-width: calc(100% - 40px);
-    margin: 14px 20px 10px;
-    border-color: color-mix(in srgb, var(--accent-color) 24%, var(--border-color));
-    background:
-        linear-gradient(90deg, var(--accent-soft), transparent 70%),
-        var(--surface-elevated);
 }
 
 .performance-chart {
@@ -5196,156 +4541,6 @@ select,
         opacity: 0.42;
     }
 
-    .holding-mobile-card,
-    .holding-mobile-card-head {
-        background: transparent !important;
-    }
-
-    .holding-table-wrap .holding-table tr:hover .holding-mobile-details > div {
-        background: transparent;
-    }
-
-    /* Compact label/value rows: tighter padding and a one-line weight keep each card short. */
-    .holding-mobile-details {
-        gap: 0;
-        overflow: visible;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-    }
-
-    .holding-mobile-details > div {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 10px !important;
-        min-width: 0;
-        min-height: 0;
-        padding: 6px 0;
-        border-bottom: 1px solid color-mix(in srgb, var(--border-color) 66%, transparent);
-        background: transparent;
-        box-shadow: none !important;
-    }
-
-    .holding-mobile-details > div:last-child {
-        border-bottom: 0;
-    }
-
-    .holding-mobile-details > div > span {
-        flex: 0 0 auto;
-    }
-
-    .holding-mobile-details > div:first-child strong,
-    .holding-mobile-details > div:nth-child(2) strong,
-    .holding-mobile-details > div:first-child strong.positive,
-    .holding-mobile-details > div:first-child strong.negative,
-    .holding-mobile-details > div:nth-child(2) strong.positive,
-    .holding-mobile-details > div:nth-child(2) strong.negative,
-    .holding-mobile-card .holding-mobile-details > div:first-child strong {
-        color: var(--heading-color) !important;
-        font-size: 12px !important;
-        font-weight: 800 !important;
-        line-height: 1.35 !important;
-        letter-spacing: 0 !important;
-        text-align: right;
-    }
-
-    .holding-mobile-details > div:nth-child(2) strong.positive,
-    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.positive {
-        color: var(--positive-color) !important;
-    }
-
-    .holding-mobile-details > div:nth-child(2) strong.negative,
-    .holding-mobile-card .holding-mobile-details > div:nth-child(2) strong.negative {
-        color: var(--negative-color) !important;
-    }
-
-    .holding-mobile-details .valuation-status {
-        justify-content: flex-end;
-        text-align: right;
-    }
-
-    /* Bar beside the number rather than above it, so the weight row stays one line tall. */
-    .holding-table td:first-child .holding-mobile-details .holding-weight {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        width: auto;
-        min-width: 0;
-        overflow: visible;
-    }
-
-    .holding-table td:first-child .holding-mobile-details .holding-weight > span {
-        display: block;
-        flex: 0 0 48px;
-        width: 48px;
-    }
-
-    .holding-table td:first-child .holding-mobile-details .valuation-status {
-        overflow: visible;
-        white-space: nowrap;
-    }
-
-    .holding-mobile-actions {
-        margin-top: 4px;
-        padding-top: 12px;
-        border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-    }
-
-    .holding-mobile-card {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: start;
-        gap: 10px;
-        padding: 12px 14px;
-    }
-
-    .holding-mobile-card-head {
-        grid-column: 1;
-        min-width: 0;
-        margin: 0;
-        padding: 0;
-        border-bottom: 0 !important;
-    }
-
-    .holding-mobile-card-head strong {
-        font-size: 15px;
-    }
-
-    /* Plain meta line under the name; the pill made the head nearly twice as tall. */
-    .holding-table td:first-child .holding-mobile-card-head small {
-        display: block;
-        margin-top: 3px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-    }
-
-    .holding-mobile-details {
-        grid-column: 1 / -1;
-        margin-top: 0;
-        padding-top: 10px;
-        border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-    }
-
-    .holding-mobile-actions {
-        grid-column: 2;
-        grid-row: 1;
-        display: flex;
-        gap: 6px;
-        margin-top: 0;
-        padding-top: 0;
-        border-top: 0;
-    }
-
-    .holding-mobile-actions .mini-btn.icon-btn {
-        width: 34px;
-        min-width: 34px;
-        height: 34px;
-        min-height: 34px;
-        border-radius: 12px;
-    }
 }
 
 /* View switch and filters share one row: switch on the left, filters on the right. */
@@ -7294,8 +6489,7 @@ select,
 }
 
 /* Account returns view on phones: compact overview, full period row, and per-account comparison cards. */
-.comparison-mobile,
-.chart-legend-mobile {
+.comparison-mobile {
     display: none;
 }
 
@@ -7393,27 +6587,11 @@ select,
         margin: 4px 2px 0;
     }
 
-    .chart-legend-mobile {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        margin: 0 14px 12px !important;
-        color: var(--muted-text);
-        font-size: 11px !important;
-        font-weight: 700;
-    }
-
-    #analysisView .overview-card .nowrap {
+#analysisView .overview-card .nowrap {
         white-space: nowrap;
     }
 
-    .chart-legend-mobile i {
-        flex: 0 0 18px;
-        height: 0;
-        border-top: 2px dashed var(--muted-text);
-    }
-
-    /* Comparison: cards replace the wide table, which only fit one account column at a time. */
+/* Comparison: cards replace the wide table, which only fit one account column at a time. */
     .comparison-panel .comparison-desc-desktop {
         display: none;
     }
@@ -7597,16 +6775,7 @@ select,
         line-height: 1.1;
     }
 
-    .cmp-row-chevron {
-        color: var(--muted-text);
-        transition: transform 0.16s ease;
-    }
-
-    .cmp-row.active .cmp-row-chevron {
-        transform: rotate(90deg);
-    }
-
-    .cmp-row-details {
+.cmp-row-details {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
@@ -7642,12 +6811,6 @@ select,
         white-space: nowrap;
     }
 
-    .cmp-row-date {
-        margin: 6px 12px 10px 34px !important;
-        color: var(--muted-text);
-        font-size: 11px !important;
-        font-weight: 700;
-    }
 }
 
 @media (max-width: 380px) {
@@ -8387,11 +7550,7 @@ select,
         margin-top: 2px;
     }
 
-    .chart-legend-mobile {
-        margin-bottom: 10px !important;
-    }
-
-    /* Account comparison: description inline with the title, slimmer sort bar and rows. */
+/* Account comparison: description inline with the title, slimmer sort bar and rows. */
     .comparison-panel .split-head {
         padding: 12px 14px 8px;
     }
@@ -8456,9 +7615,6 @@ select,
         padding-top: 8px;
     }
 
-    .cmp-row-date {
-        margin: 4px 10px 8px 30px !important;
-    }
 }
 
 /* Full-screen view. Blurred ancestors would become the containing block of a fixed element, so the
@@ -8512,8 +7668,7 @@ html.chart-fullscreen-open .chart-panel.is-fullscreen {
     min-width: 0;
 }
 
-.chart-panel.is-fullscreen .panel-head p,
-.chart-panel.is-fullscreen .chart-legend-mobile {
+.chart-panel.is-fullscreen .panel-head p {
     display: none !important;
 }
 
@@ -8591,7 +7746,6 @@ html {
     .holding-summary dt,
     .holding-row-details dt,
     .cmp-row-details dt,
-    .panel-kicker,
     .account-card-heading > div > span {
         font-size: 11px;
     }
@@ -8783,11 +7937,7 @@ html {
         padding: 0;
     }
 
-    .chart-legend-mobile {
-        display: none !important;
-    }
-
-    /* Ranking: one tap target per row (dot, name and assets, diverging bar, return and period P/L). */
+/* Ranking: one tap target per row (dot, name and assets, diverging bar, return and period P/L). */
     .cmp-row {
         cursor: default;
     }
@@ -9292,7 +8442,6 @@ html {
     html body .app-shell .account-summary-head small,
     html body .app-shell .list-pager,
     html body .app-shell .list-pager > span,
-    html body .app-shell .chart-legend-mobile,
     html body .app-shell .comparison-sort-select > span,
     html body .asset-dialog .form-guide,
     html body .asset-dialog small {
@@ -9335,7 +8484,6 @@ html {
     html body .app-shell .list-pager button,
     html body .app-shell .context-action,
     html body .asset-dialog .primary-btn,
-    html body .asset-dialog .secondary-btn,
     html body .asset-dialog .ghost-btn {
         font-size: var(--type-control) !important;
         font-weight: 600 !important;
@@ -9394,8 +8542,7 @@ html {
     .account-card-heading strong,
     .overview-card strong,
     .form-card-head h3,
-    .confirm-dialog-copy strong,
-    .holding-mobile-card-head strong {
+    .confirm-dialog-copy strong {
         font-weight: 700 !important;
         letter-spacing: -0.01em !important;
     }
