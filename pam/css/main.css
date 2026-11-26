@@ -5977,25 +5977,22 @@ select,
 
 /* Risk exposure: HTML only like allocation, so the view works without ECharts. Warning tone marks
    near/over limits; P/L red/green stays out because exposure is not a profit or loss. */
-.risk-scope-label {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    color: var(--muted-text);
-    font-size: 12px;
-    font-weight: 800;
+/* Account scope is a chip bar like 账户管理's account switch, not a select. */
+.risk-scope-switch {
+    max-width: 100%;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
 
-.risk-scope-label select {
-    min-height: 36px;
-    max-width: 14em;
-    padding: 4px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--heading-color);
-    background: var(--surface-color);
-    font: inherit;
-    font-weight: 750;
+.risk-scope-switch::-webkit-scrollbar {
+    display: none;
+}
+
+.risk-scope-switch .period-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .risk-lines {
@@ -7831,23 +7828,6 @@ html {
         background: var(--surface-color);
     }
 
-    .returns-summary-stats {
-        display: flex;
-        margin: 0;
-    }
-
-    .returns-summary-stats > div {
-        display: grid;
-        flex: 1 1 auto;
-        gap: 2px;
-        min-width: 0;
-        padding: 9px 10px 10px 12px;
-    }
-
-    .returns-summary-stats > div + div {
-        border-left: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-    }
-
     .returns-summary-stats dt {
         color: var(--muted-text);
         font-size: 11px;
@@ -9478,5 +9458,71 @@ html {
         width: fit-content;
         padding: 1px 8px;
         border-radius: 999px;
+    }
+}
+
+/* ---- Phone summaries: the 资产配置 stat-card grid ----
+   The returns hero and the 账户管理 summary used divided rows. They now use the same bordered cards as
+   资产配置 and 风险敞口 (.alloc-stats): the total spans the first row, the other two share the next.
+   The figure size still follows the card width (cqi), so a 7-digit total stays whole at 360px. */
+@media (max-width: 720px) {
+    .returns-summary-stats,
+    .account-summary-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0;
+    }
+
+    .returns-summary-stats > div,
+    .account-summary-stats > div {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+        border-radius: var(--radius-lg);
+        background: var(--surface-muted);
+    }
+
+    .returns-summary-stats > div:first-child,
+    .account-summary-stats > div:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .returns-summary-stats dt,
+    .account-summary-stats dt {
+        font-size: 11px;
+        font-weight: 800;
+        white-space: normal;
+    }
+
+    .returns-summary-stats dd,
+    .account-summary-stats dd {
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+    }
+}
+
+/* ---- Account list: one panel, not a panel inside a panel ----
+   The account strip now sits under its own 账户列表 panel head (generate and refresh live there), so the
+   inner strip drops its border, gradient, and padding and only holds the cards. */
+html body .app-shell .account-strip-body > .account-card-strip-panel {
+    display: block;
+    padding: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.account-strip-body > .account-card-strip-panel > .account-card-strip {
+    padding: 16px 20px 20px;
+}
+
+@media (max-width: 720px) {
+    .account-strip-body > .account-card-strip-panel > .account-card-strip {
+        padding: 12px 14px 14px;
     }
 }

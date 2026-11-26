@@ -42,6 +42,7 @@ export function renderRiskPanel(metrics) {
     `;
 }
 
+// Same chip bar as 账户管理: one chip per account, plus 全部账户. Hidden with fewer than two accounts.
 function renderScopeSwitch(el) {
     if (!el) return;
     el.hidden = state.accounts.length < 2;
@@ -49,13 +50,11 @@ function renderScopeSwitch(el) {
         el.innerHTML = '';
         return;
     }
-    const options = [['all', t('riskScopeAll')], ...state.accounts.map(account => [account.id, account.name])];
-    el.innerHTML = `
-        <label class="risk-scope-label">
-            <span>${t('riskScopeLabel')}</span>
-            <select id="riskScopeSelect">${options.map(([value, label]) => `<option value="${escapeHtml(value)}"${value === state.riskScope ? ' selected' : ''}>${escapeHtml(label)}</option>`).join('')}</select>
-        </label>
-    `;
+    const chips = [['all', t('riskScopeAll')], ...state.accounts.map(account => [account.id, account.name])];
+    el.innerHTML = chips.map(([value, label]) => {
+        const active = value === state.riskScope;
+        return `<button class="period-chip${active ? ' active' : ''}" type="button" data-risk-scope="${escapeHtml(value)}" aria-pressed="${active}">${escapeHtml(label)}</button>`;
+    }).join('');
 }
 
 function renderLines(metrics) {
@@ -248,7 +247,7 @@ function renderTrial(metrics) {
                 <div class="risk-trial-inputs">
                     ${trialInput('entry', t('riskTrialEntry'), '0.001')}
                     ${trialInput('stop', t('riskTrialStop'), '0.001')}
-                    ${trialInput('risk', t('riskTrialRisk'), '0.01', state.amountsHidden ? t('riskTrialRiskHiddenPlaceholder', { pct: formatSetting(metrics.settings.riskPerTradePct) }) : t('riskTrialRiskPlaceholder', { value: formatCurrency(suggested), pct: formatSetting(metrics.settings.riskPerTradePct) }))}
+                    ${trialInput('risk', t('riskTrialRisk'), '0.01', state.amountsHidden ? t('riskTrialRiskHiddenPlaceholder') : t('riskTrialRiskPlaceholder', { value: formatCurrency(suggested) }))}
                     ${trialInput('lot', t('riskTrialLot'), '1')}
                 </div>
                 ${renderTrialResult(result, metrics)}
@@ -312,8 +311,9 @@ function renderEmpty(message) {
 }
 
 export function bindRiskPanel({ onScopeChange, onEditStop, onGoToAssetData, onRender }) {
-    document.getElementById('riskScopeSwitch')?.addEventListener('change', event => {
-        if (event.target.id === 'riskScopeSelect') onScopeChange(event.target.value);
+    document.getElementById('riskScopeSwitch')?.addEventListener('click', event => {
+        const chip = event.target.closest('[data-risk-scope]');
+        if (chip) onScopeChange(chip.dataset.riskScope);
     });
     const content = document.getElementById('riskContent');
     // Re-render on change (blur or Enter), not on every keystroke, so the input keeps focus.

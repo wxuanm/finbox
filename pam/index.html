@@ -126,14 +126,6 @@
                 <button class="module-tab" type="button" data-view="risk" data-i18n="tabRisk">风险敞口</button>
                 <button class="module-tab" type="button" disabled data-i18n="tabTransactions">交易记录</button>
             </div>
-            <div class="context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataBatchActions" aria-label="账户管理批量操作">
-                <button id="generateSnapshotsBtn" class="context-action" type="button" data-i18n-title="generateSnapshotsTitle" title="为全部账户生成快照" aria-label="为全部账户生成快照">
-                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span data-i18n="generate">生成</span>
-                </button>
-                <button id="refreshQuotesBtn" class="context-action" type="button" data-i18n-title="refreshQuotesTitle" title="刷新全部账户行情" aria-label="刷新全部账户行情">
-                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v5h5M4 13a8 8 0 0 0 14.9 4M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="refresh">刷新</span>
-                </button>
-            </div>
         </nav>
 
         <div id="accountFloatingActions" class="context-actions account-context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataActions" aria-label="账户管理操作">
@@ -210,8 +202,26 @@
                 <div class="account-switch-bar" hidden>
                     <div id="accountSwitchBar" class="period-switch account-switch" role="group" data-i18n-aria-label="assetAccount" aria-label="资产账户"></div>
                 </div>
-                <section class="account-card-strip-panel">
-                    <div id="accountList" class="account-list account-card-strip"></div>
+                <section class="panel management-panel account-strip-section">
+                    <div class="panel-head split-head">
+                        <div>
+                            <h2 data-i18n="accountListTitle">账户</h2>
+                            <p data-i18n="accountListDesc">选择账户查看其快照、持仓与走势；批量操作可为全部账户生成快照或刷新行情。</p>
+                        </div>
+                        <div class="alloc-head-actions">
+                            <button id="generateSnapshotsBtn" class="ghost-btn alloc-head-action" type="button" data-i18n-title="generateSnapshotsTitle" title="为全部账户生成快照" aria-label="为全部账户生成快照">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span data-i18n="generate">生成</span>
+                            </button>
+                            <button id="refreshQuotesBtn" class="ghost-btn alloc-head-action" type="button" data-i18n-title="refreshQuotesTitle" title="刷新全部账户行情" aria-label="刷新全部账户行情">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v5h5M4 13a8 8 0 0 0 14.9 4M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="refresh">刷新</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="account-strip-body">
+                        <section class="account-card-strip-panel">
+                            <div id="accountList" class="account-list account-card-strip"></div>
+                        </section>
+                    </div>
                 </section>
 
                 <dialog id="snapshotDialog" class="asset-dialog" aria-labelledby="snapshotDialogTitle">
@@ -473,7 +483,7 @@
                             <p data-i18n="riskDesc">持仓全部按止损价退出时，本金和净值会少多少。</p>
                         </div>
                         <div class="alloc-head-actions">
-                            <div id="riskScopeSwitch" class="risk-scope" hidden></div>
+                            <div id="riskScopeSwitch" class="period-switch risk-scope-switch" role="group" data-i18n-aria-label="riskScopeLabel" aria-label="范围" hidden></div>
                             <button id="riskSettingsBtn" class="ghost-btn alloc-head-action" type="button">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke-linecap="round"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
                                 <span data-i18n="riskSettings">预警设置</span>

@@ -91,7 +91,7 @@ It reports quantity, cost and weight, added principal risk, and both lines after
 
 ## UI
 
-- Header: title, account scope select (shown with two or more accounts), `预警设置`.
+- Header: title, account scope as a chip bar (`全部账户` plus one chip per account, shown with two or more accounts; same control as the `账户管理` account switch), `预警设置`.
 - Two line cards with value, limit, status text, and a meter whose track runs to 125% of the limit with a tick at the limit. Warning tone marks `near`/`over`; P/L red/green is not used.
 - Figures: possible drawdown from now (% and amount), net value after stop-outs, and the share of invested value estimated by the default stop.
 - Notices: triggered stops, stale prices (over three days), and a holdings-vs-latest-snapshot gap of 10% or more, which makes the unit NAV unreliable.

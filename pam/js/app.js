@@ -548,6 +548,7 @@ function bindEvents() {
     // Folding only applies on phones; crossing the breakpoint redraws a trend chart that was skipped while folded.
     window.matchMedia?.('(max-width: 720px)')?.addEventListener?.('change', () => renderApp());
     bindAccountComparison({
+        onGoToAssetData: () => switchView('assetData'),
         onHighlight: accountId => {
             state.selectedHighlightAccountId = state.selectedHighlightAccountId === accountId ? '' : accountId;
             renderApp();

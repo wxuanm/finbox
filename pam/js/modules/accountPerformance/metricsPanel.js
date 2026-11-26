@@ -44,8 +44,16 @@ export function renderAccountComparison(metrics) {
     if (!wrap) return;
     if (periodLabel) periodLabel.textContent = currentPeriodLabel();
 
+    // Same empty-state shape as 资产配置 and 风险敞口: a message and one action that goes to 账户管理.
     if (state.accounts.length === 0) {
-        wrap.innerHTML = `<div class="empty-state">${t('noAccountsAddSnapshot')}</div>`;
+        wrap.innerHTML = `
+            <div class="empty-state alloc-empty">
+                <div>
+                    <p>${t('noAccountsAddSnapshot')}</p>
+                    <button class="primary-btn" type="button" data-returns-action="go-asset-data">${t('allocationGoAssetData')}</button>
+                </div>
+            </div>
+        `;
         return;
     }
 
@@ -82,7 +90,7 @@ export function renderAccountComparison(metrics) {
 // Expanded rows in the phone ranking; they survive re-renders but not a reload, like holdings rows.
 const expandedComparisonRows = new Set();
 
-export function bindAccountComparison({ onHighlight, onSort, onGoToAccount }) {
+export function bindAccountComparison({ onHighlight, onSort, onGoToAccount, onGoToAssetData }) {
     const wrap = document.getElementById('accountComparison');
     if (!wrap) return;
     wrap.addEventListener('click', event => {
@@ -91,6 +99,10 @@ export function bindAccountComparison({ onHighlight, onSort, onGoToAccount }) {
         const goTo = event.target.closest('[data-goto-account]');
         if (goTo) {
             onGoToAccount?.(goTo.dataset.gotoAccount);
+            return;
+        }
+        if (event.target.closest('[data-returns-action="go-asset-data"]')) {
+            onGoToAssetData?.();
             return;
         }
         const toggle = event.target.closest('[data-expand-account]');
