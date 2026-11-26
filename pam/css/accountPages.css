@@ -1,9 +1,10 @@
 /* ==========================================================================
-   账户收益 and 账户管理, styled like 资产配置.
-   Each page is one .page-surface: one border, radius and shadow. Its sections are flat blocks divided
-   by hairlines, with the 资产配置 head padding. Summary figures are flat cells divided by hairlines.
-   Tables and lists are bordered with a muted head row. Every rule is scoped to #analysisView or
-   #assetDataView, and no rule here sets a state class (.active, .expanded, [hidden], :hover).
+   账户收益 and 账户管理, styled like 资产配置 on desktop.
+   Each page is one .page-surface with the 资产配置 frame: 24px radius, the management-panel gradient and
+   shadow. Its sections are flat blocks divided by hairlines, with the 资产配置 head padding and accent bar.
+   Summary figures are bordered tiles and tables are bordered with a muted head row, like the allocation stats.
+   Desktop rules sit in one (min-width: 721px) block so phones keep their existing layout. Every rule is scoped
+   to #analysisView or #assetDataView, and no rule sets a state class (.active, .expanded, [hidden], :hover).
    ========================================================================== */
 
 /* ---- Shared page surface ---- */
@@ -67,12 +68,6 @@
     letter-spacing: -0.01em;
 }
 
-#analysisView .returns-surface .panel h2::before,
-#assetDataView .assets-surface .panel h2::before {
-    content: none;
-    display: none;
-}
-
 #analysisView .returns-surface .panel p,
 #assetDataView .assets-surface .panel p {
     margin: 4px 0 0;
@@ -84,69 +79,6 @@
 #analysisView .returns-surface .panel-head .alloc-head-actions,
 #assetDataView .assets-surface .panel-head .alloc-head-actions {
     margin-left: auto;
-}
-
-/* ---- 账户收益: summary ---- */
-@media (min-width: 721px) {
-    #analysisView .returns-surface > .overview-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
-#analysisView .returns-surface > .overview-grid {
-    gap: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-}
-
-#analysisView .returns-surface > .overview-grid > .overview-card {
-    display: grid;
-    gap: 4px;
-    min-height: 0;
-    padding: 14px 18px;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-}
-
-#analysisView .returns-surface > .overview-grid > .overview-card + .overview-card {
-    border-left: 1px solid var(--border-color);
-}
-
-#analysisView .returns-surface > .overview-grid > .overview-card::before,
-#analysisView .returns-surface > .overview-grid > .overview-card::after {
-    content: none;
-    display: none;
-}
-
-#analysisView .returns-surface > .overview-grid > .overview-card span {
-    color: var(--muted-text);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: none;
-}
-
-#analysisView .returns-surface > .overview-grid > .overview-card strong {
-    margin-top: 0;
-    color: var(--heading-color);
-    font-size: 22px;
-    font-weight: 900;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
-}
-
-#analysisView .returns-surface > .overview-grid > .overview-card small {
-    color: var(--muted-text);
-    font-size: 12px;
-    font-weight: 600;
 }
 
 /* ---- Tables and lists: bordered, muted head row ---- */
@@ -199,7 +131,7 @@
     #assetDataView .account-card-strip {
         display: flex;
         gap: 10px;
-        padding: 4px 22px 18px;
+        padding: 4px 20px 18px;
         overflow-x: auto;
     }
 }
@@ -240,6 +172,98 @@
 #analysisView .returns-surface .is-desktop-folded .desktop-fold-body,
 #assetDataView .assets-surface .is-desktop-folded .desktop-fold-body {
     display: none;
+}
+
+/* ---- Desktop: the 资产配置 frame and tiles ----
+   Placed after the base rules so it wins by order. The !important declarations are needed only where main.css's
+   page-surface reset (flat summary cells and frameless table) sets !important, which this block replaces. */
+@media (min-width: 721px) {
+    /* Surface: 24px radius, the management-panel gradient and shadow. */
+    #analysisView .returns-surface,
+    #assetDataView .assets-surface {
+        border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
+        border-radius: 24px;
+        background:
+            radial-gradient(circle at 0 0, var(--primary-soft), transparent 32%),
+            radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 44%),
+            var(--surface-elevated);
+        box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.56);
+    }
+
+    /* Section heads and titles: the 资产配置 head padding and 18px title with its accent bar. */
+    #analysisView .returns-surface .panel-head,
+    #assetDataView .assets-surface .panel-head {
+        padding: 18px 20px 14px;
+    }
+
+    #analysisView .returns-surface .panel h2,
+    #assetDataView .assets-surface .panel h2 {
+        font-size: 18px;
+    }
+
+    /* Summary figures: bordered tiles with 10px gaps, like the 资产配置 stats. */
+    #analysisView .returns-surface > .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        padding: 4px 20px 16px;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card {
+        display: grid;
+        gap: 4px;
+        min-height: 0;
+        padding: 12px 14px;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+        box-shadow: none;
+    }
+
+    /* main.css draws a decorative circle on .overview-card; the allocation stats have none. */
+    #analysisView .returns-surface > .overview-grid > .overview-card::before,
+    #analysisView .returns-surface > .overview-grid > .overview-card::after {
+        content: none;
+        display: none;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card span {
+        color: var(--muted-text);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card strong {
+        margin-top: 0;
+        color: var(--heading-color);
+        font-size: 22px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card small {
+        color: var(--muted-text);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card + .overview-card {
+        border-left: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
+    }
+
+    /* Tables: bordered with a muted head, on the section inset, like the 资产配置 table. */
+    #analysisView .returns-surface .comparison-table-wrap,
+    #assetDataView .assets-surface .holding-table-wrap,
+    #assetDataView .assets-surface .snapshot-table-wrap {
+        margin: 0 20px 18px;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+    }
 }
 
 /* ---- Phones ----
