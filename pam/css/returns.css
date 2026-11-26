@@ -1,0 +1,214 @@
+/* ==========================================================================
+   账户收益 page, styled like 资产配置.
+   One page surface holds the summary, the return chart, and the comparison. Each section is
+   separated by a hairline; the head uses the allocation head padding; stat tiles are flat
+   bordered boxes with the allocation radius. Scoped to #analysisView so no other view changes.
+   ========================================================================== */
+
+#analysisView .returns-period-bar {
+    margin-bottom: 14px;
+}
+
+#analysisView .returns-surface {
+    display: grid;
+    gap: 0;
+    margin-top: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    box-shadow: var(--shadow-md);
+}
+
+/* Summary: four flat cells divided by hairlines, the same figures as the allocation stats. */
+#analysisView .returns-surface > .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+#analysisView .returns-surface > .overview-grid > .overview-card {
+    display: grid;
+    gap: 4px;
+    min-height: 0;
+    padding: 14px 18px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+#analysisView .returns-surface > .overview-grid > .overview-card + .overview-card {
+    border-left: 1px solid var(--border-color);
+}
+
+#analysisView .returns-surface > .overview-grid > .overview-card::before,
+#analysisView .returns-surface > .overview-grid > .overview-card::after {
+    content: none;
+    display: none;
+}
+
+#analysisView .returns-surface > .overview-grid > .overview-card span {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+#analysisView .returns-surface > .overview-grid > .overview-card strong {
+    margin-top: 0;
+    color: var(--heading-color);
+    font-size: 22px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+}
+
+#analysisView .returns-surface > .overview-grid > .overview-card small {
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Sections: each one is a flat block with a hairline above it. */
+#analysisView .returns-surface > .panel {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+
+#analysisView .returns-surface > .panel + .panel,
+#analysisView .returns-surface > .overview-grid + .panel {
+    border-top: 1px solid var(--border-color);
+}
+
+#analysisView .returns-surface .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 0;
+    padding: 18px 22px 12px;
+    background: transparent;
+    border-bottom: 0;
+}
+
+#analysisView .returns-surface .panel-head > div:first-child {
+    min-width: 0;
+}
+
+#analysisView .returns-surface .panel h2 {
+    color: var(--heading-color);
+    font-size: 16px;
+    font-weight: 850;
+    letter-spacing: -0.01em;
+}
+
+#analysisView .returns-surface .panel h2::before {
+    content: none;
+    display: none;
+}
+
+#analysisView .returns-surface .panel p {
+    margin: 4px 0 0;
+    color: var(--muted-text);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Comparison: a bordered list with a muted head row, as the allocation class list. */
+#analysisView .returns-surface .comparison-table-wrap {
+    margin: 0 22px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    box-shadow: none;
+    overflow-x: auto;
+}
+
+#analysisView .returns-surface .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#analysisView .returns-surface .comparison-table th,
+#analysisView .returns-surface .comparison-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+}
+
+#analysisView .returns-surface .comparison-table thead th {
+    background: var(--surface-muted);
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+#analysisView .returns-surface .comparison-table tbody tr:last-child > * {
+    border-bottom: 0;
+}
+
+/* Chart: plain plot area, no inner frame. */
+#analysisView .returns-surface .performance-chart {
+    margin: 0 14px 12px;
+}
+
+/* Folds: the chevron toggles, and a collapsed body hides. */
+#analysisView .returns-surface .is-collapsed .desktop-fold-body,
+#analysisView .returns-surface .is-desktop-folded .desktop-fold-body {
+    display: none;
+}
+
+/* Phones: the summary keeps the stacked figures of the 资产配置 stat cards. The total spans the first row,
+   the other two share the next, so no figure is cut off at 360px. */
+@media (max-width: 720px) {
+    #analysisView .returns-surface > .overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card {
+        padding: 12px 14px;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card:nth-child(n + 3) {
+        border-top: 1px solid var(--border-color);
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card + .overview-card {
+        border-left: 0;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card:nth-child(even) {
+        border-left: 1px solid var(--border-color);
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card strong {
+        font-size: 18px;
+        white-space: nowrap;
+    }
+
+    #analysisView .returns-surface .panel-head {
+        padding: 14px 16px 10px;
+    }
+
+    #analysisView .returns-surface .comparison-table-wrap {
+        margin: 0 14px 14px;
+    }
+
+    #analysisView .returns-surface .comparison-table th,
+    #analysisView .returns-surface .comparison-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
