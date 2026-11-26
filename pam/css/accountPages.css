@@ -1,7 +1,8 @@
 /* ==========================================================================
    账户收益 and 账户管理, styled like 资产配置 on desktop.
-   Each page is one .page-surface with the 资产配置 frame: 24px radius, the management-panel gradient and
-   shadow. Its sections are flat blocks divided by hairlines, with the 资产配置 head padding and accent bar.
+   Each page is one .page-surface with the 资产配置 frame: a flat --surface-color panel, --radius-lg and
+   --shadow-md, as main.css's desktop surfaces block draws .management-panel. Its sections are flat blocks
+   divided by hairlines, with the 资产配置 head padding and accent bar.
    Summary figures are bordered tiles and tables are bordered with a muted head row, like the allocation stats.
    Desktop rules sit in one (min-width: 721px) block so phones keep their existing layout. Every rule is scoped
    to #analysisView or #assetDataView, and no rule sets a state class (.active, .expanded, [hidden], :hover).
@@ -178,17 +179,14 @@
    Placed after the base rules so it wins by order. The !important declarations are needed only where main.css's
    page-surface reset (flat summary cells and frameless table) sets !important, which this block replaces. */
 @media (min-width: 721px) {
-    /* Surface: 24px radius, the management-panel gradient and shadow. */
+    /* Surface: a flat --surface-color panel, as main.css's desktop surfaces block draws .management-panel
+       (allocation). Its gradient is cleared there with !important, so the page surface matches it. */
     #analysisView .returns-surface,
     #assetDataView .assets-surface {
-        border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
-        border-radius: 24px;
-        background:
-            radial-gradient(circle at 0 0, var(--primary-soft), transparent 32%),
-            radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 44%),
-            var(--surface-elevated);
-        box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.56);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        background: var(--surface-color);
+        box-shadow: var(--shadow-md);
     }
 
     /* Section heads and titles: the 资产配置 head padding and 18px title with its accent bar. */
