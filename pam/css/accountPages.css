@@ -39,7 +39,7 @@
 #analysisView .returns-surface > .panel + .panel,
 #analysisView .returns-surface > .overview-grid + .panel,
 #assetDataView .assets-surface > .panel + .panel {
-    border-top: 1px solid var(--border-color);
+    border-top: 0;
 }
 
 /* Section heads: the 资产配置 head padding, title and description on the left, actions on the right. */
@@ -132,7 +132,7 @@
     #assetDataView .account-card-strip {
         display: flex;
         gap: 10px;
-        padding: 4px 20px 18px;
+        padding: 0;
         overflow-x: auto;
     }
 }
@@ -189,10 +189,28 @@
         box-shadow: var(--shadow-md);
     }
 
+    /* One layout, as 资产配置: the surface holds every section on the .alloc-content grid (18px gap, 16px/20px
+       padding). Sections drop their own frames, which main.css's desktop block gives every .management-panel. */
+    #analysisView .returns-surface,
+    #assetDataView .assets-surface {
+        display: grid;
+        gap: 18px;
+        padding: 16px 20px 22px;
+    }
+
+    #analysisView .returns-surface > .panel,
+    #analysisView .returns-surface > .overview-grid,
+    #assetDataView .assets-surface > .panel {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
     /* Section heads and titles: the 资产配置 head padding and 18px title with its accent bar. */
     #analysisView .returns-surface .panel-head,
     #assetDataView .assets-surface .panel-head {
-        padding: 18px 20px 14px;
+        padding: 0 0 10px;
     }
 
     #analysisView .returns-surface .panel h2,
@@ -200,12 +218,12 @@
         font-size: 18px;
     }
 
-    /* Summary figures: bordered tiles with 10px gaps, like the 资产配置 stats. */
+    /* Summary figures: bordered tiles in a 4-column row, like the 资产配置 stats. Spacing comes from the surface grid. */
     #analysisView .returns-surface > .overview-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
-        padding: 4px 20px 16px;
+        padding: 0;
     }
 
     #analysisView .returns-surface > .overview-grid > .overview-card {
@@ -257,7 +275,7 @@
     #analysisView .returns-surface .comparison-table-wrap,
     #assetDataView .assets-surface .holding-table-wrap,
     #assetDataView .assets-surface .snapshot-table-wrap {
-        margin: 0 20px 18px;
+        margin: 0;
         border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
