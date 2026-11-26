@@ -20,10 +20,16 @@
     box-shadow: var(--shadow-md);
 }
 
-/* Summary: four flat cells divided by hairlines, the same figures as the allocation stats. */
+/* Summary: four flat cells divided by hairlines, the same figures as the allocation stats.
+   Desktop only sets display, so on phones main.css's hide for the overview still applies. */
+@media (min-width: 721px) {
+    #analysisView .returns-surface > .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
 #analysisView .returns-surface > .overview-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
     padding: 0;
     border: 0;
@@ -164,40 +170,15 @@
     margin: 0 14px 12px;
 }
 
-/* Folds: the chevron toggles, and a collapsed body hides. */
-#analysisView .returns-surface .is-collapsed .desktop-fold-body,
+/* Desktop folds only. The phone fold uses .is-collapsed and is handled by main.css on phones, so this
+   rule must not touch it: an unscoped .is-collapsed rule hid the desktop chart. */
 #analysisView .returns-surface .is-desktop-folded .desktop-fold-body {
     display: none;
 }
 
-/* Phones: the summary keeps the stacked figures of the 资产配置 stat cards. The total spans the first row,
-   the other two share the next, so no figure is cut off at 360px. */
+/* Phones: the returns hero is the one summary, as in main.css. The four overview cards are hidden there,
+   so they are not restyled on phones. */
 @media (max-width: 720px) {
-    #analysisView .returns-surface > .overview-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card {
-        padding: 12px 14px;
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card:nth-child(n + 3) {
-        border-top: 1px solid var(--border-color);
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card + .overview-card {
-        border-left: 0;
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card:nth-child(even) {
-        border-left: 1px solid var(--border-color);
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card strong {
-        font-size: 18px;
-        white-space: nowrap;
-    }
-
     #analysisView .returns-surface .panel-head {
         padding: 14px 16px 10px;
     }
