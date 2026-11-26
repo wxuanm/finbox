@@ -13,11 +13,11 @@ body {
     font-family: Inter, "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
     color: var(--text-color);
     background:
-        linear-gradient(180deg, rgba(79, 70, 229, 0.12), transparent 22rem),
-        radial-gradient(circle at 8% 8%, rgba(6, 182, 212, 0.16), transparent 28rem),
-        radial-gradient(circle at 92% 4%, rgba(79, 70, 229, 0.18), transparent 25rem),
-        radial-gradient(circle at 68% 82%, rgba(168, 85, 247, 0.1), transparent 28rem),
-        var(--background-color);
+    linear-gradient(180deg, rgba(79, 70, 229, 0.12), transparent 22rem),
+    radial-gradient(circle at 8% 8%, rgba(6, 182, 212, 0.16), transparent 28rem),
+    radial-gradient(circle at 92% 4%, rgba(79, 70, 229, 0.18), transparent 25rem),
+    radial-gradient(circle at 68% 82%, rgba(168, 85, 247, 0.1), transparent 28rem),
+    var(--background-color);
     font-size: 14px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -123,8 +123,8 @@ body::before {
     z-index: 0;
     pointer-events: none;
     background-image:
-        linear-gradient(rgba(79, 70, 229, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(79, 70, 229, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
     background-size: 52px 52px;
     mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.78), transparent 70%);
 }
@@ -182,8 +182,8 @@ button:disabled {
     border-radius: 18px;
     color: #ffffff;
     background:
-        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.38), transparent 34%),
-        linear-gradient(135deg, #312e81, var(--primary-color) 48%, var(--accent-color));
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.38), transparent 34%),
+    linear-gradient(135deg, #312e81, var(--primary-color) 48%, var(--accent-color));
     box-shadow: 0 18px 36px rgb(79 70 229 / 0.28), 0 0 28px rgba(6, 182, 212, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
@@ -373,8 +373,8 @@ button:disabled {
     border: 0;
     color: #ffffff;
     background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 36%),
-        linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 36%),
+    linear-gradient(135deg, var(--primary-color), var(--accent-color));
     box-shadow: 0 12px 22px rgb(37 99 235 / 0.22);
 }
 
@@ -441,8 +441,8 @@ button:disabled {
     border-bottom: 0;
     border-radius: 24px 24px 0 0;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 46%),
-        var(--surface-glass);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 46%),
+    var(--surface-glass);
     box-shadow: 0 12px 26px -26px rgb(15 23 42 / 0.32);
     backdrop-filter: blur(18px);
 }
@@ -523,7 +523,6 @@ button:disabled {
     flex: 0 0 auto;
     min-height: 40px;
     padding: 8px 16px;
-    border: 0;
     border: 1px solid transparent;
     border-radius: 14px;
     color: var(--muted-text);
@@ -535,8 +534,8 @@ button:disabled {
 .module-tab.active {
     color: #ffffff;
     background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
-        linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
+    linear-gradient(135deg, var(--primary-color), var(--accent-color));
     box-shadow: 0 8px 18px rgb(37 99 235 / 0.18);
 }
 
@@ -554,8 +553,8 @@ button:disabled {
     border: 1px solid var(--border-color);
     border-radius: 0 0 30px 30px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 18%),
-        var(--surface-glass);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 18%),
+    var(--surface-glass);
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(18px);
 }
@@ -567,8 +566,8 @@ button:disabled {
     border-radius: inherit;
     pointer-events: none;
     background:
-        linear-gradient(90deg, rgba(79, 70, 229, 0.14), transparent 24%, transparent 76%, rgba(6, 182, 212, 0.12)),
-        linear-gradient(180deg, rgba(168, 85, 247, 0.08), transparent 24%);
+    linear-gradient(90deg, rgba(79, 70, 229, 0.14), transparent 24%, transparent 76%, rgba(6, 182, 212, 0.12)),
+    linear-gradient(180deg, rgba(168, 85, 247, 0.08), transparent 24%);
     opacity: 0.42;
     mask: linear-gradient(#000, transparent 58%);
 }
@@ -582,9 +581,9 @@ button:disabled {
     border-bottom: 1px solid var(--border-color);
     border-radius: 0;
     background:
-        radial-gradient(circle at 8% 0%, var(--primary-soft), transparent 34%),
-        radial-gradient(circle at 96% 0%, var(--accent-soft), transparent 28%),
-        linear-gradient(180deg, var(--surface-muted), var(--surface-glass));
+    radial-gradient(circle at 8% 0%, var(--primary-soft), transparent 34%),
+    radial-gradient(circle at 96% 0%, var(--accent-soft), transparent 28%),
+    linear-gradient(180deg, var(--surface-muted), var(--surface-glass));
     box-shadow: none;
     backdrop-filter: none;
 }
@@ -606,9 +605,9 @@ button:disabled {
     border-color: rgba(148, 163, 184, 0.2);
     border-radius: 22px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.46), transparent 48%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 46%),
-        var(--surface-elevated);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.46), transparent 48%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 46%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.62);
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
@@ -770,7 +769,6 @@ button:disabled {
     align-items: end;
 }
 
-
 .management-form {
     display: grid;
     gap: 12px;
@@ -828,16 +826,16 @@ button:disabled {
     border: 1px solid var(--border-color);
     border-radius: 16px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 48%),
-        var(--surface-elevated);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 48%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-sm);
 }
 
 .form-card-accent {
     border-color: color-mix(in srgb, var(--primary-color) 26%, var(--border-color));
     background:
-        linear-gradient(135deg, var(--primary-soft), transparent 48%),
-        var(--surface-elevated);
+    linear-gradient(135deg, var(--primary-soft), transparent 48%),
+    var(--surface-elevated);
 }
 
 .form-card-head {
@@ -1023,8 +1021,8 @@ button:disabled {
 .holding-form.cash-mode .valuation-card {
     border-color: color-mix(in srgb, var(--accent-color) 28%, var(--border-color));
     background:
-        linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 12%, transparent), transparent 45%),
-        var(--surface-color);
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 12%, transparent), transparent 45%),
+    var(--surface-color);
 }
 
 .holding-form.cash-mode .holding-cash-hint {
@@ -1044,8 +1042,8 @@ button:disabled {
     border-bottom: 1px solid var(--border-color);
     border-radius: 0;
     background:
-        radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
-        linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+    radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
+    linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
     box-shadow: none;
 }
 
@@ -1069,8 +1067,8 @@ button:disabled {
     border-radius: 50%;
     color: #ffffff;
     background:
-        radial-gradient(circle at 28% 22%, rgb(255 255 255 / 0.3), transparent 28%),
-        linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    radial-gradient(circle at 28% 22%, rgb(255 255 255 / 0.3), transparent 28%),
+    linear-gradient(135deg, var(--primary-color), var(--accent-color));
     box-shadow: 0 18px 34px rgb(37 99 235 / 0.28);
     font-size: 26px;
     font-weight: 700;
@@ -1233,8 +1231,8 @@ button:disabled {
     overflow: hidden;
     border-color: color-mix(in srgb, var(--border-color) 82%, var(--primary-color));
     background:
-        linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 9%, transparent), transparent 52%),
-        linear-gradient(145deg, var(--surface-glass), var(--surface-color));
+    linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 9%, transparent), transparent 52%),
+    linear-gradient(145deg, var(--surface-glass), var(--surface-color));
     box-shadow: 0 6px 18px rgb(15 23 42 / 0.04);
     scroll-snap-align: start;
 }
@@ -1335,8 +1333,8 @@ button:disabled {
     border-radius: 22px;
     color: var(--text-color);
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
-        linear-gradient(180deg, var(--surface-elevated), var(--surface-muted));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, var(--surface-elevated), var(--surface-muted));
     box-shadow: var(--shadow-lg);
 }
 
@@ -1354,9 +1352,9 @@ button:disabled {
 
 .asset-dialog::backdrop {
     background:
-        radial-gradient(circle at 50% 12%, rgba(79, 70, 229, 0.24), transparent 34rem),
-        radial-gradient(circle at 84% 18%, rgba(6, 182, 212, 0.16), transparent 26rem),
-        rgba(4, 10, 20, 0.62);
+    radial-gradient(circle at 50% 12%, rgba(79, 70, 229, 0.24), transparent 34rem),
+    radial-gradient(circle at 84% 18%, rgba(6, 182, 212, 0.16), transparent 26rem),
+    rgba(4, 10, 20, 0.62);
     backdrop-filter: blur(10px);
 }
 
@@ -1374,10 +1372,10 @@ button:disabled {
     padding: 16px 18px 13px;
     border-bottom: 1px solid var(--border-color);
     background:
-        radial-gradient(circle at 10% 0%, var(--primary-soft), transparent 34%),
-        linear-gradient(90deg, var(--wealth-gold-soft), transparent 62%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 28%),
-        linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+    radial-gradient(circle at 10% 0%, var(--primary-soft), transparent 34%),
+    linear-gradient(90deg, var(--wealth-gold-soft), transparent 62%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 28%),
+    linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
 }
 
 .asset-dialog-heading {
@@ -1451,8 +1449,8 @@ button:disabled {
     border: 1px solid var(--border-color);
     border-radius: 16px;
     background:
-        radial-gradient(circle at 100% 0%, var(--primary-soft), transparent 42%),
-        var(--surface-elevated);
+    radial-gradient(circle at 100% 0%, var(--primary-soft), transparent 42%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-sm);
     transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
     cursor: pointer;
@@ -1473,8 +1471,8 @@ button:disabled {
 .snapshot-choice-card:has(input:checked) {
     border-color: var(--primary-color);
     background:
-        radial-gradient(circle at 100% 0%, rgba(8, 145, 178, 0.16), transparent 44%),
-        linear-gradient(145deg, var(--primary-soft), var(--surface-color));
+    radial-gradient(circle at 100% 0%, rgba(8, 145, 178, 0.16), transparent 44%),
+    linear-gradient(145deg, var(--primary-soft), var(--surface-color));
 }
 
 .choice-marker {
@@ -1654,10 +1652,9 @@ button:disabled {
 
 .management-panel.focus-panel {
     background:
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 24rem),
-        transparent;
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 24rem),
+    transparent;
 }
-
 
 .management-panel::before {
     content: none;
@@ -1727,19 +1724,19 @@ button:disabled {
     border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 22px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 34%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 34%),
-        radial-gradient(circle at 0% 100%, var(--primary-soft), transparent 30%),
-        var(--surface-elevated);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 34%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 34%),
+    radial-gradient(circle at 0% 100%, var(--primary-soft), transparent 30%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
 .management-panel .holding-table th,
 .management-panel .snapshot-table th {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent),
-        linear-gradient(90deg, var(--primary-soft), transparent 50%, var(--accent-soft)),
-        var(--surface-glass);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent),
+    linear-gradient(90deg, var(--primary-soft), transparent 50%, var(--accent-soft)),
+    var(--surface-glass);
 }
 
 .holding-context-warning {
@@ -1832,8 +1829,8 @@ select:focus {
     border: 1px solid var(--border-color);
     border-radius: 16px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 48%),
-        var(--surface-elevated);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 48%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-sm);
     transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
@@ -1847,8 +1844,8 @@ select:focus {
 .account-item.active {
     border-color: var(--primary-color);
     background:
-        linear-gradient(135deg, var(--primary-soft), transparent 48%),
-        var(--surface-elevated);
+    linear-gradient(135deg, var(--primary-soft), transparent 48%),
+    var(--surface-elevated);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 20%, transparent), var(--shadow-md);
 }
 
@@ -1885,8 +1882,8 @@ select:focus {
     border: 1px solid color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
     color: var(--primary-color);
     background:
-        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.38), transparent 36%),
-        var(--primary-soft);
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.38), transparent 36%),
+    var(--primary-soft);
     font-size: 14px;
     font-weight: 900;
 }
@@ -2081,8 +2078,8 @@ select:focus {
     border-radius: 16px;
     color: var(--text-color);
     background:
-        linear-gradient(135deg, var(--primary-soft), transparent 46%),
-        var(--surface-elevated);
+    linear-gradient(135deg, var(--primary-soft), transparent 46%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-lg);
 }
 
@@ -2145,8 +2142,8 @@ select:focus {
     color: #ffffff;
     border-color: transparent;
     background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
-        linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
+    linear-gradient(135deg, var(--primary-color), var(--accent-color));
 }
 
 .performance-chart {
@@ -2176,9 +2173,9 @@ select:focus {
     border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 22px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 36%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 36%),
-        var(--surface-elevated);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 36%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 36%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
@@ -2208,9 +2205,9 @@ select:focus {
 .comparison-table thead th:first-child {
     z-index: 4;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent),
-        linear-gradient(90deg, var(--primary-soft), transparent 50%, var(--accent-soft)),
-        var(--surface-glass);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent),
+    linear-gradient(90deg, var(--primary-soft), transparent 50%, var(--accent-soft)),
+    var(--surface-glass);
 }
 
 .comparison-table .comparison-account-heading {
@@ -2277,8 +2274,8 @@ select:focus {
     border: 1px solid color-mix(in srgb, var(--border-color) 76%, transparent);
     border-radius: 24px;
     background:
-        radial-gradient(circle at 0 0, color-mix(in srgb, var(--primary-color) 10%, transparent), transparent 28%),
-        linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, transparent), var(--surface-color));
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--primary-color) 10%, transparent), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, transparent), var(--surface-color));
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
@@ -2299,9 +2296,9 @@ select:focus {
 .snapshot-table th {
     color: var(--muted-text);
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent),
-        linear-gradient(90deg, var(--primary-soft), transparent 50%, var(--accent-soft)),
-        var(--surface-glass);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent),
+    linear-gradient(90deg, var(--primary-soft), transparent 50%, var(--accent-soft)),
+    var(--surface-glass);
     box-shadow: 0 1px 0 var(--border-color), 0 8px 18px rgba(15, 23, 42, 0.04);
     font-size: 12px;
     font-weight: 800;
@@ -2353,6 +2350,7 @@ select:focus {
 .holding-table td:last-child,
 .snapshot-table .snapshot-actions-cell {
     width: 94px;
+    text-align: right;
 }
 
 .snapshot-table .snapshot-date-cell {
@@ -2393,12 +2391,6 @@ select:focus {
 
 .holding-table th:last-child {
     border-top-right-radius: 14px;
-}
-
-.holding-table th:last-child,
-.holding-table td:last-child,
-.snapshot-table .snapshot-actions-cell {
-    text-align: right;
 }
 
 .holding-table th:nth-child(n+2),
@@ -2463,8 +2455,8 @@ select:focus {
     border-radius: 13px;
     color: var(--primary-color);
     background:
-        radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.58), transparent 36%),
-        linear-gradient(135deg, var(--primary-soft), var(--accent-soft));
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.58), transparent 36%),
+    linear-gradient(135deg, var(--primary-soft), var(--accent-soft));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
     font-size: 13px;
     font-weight: 950;
@@ -2533,8 +2525,8 @@ select:focus {
 .holding-table tbody tr:hover,
 .snapshot-table tbody tr:hover {
     background:
-        linear-gradient(90deg, var(--primary-soft), transparent 56%),
-        color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+    linear-gradient(90deg, var(--primary-soft), transparent 56%),
+    color-mix(in srgb, var(--surface-elevated) 88%, transparent);
     box-shadow: inset 3px 0 0 var(--accent-color);
 }
 
@@ -2648,10 +2640,10 @@ select:focus {
 .app-message-card {
     border-color: color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
     background:
-        radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
-        radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 42%),
-        var(--surface-elevated);
+    radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
+    radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 42%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
@@ -2665,9 +2657,9 @@ select:focus {
 .app-message-card,
 .form-card-head {
     background:
-        linear-gradient(90deg, var(--wealth-gold-soft), transparent 62%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 34%),
-        linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+    linear-gradient(90deg, var(--wealth-gold-soft), transparent 62%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 34%),
+    linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
 }
 
 .management-panel .panel-head,
@@ -2739,8 +2731,8 @@ select:focus {
     color: var(--muted-text);
     border-color: var(--border-color);
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 62%),
-        var(--surface-elevated);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 62%),
+    var(--surface-elevated);
 }
 
 .primary-btn,
@@ -2748,8 +2740,8 @@ select:focus {
 .period-chip.active,
 .account-context-actions .context-action {
     background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
-        linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
+    linear-gradient(135deg, var(--primary-color), var(--accent-color));
     box-shadow: 0 12px 24px rgb(37 99 235 / 0.2);
 }
 
@@ -2760,8 +2752,8 @@ select,
     border-color: var(--border-color);
     border-radius: 12px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 60%),
-        var(--surface-color);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 60%),
+    var(--surface-color);
 }
 
 .comparison-table th,
@@ -2771,9 +2763,9 @@ select,
 .management-panel .snapshot-table th {
     color: var(--muted-text);
     background:
-        linear-gradient(90deg, var(--wealth-gold-soft), transparent 58%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 30%),
-        linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+    linear-gradient(90deg, var(--wealth-gold-soft), transparent 58%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 30%),
+    linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0;
@@ -2794,8 +2786,8 @@ select,
 .overview-card:hover {
     border-color: color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
     background:
-        linear-gradient(90deg, var(--primary-soft), transparent 58%),
-        var(--surface-elevated);
+    linear-gradient(90deg, var(--primary-soft), transparent 58%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-md), inset 3px 0 0 var(--accent-color);
 }
 
@@ -2818,9 +2810,9 @@ select,
 
 .asset-dialog-body {
     background:
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 20rem),
-        radial-gradient(circle at 0 100%, var(--primary-soft), transparent 18rem),
-        transparent;
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 20rem),
+    radial-gradient(circle at 0 100%, var(--primary-soft), transparent 18rem),
+    transparent;
 }
 
 [data-theme="dark"] .workspace,
@@ -2838,10 +2830,10 @@ select,
 [data-theme="dark"] .confirm-dialog-copy,
 [data-theme="dark"] .app-message-card {
     background:
-        radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
-        radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%),
-        var(--surface-elevated);
+    radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
+    radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -2850,7 +2842,7 @@ select,
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-.holding-valuation-grid {
+    .holding-valuation-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -2928,8 +2920,8 @@ select,
     .asset-holdings-panel .asset-tool-bar select {
         color: var(--heading-color);
         background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent 58%),
-            var(--surface-elevated);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent 58%),
+        var(--surface-elevated);
         box-shadow: var(--shadow-sm);
         font-weight: 850;
     }
@@ -2987,9 +2979,9 @@ select,
         display: block;
     }
 
-/* Header sits flush at the top of the screen and stays pinned so the top "..." menu is always reachable while scrolling.
-       It shares the bottom bar's flat full-width look: no card radius, gradient, or side border.
-       The .app-shell > prefix outranks the base .global-header card rules declared later in this file. */
+    /* Header sits flush at the top of the screen and stays pinned so the top "..." menu is always reachable while scrolling.
+           It shares the bottom bar's flat full-width look: no card radius, gradient, or side border.
+           The .app-shell > prefix outranks the base .global-header card rules declared later in this file. */
     .app-shell > .global-header,
     .app-shell > .hero {
         position: sticky;
@@ -3095,7 +3087,6 @@ select,
         border-radius: 16px;
     }
 
-
     .panel {
         border-radius: 0;
     }
@@ -3104,12 +3095,12 @@ select,
         padding: 16px 18px 8px;
     }
 
-.module-tab-list {
+    .module-tab-list {
         flex: 1 1 auto;
         min-width: 0;
     }
 
-.account-card-strip {
+    .account-card-strip {
         padding: 2px 1px 4px;
     }
 
@@ -3255,7 +3246,6 @@ select,
         border-spacing: 0 12px;
     }
 
-
     .holding-table thead,
     .comparison-table thead {
         display: none;
@@ -3284,12 +3274,11 @@ select,
         border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
         border-radius: 22px;
         background:
-            radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent-color) 12%, transparent), transparent 44%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.62), transparent 46%),
-            var(--surface-elevated);
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent-color) 12%, transparent), transparent 44%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.62), transparent 46%),
+        var(--surface-elevated);
         box-shadow: 0 18px 36px -30px rgb(15 23 42 / 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.62);
     }
-
 
     .holding-table tr::before {
         content: "";
@@ -3301,9 +3290,9 @@ select,
 
     .holding-table tbody tr:nth-child(even) {
         background:
-            radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary-color) 12%, transparent), transparent 46%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 48%),
-            var(--surface-elevated);
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary-color) 12%, transparent), transparent 46%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 48%),
+        var(--surface-elevated);
     }
 
     .holding-table tbody tr:hover {
@@ -3368,7 +3357,7 @@ select,
         display: none;
     }
 
-.comparison-table td[data-mobile-label]::before {
+    .comparison-table td[data-mobile-label]::before {
         content: attr(data-mobile-label);
     }
 
@@ -3377,7 +3366,10 @@ select,
     .holding-table td:nth-child(4)::before { content: "持仓盈亏"; }
     .holding-table td:nth-child(5)::before { content: "仓位"; }
     .holding-table td:nth-child(6)::before { content: "估值状态"; }
-    .holding-table td:nth-child(7)::before { content: "操作"; }
+    .holding-table td:nth-child(7)::before {
+        content: "操作";
+        align-self: center;
+    }
 
     .holding-table tr {
         display: block;
@@ -3404,8 +3396,8 @@ select,
         border: 1px solid color-mix(in srgb, var(--primary-color) 24%, var(--border-color));
         border-radius: 14px;
         background:
-            radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.68), transparent 34%),
-            linear-gradient(135deg, var(--primary-soft), var(--accent-soft));
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.68), transparent 34%),
+        linear-gradient(135deg, var(--primary-soft), var(--accent-soft));
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58), var(--shadow-sm);
     }
 
@@ -3423,8 +3415,8 @@ select,
         border-radius: 18px;
         text-align: left !important;
         background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent 54%),
-            color-mix(in srgb, var(--surface-muted) 78%, transparent);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent 54%),
+        color-mix(in srgb, var(--surface-muted) 78%, transparent);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
@@ -3435,18 +3427,17 @@ select,
 
     .holding-table td:nth-child(2) {
         background:
-            radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary-color) 16%, transparent), transparent 58%),
-            linear-gradient(145deg, var(--surface-elevated), var(--surface-muted));
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary-color) 16%, transparent), transparent 58%),
+        linear-gradient(145deg, var(--surface-elevated), var(--surface-muted));
         font-size: 18px;
         letter-spacing: -0.035em;
     }
 
     .holding-table td:nth-child(4) {
         background:
-            radial-gradient(circle at 100% 0%, currentColor 0, transparent 1px),
-            linear-gradient(145deg, var(--surface-elevated), var(--surface-muted));
+        radial-gradient(circle at 100% 0%, currentColor 0, transparent 1px),
+        linear-gradient(145deg, var(--surface-elevated), var(--surface-muted));
     }
-
 
     .holding-table td:nth-child(4) .price-pair > span {
         font-size: 17px;
@@ -3485,10 +3476,6 @@ select,
         border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
     }
 
-    .holding-table td:nth-child(7)::before {
-        align-self: center;
-    }
-
     .holding-table td:nth-child(7) .row-actions {
         width: 100%;
     }
@@ -3499,8 +3486,8 @@ select,
         max-width: 96px;
         color: var(--heading-color);
         background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent),
-            var(--surface-muted);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent),
+        var(--surface-muted);
     }
 
     .holding-table-wrap .holding-table,
@@ -3547,8 +3534,6 @@ select,
     .holding-table-wrap .holding-table td:nth-child(1)::before {
         display: none;
     }
-
-
 
     .holding-table-wrap .holding-table td:nth-child(3),
     .holding-table-wrap .holding-table td:nth-child(5),
@@ -3632,7 +3617,7 @@ select,
         display: none;
     }
 
-.holding-table-wrap .holding-table > tbody > tr > td:not(:first-child) {
+    .holding-table-wrap .holding-table > tbody > tr > td:not(:first-child) {
         display: none !important;
     }
 
@@ -3683,20 +3668,19 @@ select,
         background: rgba(245, 158, 11, 0.12);
     }
 
-.holding-table-wrap .holding-table tr {
+    .holding-table-wrap .holding-table tr {
         border-color: color-mix(in srgb, var(--primary-color) 18%, var(--border-color));
         background:
-            radial-gradient(circle at 0 0, var(--primary-soft), transparent 38%),
-            radial-gradient(circle at 100% 0, var(--accent-soft), transparent 30%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 44%),
-            var(--surface-elevated);
+        radial-gradient(circle at 0 0, var(--primary-soft), transparent 38%),
+        radial-gradient(circle at 100% 0, var(--accent-soft), transparent 30%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 44%),
+        var(--surface-elevated);
         box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.58);
     }
 
     .holding-table-wrap .holding-table tr::before {
         height: 3px;
     }
-
 }
 
 @media (max-width: 460px) {
@@ -3709,7 +3693,6 @@ select,
     .icon-btn {
         min-height: 38px;
     }
-
 }
 
 .positive,
@@ -3876,9 +3859,9 @@ select,
     border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
     border-radius: 28px;
     background:
-        linear-gradient(90deg, var(--wealth-gold-soft), transparent 58%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 28%),
-        linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+    linear-gradient(90deg, var(--wealth-gold-soft), transparent 58%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 28%),
+    linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
     box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.58);
     backdrop-filter: blur(18px);
 }
@@ -3895,10 +3878,10 @@ select,
     border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
     border-radius: 24px;
     background:
-        radial-gradient(circle at 0 0, var(--primary-soft), transparent 32%),
-        radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 44%),
-        var(--surface-elevated);
+    radial-gradient(circle at 0 0, var(--primary-soft), transparent 32%),
+    radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 44%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
@@ -3918,9 +3901,9 @@ select,
 .management-panel .panel-head {
     padding: 18px 20px 14px;
     background:
-        linear-gradient(90deg, var(--wealth-gold-soft), transparent 60%),
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 32%),
-        linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
+    linear-gradient(90deg, var(--wealth-gold-soft), transparent 60%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 32%),
+    linear-gradient(135deg, var(--surface-glass), var(--surface-muted));
 }
 
 .panel h2::before,
@@ -4092,9 +4075,9 @@ select,
     border: 1px dashed color-mix(in srgb, var(--primary-color) 24%, var(--border-strong));
     border-radius: 18px;
     background:
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 36%),
-        linear-gradient(135deg, var(--primary-soft), transparent 58%),
-        var(--surface-elevated);
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 36%),
+    linear-gradient(135deg, var(--primary-soft), transparent 58%),
+    var(--surface-elevated);
     text-align: center;
 }
 
@@ -4107,8 +4090,8 @@ select,
     border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
     border-radius: 18px;
     background:
-        radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 36%),
-        var(--surface-elevated);
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 36%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-sm);
 }
 
@@ -4124,10 +4107,10 @@ select,
 [data-theme="dark"] .empty-state,
 [data-theme="dark"] .preview-empty {
     background:
-        radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
-        radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%),
-        var(--surface-elevated);
+    radial-gradient(circle at 0 0, var(--primary-soft), transparent 34%),
+    radial-gradient(circle at 100% 0, var(--accent-soft), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%),
+    var(--surface-elevated);
     box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -4169,7 +4152,6 @@ select,
     .management-panel .holding-table-wrap {
         margin: 10px 10px 14px;
     }
-
 
     .chart-range-note {
         justify-content: flex-start;
@@ -4277,7 +4259,6 @@ select,
 }
 
 @media (max-width: 720px) {
-
     .chart-panel .split-head > div:first-child {
         flex: 1 1 auto;
         min-width: 0;
@@ -4426,7 +4407,6 @@ select,
         background: linear-gradient(90deg, transparent, var(--primary-color), var(--accent-color), transparent);
         opacity: 0.42;
     }
-
 }
 
 /* View switch and filters share one row: switch on the left, filters on the right. */
@@ -4757,7 +4737,6 @@ select,
 }
 
 @media (max-width: 720px) {
-
     /* Phones: the view switch becomes a full-width segmented control, filters split the next row. */
     .holding-toolbar .holding-view-switch,
     .management-panel .holding-toolbar .holding-view-switch {
@@ -5022,9 +5001,6 @@ select,
     .account-trend-toolbar .account-trend-view-switch {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-
-
 
     .account-trend-table th,
     .account-trend-table td {
@@ -5307,8 +5283,8 @@ select,
 
 .alloc-class-row.with-target .alloc-class-toggle {
     grid-template-areas:
-        "name bar figures chevron"
-        "name target figures chevron";
+    "name bar figures chevron"
+    "name target figures chevron";
 }
 
 .alloc-mode-switch {
@@ -5723,9 +5699,9 @@ select,
     .alloc-class-row.with-target .alloc-class-toggle {
         grid-template-columns: minmax(0, 1fr) auto 16px;
         grid-template-areas:
-            "name figures chevron"
-            "bar bar bar"
-            "target target target";
+        "name figures chevron"
+        "bar bar bar"
+        "target target target";
         padding: 10px 12px;
     }
 
@@ -6404,7 +6380,6 @@ select,
 
     /* Chart head: title on top, then every period chip in one equal-width row instead of a clipped scroller. */
 
-
     .chart-panel .period-switch {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -6427,8 +6402,8 @@ select,
 
     .chart-panel .period-chip.active {
         background:
-            linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
-            linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
+        linear-gradient(135deg, var(--primary-color), var(--accent-color));
     }
 
     /* No legend on phones, so the zoom slider is the only chrome; the comparison list names each line. */
@@ -6437,11 +6412,11 @@ select,
         margin: 4px 2px 0;
     }
 
-#analysisView .overview-card .nowrap {
+    #analysisView .overview-card .nowrap {
         white-space: nowrap;
     }
 
-/* Comparison: cards replace the wide table, which only fit one account column at a time. */
+    /* Comparison: cards replace the wide table, which only fit one account column at a time. */
     .comparison-panel .comparison-desc-desktop {
         display: none;
     }
@@ -6616,7 +6591,7 @@ select,
         line-height: 1.1;
     }
 
-.cmp-row-details {
+    .cmp-row-details {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         padding: 10px 0 0;
@@ -6638,7 +6613,6 @@ select,
         line-height: 1.25;
     }
 
-
     .cmp-row-details dd {
         margin: 0;
         color: var(--heading-color);
@@ -6647,7 +6621,6 @@ select,
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
     }
-
 }
 
 @media (max-width: 380px) {
@@ -7062,8 +7035,8 @@ select,
 
     .account-trend-panel .account-trend-period-switch .period-chip.active {
         background:
-            linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
-            linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
+        linear-gradient(135deg, var(--primary-color), var(--accent-color));
     }
 
     .account-trend-toolbar .account-trend-view-switch {
@@ -7152,8 +7125,8 @@ select,
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto 14px;
         grid-template-areas:
-            "date value chevron"
-            "meta meta chevron";
+        "date value chevron"
+        "meta meta chevron";
         gap: 2px 10px;
         align-items: center;
         width: 100%;
@@ -7381,7 +7354,7 @@ select,
         margin-top: 2px;
     }
 
-/* Account comparison: description inline with the title, slimmer sort bar and rows. */
+    /* Account comparison: description inline with the title, slimmer sort bar and rows. */
     .comparison-panel .split-head {
         padding: 12px 14px 8px;
     }
@@ -7445,7 +7418,6 @@ select,
         margin: 0 10px 0 30px;
         padding-top: 8px;
     }
-
 }
 
 /* Full-screen view. Blurred ancestors would become the containing block of a fixed element, so the
@@ -7471,10 +7443,10 @@ html.chart-fullscreen-open .chart-panel.is-fullscreen {
     height: auto;
     margin: 0;
     padding:
-        env(safe-area-inset-top, 0px)
-        env(safe-area-inset-right, 0px)
-        env(safe-area-inset-bottom, 0px)
-        env(safe-area-inset-left, 0px);
+    env(safe-area-inset-top, 0px)
+    env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px)
+    env(safe-area-inset-left, 0px);
     border: 0;
     border-radius: 0;
     background: var(--surface-color);
@@ -7542,10 +7514,10 @@ html.chart-fullscreen-open .chart-panel.is-fullscreen {
         width: 100dvh;
         height: 100vw;
         padding:
-            env(safe-area-inset-right, 0px)
-            env(safe-area-inset-bottom, 0px)
-            env(safe-area-inset-left, 0px)
-            env(safe-area-inset-top, 0px);
+        env(safe-area-inset-right, 0px)
+        env(safe-area-inset-bottom, 0px)
+        env(safe-area-inset-left, 0px)
+        env(safe-area-inset-top, 0px);
         transform: rotate(90deg);
         transform-origin: top left;
     }
@@ -7748,7 +7720,7 @@ html {
         padding: 0;
     }
 
-/* Ranking: one tap target per row (dot, name and assets, diverging bar, return and period P/L). */
+    /* Ranking: one tap target per row (dot, name and assets, diverging bar, return and period P/L). */
     .cmp-row {
         cursor: default;
     }
@@ -8358,7 +8330,6 @@ html {
         letter-spacing: -0.01em !important;
     }
 
-
     html body .app-shell .panel h2,
     html body .asset-dialog .asset-dialog-header h2 {
         font-size: var(--d-title);
@@ -8643,7 +8614,6 @@ html {
     html body .app-shell .account-card-strip-panel {
         border-radius: var(--d-panel-radius);
     }
-
 
     /* ---- Tables: one style ---- */
     html body .app-shell .comparison-table th,
@@ -9416,6 +9386,7 @@ html body .app-shell .returns-surface > .overview-grid > .overview-card + .overv
     border-left: 1px solid var(--border-color) !important;
 }
 
+/* The table keeps the section's inset so it lines up with the section title. */
 html body .app-shell .returns-surface .comparison-table-wrap {
     border: 0 !important;
     border-radius: 0 !important;
@@ -9434,4 +9405,314 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     border-top: 1px solid var(--border-color) !important;
 }
 
-/* The table keeps the section's inset so it lines up with the section title. */
+/* ==========================================================================
+   账户收益 and 账户管理, styled like 资产配置 on desktop.
+   Each page is one .page-surface with the 资产配置 frame: a flat --surface-color panel, --radius-lg and
+   --shadow-md, as main.css's desktop surfaces block draws .management-panel. Its sections are flat blocks
+   divided by hairlines, with the 资产配置 head padding and accent bar.
+   Summary figures are bordered tiles and tables are bordered with a muted head row, like the allocation stats.
+   Desktop rules sit in one (min-width: 721px) block so phones keep their existing layout. Every rule is scoped
+   to #analysisView or #assetDataView, and no rule sets a state class (.active, .expanded, [hidden], :hover).
+   ========================================================================== */
+
+/* ---- Shared page surface ---- */
+#analysisView .returns-surface,
+#assetDataView .assets-surface {
+    display: grid;
+    gap: 0;
+    margin-top: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    box-shadow: var(--shadow-md);
+}
+
+#analysisView .returns-period-bar,
+#assetDataView .account-switch-bar {
+    margin-bottom: 14px;
+}
+
+/* Sections: flat blocks, a hairline above every section after the first. */
+#analysisView .returns-surface > .panel,
+#assetDataView .assets-surface > .panel {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+
+#analysisView .returns-surface > .panel + .panel,
+#analysisView .returns-surface > .overview-grid + .panel,
+#assetDataView .assets-surface > .panel + .panel {
+    border-top: 0;
+}
+
+/* Section heads: the 资产配置 head padding, title and description on the left, actions on the right. */
+#analysisView .returns-surface .panel-head,
+#assetDataView .assets-surface .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 0;
+    padding: 18px 22px 12px;
+    background: transparent;
+    border-bottom: 0;
+}
+
+#analysisView .returns-surface .panel-head > div:first-child,
+#assetDataView .assets-surface .panel-head > div:first-child {
+    min-width: 0;
+}
+
+#analysisView .returns-surface .panel h2,
+#assetDataView .assets-surface .panel h2 {
+    margin: 0;
+    color: var(--heading-color);
+    font-size: 16px;
+    font-weight: 850;
+    letter-spacing: -0.01em;
+}
+
+#analysisView .returns-surface .panel p,
+#assetDataView .assets-surface .panel p {
+    margin: 4px 0 0;
+    color: var(--muted-text);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+#analysisView .returns-surface .panel-head .alloc-head-actions,
+#assetDataView .assets-surface .panel-head .alloc-head-actions {
+    margin-left: auto;
+}
+
+/* ---- Tables and lists: bordered, muted head row ---- */
+#analysisView .returns-surface .comparison-table-wrap,
+#assetDataView .assets-surface .holding-table-wrap,
+#assetDataView .assets-surface .snapshot-table-wrap {
+    margin: 0 22px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    box-shadow: none;
+    overflow-x: auto;
+}
+
+#analysisView .returns-surface .comparison-table,
+#assetDataView .assets-surface .holding-table,
+#assetDataView .assets-surface .snapshot-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#analysisView .returns-surface .comparison-table th,
+#analysisView .returns-surface .comparison-table td,
+#assetDataView .assets-surface .holding-table th,
+#assetDataView .assets-surface .holding-table td,
+#assetDataView .assets-surface .snapshot-table th,
+#assetDataView .assets-surface .snapshot-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+}
+
+#analysisView .returns-surface .comparison-table thead th,
+#assetDataView .assets-surface .holding-table thead th,
+#assetDataView .assets-surface .snapshot-table thead th {
+    background: var(--surface-muted);
+    color: var(--muted-text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+#analysisView .returns-surface .comparison-table tbody tr:last-child > *,
+#assetDataView .assets-surface .holding-table tbody tr:last-child > *,
+#assetDataView .assets-surface .snapshot-table tbody tr:last-child > * {
+    border-bottom: 0;
+}
+
+/* ---- 账户管理: account cards on the desktop strip ---- */
+@media (min-width: 721px) {
+    #assetDataView .account-card-strip {
+        display: flex;
+        gap: 10px;
+        padding: 0;
+        overflow-x: auto;
+    }
+}
+
+#assetDataView .account-strip-body,
+#assetDataView .account-card-strip-panel {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#assetDataView .account-card-strip .account-item {
+    flex: 0 0 auto;
+    min-width: 300px;
+    min-height: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    box-shadow: none;
+}
+
+#assetDataView .account-card-strip .account-item.active {
+    border-color: var(--primary-color);
+    background: var(--primary-soft);
+    box-shadow: none;
+}
+
+#assetDataView .account-card-strip .account-item:hover {
+    transform: none;
+    border-color: var(--border-strong);
+    box-shadow: none;
+}
+
+/* ---- Folds: a collapsed desktop section hides its body. Phone folds keep main.css's behaviour. ---- */
+#analysisView .returns-surface .is-desktop-folded .desktop-fold-body,
+#assetDataView .assets-surface .is-desktop-folded .desktop-fold-body {
+    display: none;
+}
+
+/* ---- Desktop: the 资产配置 frame and tiles ----
+   Placed after the base rules so it wins by order. The !important declarations are needed only where main.css's
+   page-surface reset (flat summary cells and frameless table) sets !important, which this block replaces. */
+@media (min-width: 721px) {
+    /* Surface: a flat --surface-color panel, as main.css's desktop surfaces block draws .management-panel
+       (allocation). Its gradient is cleared there with !important, so the page surface matches it. */
+    #analysisView .returns-surface,
+    #assetDataView .assets-surface {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        background: var(--surface-color);
+        box-shadow: var(--shadow-md);
+        display: grid;
+        gap: 18px;
+        padding: 16px 20px 22px;
+    }
+
+    /* One layout, as 资产配置: the surface holds every section on the .alloc-content grid (18px gap, 16px/20px
+       padding). Sections drop their own frames, which main.css's desktop block gives every .management-panel. */
+
+    #analysisView .returns-surface > .panel,
+    #analysisView .returns-surface > .overview-grid,
+    #assetDataView .assets-surface > .panel {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Section heads and titles: the 资产配置 head padding and 18px title with its accent bar. */
+    #analysisView .returns-surface .panel-head,
+    #assetDataView .assets-surface .panel-head {
+        padding: 0 0 10px;
+    }
+
+    #analysisView .returns-surface .panel h2,
+    #assetDataView .assets-surface .panel h2 {
+        font-size: 18px;
+    }
+
+    /* Summary figures: bordered tiles in a 4-column row, like the 资产配置 stats. Spacing comes from the surface grid. */
+    #analysisView .returns-surface > .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        padding: 0;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card {
+        display: grid;
+        gap: 4px;
+        min-height: 0;
+        padding: 12px 14px;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+        box-shadow: none;
+    }
+
+    /* main.css draws a decorative circle on .overview-card; the allocation stats have none. */
+    #analysisView .returns-surface > .overview-grid > .overview-card::before,
+    #analysisView .returns-surface > .overview-grid > .overview-card::after {
+        content: none;
+        display: none;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card span {
+        color: var(--muted-text);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card strong {
+        margin-top: 0;
+        color: var(--heading-color);
+        font-size: 22px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card small {
+        color: var(--muted-text);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    #analysisView .returns-surface > .overview-grid > .overview-card + .overview-card {
+        border-left: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
+    }
+
+    /* Tables: bordered with a muted head, on the section inset, like the 资产配置 table. */
+    #analysisView .returns-surface .comparison-table-wrap,
+    #assetDataView .assets-surface .holding-table-wrap,
+    #assetDataView .assets-surface .snapshot-table-wrap {
+        margin: 0;
+        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
+        border-radius: var(--radius-lg) !important;
+        background: var(--surface-color) !important;
+    }
+}
+
+/* ---- Phones ----
+   The summary hero is the one phone summary. The four overview cards stay hidden on phones, as main.css
+   intends; without this they show beside the hero with cut-off figures. The account summary and the card
+   list keep main.css's phone layout, and only spacing and table margins tighten here. */
+@media (max-width: 720px) {
+    #analysisView .returns-surface > .overview-grid {
+        display: none;
+    }
+
+    #analysisView .returns-surface .panel-head,
+    #assetDataView .assets-surface .panel-head {
+        padding: 14px 16px 10px;
+    }
+
+    #analysisView .returns-surface .comparison-table-wrap,
+    #assetDataView .assets-surface .holding-table-wrap,
+    #assetDataView .assets-surface .snapshot-table-wrap {
+        margin: 0 14px 14px;
+    }
+
+    #analysisView .returns-surface .comparison-table th,
+    #analysisView .returns-surface .comparison-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    #assetDataView .account-card-strip .account-item {
+        min-width: 0;
+    }
+}
