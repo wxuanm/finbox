@@ -9526,3 +9526,93 @@ html body .app-shell .account-strip-body > .account-card-strip-panel {
         padding: 12px 14px 14px;
     }
 }
+
+/* ---- Page surfaces: one panel per module, like 资产配置 ----
+   Returns and accounts were a stack of separate cards. Each module's sections now sit inside one .page-surface
+   (one border, one radius, one shadow, as 资产配置 does). Sections inside it keep their panel classes and ids,
+   so the fold, fullscreen and render code is unchanged; this block only removes their own frames and gaps and
+   divides sections with a hairline. Set last so it wins over the one-surface-per-panel rules above. */
+html body .app-shell .page-surface {
+    display: grid;
+    gap: 0;
+    margin-top: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    box-shadow: var(--shadow-md);
+}
+
+html body .app-shell .page-surface > .panel,
+html body .app-shell .page-surface > .panel.management-panel,
+html body .app-shell .page-surface > .overview-grid,
+html body .app-shell .page-surface > .returns-hero,
+html body .app-shell .page-surface > .account-switch-bar {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Sections divide with a hairline instead of a gap. */
+html body .app-shell .page-surface > .panel + .panel,
+html body .app-shell .page-surface > .returns-hero + .overview-grid,
+html body .app-shell .page-surface > .overview-grid + .panel,
+html body .app-shell .page-surface > .returns-hero + .panel,
+html body .app-shell .page-surface > .panel + .returns-hero {
+    border-top: 1px solid var(--border-color);
+}
+
+/* Section titles on the same level: the fold title and the rest of the head share one row. */
+html body .app-shell .page-surface .panel-head {
+    padding: 18px 22px 12px;
+}
+
+html body .app-shell .page-surface .overview-card,
+html body .app-shell .page-surface .returns-summary-stats > div,
+html body .app-shell .page-surface .account-summary-stats > div {
+    box-shadow: none !important;
+}
+
+/* Summary figures and the comparison table sit inside the page surface like the 资产配置 stats and tables:
+   figures divide with hairlines, tables keep only their header tint and no frame of their own. */
+html body .app-shell .returns-surface > .overview-grid {
+    gap: 0;
+    padding: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+html body .app-shell .returns-surface > .overview-grid > .overview-card {
+    min-height: 0;
+    padding: 18px 22px;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+html body .app-shell .returns-surface > .overview-grid > .overview-card + .overview-card {
+    border-left: 1px solid var(--border-color) !important;
+}
+
+html body .app-shell .returns-surface .comparison-table-wrap {
+    margin: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body .app-shell .page-surface > .panel + .panel,
+html body .app-shell .page-surface > .returns-hero + .overview-grid,
+html body .app-shell .page-surface > .overview-grid + .panel,
+html body .app-shell .page-surface > .returns-hero + .panel,
+html body .app-shell .page-surface > .panel + .returns-hero,
+html body .app-shell .page-surface > .panel + .panel.account-strip-section {
+    border-top: 1px solid var(--border-color) !important;
+}
+
+/* The table keeps the section's inset so it lines up with the section title. */
+html body .app-shell .returns-surface .comparison-table-wrap {
+    margin: 0 22px 18px;
+    overflow-x: auto;
+}
