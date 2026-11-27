@@ -307,6 +307,16 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
         align-items: center;
     }
 
+    /* The filters are plain selects in the head, not a second framed box: the big frame from the management panel's
+       tool bar is cleared here (!important beats its desktop rule). */
+    #assetDataView .asset-holdings-panel > .accounts-section-head .holding-toolbar .asset-tool-bar {
+        padding: 0;
+        border: 0 !important;
+        border-radius: 0;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
     #assetDataView .asset-holdings-panel > .accounts-section-head > .desktop-fold-title > h3 {
         grid-row: 1;
         grid-column: 1 / -1;
