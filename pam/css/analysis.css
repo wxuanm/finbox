@@ -156,6 +156,25 @@
         border-radius: var(--radius-md);
         pointer-events: none;
     }
+
+    /* The expanded body gets the same hairline frame, so the head frame and the body read as one panel. It exists
+       only while the panel is open: a folded body is display:none and draws nothing. The account comparison's
+       table draws its own bordered box from system.css, so that box is cleared here (!important is needed to
+       beat it) and the body frame stands in for it. */
+    #analysisView .returns-chart-section:not(.is-fullscreen) > #performanceChartBody,
+    #analysisView .returns-comparison-section > #comparisonBody {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+    }
+
+    #analysisView .returns-comparison-section > #comparisonBody .comparison-table-wrap {
+        margin: 0;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
 }
 
 /* Landscape full-screen view. Blurred ancestors would become the containing block of a fixed element, so the
