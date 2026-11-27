@@ -7,108 +7,37 @@
 }
 
 @media (max-width: 720px) {
-    .account-card-strip-panel {
-        padding: 12px 10px;
-    }
+    
 
-    .account-list.account-card-strip {
-        display: block;
-        padding: 0;
-        overflow: visible;
-    }
+    
 
-    .account-card-strip .account-item {
-        display: none;
-    }
+    
 
-    .account-switcher-mobile {
-        display: grid;
-    }
+    
 
     /* One card: name, update date, and menu on the head line; three figures in a divided row. */
-    .account-summary-mobile {
-        display: grid;
-        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
-        border-radius: var(--radius-lg);
-        background: var(--surface-color);
-    }
+    
 
-    .account-summary-head {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        min-width: 0;
-        padding: 6px 6px 6px 12px;
-        border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-    }
+    
 
-    .account-summary-head strong {
-        flex: 0 1 auto;
-        min-width: 0;
-        overflow: hidden;
-        color: var(--heading-color);
-        font-size: 15px;
-        font-weight: 900;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+    
 
-    .account-summary-head small {
-        flex: 1 0 auto;
-        color: var(--muted-text);
-        font-size: 11px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-    }
+    
 
-    .account-summary-head .account-card-menu {
-        position: relative;
-        top: auto;
-        right: auto;
-        flex: 0 0 auto;
-    }
+    
 
-    .account-summary-head .account-card-menu summary {
-        width: 32px;
-        height: 32px;
-    }
+    
 
     /* Columns size to their figures, so a long total takes width from the shorter percentages. */
-    .account-summary-stats {
-        display: flex;
-        margin: 0;
-    }
+    
 
-    .account-summary-stats > div {
-        display: grid;
-        flex: 1 1 auto;
-        gap: 2px;
-        min-width: 0;
-        padding: 8px 10px 9px 12px;
-    }
+    
 
-    .account-summary-stats > div + div {
-        border-left: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-    }
+    
 
-    .account-summary-stats dt {
-        color: var(--muted-text);
-        font-size: 11px;
-        font-weight: 800;
-        white-space: nowrap;
-    }
+    
 
-    .account-summary-stats dd {
-        margin: 0;
-        overflow: hidden;
-        color: var(--heading-color);
-        font-size: 15px;
-        font-weight: 900;
-        font-variant-numeric: tabular-nums;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+    
 
     /* Holdings: the table (and its card restyling) gives way to the divided list. */
     .holding-table-wrap .holding-table {
@@ -375,9 +304,7 @@
         grid-row: 1;
     }
 
-    .account-trend-toolbar {
-        display: contents;
-    }
+    
 
     .account-trend-panel .account-trend-period-switch {
         grid-column: 1 / -1;
@@ -404,21 +331,9 @@
         linear-gradient(135deg, var(--primary-color), var(--accent-color));
     }
 
-    .account-trend-toolbar .account-trend-view-switch {
-        grid-column: 2;
-        grid-row: 1;
-        display: flex;
-        gap: 2px;
-        width: auto;
-        padding: 3px;
-        border-radius: 14px;
-    }
+    
 
-    .account-trend-toolbar .account-trend-view-switch .period-chip {
-        min-height: 30px;
-        padding: 4px 9px;
-        font-size: 12px;
-    }
+    
 
     .account-trend-chart {
         height: 240px;

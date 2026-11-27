@@ -213,11 +213,12 @@
 
             <section id="assetDataView" class="workspace-view asset-data-view" data-workspace-view="assetData">
                 <section class="panel management-panel accounts-panel">
-                    <div class="panel-head split-head">
-                        <div>
+                    <div class="panel-head accounts-head">
+                        <div class="accounts-title">
                             <h2 data-i18n="tabAssetData">账户管理</h2>
                             <p data-i18n="accountListDesc">选择账户查看其快照、持仓与走势；批量操作可为全部账户生成快照或刷新行情。</p>
                         </div>
+                        <div id="accountSwitchBar" class="account-switch" role="group" data-i18n-aria-label="assetAccount" aria-label="资产账户"></div>
                         <div class="alloc-head-actions">
                             <button id="generateSnapshotsBtn" class="ghost-btn alloc-head-action" type="button" data-i18n-title="generateSnapshotsTitle" title="为全部账户生成快照" aria-label="为全部账户生成快照">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M17 14v6M14 17h6" stroke-linecap="round"/></svg><span data-i18n="generate">生成</span>
@@ -227,11 +228,19 @@
                             </button>
                         </div>
                     </div>
-                    <div class="account-switch-bar">
-                        <div id="accountSwitchBar" class="account-switch" role="group" data-i18n-aria-label="assetAccount" aria-label="资产账户"></div>
-                        <div class="account-switch-tools">
+                    <div id="accountsContent" class="alloc-content accounts-content" aria-live="polite">
+                        <dl id="accountSummary" class="alloc-stats four"></dl>
+
+
+                        <div class="account-actions-row">
                             <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-account" data-i18n-title="addAccount" title="新增账户" aria-label="新增账户">
                                 <span data-i18n="addAccount">新增账户</span>
+                            </button>
+                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-snapshot" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
+                                <span data-i18n="addSnapshot">新增快照</span>
+                            </button>
+                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-holding" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
+                                <span data-i18n="addHolding">新增持仓</span>
                             </button>
                             <details id="accountMenu" class="account-card-menu">
                                 <summary data-i18n-aria-label="accountMenu" aria-label="账户菜单">...</summary>
@@ -240,18 +249,6 @@
                                     <button id="accountDeleteBtn" type="button" data-i18n="deleteAccount">删除账户</button>
                                 </div>
                             </details>
-                        </div>
-                    </div>
-                    <div id="accountsContent" class="alloc-content accounts-content" aria-live="polite">
-                        <dl id="accountSummary" class="alloc-stats four"></dl>
-
-                        <div class="account-actions-row">
-                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-snapshot" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
-                                <span data-i18n="addSnapshot">新增快照</span>
-                            </button>
-                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-holding" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
-                                <span data-i18n="addHolding">新增持仓</span>
-                            </button>
                         </div>
 
                         <section id="accountTrendPanel" class="alloc-section accounts-section account-trend-panel">

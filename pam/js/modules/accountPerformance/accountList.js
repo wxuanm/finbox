@@ -82,10 +82,10 @@ function calculateAnnualizedReturn(metric) {
 // account. The bar and menu are hidden while there are no accounts.
 export function renderAccountList() {
     const wrap = document.getElementById("accountSwitchBar");
-    const bar = wrap?.closest(".account-switch-bar");
     const menu = document.getElementById("accountMenu");
     const hasAccounts = state.accounts.length > 0;
-    if (bar) bar.hidden = !hasAccounts;
+    // The chip list is empty with no accounts, so it hides; 新增账户 in the action row stays available.
+    if (wrap) wrap.hidden = !hasAccounts;
     if (menu) {
         menu.hidden = !hasAccounts;
         menu.open = false;

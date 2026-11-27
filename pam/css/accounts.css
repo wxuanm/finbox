@@ -1,47 +1,47 @@
 /* 账户管理 (Accounts), laid out like 资产配置 and 风险敞口.
 
-   One .management-panel holds one .alloc-content grid: the summary (.alloc-stats), the account list, the account
-   trend, holdings, and records. The shared look (head, stat tiles, section titles, tables, notices) comes from
-   allocation.css. This file adds only what the Accounts page needs: the account rows, the section heads with
-   their fold toggles, and the phone rules. Holdings and snapshot tables keep their own rules in asset-data.css
-   and mobile-views.css. Every rule is scoped to #assetDataView, so no other view can pick it up. */
+   One .management-panel: its head holds the title, the account switch (chips), and the batch actions; its
+   .alloc-content grid holds the summary tiles, the action row (新增账户, 新增快照, 新增持仓, and the selected
+   account's rename/delete menu), then the account trend, holdings, and records. The shared look (head, stat
+   tiles, section titles, tables) comes from allocation.css. Holdings and snapshot tables keep their rules in
+   asset-data.css and mobile-views.css. Every rule is scoped to #assetDataView. */
 
-/* Account switch bar: one row of account chips and the selected account's actions, on every width.
-   Chips scroll sideways when the accounts do not fit. The bar sits above the summary tiles. Older rules in
-   system.css give the bar a frame and background on desktop; these override them with higher specificity, so the
-   bar reads as a flat row inside the panel, like the 资产配置 head. */
-html body .app-shell #assetDataView .account-switch-bar {
+/* ---- Panel head: title on the left, the account switch between the title and the batch actions ---- */
+#assetDataView .accounts-panel .accounts-head {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 12px;
+    gap: 10px 16px;
     align-items: center;
     justify-content: space-between;
+}
+
+#assetDataView .accounts-title {
     min-width: 0;
-    margin: 0 22px 12px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    flex: 1 1 260px;
 }
 
-#assetDataView .account-switch-bar[hidden] {
-    display: none;
+#assetDataView .accounts-title p {
+    margin: 4px 0 0;
 }
 
+/* The switch sits in the head row, after the title, and scrolls sideways if the chips do not fit. */
 #assetDataView .account-switch {
     display: flex;
-    flex: 1 1 auto;
+    flex: 1 1 320px;
     flex-wrap: nowrap;
     gap: 6px;
+    align-items: center;
     min-width: 0;
+    max-width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
 }
 
 #assetDataView .account-switch::-webkit-scrollbar {
+    display: none;
+}
+
+#assetDataView .account-switch[hidden] {
     display: none;
 }
 
@@ -93,15 +93,23 @@ html body .app-shell #assetDataView .account-switch-bar {
     box-shadow: inset -3px 0 0 var(--primary-color);
 }
 
-#assetDataView .account-switch-tools {
+/* ---- Action row: 新增账户, 新增快照, 新增持仓, and the selected account's menu, on one line ---- */
+#assetDataView .account-actions-row {
     display: flex;
-    flex: 0 0 auto;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+    justify-content: flex-end;
+    /* The menu sits on the same right edge as the summary tiles and the list, not past it. */
+    margin-right: 0;
 }
 
-/* Every control in the tools group is the same height, so the add button and the menu share one line. */
-#assetDataView .account-switch-tools .alloc-head-action {
+#assetDataView .account-actions-row .account-card-menu {
+    margin-left: 2px;
+}
+
+/* Every control in the row is one height, so the buttons and the menu share a line. */
+#assetDataView .account-actions-row .alloc-head-action {
     height: 36px;
     padding-block: 0;
 }
@@ -167,27 +175,7 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
     background: var(--primary-soft);
 }
 
-/* The per-account action row sits under the summary tiles: snapshot and holding entry. */
-#assetDataView .account-actions-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
-#assetDataView .accounts-panel .account-switch-bar .alloc-head-action {
-    flex: 0 0 auto;
-}
-
-/* Sections share the grid of the panel; the panel itself draws the frame. */
-#assetDataView .accounts-panel .panel-head {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-    align-items: center;
-    justify-content: space-between;
-}
-
+/* ---- Sections: the panel's grid holds each section; the panel itself draws the frame ---- */
 #assetDataView .accounts-content {
     container-type: normal;
 }
@@ -227,7 +215,6 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
     line-height: 1.5;
 }
 
-/* ---- Section content ---- */
 #assetDataView .accounts-section .alloc-section-title {
     font-size: 15px;
 }
@@ -245,45 +232,54 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
     justify-content: space-between;
 }
 
-/* Desktop folds: a folded section hides its body and keeps its head. The old fold rules were scoped to the
-   removed page surface and to .panel, so this view's sections need their own. Phones keep their own folds. */
+/* Desktop folds: a folded section hides its body and keeps its head. Phones keep their own folds. */
 @media (min-width: 721px) {
     #assetDataView .accounts-section.is-desktop-folded .desktop-fold-body {
         display: none;
     }
 }
 
-/* Phone: the chips above the view pick the account, so the list and section heads stack in one column. */
+/* ---- Phone ----
+   The head stacks: title, then the account chips on a full row. The chips stay in reach while the page
+   scrolls, so the head sticks under the header. The action row wraps beneath the summary tiles. */
 @media (max-width: 720px) {
     #assetDataView.workspace-view.active {
         padding-top: 0;
     }
 
-    /* Phones: the chips take the first full row, and the add button and menu sit right-aligned on a second row.
-       The bar sticks under the header, like the returns period bar, so the account stays in reach. */
-    html body .app-shell #assetDataView .account-switch-bar .account-switch {
-        flex: 1 0 100%;
+    #assetDataView .accounts-panel .accounts-head {
+        gap: 10px;
+        padding: 12px 12px 10px;
     }
 
-    html body .app-shell #assetDataView .account-switch-tools {
-        flex: 1 0 100%;
-        justify-content: flex-end;
+    #assetDataView .accounts-title {
+        flex: 1 1 100%;
     }
 
-    html body .app-shell #assetDataView .account-switch-bar {
+    /* Only the chips stick under the header; the title and batch actions scroll away with the page. */
+    html body .app-shell #assetDataView .account-switch {
         position: sticky;
         top: var(--pam-header-height, 0px);
         z-index: 20;
-        margin: 0 -12px 14px;
-        padding: 10px 12px 8px;
+        flex: 1 1 100%;
+        width: 100%;
+        margin: 0 -12px;
+        padding: 8px 12px;
         border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
         background: var(--surface-elevated);
         -webkit-backdrop-filter: blur(18px);
         backdrop-filter: blur(18px);
     }
 
-    #assetDataView .accounts-panel .panel-head {
-        padding: 12px 12px 8px;
+    #assetDataView .accounts-panel .accounts-head .alloc-head-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    #assetDataView .accounts-panel .accounts-head .alloc-head-action {
+        flex: 1 1 0;
+        justify-content: center;
+        min-width: 0;
     }
 
     #assetDataView .accounts-content {
@@ -296,7 +292,26 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
         gap: 8px;
     }
 
-    /* Phone heads: the fold toggle (or the title) takes the first row; tools take a full second row. */
+    /* Phones: the three add buttons share the row width and the menu keeps its own square at the end. */
+    #assetDataView .account-actions-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+        gap: 6px;
+        align-items: stretch;
+    }
+
+    #assetDataView .account-actions-row .alloc-head-action {
+        justify-content: center;
+        min-width: 0;
+        padding-inline: 6px;
+        font-size: 12px;
+    }
+
+    #assetDataView .account-actions-row .account-card-menu {
+        margin-left: 0;
+    }
+
+    /* Phone section heads: the fold toggle (or the title) takes the first row, tools take a full second row. */
     #assetDataView .accounts-section-head {
         flex-wrap: wrap;
         justify-content: flex-start;
@@ -347,5 +362,4 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
         gap: 2px;
         width: 100%;
     }
-
 }
