@@ -11,7 +11,7 @@
 
 - `fundmonitor/`, `pam/`, and `backtest/` are separate standalone browser tools. Do not import code between them unless explicitly requested.
 - Fund Monitor entrypoints: `fundmonitor/index.html`, `fundmonitor/css/main.css`, `fundmonitor/css/variables.css`, `fundmonitor/js/app.js`.
-- PAM entrypoints: `pam/index.html`, `pam/css/main.css`, `pam/css/variables.css`, `pam/js/app.js`.
+- PAM entrypoints: `pam/index.html`, `pam/css/variables.css`, `pam/css/base.css`, `pam/css/asset-data.css`, `pam/css/allocation.css`, `pam/css/risk.css`, `pam/css/mobile-views.css`, `pam/css/analysis.css`, `pam/css/system.css` (loaded in this order; later files win on equal specificity), `pam/js/app.js`.
 - Backtest entrypoints: `backtest/index.html`, `backtest/css/main.css`, `backtest/css/variables.css`, `backtest/js/app.js`.
 - VSIX entrypoints: `vsix/package.json`, `vsix/src/extension.ts`, `vsix/src/views/`, `vsix/src/services/`, `vsix/src/state/`, and `vsix/media/`.
 - Cloudflare Pages Functions live under `functions/api/`: `fundgz.js`, `fundnav.js`, `history.js`, `quotes.js`, and `pam/[[path]].js`. Underscore-prefixed files and folders (`functions/api/_lib/`, `functions/api/pam/_autoSnapshot.js`) are shared modules that Pages does not route.

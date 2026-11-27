@@ -335,7 +335,13 @@ pam/
 ├─ index.html
 ├─ css/
 │  ├─ variables.css
-│  └─ main.css
+│  ├─ base.css           # shared chrome, panels, controls, dialogs, auth gate
+│  ├─ asset-data.css     # 账户管理
+│  ├─ allocation.css     # 资产配置
+│  ├─ risk.css           # 风险
+│  ├─ mobile-views.css   # 账户收益 and 账户管理 phone layouts
+│  ├─ analysis.css       # 账户收益 chart toggles and fullscreen, incl. phone
+│  └─ system.css         # 账户管理 phone rules, design-system type/surface blocks, page surfaces (last)
 └─ js/
    ├─ app.js
    ├─ config/
