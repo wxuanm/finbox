@@ -624,16 +624,26 @@ html body .app-shell .global-header {
         position: sticky;
         top: 0;
         z-index: 35;
+        /* Own compositing layer: the bar stays pinned while the scrollbar is dragged, instead of trailing the content. */
+        transform: translateZ(0);
+        backface-visibility: hidden;
         flex-wrap: wrap;
         gap: 12px 20px;
         margin: 0 -24px;
         padding: 14px 24px 12px;
         border: 0;
-        border-bottom: 1px solid var(--border-color);
         border-radius: 0;
         background: var(--background-color) !important;
         box-shadow: none !important;
         backdrop-filter: none !important;
+    }
+/* Actions sit close together, and the sync status is an icon: its state is the dot, and the title and
+   aria-label carry the text. */
+html body .app-shell .global-header .hero-actions {
+        gap: 4px;
+    }
+html body .app-shell .global-header .cloud-sync-status span {
+        display: none;
     }
 html body .app-shell .global-header .brand-mark {
         width: 42px;
@@ -698,21 +708,6 @@ html body .app-shell .module-tab:not(.active):not(:disabled):hover {
 /* The brand, the four tabs, and the actions only fit on one line from 1280px. Below that the tabs take their own
        full-width row under the brand and actions, which keeps the sticky header to two rows. */
 @media (min-width: 721px) and (max-width: 1279px) {
-html body .app-shell .global-header {
-        gap: 12px;
-    }
-html body .app-shell .global-header .brand-area {
-        gap: 12px;
-    }
-html body .app-shell .global-header .hero-actions {
-        gap: 4px;
-    }
-/* Narrow desktops keep only the sync dot: the label would push the actions onto a third row. */
-@media (max-width: 879px) {
-html body .app-shell .global-header .cloud-sync-status span {
-        display: none;
-    }
-}
 html body .app-shell .global-header .module-tabs {
         order: 3;
         width: 100%;
