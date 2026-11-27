@@ -2,6 +2,64 @@ import { state } from '../../config/state.js';
 import { t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency, formatPercent, signedClass } from '../../utils/formatter.js';
 
+// 账户管理 summary: four 资产配置-style tiles across all accounts (total assets, period P/L, period return,
+// and how many accounts share the latest snapshot date). Tiles drop to two columns on phones via CSS.
+export function renderAccountSummary(metrics, portfolio) {
+    const el = document.getElementById('accountSummary');
+    if (!el) return;
+    el.hidden = state.accounts.length === 0;
+    if (state.accounts.length === 0) {
+        el.innerHTML = '';
+        return;
+    }
+    const masked = state.amountsHidden;
+    const valid = metrics.filter(metric => metric.valid);
+    const latestValue = valid.reduce((sum, metric) => sum + metric.latestValue, 0);
+    const latestDate = valid.reduce((latest, metric) => (metric.latestDate > latest ? metric.latestDate : latest), '');
+    const syncedCount = latestDate ? valid.filter(metric => metric.latestDate === latestDate).length : 0;
+    const tile = (label, value, tone, hint) => `
+        <div>
+            <dt>${escapeHtml(label)}</dt>
+            <dd><strong class="${tone}">${value}</strong><small>${hint}</small></dd>
+        </div>
+    `;
+    el.innerHTML = [
+        tile(
+            t('latestTotalAssets'),
+            formatCurrency(latestValue, masked),
+            '',
+            escapeHtml(t('validAccountsTotal'))
+        ),
+        tile(
+            t('periodPnl'),
+            portfolio ? formatSignedCurrency(portfolio.periodProfitLoss, masked) : '-',
+            signedClass(portfolio?.periodProfitLoss),
+            escapeHtml(t('periodPnl'))
+        ),
+        tile(
+            t('periodReturn'),
+            portfolio ? formatPercent(portfolio.periodReturn) : '-',
+            signedClass(portfolio?.periodReturn),
+            escapeHtml(t('periodReturn'))
+        ),
+        tile(
+            t('accountCount'),
+            String(state.accounts.length),
+            '',
+            latestDate ? `${escapeHtml(latestDate)} · ${syncedCount}` : '-'
+        )
+    ].join('');
+}
+
+function formatSignedCurrency(value, masked = false) {
+    const num = Number(value);
+    if (masked || !Number.isFinite(num)) return formatCurrency(num, masked);
+    return `${num > 0 ? '+' : ''}${formatCurrency(num)}`;
+}
+
+// Account list: one bordered list, a row per account, the selected row highlighted. Rows stay draggable on
+// desktop, and each row's `...` menu holds rename and delete. Phones show the same rows, with the figures
+// stacked under the name, and the chip bar above the view picks the account.
 export function renderAccountList(metrics) {
     const wrap = document.getElementById('accountList');
     if (!wrap) return;
@@ -21,30 +79,23 @@ export function renderAccountList(metrics) {
         return;
     }
 
-    const cards = state.accounts.map(account => {
+    const rows = state.accounts.map(account => {
         const metric = metrics.find(item => item.account.id === account.id);
         const active = account.id === state.selectedAccountId;
-        const accountSnapshots = state.snapshots
-            .filter(snapshot => snapshot.accountId === account.id)
-            .sort((a, b) => b.date.localeCompare(a.date));
-        const latestSnapshot = accountSnapshots[0];
+        const latestSnapshot = latestSnapshotOf(account.id);
         const annualizedReturn = calculateAnnualizedReturn(metric);
         return `
-            <div class="account-item${active ? ' active' : ''}" draggable="true" data-account-id="${account.id}">
-                <button class="account-main" type="button" data-action="select-account" data-account-id="${account.id}">
-                    <div class="account-card-heading">
-                        <span class="account-card-mark" aria-hidden="true">A</span>
-                        <div>
-                            <span>${t('assetAccount')}</span>
-                            <strong title="${escapeHtml(account.name)}">${escapeHtml(account.name)}</strong>
-                            <small>${t('recentlyUpdated')} ${latestSnapshot?.date || t('noSnapshot')}</small>
-                        </div>
-                    </div>
-                    <div class="account-card-metrics">
-                        <div><span>${t('totalAssets')}</span><strong>${latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-'}</strong></div>
-                        <div><span>${t('cumulativeProfit')}</span><strong class="${signedClass(metric?.profitLoss)}">${metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-'}</strong></div>
-                        <div><span>${t('annualizedReturn')}</span><strong class="${signedClass(annualizedReturn)}">${Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-'}</strong></div>
-                    </div>
+            <li class="account-item${active ? ' active' : ''}" draggable="true" data-account-id="${account.id}">
+                <button class="account-main" type="button" data-action="select-account" data-account-id="${account.id}" aria-pressed="${active}">
+                    <span class="account-row-name">
+                        <strong title="${escapeHtml(account.name)}">${escapeHtml(account.name)}</strong>
+                        <small>${t('recentlyUpdated')} ${latestSnapshot?.date || t('noSnapshot')}</small>
+                    </span>
+                    <span class="account-row-figures">
+                        <span class="account-row-cell"><span>${t('totalAssets')}</span><strong>${latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-'}</strong></span>
+                        <span class="account-row-cell"><span>${t('cumulativeProfit')}</span><strong class="${signedClass(metric?.profitLoss)}">${metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-'}</strong></span>
+                        <span class="account-row-cell"><span>${t('annualizedReturn')}</span><strong class="${signedClass(annualizedReturn)}">${Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-'}</strong></span>
+                    </span>
                 </button>
                 <details class="account-card-menu">
                     <summary aria-label="${t('accountMenu')}">...</summary>
@@ -53,14 +104,13 @@ export function renderAccountList(metrics) {
                         <button type="button" data-action="delete-account" data-account-id="${account.id}">${t('deleteAccount')}</button>
                     </div>
                 </details>
-            </div>
+            </li>
         `;
     }).join('');
-    wrap.innerHTML = `${cards}${renderAccountSwitcherMobile(metrics)}`;
+    wrap.innerHTML = `<ul class="account-rows">${rows}</ul>`;
 }
 
-// Phones pick the account from a bar pinned under the header, like the returns view's period bar; CSS shows it
-// only at <=720px. It is hidden while there are no accounts.
+// The chip bar is the phone account picker. It is hidden while there are no accounts.
 function renderAccountSwitchBar() {
     const wrap = document.getElementById('accountSwitchBar');
     if (!wrap) return;
@@ -75,38 +125,10 @@ function renderAccountSwitchBar() {
     }).join('');
 }
 
-// Phones swap the one-card-at-a-time strip for one compact card for the selected account (the account bar above
-// switches between them): name, update date, and menu on the first line, three figures in a divided row beneath.
-function renderAccountSwitcherMobile(metrics) {
-    const selected = state.accounts.find(account => account.id === state.selectedAccountId) || state.accounts[0];
-    const metric = metrics.find(item => item.account.id === selected.id);
-    const latestSnapshot = state.snapshots
-        .filter(snapshot => snapshot.accountId === selected.id)
+function latestSnapshotOf(accountId) {
+    return state.snapshots
+        .filter(snapshot => snapshot.accountId === accountId)
         .reduce((latest, snapshot) => (!latest || snapshot.date > latest.date ? snapshot : latest), null);
-    const annualizedReturn = calculateAnnualizedReturn(metric);
-    const stat = (label, value, className = '') => `<div><dt>${label}</dt><dd class="${className}">${value}</dd></div>`;
-    return `
-        <div class="account-switcher-mobile">
-            <div class="account-summary-mobile">
-                <div class="account-summary-head">
-                    <strong title="${escapeHtml(selected.name)}">${escapeHtml(selected.name)}</strong>
-                    <small>${t('recentlyUpdated')} ${latestSnapshot?.date || t('noSnapshot')}</small>
-                    <details class="account-card-menu">
-                        <summary aria-label="${t('accountMenu')}">...</summary>
-                        <div>
-                            <button type="button" data-action="rename-account" data-account-id="${selected.id}">${t('renameAccount')}</button>
-                            <button type="button" data-action="delete-account" data-account-id="${selected.id}">${t('deleteAccount')}</button>
-                        </div>
-                    </details>
-                </div>
-                <dl class="account-summary-stats">
-                    ${stat(t('totalAssets'), latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-')}
-                    ${stat(t('cumulativeProfit'), metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-', signedClass(metric?.profitLoss))}
-                    ${stat(t('annualizedReturn'), Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-', signedClass(annualizedReturn))}
-                </dl>
-            </div>
-        </div>
-    `;
 }
 
 function calculateAnnualizedReturn(metric) {
@@ -195,23 +217,13 @@ export function bindAccountList({ onSelect, onRename, onDelete, onAdd, onReorder
     });
 }
 
+// Keeps the selected row in view: the phone chip bar scrolls sideways, and the list scrolls vertically.
 export function scrollAccountCardIntoView(accountId, behavior = 'smooth') {
-    const list = document.getElementById('accountList');
-    if (!list || !accountId) return;
+    if (!accountId) return;
     scrollAccountChipIntoView(accountId, behavior);
-
-    const item = Array.from(list.querySelectorAll('.account-item'))
+    const item = Array.from(document.querySelectorAll('#accountList .account-item'))
         .find(element => element.dataset.accountId === accountId);
-    if (!item) return;
-
-    const listRect = list.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
-    const centeredOffset = item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2;
-    const maxScrollLeft = list.scrollWidth - list.clientWidth;
-    const nextScrollLeft = Math.min(Math.max(0, centeredOffset), maxScrollLeft);
-
-    if (Math.abs(nextScrollLeft - list.scrollLeft) < 1 && itemRect.left >= listRect.left && itemRect.right <= listRect.right) return;
-    list.scrollTo({ left: nextScrollLeft, behavior });
+    item?.scrollIntoView({ block: 'nearest', behavior });
 }
 
 function scrollAccountChipIntoView(accountId, behavior) {
@@ -224,7 +236,7 @@ function scrollAccountChipIntoView(accountId, behavior) {
 
 function isDropAfter(event, item) {
     const rect = item.getBoundingClientRect();
-    return event.clientX > rect.left + rect.width / 2;
+    return event.clientY > rect.top + rect.height / 2;
 }
 
 function clearDropTargets(list) {

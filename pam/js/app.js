@@ -4,7 +4,7 @@ import { applyTheme, toggleTheme } from './core/theme.js';
 import { initializeCloudSync, replaceWithLatestCloud, retryCloudSync } from './core/cloudSync.js';
 import { loadAccounts, loadPreferences, loadSnapshots, saveAccounts, savePreferences, saveSnapshots } from './modules/accountPerformance/storage.js';
 import { buildAccountMetrics, buildAccountSeries, buildPortfolioMetrics } from './modules/accountPerformance/metrics.js';
-import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
+import { renderAccountList, renderAccountSummary, bindAccountList, scrollAccountCardIntoView } from './modules/accountPerformance/accountList.js';
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindChartFullscreen, renderChartFullscreenButton } from './modules/accountPerformance/chartFullscreen.js';
@@ -403,6 +403,15 @@ function bindEvents() {
     });
     document.getElementById('addAccountToolbarBtn')?.addEventListener('click', openAccountDialog);
     document.getElementById('addSnapshotBtn')?.addEventListener('click', () => openSnapshotForAccount(state.selectedAccountId));
+    // Section-head actions on the 账户管理 panel: same handlers as the floating menu, without reusing its IDs.
+    document.querySelectorAll('[data-account-action]').forEach(button => {
+        button.addEventListener('click', () => {
+            const action = button.dataset.accountAction;
+            if (action === 'add-account') openAccountDialog();
+            if (action === 'add-snapshot') openSnapshotForAccount(state.selectedAccountId);
+            if (action === 'add-holding') openHoldingForAccount(state.selectedAccountId);
+        });
+    });
     document.querySelectorAll('[data-dialog-close]').forEach(button => {
         button.addEventListener('click', () => {
             if (button.dataset.dialogClose === 'account') {
@@ -658,7 +667,7 @@ function renderDesktopFolds() {
         const fold = DESKTOP_FOLDS[button.dataset.desktopFold];
         if (!fold) return;
         const open = !state.desktopFolded.includes(button.dataset.desktopFold);
-        button.closest('.returns-section, .panel')?.classList.toggle('is-desktop-folded', !open);
+        button.closest('.returns-section, .accounts-section, .panel')?.classList.toggle('is-desktop-folded', !open);
         button.setAttribute('aria-expanded', String(open));
         const label = t(open ? fold.collapseKey : fold.expandKey);
         button.setAttribute('aria-label', label);
@@ -811,6 +820,7 @@ function renderApp() {
     renderActiveView();
     renderAmountPrivacyToggle();
     renderReturnsSummary(metrics, portfolio);
+    renderAccountSummary(metrics, portfolio);
     renderAccountList(metrics);
     renderSnapshotForm();
     renderPeriodSwitch();

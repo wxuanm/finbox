@@ -1,0 +1,434 @@
+/* 账户管理 (Accounts), laid out like 资产配置 and 风险敞口.
+
+   One .management-panel holds one .alloc-content grid: the summary (.alloc-stats), the account list, the account
+   trend, holdings, and records. The shared look (head, stat tiles, section titles, tables, notices) comes from
+   allocation.css. This file adds only what the Accounts page needs: the account rows, the section heads with
+   their fold toggles, and the phone rules. Holdings and snapshot tables keep their own rules in asset-data.css
+   and mobile-views.css. Every rule is scoped to #assetDataView, so no other view can pick it up. */
+
+/* Desktop: the account chip bar is a phone picker only. */
+#assetDataView .account-switch-bar {
+    display: none;
+}
+
+/* Sections share the grid of the panel; the panel itself draws the frame. */
+#assetDataView .accounts-panel .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#assetDataView .accounts-content {
+    container-type: normal;
+}
+
+#assetDataView .accounts-section {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+#assetDataView .accounts-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+#assetDataView .accounts-section-head .desktop-fold-title {
+    min-width: 0;
+}
+
+#assetDataView .accounts-section-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+    min-width: 0;
+}
+
+#assetDataView .accounts-desc {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* ---- Account list: one bordered list, one row per account ---- */
+#assetDataView .account-card-strip-panel {
+    min-width: 0;
+}
+
+#assetDataView .account-rows {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    overflow: hidden;
+}
+
+#assetDataView .account-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    min-width: 0;
+}
+
+#assetDataView .account-item + .account-item {
+    border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+}
+
+#assetDataView .account-item[draggable="true"] {
+    cursor: grab;
+}
+
+#assetDataView .account-item.is-dragging {
+    opacity: 0.5;
+}
+
+#assetDataView .account-item.drop-before::before,
+#assetDataView .account-item.drop-after::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+#assetDataView .account-item.drop-before::before {
+    top: 0;
+}
+
+#assetDataView .account-item.drop-after::after {
+    bottom: 0;
+}
+
+/* The row is the select button: name on the left, three figures on the right. */
+#assetDataView .account-main {
+    display: grid;
+    grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
+    gap: 12px 20px;
+    align-items: center;
+    min-width: 0;
+    min-height: 56px;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+#assetDataView .account-main:hover {
+    background: var(--primary-soft);
+}
+
+#assetDataView .account-main:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+#assetDataView .account-item.active {
+    background: color-mix(in srgb, var(--primary-color) 8%, var(--surface-color));
+}
+
+#assetDataView .account-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+}
+
+#assetDataView .account-row-name {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+#assetDataView .account-row-name strong {
+    overflow: hidden;
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#assetDataView .account-row-name small {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+#assetDataView .account-row-figures {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+#assetDataView .account-row-cell {
+    display: grid;
+    gap: 2px;
+    justify-items: end;
+    min-width: 0;
+    text-align: right;
+}
+
+#assetDataView .account-row-cell > span {
+    color: var(--muted-text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+#assetDataView .account-row-cell strong {
+    color: var(--heading-color);
+    font-size: 14px;
+    font-weight: 850;
+}
+
+#assetDataView .account-row-cell strong.positive {
+    color: var(--positive-color);
+}
+
+#assetDataView .account-row-cell strong.negative {
+    color: var(--negative-color);
+}
+
+/* The per-row menu is a grid cell at the right edge, beside the select button, not a floating card corner.
+   Old card rules set it absolute and styled it as a bordered tile; this block restores it to the flow. */
+html body .app-shell #assetDataView .account-item .account-card-menu {
+    position: static;
+    top: auto;
+    right: auto;
+    margin: 0 12px 0 0;
+}
+
+html body .app-shell #assetDataView .account-item .account-card-menu summary {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--muted-text);
+    background: var(--surface-color);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    list-style: none;
+    cursor: pointer;
+}
+
+/* Rows are flat: no card radius, shadow, gradient, or hover lift from the old strip. */
+html body .app-shell #assetDataView .account-card-strip .account-item,
+html body .app-shell #assetDataView .account-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+    transition: none;
+}
+
+html body .app-shell #assetDataView .account-card-strip .account-item:hover,
+html body .app-shell #assetDataView .account-item:hover {
+    transform: none;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+html body .app-shell #assetDataView .account-item.active {
+    border: 0;
+    background: color-mix(in srgb, var(--primary-color) 8%, var(--surface-color));
+    box-shadow: none;
+}
+
+/* ---- Section content ---- */
+#assetDataView .accounts-section .alloc-section-title {
+    font-size: 15px;
+}
+
+#assetDataView .accounts-section .holding-table-wrap,
+#assetDataView .accounts-section .snapshot-table-wrap {
+    margin: 0;
+}
+
+#assetDataView .accounts-section .holding-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Desktop folds: a folded section hides its body and keeps its head. The old fold rules were scoped to the
+   removed page surface and to .panel, so this view's sections need their own. Phones keep their own folds. */
+@media (min-width: 721px) {
+    #assetDataView .accounts-section.is-desktop-folded .desktop-fold-body {
+        display: none;
+    }
+}
+
+/* Phone: the chips above the view pick the account, so the list and section heads stack in one column. */
+@media (max-width: 720px) {
+    #assetDataView.workspace-view.active {
+        padding-top: 0;
+    }
+
+    #assetDataView .account-switch-bar {
+        position: sticky;
+        top: var(--pam-header-height, 0px);
+        z-index: 20;
+        display: block;
+        min-width: 0;
+        margin: 0 -12px;
+        padding: 10px 12px 8px;
+        border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+        background: var(--surface-elevated);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+    }
+
+    #assetDataView .account-switch-bar[hidden] {
+        display: none;
+    }
+
+    #assetDataView .account-switch-bar .account-switch {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 2px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    #assetDataView .account-switch-bar .account-switch::-webkit-scrollbar {
+        display: none;
+    }
+
+    #assetDataView .account-switch-bar .period-chip {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    #assetDataView .accounts-panel .panel-head {
+        padding: 12px 12px 8px;
+    }
+
+    #assetDataView .accounts-content {
+        gap: 14px;
+        padding: 12px 10px 16px;
+    }
+
+    #assetDataView .alloc-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    /* Phone heads: the fold toggle (or the title) takes the first row; tools take a full second row. */
+    #assetDataView .accounts-section-head {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    #assetDataView .accounts-section-head > * {
+        min-width: 0;
+    }
+
+    #assetDataView .accounts-section-tools {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* The chip bar names the account, so section titles drop the account badge. */
+    #assetDataView .accounts-section .title-account-badge {
+        display: none;
+    }
+
+    /* Trend and records fold from their toggle alone; the desktop title that duplicates it is hidden. */
+    #assetDataView #accountTrendPanel .desktop-fold-title,
+    #assetDataView #assetRecordPanel .desktop-fold-title {
+        display: none;
+    }
+
+    #assetDataView #accountTrendPanel .panel-collapse-btn,
+    #assetDataView #assetRecordPanel .panel-collapse-btn {
+        flex: 1 1 auto;
+    }
+
+    /* Trend: period chips and the curve/list switch sit under the toggle as full-width rows. */
+    #assetDataView #accountTrendPanel .accounts-section-tools {
+        display: grid;
+        gap: 6px;
+    }
+
+    #assetDataView .account-trend-period-switch {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 2px;
+        width: 100%;
+    }
+
+    #assetDataView .account-trend-view-switch {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px;
+        width: 100%;
+    }
+
+    /* The list head: the three actions share one full-width row under the title. */
+    #assetDataView .accounts-list-section .accounts-section-tools {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    #assetDataView .accounts-list-section .alloc-head-action {
+        justify-content: center;
+        min-width: 0;
+        padding-inline: 6px;
+        font-size: 12px;
+    }
+
+    /* Each row: name and total assets on one line; cumulative P/L and annualized return beneath. */
+    #assetDataView .account-main {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    #assetDataView .account-row-figures {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    #assetDataView .account-row-cell {
+        justify-items: start;
+        text-align: left;
+    }
+
+    #assetDataView .account-item .account-card-menu {
+        margin-right: 6px;
+    }
+}
