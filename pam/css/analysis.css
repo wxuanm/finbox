@@ -157,15 +157,25 @@
         pointer-events: none;
     }
 
-    /* The expanded body gets the same hairline frame, so the head frame and the body read as one panel. It exists
-       only while the panel is open: a folded body is display:none and draws nothing. The account comparison's
-       table draws its own bordered box from system.css, so that box is cleared here (!important is needed to
-       beat it) and the body frame stands in for it. */
+    /* Open: the bottom corners are square where the body joins (see the body rule). */
+    #analysisView .returns-section:not(.is-desktop-folded) > .returns-section-head::after {
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+
+    /* Open: the head frame and the body are one box. The section has no gap between them, and the head frame's
+       bottom edge is the divider, so the body drops its top edge. Its bottom corners are rounded; the head frame's
+       bottom corners are square (below). Folded, the body is display:none and the head frame keeps all four corners. */
+    #analysisView .returns-chart-section:not(.is-fullscreen),
+    #analysisView .returns-comparison-section {
+        row-gap: 0;
+    }
+
     #analysisView .returns-chart-section:not(.is-fullscreen) > #performanceChartBody,
     #analysisView .returns-comparison-section > #comparisonBody {
         padding: 8px 12px;
         border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
+        border-top: 0;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
     }
 
     #analysisView .returns-comparison-section > #comparisonBody .comparison-table-wrap {
