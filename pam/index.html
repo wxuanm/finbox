@@ -69,6 +69,15 @@
                     <p data-i18n="heroDesc">手动快照，扣除现金流，对比账户真实收益。</p>
                 </div>
             </div>
+            <nav class="module-tabs module-bar" aria-label="PAM modules">
+                <div class="module-tab-list">
+                    <button class="module-tab active" type="button" data-view="analysis" data-i18n="tabAnalysis">账户收益</button>
+                    <button class="module-tab" type="button" data-view="assetData" data-i18n="tabAssetData">账户管理</button>
+                    <button class="module-tab" type="button" data-view="allocation" data-i18n="tabAssetAllocation">资产配置</button>
+                    <button class="module-tab" type="button" data-view="risk" data-i18n="tabRisk">风险敞口</button>
+                    <button class="module-tab" type="button" disabled data-i18n="tabTransactions">交易记录</button>
+                </div>
+            </nav>
             <div class="hero-actions">
                 <button id="cloudSyncStatus" class="cloud-sync-status" type="button" data-status="connecting" aria-live="polite" aria-busy="true">
                     <i aria-hidden="true"></i><span>连接云端</span>
@@ -124,16 +133,6 @@
                 <input id="importDataInput" class="hidden" type="file" accept="application/json,.json">
             </div>
         </header>
-
-        <nav class="module-tabs module-bar" aria-label="PAM modules">
-            <div class="module-tab-list">
-                <button class="module-tab active" type="button" data-view="analysis" data-i18n="tabAnalysis">账户收益</button>
-                <button class="module-tab" type="button" data-view="assetData" data-i18n="tabAssetData">账户管理</button>
-                <button class="module-tab" type="button" data-view="allocation" data-i18n="tabAssetAllocation">资产配置</button>
-                <button class="module-tab" type="button" data-view="risk" data-i18n="tabRisk">风险敞口</button>
-                <button class="module-tab" type="button" disabled data-i18n="tabTransactions">交易记录</button>
-            </div>
-        </nav>
 
         <div id="accountFloatingActions" class="context-actions account-context-actions" data-context-actions="assetData" data-i18n-aria-label="assetDataActions" aria-label="账户管理操作">
             <div class="account-floating-menu" aria-hidden="true">
