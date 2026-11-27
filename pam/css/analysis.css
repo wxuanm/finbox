@@ -95,6 +95,48 @@
     }
 }
 
+/* Desktop return trend head: the title takes the first row. The description, the period chips, and the fold
+   toggle share the second, with the toggle at the far right. The title wrapper's box goes (display: contents)
+   so its children can be placed on the grid; the wrapper stays in the DOM, so a click on the title still
+   toggles the panel. */
+@media (min-width: 721px) {
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 6px 12px;
+        align-items: center;
+    }
+
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title {
+        display: contents;
+    }
+
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title > h3 {
+        grid-row: 1;
+        grid-column: 1 / -1;
+        min-width: 0;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .returns-desc {
+        grid-row: 2;
+        grid-column: 1;
+        min-width: 0;
+    }
+
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .returns-chart-periods {
+        grid-row: 2;
+        grid-column: 2;
+        margin-left: 0;
+    }
+
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title > .desktop-fold-btn {
+        grid-row: 2;
+        grid-column: 3;
+    }
+}
+
 /* Landscape full-screen view. Blurred ancestors would become the containing block of a fixed element, so the
    blur is dropped while the view is open. */
 html.chart-fullscreen-open,
