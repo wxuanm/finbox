@@ -307,6 +307,44 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
         border-radius: var(--radius-md);
     }
 
+    /* Holdings head: the title and the filtered totals share row 1 (totals at the title's right). Row 2 holds the
+       description, the view switch and filters, and the chevron, inside the frame. The toolbar sits in the head, so
+       the open body starts at the table. Only this panel uses it: the trend and records heads have no totals or
+       toolbar. */
+    #assetDataView .asset-holdings-panel > .accounts-section-head {
+        grid-template-columns: minmax(0, 1fr) minmax(0, auto) auto;
+        align-items: center;
+    }
+
+    #assetDataView .asset-holdings-panel > .accounts-section-head > .desktop-fold-title > h3 {
+        grid-row: 1;
+        grid-column: 1 / 3;
+    }
+
+    #assetDataView .asset-holdings-panel > .accounts-section-head > .holding-summary {
+        grid-row: 1;
+        grid-column: 3;
+        justify-self: end;
+        margin: 0;
+    }
+
+    #assetDataView .asset-holdings-panel > .accounts-section-head > .accounts-desc {
+        grid-row: 2;
+        grid-column: 1;
+    }
+
+    #assetDataView .asset-holdings-panel > .accounts-section-head > .holding-toolbar {
+        grid-row: 2;
+        grid-column: 2;
+        margin: 6px 0;
+        justify-self: end;
+    }
+
+    #assetDataView .asset-holdings-panel > .accounts-section-head > .desktop-fold-title > .desktop-fold-btn {
+        grid-row: 2;
+        grid-column: 3;
+    }
+
     /* Open: the body joins the head frame. It takes the frame's sides and bottom, and no top edge. The holdings and
        records tables draw their own bordered box from system.css; that box is cleared inside the body (!important is
        needed to beat system.css), so the body frame stands in for it. */
@@ -315,14 +353,6 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
         border: 1px solid var(--border-color);
         border-top: 0;
         border-radius: 0 0 var(--radius-md) var(--radius-md);
-    }
-
-    /* Holdings: the view switch and filters are the open body's first row, inside the same frame, with a hairline
-       under them before the table. They take the body's inset, not the 12px margin they had. */
-    #assetDataView .asset-holdings-panel:not(.is-desktop-folded) > .desktop-fold-body > .holding-toolbar {
-        margin: 0 0 8px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid var(--border-color);
     }
 
     #assetDataView .accounts-section:not(.is-desktop-folded) > .desktop-fold-body .holding-table-wrap,

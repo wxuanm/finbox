@@ -357,6 +357,11 @@
         margin: 8px 10px 0;
     }
 
+    /* The toolbar sits in the head now: no body inset, so it lines up with the other head rows. */
+    #assetDataView .asset-holdings-panel > .accounts-section-head > .holding-toolbar {
+        margin: 0;
+    }
+
     .holding-toolbar .holding-view-switch,
     .management-panel .holding-toolbar .holding-view-switch {
         padding: 3px;
