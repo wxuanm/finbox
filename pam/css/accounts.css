@@ -95,6 +95,12 @@
 
 /* ---- Header menu: 新增账户, 新增快照, 新增持仓, 修改名称, 删除账户, behind the ... beside 刷新 ---- */
 /* The menu sits in the header's action row, after 刷新, and its panel opens to the left so it stays in the panel. */
+/* The action row centres its items on one line, so the ... menu's square sits level with 刷新 (the row defaults to
+   stretch, which lets the menu's box drift from the buttons' height). */
+#assetDataView .accounts-panel .accounts-head .alloc-head-actions {
+    align-items: center;
+}
+
 #assetDataView .accounts-panel .accounts-head .account-head-menu {
     display: block;
 }
@@ -301,9 +307,9 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
        description, the view switch and filters, and the chevron, inside the frame. The toolbar sits in the head, so
        the open body starts at the table. Only this panel uses it: the trend and records heads have no totals or
        toolbar. */
-    /* Second row, left to right: description, view switch and filters, the three totals, then the chevron. */
+    /* Second row, left to right: description, the three totals, view switch and filters, then the chevron. */
     #assetDataView .asset-holdings-panel > .accounts-section-head {
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, auto) auto;
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
         align-items: center;
     }
 
@@ -322,11 +328,11 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
         grid-column: 1 / -1;
     }
 
-    /* The three totals stay on one line; the row's grid sizes the totals column to fit them. */
+    /* The three totals stay on one line, in the middle of the second row. */
     #assetDataView .asset-holdings-panel > .accounts-section-head > .holding-summary {
         grid-row: 2;
-        grid-column: 3;
-        justify-self: end;
+        grid-column: 2;
+        justify-self: center;
         margin: 6px 0;
         flex-wrap: nowrap;
         gap: 12px;
@@ -339,7 +345,7 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
 
     #assetDataView .asset-holdings-panel > .accounts-section-head > .holding-toolbar {
         grid-row: 2;
-        grid-column: 2;
+        grid-column: 3;
         margin: 6px 0;
         justify-self: end;
     }
