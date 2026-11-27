@@ -1,6 +1,5 @@
 /* Account management on phones: account chips with a flat summary, and holdings as divided rows,
    both following the allocation view (one bordered list, figures right-aligned, details on tap). */
-.account-switcher-mobile,
 .holding-list,
 .snapshot-list {
     display: none;

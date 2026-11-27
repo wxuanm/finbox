@@ -49,7 +49,6 @@
         grid-column: 1;
         grid-row: 1;
     }
-.account-trend-panel.is-collapsed .account-trend-toolbar > *,
 .account-trend-panel.is-collapsed .chart-message,
 .account-trend-panel.is-collapsed .account-trend-chart,
 .account-trend-panel.is-collapsed .account-trend-list,
@@ -205,8 +204,7 @@ html body .app-shell .holding-row-figures strong,
 html body .app-shell .snapshot-row-value,
 html body .app-shell .alloc-class-name,
 html body .app-shell .alloc-class-figures strong,
-html body .app-shell .holding-summary dd,
-html body .app-shell .account-summary-head strong {
+html body .app-shell .holding-summary dd {
         font-size: var(--type-figure);
         font-weight: 700;
         letter-spacing: 0;
@@ -233,7 +231,6 @@ html body .app-shell .snapshot-row-date {
         font-weight: 500;
     }
 /* Caption: labels, row sub-lines, dates, secondary amounts. Muted colour carries the hierarchy. */
-html body .app-shell .account-summary-stats dt,
 html body .app-shell .alloc-stats dt,
 html body .app-shell .holding-summary dt,
 html body .app-shell .cmp-row-details dt,
@@ -252,7 +249,6 @@ html body .app-shell .alloc-class-name small,
 html body .app-shell .alloc-class-figures small,
 html body .app-shell .alloc-notice-names,
 html body .app-shell .alloc-notice-names small,
-html body .app-shell .account-summary-head small,
 html body .app-shell .list-pager,
 html body .app-shell .list-pager > span,
 html body .app-shell .comparison-sort-select > span,
@@ -262,7 +258,6 @@ html body .asset-dialog small {
         font-weight: 500 !important;
         letter-spacing: 0;
     }
-html body .app-shell .account-summary-stats dt,
 html body .app-shell .alloc-stats dt,
 html body .app-shell .holding-summary dt,
 html body .app-shell .cmp-row-details dt,
@@ -344,7 +339,6 @@ html body .asset-dialog .dialog-eyebrow {
 .hero h1,
 .panel h2,
 .asset-dialog-header h2,
-.account-card-heading strong,
 .form-card-head h3,
 .confirm-dialog-copy strong {
         font-weight: 700 !important;
@@ -420,9 +414,6 @@ html body .app-shell .alloc-stats dt,
 html body .app-shell .holding-summary dt,
 html body .app-shell .holding-chart-stats dt,
 html body .app-shell .holding-chart-stats small,
-html body .app-shell .account-card-metrics span,
-html body .app-shell .account-card-heading span,
-html body .app-shell .account-card-heading small,
 html body .app-shell .comparison-table th,
 html body .app-shell .holding-table th,
 html body .app-shell .snapshot-table th,
@@ -451,7 +442,6 @@ html body .asset-dialog .form-guide {
 html body .app-shell .alloc-stats dt,
 html body .app-shell .holding-summary dt,
 html body .app-shell .holding-chart-stats dt,
-html body .app-shell .account-card-metrics span,
 html body .app-shell .comparison-table th,
 html body .app-shell .holding-table th,
 html body .app-shell .snapshot-table th,
@@ -589,8 +579,7 @@ html body .asset-dialog .primary-btn {
         min-height: var(--d-control-lg);
     }
 /* ---- Surfaces: panels 24, cards 18, inner boxes 14 ---- */
-html body .app-shell .panel,
-html body .app-shell .account-card-strip-panel {
+html body .app-shell .panel {
         border-radius: var(--d-panel-radius);
     }
 /* ---- Tables: one style ---- */
@@ -745,8 +734,7 @@ html body .app-shell .workspace-view.active {
     }
 /* ---- Panels: one surface each ---- */
 html body .app-shell .panel,
-html body .app-shell .management-panel,
-html body .app-shell .account-card-strip-panel {
+html body .app-shell .management-panel {
         border: 1px solid var(--border-color) !important;
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
@@ -762,7 +750,6 @@ html body .app-shell .panel h2 {
         font-size: 16px;
     }
 /* Overview figures: the grid is just layout; each card is its own surface. */
-html body .app-shell .account-item,
 html body .app-shell .alloc-stats > div {
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg) !important;
@@ -771,7 +758,6 @@ html body .app-shell .alloc-stats > div {
         backdrop-filter: none !important;
     }
 /* Cards inside a panel step down to the muted surface, like Backtest's portfolio cards. */
-html body .app-shell .account-item,
 html body .app-shell .alloc-stats > div {
         background: var(--surface-muted) !important;
         box-shadow: none !important;
@@ -850,8 +836,7 @@ html body .app-shell .period-chip.active {
         background: var(--primary-soft) !important;
     }
 /* Small marks: flat tint instead of gradient tiles. */
-html body .app-shell .holding-asset-mark,
-html body .app-shell .account-card-mark {
+html body .app-shell .holding-asset-mark {
         border: 0;
         color: var(--primary-color);
         background: var(--primary-soft) !important;
@@ -943,8 +928,7 @@ html body .asset-dialog .asset-dialog-header h2::before {
     }
 /* ---- Header, sticky bars, bottom tabs: solid, one hairline ---- */
 html body .app-shell .global-header,
-html body .app-shell .returns-period-bar,
-html body .app-shell .account-switch-bar {
+html body .app-shell .returns-period-bar {
         background: var(--surface-color) !important;
         box-shadow: none !important;
         -webkit-backdrop-filter: none !important;
@@ -988,14 +972,12 @@ html body .app-shell .workspace-view.active {
         padding-right: 0;
         padding-left: 0;
     }
-html body .app-shell .returns-period-bar,
-html body .app-shell .account-switch-bar {
+html body .app-shell .returns-period-bar {
         border-bottom: 1px solid var(--border-color);
     }
 /* ---- Panels: one surface each ---- */
 html body .app-shell .panel,
-html body .app-shell .management-panel,
-html body .app-shell .account-card-strip-panel {
+html body .app-shell .management-panel {
         border: 1px solid var(--border-color) !important;
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
@@ -1013,8 +995,7 @@ html body .app-shell .management-panel .panel-head,
 html body .app-shell .panel-head {
         background: none !important;
     }
-html body .app-shell .alloc-stats > div,
-html body .app-shell .account-item {
+html body .app-shell .alloc-stats > div {
         border: 1px solid var(--border-color);
         background: var(--surface-muted) !important;
         box-shadow: none !important;
@@ -1083,8 +1064,7 @@ html body .app-shell .period-chip.active {
         box-shadow: var(--shadow-sm) !important;
     }
 /* Small marks: flat tint instead of gradient tiles. */
-html body .app-shell .holding-asset-mark,
-html body .app-shell .account-card-mark {
+html body .app-shell .holding-asset-mark {
         border: 0;
         color: var(--primary-color);
         background: var(--primary-soft) !important;
@@ -1192,8 +1172,7 @@ html body .asset-dialog .dialog-eyebrow {
    ========================================================================== */
 /* ---- Shared page surface ---- */
 
-#analysisView .returns-period-bar,
-#assetDataView .account-switch-bar {
+#analysisView .returns-period-bar {
     margin-bottom: 14px;
 }
 /* Sections: flat blocks, a hairline above every section after the first. */

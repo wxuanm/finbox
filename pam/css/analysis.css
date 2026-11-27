@@ -788,8 +788,7 @@ html.chart-fullscreen-open .returns-panel {
     }
 
     .holding-summary dt,
-    .holding-row-details dt,
-    .account-card-heading > div > span {
+    .holding-row-details dt {
         font-size: 11px;
     }
 }

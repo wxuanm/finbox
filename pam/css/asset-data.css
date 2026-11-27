@@ -1176,14 +1176,12 @@ select:focus {
 }
 /* Unified wealth-product surface language across desktop and mobile PAM views. */
 .workspace,
-.account-card-strip-panel,
 .management-panel,
 .comparison-table-wrap,
 .holding-table-wrap,
 .snapshot-table-wrap,
 .asset-dialog,
 .form-card,
-.account-item,
 .snapshot-choice-card,
 .confirm-dialog-copy,
 .app-message-card {
@@ -1212,14 +1210,11 @@ select:focus {
 .panel-head {
     border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 12%, var(--border-color));
 }
-.account-card-strip .account-item,
-.account-item,
 .form-card,
 .snapshot-choice-card,
 .confirm-dialog-copy {
     border-radius: 18px;
 }
-.account-card-metrics span,
 .management-form label,
 .asset-tool-bar label {
     color: var(--muted-text);
@@ -1228,7 +1223,6 @@ select:focus {
     letter-spacing: 0;
     text-transform: none;
 }
-.account-card-heading strong,
 .panel h2,
 .asset-dialog-header h2,
 .form-card-head h3,
@@ -1240,7 +1234,6 @@ select:focus {
 .panel p,
 .asset-dialog-header p,
 .form-card-head p,
-.account-card-heading small,
 .confirm-dialog-copy p {
     color: var(--muted-text);
 }
@@ -1306,9 +1299,7 @@ select,
 }
 .comparison-table tbody tr:hover,
 .holding-table tbody tr:hover,
-.snapshot-table tbody tr:hover,
-.account-item:hover,
-.account-card-strip .account-item:hover {
+.snapshot-table tbody tr:hover {
     border-color: color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
     background:
     linear-gradient(90deg, var(--primary-soft), transparent 58%),
@@ -1337,14 +1328,12 @@ select,
     transparent;
 }
 [data-theme="dark"] .workspace,
-[data-theme="dark"] .account-card-strip-panel,
 [data-theme="dark"] .management-panel,
 [data-theme="dark"] .comparison-table-wrap,
 [data-theme="dark"] .holding-table-wrap,
 [data-theme="dark"] .snapshot-table-wrap,
 [data-theme="dark"] .asset-dialog,
 [data-theme="dark"] .form-card,
-[data-theme="dark"] .account-item,
 [data-theme="dark"] .snapshot-choice-card,
 [data-theme="dark"] .confirm-dialog-copy,
 [data-theme="dark"] .app-message-card {
@@ -2054,15 +2043,13 @@ select,
 .positive,
 .holding-table .positive,
 .snapshot-table .positive,
-.comparison-table .positive,
-.account-card-metrics .positive {
+.comparison-table .positive {
     color: var(--positive-color) !important;
 }
 .negative,
 .holding-table .negative,
 .snapshot-table .negative,
-.comparison-table .negative,
-.account-card-metrics .negative {
+.comparison-table .negative {
     color: var(--negative-color) !important;
 }
 body,
@@ -2075,7 +2062,6 @@ select {
 .hero h1,
 .panel h2,
 .asset-dialog-header h2,
-.account-card-heading strong,
 .form-card-head h3,
 .confirm-dialog-copy strong {
     color: var(--heading-color);
@@ -2089,7 +2075,6 @@ select {
 .hero h1,
 .panel h2,
 .asset-dialog-header h2,
-.account-card-heading strong,
 .form-card-head h3,
 .confirm-dialog-copy strong {
         font-weight: 700 !important;
@@ -2110,7 +2095,6 @@ select {
 .asset-dialog-header p,
 .form-card-head p,
 .confirm-dialog-copy p,
-.account-card-heading small,
 .form-message,
 .chart-message,
 .empty-state {
@@ -2128,7 +2112,6 @@ select {
 .management-form label > span,
 .holding-form label,
 .asset-tool-bar label,
-.account-card-metrics span,
 .comparison-table th,
 .holding-table th,
 .snapshot-table th,
@@ -2144,7 +2127,6 @@ select {
 .comparison-table td,
 .holding-table td,
 .snapshot-table td,
-.account-card-metrics strong,
 .valuation-status,
 .price-pair > span,
 .price-pair small {
@@ -2197,7 +2179,6 @@ select,
     gap: 18px;
     padding: 18px;
 }
-.account-card-strip-panel,
 .management-panel {
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--border-color));
@@ -2349,7 +2330,6 @@ select,
     box-shadow: var(--shadow-md), inset 0 3px 0 var(--primary-color);
 }
 [data-theme="dark"] .global-header,
-[data-theme="dark"] .account-card-strip-panel,
 [data-theme="dark"] .management-panel,
 [data-theme="dark"] .account-form.compact-account-form,
 [data-theme="dark"] .empty-state,
@@ -2366,7 +2346,6 @@ select,
         gap: 12px;
         padding: 12px;
     }
-.account-card-strip-panel,
 .management-panel {
         border-radius: 20px;
     }
