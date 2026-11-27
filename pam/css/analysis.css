@@ -95,23 +95,26 @@
     }
 }
 
-/* Desktop return trend head: the title takes the first row. The description, the period chips, and the fold
-   toggle share the second, with the toggle at the far right. The title wrapper's box goes (display: contents)
-   so its children can be placed on the grid; the wrapper stays in the DOM, so a click on the title still
-   toggles the panel. */
+/* Desktop return heads (returns chart and account comparison): the title takes the first row. The description,
+   the period chips (chart only), and the fold toggle share the second row inside one hairline frame, with the
+   toggle at the far right. The title wrapper's box goes (display: contents) so its children can be placed on
+   the grid; the wrapper stays in the DOM, so a click on the title still toggles the panel. */
 @media (min-width: 721px) {
-    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head {
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head,
+    #analysisView .returns-comparison-section > .returns-section-head {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto auto;
         gap: 6px 12px;
         align-items: center;
     }
 
-    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title {
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title,
+    #analysisView .returns-comparison-section > .returns-section-head > .desktop-fold-title {
         display: contents;
     }
 
-    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title > h3 {
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title > h3,
+    #analysisView .returns-comparison-section > .returns-section-head > .desktop-fold-title > h3 {
         grid-row: 1;
         grid-column: 1 / -1;
         min-width: 0;
@@ -119,7 +122,8 @@
         user-select: none;
     }
 
-    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .returns-desc {
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .returns-desc,
+    #analysisView .returns-comparison-section > .returns-section-head > .returns-desc {
         grid-row: 2;
         grid-column: 1;
         min-width: 0;
@@ -132,15 +136,18 @@
         margin: 6px 0;
     }
 
-    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title > .desktop-fold-btn {
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head > .desktop-fold-title > .desktop-fold-btn,
+    #analysisView .returns-comparison-section > .returns-section-head > .desktop-fold-title > .desktop-fold-btn {
         grid-row: 2;
         grid-column: 3;
         margin: 6px 12px 6px 0;
     }
 
-    /* One hairline frame around the second row. It spans the row's cell, and the row's items carry the inset,
-       so the frame is drawn behind them and ignores the pointer. Fold state does not change it. */
-    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head::after {
+    /* One hairline frame around the second row. It stretches to the row height (an empty ::after does not size
+       the row by itself), and the row's items carry the inset, so the frame is drawn behind them and ignores the
+       pointer. Fold state does not change it. */
+    #analysisView .returns-chart-section:not(.is-fullscreen) > .returns-section-head::after,
+    #analysisView .returns-comparison-section > .returns-section-head::after {
         content: "";
         grid-row: 2;
         grid-column: 1 / -1;
