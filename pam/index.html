@@ -212,9 +212,6 @@
             </section>
 
             <section id="assetDataView" class="workspace-view asset-data-view" data-workspace-view="assetData">
-                <div class="account-switch-bar" hidden>
-                    <div id="accountSwitchBar" class="period-switch account-switch" role="group" data-i18n-aria-label="assetAccount" aria-label="资产账户"></div>
-                </div>
                 <section class="panel management-panel accounts-panel">
                     <div class="panel-head split-head">
                         <div>
@@ -230,28 +227,32 @@
                             </button>
                         </div>
                     </div>
+                    <div class="account-switch-bar">
+                        <div id="accountSwitchBar" class="account-switch" role="group" data-i18n-aria-label="assetAccount" aria-label="资产账户"></div>
+                        <div class="account-switch-tools">
+                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-account" data-i18n-title="addAccount" title="新增账户" aria-label="新增账户">
+                                <span data-i18n="addAccount">新增账户</span>
+                            </button>
+                            <details id="accountMenu" class="account-card-menu">
+                                <summary data-i18n-aria-label="accountMenu" aria-label="账户菜单">...</summary>
+                                <div>
+                                    <button id="accountRenameBtn" type="button" data-i18n="renameAccount">修改名称</button>
+                                    <button id="accountDeleteBtn" type="button" data-i18n="deleteAccount">删除账户</button>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
                     <div id="accountsContent" class="alloc-content accounts-content" aria-live="polite">
                         <dl id="accountSummary" class="alloc-stats four"></dl>
 
-                        <section class="alloc-section accounts-list-section" aria-labelledby="accountListTitle">
-                            <div class="accounts-section-head">
-                                <h3 id="accountListTitle" class="alloc-section-title" data-i18n="accountListTitle">账户列表</h3>
-                                <div class="accounts-section-tools">
-                                    <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-account" data-i18n-title="addAccount" title="新增账户" aria-label="新增账户">
-                                        <span data-i18n="addAccount">新增账户</span>
-                                    </button>
-                                    <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-snapshot" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
-                                        <span data-i18n="addSnapshot">新增快照</span>
-                                    </button>
-                                    <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-holding" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
-                                        <span data-i18n="addHolding">新增持仓</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="account-card-strip-panel">
-                                <div id="accountList" class="account-list accounts-list"></div>
-                            </div>
-                        </section>
+                        <div class="account-actions-row">
+                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-snapshot" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
+                                <span data-i18n="addSnapshot">新增快照</span>
+                            </button>
+                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-holding" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
+                                <span data-i18n="addHolding">新增持仓</span>
+                            </button>
+                        </div>
 
                         <section id="accountTrendPanel" class="alloc-section accounts-section account-trend-panel">
                             <div class="accounts-section-head">

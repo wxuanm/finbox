@@ -6,9 +6,177 @@
    their fold toggles, and the phone rules. Holdings and snapshot tables keep their own rules in asset-data.css
    and mobile-views.css. Every rule is scoped to #assetDataView, so no other view can pick it up. */
 
-/* Desktop: the account chip bar is a phone picker only. */
-#assetDataView .account-switch-bar {
+/* Account switch bar: one row of account chips and the selected account's actions, on every width.
+   Chips scroll sideways when the accounts do not fit. The bar sits above the summary tiles. Older rules in
+   system.css give the bar a frame and background on desktop; these override them with higher specificity, so the
+   bar reads as a flat row inside the panel, like the 资产配置 head. */
+html body .app-shell #assetDataView .account-switch-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    margin: 0 22px 12px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+#assetDataView .account-switch-bar[hidden] {
     display: none;
+}
+
+#assetDataView .account-switch {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+#assetDataView .account-switch::-webkit-scrollbar {
+    display: none;
+}
+
+#assetDataView .account-chip {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--muted-text);
+    background: var(--surface-color);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#assetDataView .account-chip:hover {
+    border-color: var(--primary-color);
+    color: var(--heading-color);
+}
+
+#assetDataView .account-chip:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+#assetDataView .account-chip.active {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary-soft);
+}
+
+#assetDataView .account-chip[draggable="true"] {
+    cursor: grab;
+}
+
+#assetDataView .account-chip.is-dragging {
+    opacity: 0.5;
+}
+
+#assetDataView .account-chip.drop-before {
+    box-shadow: inset 3px 0 0 var(--primary-color);
+}
+
+#assetDataView .account-chip.drop-after {
+    box-shadow: inset -3px 0 0 var(--primary-color);
+}
+
+#assetDataView .account-switch-tools {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Every control in the tools group is the same height, so the add button and the menu share one line. */
+#assetDataView .account-switch-tools .alloc-head-action {
+    height: 36px;
+    padding-block: 0;
+}
+
+/* The selected account's rename/delete menu: a bordered summary that opens a small list. */
+html body .app-shell #assetDataView .account-card-menu {
+    position: relative;
+}
+
+html body .app-shell #assetDataView .account-card-menu summary {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--muted-text);
+    background: var(--surface-color);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    list-style: none;
+    cursor: pointer;
+}
+
+html body .app-shell #assetDataView .account-card-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+html body .app-shell #assetDataView .account-card-menu[open] summary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+html body .app-shell #assetDataView .account-card-menu > div {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 30;
+    display: grid;
+    min-width: 148px;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-color);
+    box-shadow: var(--shadow-md);
+}
+
+html body .app-shell #assetDataView .account-card-menu > div button {
+    padding: 8px 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--heading-color);
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+html body .app-shell #assetDataView .account-card-menu > div button:hover {
+    background: var(--primary-soft);
+}
+
+/* The per-account action row sits under the summary tiles: snapshot and holding entry. */
+#assetDataView .account-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+#assetDataView .accounts-panel .account-switch-bar .alloc-head-action {
+    flex: 0 0 auto;
 }
 
 /* Sections share the grid of the panel; the panel itself draws the frame. */
@@ -59,211 +227,6 @@
     line-height: 1.5;
 }
 
-/* ---- Account list: one bordered list, one row per account ---- */
-#assetDataView .account-card-strip-panel {
-    min-width: 0;
-}
-
-#assetDataView .account-rows {
-    display: grid;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
-    border-radius: var(--radius-lg);
-    background: var(--surface-color);
-    overflow: hidden;
-}
-
-#assetDataView .account-item {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    min-width: 0;
-}
-
-#assetDataView .account-item + .account-item {
-    border-top: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-}
-
-#assetDataView .account-item[draggable="true"] {
-    cursor: grab;
-}
-
-#assetDataView .account-item.is-dragging {
-    opacity: 0.5;
-}
-
-#assetDataView .account-item.drop-before::before,
-#assetDataView .account-item.drop-after::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--primary-color);
-}
-
-#assetDataView .account-item.drop-before::before {
-    top: 0;
-}
-
-#assetDataView .account-item.drop-after::after {
-    bottom: 0;
-}
-
-/* The row is the select button: name on the left, three figures on the right. */
-#assetDataView .account-main {
-    display: grid;
-    grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
-    gap: 12px 20px;
-    align-items: center;
-    min-width: 0;
-    min-height: 56px;
-    padding: 10px 14px;
-    border: 0;
-    border-radius: 0;
-    color: inherit;
-    background: transparent;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-
-#assetDataView .account-main:hover {
-    background: var(--primary-soft);
-}
-
-#assetDataView .account-main:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -2px;
-}
-
-#assetDataView .account-item.active {
-    background: color-mix(in srgb, var(--primary-color) 8%, var(--surface-color));
-}
-
-#assetDataView .account-item.active::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--primary-color);
-}
-
-#assetDataView .account-row-name {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-}
-
-#assetDataView .account-row-name strong {
-    overflow: hidden;
-    color: var(--heading-color);
-    font-size: 14px;
-    font-weight: 850;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#assetDataView .account-row-name small {
-    color: var(--muted-text);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-#assetDataView .account-row-figures {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    min-width: 0;
-    font-variant-numeric: tabular-nums;
-}
-
-#assetDataView .account-row-cell {
-    display: grid;
-    gap: 2px;
-    justify-items: end;
-    min-width: 0;
-    text-align: right;
-}
-
-#assetDataView .account-row-cell > span {
-    color: var(--muted-text);
-    font-size: 11px;
-    font-weight: 800;
-}
-
-#assetDataView .account-row-cell strong {
-    color: var(--heading-color);
-    font-size: 14px;
-    font-weight: 850;
-}
-
-#assetDataView .account-row-cell strong.positive {
-    color: var(--positive-color);
-}
-
-#assetDataView .account-row-cell strong.negative {
-    color: var(--negative-color);
-}
-
-/* The per-row menu is a grid cell at the right edge, beside the select button, not a floating card corner.
-   Old card rules set it absolute and styled it as a bordered tile; this block restores it to the flow. */
-html body .app-shell #assetDataView .account-item .account-card-menu {
-    position: static;
-    top: auto;
-    right: auto;
-    margin: 0 12px 0 0;
-}
-
-html body .app-shell #assetDataView .account-item .account-card-menu summary {
-    display: grid;
-    width: 30px;
-    height: 30px;
-    place-items: center;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--muted-text);
-    background: var(--surface-color);
-    font-size: 16px;
-    font-weight: 800;
-    line-height: 1;
-    list-style: none;
-    cursor: pointer;
-}
-
-/* Rows are flat: no card radius, shadow, gradient, or hover lift from the old strip. */
-html body .app-shell #assetDataView .account-card-strip .account-item,
-html body .app-shell #assetDataView .account-item {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    transform: none;
-    transition: none;
-}
-
-html body .app-shell #assetDataView .account-card-strip .account-item:hover,
-html body .app-shell #assetDataView .account-item:hover {
-    transform: none;
-    border-color: transparent;
-    box-shadow: none;
-}
-
-html body .app-shell #assetDataView .account-item.active {
-    border: 0;
-    background: color-mix(in srgb, var(--primary-color) 8%, var(--surface-color));
-    box-shadow: none;
-}
-
 /* ---- Section content ---- */
 #assetDataView .accounts-section .alloc-section-title {
     font-size: 15px;
@@ -296,39 +259,27 @@ html body .app-shell #assetDataView .account-item.active {
         padding-top: 0;
     }
 
-    #assetDataView .account-switch-bar {
+    /* Phones: the chips take the first full row, and the add button and menu sit right-aligned on a second row.
+       The bar sticks under the header, like the returns period bar, so the account stays in reach. */
+    html body .app-shell #assetDataView .account-switch-bar .account-switch {
+        flex: 1 0 100%;
+    }
+
+    html body .app-shell #assetDataView .account-switch-tools {
+        flex: 1 0 100%;
+        justify-content: flex-end;
+    }
+
+    html body .app-shell #assetDataView .account-switch-bar {
         position: sticky;
         top: var(--pam-header-height, 0px);
         z-index: 20;
-        display: block;
-        min-width: 0;
-        margin: 0 -12px;
+        margin: 0 -12px 14px;
         padding: 10px 12px 8px;
         border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
         background: var(--surface-elevated);
         -webkit-backdrop-filter: blur(18px);
         backdrop-filter: blur(18px);
-    }
-
-    #assetDataView .account-switch-bar[hidden] {
-        display: none;
-    }
-
-    #assetDataView .account-switch-bar .account-switch {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 2px;
-        overflow-x: auto;
-        scrollbar-width: none;
-    }
-
-    #assetDataView .account-switch-bar .account-switch::-webkit-scrollbar {
-        display: none;
-    }
-
-    #assetDataView .account-switch-bar .period-chip {
-        flex: 0 0 auto;
-        white-space: nowrap;
     }
 
     #assetDataView .accounts-panel .panel-head {
@@ -397,38 +348,4 @@ html body .app-shell #assetDataView .account-item.active {
         width: 100%;
     }
 
-    /* The list head: the three actions share one full-width row under the title. */
-    #assetDataView .accounts-list-section .accounts-section-tools {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 6px;
-    }
-
-    #assetDataView .accounts-list-section .alloc-head-action {
-        justify-content: center;
-        min-width: 0;
-        padding-inline: 6px;
-        font-size: 12px;
-    }
-
-    /* Each row: name and total assets on one line; cumulative P/L and annualized return beneath. */
-    #assetDataView .account-main {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 8px;
-        padding: 10px 12px;
-    }
-
-    #assetDataView .account-row-figures {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    #assetDataView .account-row-cell {
-        justify-items: start;
-        text-align: left;
-    }
-
-    #assetDataView .account-item .account-card-menu {
-        margin-right: 6px;
-    }
 }

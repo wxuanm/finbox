@@ -1,10 +1,10 @@
 import { state } from '../../config/state.js';
-import { t } from '../../config/i18n.js';
+import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency, formatPercent, signedClass } from '../../utils/formatter.js';
 
-// 账户管理 summary: four 资产配置-style tiles across all accounts (total assets, period P/L, period return,
-// and how many accounts share the latest snapshot date). Tiles drop to two columns on phones via CSS.
-export function renderAccountSummary(metrics, portfolio) {
+// 账户管理 summary: four 资产配置-style tiles for the selected account. The portfolio totals live on 账户收益,
+// so this page answers "how is this account doing". An account that cannot be calculated shows its reason.
+export function renderAccountSummary(metrics) {
     const el = document.getElementById('accountSummary');
     if (!el) return;
     el.hidden = state.accounts.length === 0;
@@ -13,10 +13,13 @@ export function renderAccountSummary(metrics, portfolio) {
         return;
     }
     const masked = state.amountsHidden;
-    const valid = metrics.filter(metric => metric.valid);
-    const latestValue = valid.reduce((sum, metric) => sum + metric.latestValue, 0);
-    const latestDate = valid.reduce((latest, metric) => (metric.latestDate > latest ? metric.latestDate : latest), '');
-    const syncedCount = latestDate ? valid.filter(metric => metric.latestDate === latestDate).length : 0;
+    const account = state.accounts.find(item => item.id === state.selectedAccountId) || state.accounts[0];
+    const metric = metrics.find(item => item.account.id === account.id);
+    const latest = latestSnapshotOf(account.id);
+    const valid = Boolean(metric?.valid);
+    const annualizedReturn = calculateAnnualizedReturn(metric);
+    const dash = '-';
+
     const tile = (label, value, tone, hint) => `
         <div>
             <dt>${escapeHtml(label)}</dt>
@@ -25,28 +28,28 @@ export function renderAccountSummary(metrics, portfolio) {
     `;
     el.innerHTML = [
         tile(
-            t('latestTotalAssets'),
-            formatCurrency(latestValue, masked),
+            t('totalAssets'),
+            latest ? formatCurrency(latest.totalValue, masked) : dash,
             '',
-            escapeHtml(t('validAccountsTotal'))
+            escapeHtml(latest ? latest.date : t('noSnapshot'))
         ),
         tile(
-            t('periodPnl'),
-            portfolio ? formatSignedCurrency(portfolio.periodProfitLoss, masked) : '-',
-            signedClass(portfolio?.periodProfitLoss),
-            escapeHtml(t('periodPnl'))
+            t('cumulativeProfit'),
+            valid ? formatSignedCurrency(metric.profitLoss, masked) : dash,
+            signedClass(valid ? metric.profitLoss : null),
+            escapeHtml(valid ? `${t('periodPnl')} ${formatSignedCurrency(metric.periodProfitLoss, masked)}` : (metric?.error || t('needTwoSnapshots')))
         ),
         tile(
             t('periodReturn'),
-            portfolio ? formatPercent(portfolio.periodReturn) : '-',
-            signedClass(portfolio?.periodReturn),
-            escapeHtml(t('periodReturn'))
+            valid && Number.isFinite(metric.periodReturn) ? formatPercent(metric.periodReturn) : dash,
+            signedClass(valid ? metric.periodReturn : null),
+            escapeHtml(periodLabel(state.selectedPeriod))
         ),
         tile(
-            t('accountCount'),
-            String(state.accounts.length),
-            '',
-            latestDate ? `${escapeHtml(latestDate)} · ${syncedCount}` : '-'
+            t('annualizedReturn'),
+            Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : dash,
+            signedClass(annualizedReturn),
+            escapeHtml(valid ? `${t('cumulativeReturn')} ${formatPercent(metric.cumulativeReturn)}` : dash)
         )
     ].join('');
 }
@@ -55,74 +58,6 @@ function formatSignedCurrency(value, masked = false) {
     const num = Number(value);
     if (masked || !Number.isFinite(num)) return formatCurrency(num, masked);
     return `${num > 0 ? '+' : ''}${formatCurrency(num)}`;
-}
-
-// Account list: one bordered list, a row per account, the selected row highlighted. Rows stay draggable on
-// desktop, and each row's `...` menu holds rename and delete. Phones show the same rows, with the figures
-// stacked under the name, and the chip bar above the view picks the account.
-export function renderAccountList(metrics) {
-    const wrap = document.getElementById('accountList');
-    if (!wrap) return;
-    const panel = wrap.closest('.account-card-strip-panel');
-    panel?.classList.toggle('is-empty', state.accounts.length === 0);
-    renderAccountSwitchBar();
-
-    if (state.accounts.length === 0) {
-        wrap.innerHTML = `
-            <div class="empty-state account-empty-state">
-                <span class="account-empty-mark" aria-hidden="true">+</span>
-                <strong>${t('noInvestmentAccounts')}</strong>
-                <p>${t('createAccountHint')}</p>
-                <button class="primary-btn management-add-btn" type="button" data-action="add-account">${t('addAccount')}</button>
-            </div>
-        `;
-        return;
-    }
-
-    const rows = state.accounts.map(account => {
-        const metric = metrics.find(item => item.account.id === account.id);
-        const active = account.id === state.selectedAccountId;
-        const latestSnapshot = latestSnapshotOf(account.id);
-        const annualizedReturn = calculateAnnualizedReturn(metric);
-        return `
-            <li class="account-item${active ? ' active' : ''}" draggable="true" data-account-id="${account.id}">
-                <button class="account-main" type="button" data-action="select-account" data-account-id="${account.id}" aria-pressed="${active}">
-                    <span class="account-row-name">
-                        <strong title="${escapeHtml(account.name)}">${escapeHtml(account.name)}</strong>
-                        <small>${t('recentlyUpdated')} ${latestSnapshot?.date || t('noSnapshot')}</small>
-                    </span>
-                    <span class="account-row-figures">
-                        <span class="account-row-cell"><span>${t('totalAssets')}</span><strong>${latestSnapshot ? formatCurrency(latestSnapshot.totalValue, state.amountsHidden) : '-'}</strong></span>
-                        <span class="account-row-cell"><span>${t('cumulativeProfit')}</span><strong class="${signedClass(metric?.profitLoss)}">${metric?.valid ? formatCurrency(metric.profitLoss, state.amountsHidden) : '-'}</strong></span>
-                        <span class="account-row-cell"><span>${t('annualizedReturn')}</span><strong class="${signedClass(annualizedReturn)}">${Number.isFinite(annualizedReturn) ? formatPercent(annualizedReturn) : '-'}</strong></span>
-                    </span>
-                </button>
-                <details class="account-card-menu">
-                    <summary aria-label="${t('accountMenu')}">...</summary>
-                    <div>
-                        <button type="button" data-action="rename-account" data-account-id="${account.id}">${t('renameAccount')}</button>
-                        <button type="button" data-action="delete-account" data-account-id="${account.id}">${t('deleteAccount')}</button>
-                    </div>
-                </details>
-            </li>
-        `;
-    }).join('');
-    wrap.innerHTML = `<ul class="account-rows">${rows}</ul>`;
-}
-
-// The chip bar is the phone account picker. It is hidden while there are no accounts.
-function renderAccountSwitchBar() {
-    const wrap = document.getElementById('accountSwitchBar');
-    if (!wrap) return;
-    const bar = wrap.closest('.account-switch-bar');
-    if (bar) bar.hidden = state.accounts.length === 0;
-    const selectedId = state.accounts.some(account => account.id === state.selectedAccountId)
-        ? state.selectedAccountId
-        : state.accounts[0]?.id;
-    wrap.innerHTML = state.accounts.map(account => {
-        const active = account.id === selectedId;
-        return `<button class="period-chip account-chip${active ? ' active' : ''}" type="button" data-action="select-account" data-account-id="${account.id}" aria-pressed="${active}">${escapeHtml(account.name)}</button>`;
-    }).join('');
 }
 
 function latestSnapshotOf(accountId) {
@@ -142,93 +77,102 @@ function calculateAnnualizedReturn(metric) {
     return (Math.pow(latest.unitNav / first.unitNav, 365 / days) - 1) * 100;
 }
 
-export function bindAccountList({ onSelect, onRename, onDelete, onAdd, onReorder }) {
-    const panel = document.querySelector('.account-card-strip-panel');
-    if (!panel) return;
-    const list = panel.querySelector('#accountList');
-    let draggedAccountId = '';
+// The account switch bar is the account picker for the whole view: one chip per account, the selected one
+// highlighted. Chips can be dragged to reorder. The rename/delete menu beside the bar acts on the selected
+// account. The bar and menu are hidden while there are no accounts.
+export function renderAccountList() {
+    const wrap = document.getElementById("accountSwitchBar");
+    const bar = wrap?.closest(".account-switch-bar");
+    const menu = document.getElementById("accountMenu");
+    const hasAccounts = state.accounts.length > 0;
+    if (bar) bar.hidden = !hasAccounts;
+    if (menu) {
+        menu.hidden = !hasAccounts;
+        menu.open = false;
+    }
+    if (!wrap) return;
+    const selectedId = currentSelectedId();
+    wrap.innerHTML = state.accounts.map(account => {
+        const active = account.id === selectedId;
+        return `<button class="account-chip${active ? " active" : ""}" type="button" draggable="true" data-account-id="${account.id}" aria-pressed="${active}">${escapeHtml(account.name)}</button>`;
+    }).join("");
+}
 
-    document.getElementById('accountSwitchBar')?.addEventListener('click', event => {
-        const chip = event.target.closest('[data-action="select-account"]');
+export function currentSelectedId() {
+    return state.accounts.some(account => account.id === state.selectedAccountId)
+        ? state.selectedAccountId
+        : state.accounts[0]?.id;
+}
+
+export function bindAccountList({ onSelect, onRename, onDelete, onReorder }) {
+    const wrap = document.getElementById("accountSwitchBar");
+    if (!wrap) return;
+    let draggedAccountId = "";
+
+    wrap.addEventListener("click", event => {
+        const chip = event.target.closest(".account-chip");
         if (!chip) return;
         onSelect(chip.dataset.accountId);
         // The chips are re-rendered; keep keyboard focus on the chosen one.
         document.querySelector(`#accountSwitchBar [data-account-id="${CSS.escape(chip.dataset.accountId)}"]`)?.focus({ preventScroll: true });
     });
 
-    panel.addEventListener('click', event => {
-        const target = event.target.closest('[data-action]');
-        if (!target) return;
-
-        if (target.dataset.action === 'add-account') {
-            onAdd();
-            return;
-        }
-
-        const accountId = target.dataset.accountId;
-        if (target.dataset.action === 'select-account') onSelect(accountId);
-        if (target.dataset.action === 'rename-account') onRename(accountId);
-        if (target.dataset.action === 'delete-account') onDelete(accountId);
+    document.getElementById("accountRenameBtn")?.addEventListener("click", () => {
+        const id = currentSelectedId();
+        if (id) onRename(id);
+    });
+    document.getElementById("accountDeleteBtn")?.addEventListener("click", () => {
+        const id = currentSelectedId();
+        if (id) onDelete(id);
     });
 
-    list?.addEventListener('dragstart', event => {
-        const item = event.target.closest('.account-item');
-        if (!item || !item.dataset.accountId) return;
-        if (event.target.closest('.account-card-menu')) {
-            event.preventDefault();
-            return;
-        }
-        draggedAccountId = item.dataset.accountId;
-        item.classList.add('is-dragging');
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', draggedAccountId);
+    wrap.addEventListener("dragstart", event => {
+        const chip = event.target.closest(".account-chip");
+        if (!chip) return;
+        draggedAccountId = chip.dataset.accountId;
+        chip.classList.add("is-dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", draggedAccountId);
     });
 
-    list?.addEventListener('dragover', event => {
+    wrap.addEventListener("dragover", event => {
         if (!draggedAccountId) return;
-        const item = event.target.closest('.account-item');
-        if (!item || item.dataset.accountId === draggedAccountId) return;
+        const chip = event.target.closest(".account-chip");
+        if (!chip || chip.dataset.accountId === draggedAccountId) return;
         event.preventDefault();
-        clearDropTargets(list);
-        item.classList.add(isDropAfter(event, item) ? 'drop-after' : 'drop-before');
-        event.dataTransfer.dropEffect = 'move';
+        clearDropTargets(wrap);
+        chip.classList.add(isDropAfter(event, chip) ? "drop-after" : "drop-before");
+        event.dataTransfer.dropEffect = "move";
     });
 
-    list?.addEventListener('dragleave', event => {
-        const item = event.target.closest('.account-item');
-        if (!item || item.contains(event.relatedTarget)) return;
-        item.classList.remove('drop-before', 'drop-after');
+    wrap.addEventListener("dragleave", event => {
+        const chip = event.target.closest(".account-chip");
+        if (!chip || chip.contains(event.relatedTarget)) return;
+        chip.classList.remove("drop-before", "drop-after");
     });
 
-    list?.addEventListener('drop', event => {
+    wrap.addEventListener("drop", event => {
         if (!draggedAccountId) return;
-        const item = event.target.closest('.account-item');
-        if (!item || item.dataset.accountId === draggedAccountId) return;
+        const chip = event.target.closest(".account-chip");
+        if (!chip || chip.dataset.accountId === draggedAccountId) return;
         event.preventDefault();
-        const position = isDropAfter(event, item) ? 'after' : 'before';
-        clearDropTargets(list);
-        onReorder?.(draggedAccountId, item.dataset.accountId, position);
+        const position = isDropAfter(event, chip) ? "after" : "before";
+        clearDropTargets(wrap);
+        onReorder?.(draggedAccountId, chip.dataset.accountId, position);
     });
 
-    list?.addEventListener('dragend', () => {
-        draggedAccountId = '';
-        list.querySelector('.is-dragging')?.classList.remove('is-dragging');
-        clearDropTargets(list);
+    wrap.addEventListener("dragend", () => {
+        draggedAccountId = "";
+        wrap.querySelector(".is-dragging")?.classList.remove("is-dragging");
+        clearDropTargets(wrap);
     });
 }
 
-// Keeps the selected row in view: the phone chip bar scrolls sideways, and the list scrolls vertically.
-export function scrollAccountCardIntoView(accountId, behavior = 'smooth') {
+// Keeps the selected chip in view on the sideways-scrolling bar.
+export function scrollAccountCardIntoView(accountId, behavior = "smooth") {
     if (!accountId) return;
-    scrollAccountChipIntoView(accountId, behavior);
-    const item = Array.from(document.querySelectorAll('#accountList .account-item'))
-        .find(element => element.dataset.accountId === accountId);
-    item?.scrollIntoView({ block: 'nearest', behavior });
-}
-
-function scrollAccountChipIntoView(accountId, behavior) {
-    const row = document.getElementById('accountSwitchBar');
-    const chip = row && Array.from(row.querySelectorAll('.account-chip')).find(element => element.dataset.accountId === accountId);
+    const row = document.getElementById("accountSwitchBar");
+    const chip = row && Array.from(row.querySelectorAll(".account-chip")).find(element => element.dataset.accountId === accountId);
     if (!chip || row.clientWidth === 0) return;
     const target = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
     row.scrollTo({ left: Math.min(Math.max(0, target), row.scrollWidth - row.clientWidth), behavior });
@@ -236,11 +180,11 @@ function scrollAccountChipIntoView(accountId, behavior) {
 
 function isDropAfter(event, item) {
     const rect = item.getBoundingClientRect();
-    return event.clientY > rect.top + rect.height / 2;
+    return event.clientX > rect.left + rect.width / 2;
 }
 
-function clearDropTargets(list) {
-    list.querySelectorAll('.drop-before, .drop-after').forEach(item => {
-        item.classList.remove('drop-before', 'drop-after');
+function clearDropTargets(wrap) {
+    wrap.querySelectorAll(".drop-before, .drop-after").forEach(item => {
+        item.classList.remove("drop-before", "drop-after");
     });
 }

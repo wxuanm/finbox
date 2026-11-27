@@ -519,7 +519,6 @@ function bindEvents() {
         onSelect: selectAccount,
         onRename: renameAccount,
         onDelete: deleteAccount,
-        onAdd: openAccountDialog,
         onReorder: reorderAccounts
     });
     bindPeriodSwitch(period => {
@@ -820,8 +819,8 @@ function renderApp() {
     renderActiveView();
     renderAmountPrivacyToggle();
     renderReturnsSummary(metrics, portfolio);
-    renderAccountSummary(metrics, portfolio);
-    renderAccountList(metrics);
+    renderAccountSummary(metrics);
+    renderAccountList();
     renderSnapshotForm();
     renderPeriodSwitch();
     renderChartFullscreenButton();
