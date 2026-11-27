@@ -225,30 +225,20 @@
                             <button id="refreshQuotesBtn" class="ghost-btn alloc-head-action" type="button" data-i18n-title="refreshQuotesTitle" title="刷新全部账户行情" aria-label="刷新全部账户行情">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v5h5M4 13a8 8 0 0 0 14.9 4M20 20v-5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="refresh">刷新</span>
                             </button>
-                        </div>
-                    </div>
-                    <div id="accountsContent" class="alloc-content accounts-content" aria-live="polite">
-                        <dl id="accountSummary" class="alloc-stats four"></dl>
-
-
-                        <div class="account-actions-row">
-                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-account" data-i18n-title="addAccount" title="新增账户" aria-label="新增账户">
-                                <span data-i18n="addAccount">新增账户</span>
-                            </button>
-                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-snapshot" data-i18n-title="addSnapshot" title="新增快照" aria-label="新增快照">
-                                <span data-i18n="addSnapshot">新增快照</span>
-                            </button>
-                            <button class="ghost-btn alloc-head-action" type="button" data-account-action="add-holding" data-i18n-title="addHolding" title="新增持仓" aria-label="新增持仓">
-                                <span data-i18n="addHolding">新增持仓</span>
-                            </button>
-                            <details id="accountMenu" class="account-card-menu">
+                            <details id="accountMenu" class="account-card-menu account-head-menu">
                                 <summary data-i18n-aria-label="accountMenu" aria-label="账户菜单">...</summary>
                                 <div>
+                                    <button type="button" data-account-action="add-account" data-i18n="addAccount">新增账户</button>
+                                    <button type="button" data-account-action="add-snapshot" data-i18n="addSnapshot">新增快照</button>
+                                    <button type="button" data-account-action="add-holding" data-i18n="addHolding">新增持仓</button>
                                     <button id="accountRenameBtn" type="button" data-i18n="renameAccount">修改名称</button>
                                     <button id="accountDeleteBtn" type="button" data-i18n="deleteAccount">删除账户</button>
                                 </div>
                             </details>
                         </div>
+                    </div>
+                    <div id="accountsContent" class="alloc-content accounts-content" aria-live="polite">
+                        <dl id="accountSummary" class="alloc-stats four"></dl>
 
                         <section id="accountTrendPanel" class="alloc-section accounts-section account-trend-panel">
                             <div class="accounts-section-head">

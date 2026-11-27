@@ -84,12 +84,12 @@ export function renderAccountList() {
     const wrap = document.getElementById("accountSwitchBar");
     const menu = document.getElementById("accountMenu");
     const hasAccounts = state.accounts.length > 0;
-    // The chip list is empty with no accounts, so it hides; 新增账户 in the action row stays available.
+    // The chip list is empty with no accounts, so it hides. The menu stays: 新增账户 in it must work with no accounts.
+    // Only the rename and delete items need a selected account.
     if (wrap) wrap.hidden = !hasAccounts;
-    if (menu) {
-        menu.hidden = !hasAccounts;
-        menu.open = false;
-    }
+    if (menu) menu.open = false;
+    document.getElementById("accountRenameBtn")?.toggleAttribute("hidden", !hasAccounts);
+    document.getElementById("accountDeleteBtn")?.toggleAttribute("hidden", !hasAccounts);
     if (!wrap) return;
     const selectedId = currentSelectedId();
     wrap.innerHTML = state.accounts.map(account => {
