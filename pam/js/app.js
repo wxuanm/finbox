@@ -657,8 +657,14 @@ function toggleDesktopFold(key) {
         ? state.desktopFolded.filter(item => item !== key)
         : [...state.desktopFolded, key];
     persistPreferences();
-    // Charts inside a folded panel have zero size and are skipped or need measuring again.
     renderApp();
+    // A chart inside a folded panel was measured at zero size, and ECharts does not notice the panel opening on
+    // its own. Measure again on the next frame, once the body has layout, as switchView does.
+    requestAnimationFrame(() => {
+        resizeChart();
+        resizeHoldingChart();
+        resizeAccountTrendChart();
+    });
 }
 
 function renderDesktopFolds() {
