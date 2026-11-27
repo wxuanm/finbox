@@ -239,6 +239,94 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
     }
 }
 
+/* Desktop heads, as the returns page: the title takes the first row; the description, the tools (or the holdings
+   summary), and the fold chevron share a second row inside one hairline frame. Open, the body joins that frame
+   (no row gap, no top border, square where they meet); folded, the head keeps all four corners. Phones keep their
+   own layout. */
+@media (min-width: 721px) {
+    #assetDataView .accounts-section {
+        row-gap: 0;
+    }
+
+    #assetDataView .accounts-section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 6px 12px;
+        align-items: center;
+        justify-content: stretch;
+    }
+
+    #assetDataView .accounts-section-head > .desktop-fold-title {
+        display: contents;
+    }
+
+    #assetDataView .accounts-section-head > .desktop-fold-title > h3 {
+        grid-row: 1;
+        grid-column: 1 / -1;
+        min-width: 0;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    #assetDataView .accounts-section-head > .desktop-fold-title > .desktop-fold-btn {
+        grid-row: 2;
+        grid-column: 3;
+        margin: 6px 12px 6px 0;
+    }
+
+    #assetDataView .accounts-section-head > .accounts-desc {
+        grid-row: 2;
+        grid-column: 1;
+        min-width: 0;
+        padding: 6px 0 6px 12px;
+    }
+
+    #assetDataView .accounts-section-head > .accounts-section-tools,
+    #assetDataView .accounts-section-head > .holding-summary {
+        grid-row: 2;
+        grid-column: 2;
+        margin: 6px 0;
+    }
+
+    /* The frame: an empty ::after stretched to the second row, drawn behind the row's items. */
+    #assetDataView .accounts-section-head::after {
+        content: "";
+        grid-row: 2;
+        grid-column: 1 / -1;
+        align-self: stretch;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+        pointer-events: none;
+    }
+
+    #assetDataView .accounts-section:not(.is-desktop-folded) > .accounts-section-head::after {
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+
+    #assetDataView .accounts-section.is-desktop-folded > .accounts-section-head::after {
+        border-radius: var(--radius-md);
+    }
+
+    /* Open: the body joins the head frame. It takes the frame's sides and bottom, and no top edge. The holdings and
+       records tables draw their own bordered box from system.css; that box is cleared inside the body (!important is
+       needed to beat system.css), so the body frame stands in for it. */
+    #assetDataView .accounts-section:not(.is-desktop-folded) > .desktop-fold-body {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-top: 0;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+    }
+
+    #assetDataView .accounts-section:not(.is-desktop-folded) > .desktop-fold-body .holding-table-wrap,
+    #assetDataView .accounts-section:not(.is-desktop-folded) > .desktop-fold-body .snapshot-table-wrap {
+        margin: 0;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+}
+
 /* ---- Phone ----
    The head stacks: title, then the account chips on a full row. The chips stay in reach while the page
    scrolls, so the head sticks under the header. The action row wraps beneath the summary tiles. */
@@ -330,6 +418,24 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
     /* The chip bar names the account, so section titles drop the account badge. */
     #assetDataView .accounts-section .title-account-badge {
         display: none;
+    }
+
+    /* The trend and records descriptions repeat the controls and the account chip, so phones drop them (they moved
+       into the head). The holdings line stays: it carries the stale-price count. It sits inline after the title,
+       one ellipsized line, as the phone holdings head did before. */
+    #assetDataView #accountTrendPanel > .accounts-section-head > .accounts-desc,
+    #assetDataView #assetRecordPanel > .accounts-section-head > .accounts-desc {
+        display: none;
+    }
+
+    #assetDataView .asset-holdings-panel > .accounts-section-head > .accounts-desc {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     /* Trend and records fold from their toggle alone; the desktop title that duplicates it is hidden. */
