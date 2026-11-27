@@ -162,48 +162,52 @@
                 <div class="returns-period-bar">
                     <div id="returnsPeriodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
                 </div>
-                <div class="page-surface returns-surface">
-                <section id="returnsHero" class="returns-hero" aria-live="polite"></section>
-                <section id="overviewCards" class="overview-grid" aria-live="polite"></section>
 
-                <section id="performanceChartPanel" class="panel management-panel chart-panel focus-panel">
-                    <div class="panel-head split-head">
-                        <div class="chart-panel-title">
-                            <div class="desktop-fold-title"><h2 data-i18n="performanceTitle">收益走势</h2><button class="desktop-fold-btn" type="button" data-desktop-fold="returnsChart" aria-controls="performanceChartBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-                            <p data-i18n="performanceDesc">现金流调整后收益率，非资产规模变化。</p>
-                        </div>
-                        <button id="chartCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="performanceChartBody" aria-expanded="false">
-                            <span data-i18n="performanceTitle">收益走势</span>
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                        <div id="periodSwitch" class="period-switch" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
-                        <button id="chartFullscreenBtn" class="chart-fullscreen-btn" type="button" title="横屏全屏查看" aria-label="横屏全屏查看"></button>
-                    </div>
-                    <div id="performanceChartBody" class="chart-panel-body desktop-fold-body">
-                    <div id="chartMessage" class="chart-message"></div>
-                    <div id="chartHints" class="chart-hints" role="status" aria-live="polite" hidden>
-                        <span id="chartSparseHint" class="chart-hint chart-hint-warning" hidden></span>
-                    </div>
-                    <div id="chartRangeNote" class="chart-range-note" hidden>
-                        <span id="chartRangeText" class="chart-range-text"></span>
-                        <button id="chartRangeReset" class="chart-range-reset" type="button"></button>
-                    </div>
-                    <div id="performanceChart" class="performance-chart"></div>
-                    </div>
-                </section>
-
-                <section class="panel management-panel comparison-panel">
+                <section class="panel management-panel returns-panel">
                     <div class="panel-head split-head">
                         <div>
-                            <div class="desktop-fold-title"><h2 data-i18n="comparisonTitle">账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h2><button class="desktop-fold-btn" type="button" data-desktop-fold="comparison" aria-controls="comparisonBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-                            <p class="comparison-desc-desktop" data-i18n="comparisonDesc">点击指标排序，点击账户列高亮走势图。</p>
+                            <h2 data-i18n="tabAnalysis">账户收益</h2>
+                            <p data-i18n="returnsDesc">现金流调整后的收益表现，区间与账户管理共用。</p>
                         </div>
                     </div>
-                    <div id="comparisonBody" class="desktop-fold-body">
-                        <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
+                    <div id="returnsContent" class="alloc-content returns-content" aria-live="polite">
+                        <dl id="returnsSummary" class="alloc-stats four" aria-live="polite"></dl>
+
+                        <section id="performanceChartPanel" class="alloc-section returns-section returns-chart-section chart-panel">
+                            <div class="returns-section-head split-head">
+                                <div class="desktop-fold-title"><h3 class="alloc-section-title" data-i18n="performanceTitle">收益走势</h3><button class="desktop-fold-btn" type="button" data-desktop-fold="returnsChart" aria-controls="performanceChartBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+                                <p class="returns-desc" data-i18n="performanceDesc">现金流调整后收益率，非资产规模变化。</p>
+                                <button id="chartCollapseBtn" class="panel-collapse-btn" type="button" aria-controls="performanceChartBody" aria-expanded="false">
+                                    <span data-i18n="performanceTitle">收益走势</span>
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </button>
+                                <div id="periodSwitch" class="period-switch returns-chart-periods" data-i18n-aria-label="periodSwitchLabel" aria-label="选择区间"></div>
+                                <button id="chartFullscreenBtn" class="chart-fullscreen-btn" type="button" title="横屏全屏查看" aria-label="横屏全屏查看"></button>
+                            </div>
+                            <div id="performanceChartBody" class="chart-panel-body desktop-fold-body">
+                                <div id="chartMessage" class="chart-message"></div>
+                                <div id="chartHints" class="chart-hints" role="status" aria-live="polite" hidden>
+                                    <span id="chartSparseHint" class="chart-hint chart-hint-warning" hidden></span>
+                                </div>
+                                <div id="chartRangeNote" class="chart-range-note" hidden>
+                                    <span id="chartRangeText" class="chart-range-text"></span>
+                                    <button id="chartRangeReset" class="chart-range-reset" type="button"></button>
+                                </div>
+                                <div id="performanceChart" class="performance-chart"></div>
+                            </div>
+                        </section>
+
+                        <section class="alloc-section returns-section returns-comparison-section">
+                            <div class="returns-section-head split-head">
+                                <div class="desktop-fold-title"><h3 class="alloc-section-title" data-i18n="comparisonTitle">账户对比 <span id="comparisonPeriodLabel" class="title-period-badge"></span></h3><button class="desktop-fold-btn" type="button" data-desktop-fold="comparison" aria-controls="comparisonBody" aria-expanded="true"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+                                <p class="returns-desc" data-i18n="comparisonDesc">点击指标排序，点击账户列高亮走势图。</p>
+                            </div>
+                            <div id="comparisonBody" class="desktop-fold-body">
+                                <div id="accountComparison" class="comparison-table-wrap" aria-live="polite"></div>
+                            </div>
+                        </section>
                     </div>
                 </section>
-                </div>
             </section>
 
             <section id="assetDataView" class="workspace-view asset-data-view" data-workspace-view="assetData">

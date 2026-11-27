@@ -2,9 +2,18 @@ import { PERIODS, state } from '../../config/state.js';
 import { periodLabel, t } from '../../config/i18n.js';
 import { escapeHtml, formatCurrency, formatPercent, formatRatio, signedClass } from '../../utils/formatter.js';
 
-export function renderOverviewCards(metrics) {
-    const wrap = document.getElementById('overviewCards');
-    if (!wrap) return;
+// Summary in the 资产配置 stat style: latest assets, period P/L, period return, and the data status.
+// The hints carry the cumulative P/L, the best account, and the snapshot dates.
+export function renderReturnsSummary(metrics, portfolio) {
+    const el = document.getElementById('returnsSummary');
+    if (!el) return;
+    el.hidden = state.accounts.length === 0;
+    if (state.accounts.length === 0) {
+        el.innerHTML = '';
+        return;
+    }
+
+    const masked = state.amountsHidden;
     const valid = metrics.filter(metric => metric.valid);
     const latestValue = valid.reduce((sum, metric) => sum + metric.latestValue, 0);
     const profitLoss = valid.reduce((sum, metric) => sum + metric.profitLoss, 0);
@@ -13,36 +22,49 @@ export function renderOverviewCards(metrics) {
     const syncedCount = latestDate ? valid.filter(metric => metric.latestDate === latestDate).length : 0;
     const laggedCount = Math.max(valid.length - syncedCount, 0);
 
-    wrap.innerHTML = [
-        card(t('latestTotalAssets'), formatCurrency(latestValue, state.amountsHidden), t('validAccountsTotal')),
-        card(t('cumulativePnl'), formatCurrency(profitLoss, state.amountsHidden), t('estimatedByNetInput'), signedClass(profitLoss)),
-        card(t('bestInPeriod'), best ? formatPercent(best.periodReturn) : '-', best ? best.account.name : t('waitingValidSnapshot'), signedClass(best?.periodReturn)),
-        // The date is kept unbroken so a narrow tile wraps before it, not at its hyphens.
-        card(t('dataStatus'), `${valid.length}/${state.accounts.length}`, latestDate ? `${syncedCount}/${valid.length} ${escapeHtml(t('updatedTo'))} <span class="nowrap">${escapeHtml(latestDate)}</span>${laggedCount > 0 ? `, ${laggedCount} ${escapeHtml(t('lagged'))}` : ''}` : escapeHtml(t('computableAllAccounts')), '', true)
-    ].join('');
-}
-
-// Phones replace the four overview cards with one summary card in the style of the 账户管理 account summary:
-// total assets, period P/L, and period return in a divided row.
-export function renderReturnsHero(portfolio) {
-    const wrap = document.getElementById('returnsHero');
-    if (!wrap) return;
-    const masked = state.amountsHidden;
-    const stat = (label, value, className = '') => `<div><dt>${escapeHtml(label)}</dt><dd class="${className}">${value}</dd></div>`;
-    wrap.innerHTML = `
-        <dl class="returns-summary-stats">
-            ${stat(t('totalAssets'), portfolio ? formatCurrency(portfolio.latestValue, masked) : '-')}
-            ${stat(t('periodPnl'), portfolio ? formatSignedCurrency(portfolio.periodProfitLoss, masked) : '-', signedClass(portfolio?.periodProfitLoss))}
-            ${stat(t('periodReturn'), portfolio ? formatPercent(portfolio.periodReturn) : '-', signedClass(portfolio?.periodReturn))}
-        </dl>
+    const tile = (label, value, tone, hint) => `
+        <div>
+            <dt>${escapeHtml(label)}</dt>
+            <dd><strong class="${tone}">${value}</strong><small>${hint}</small></dd>
+        </div>
     `;
+    el.innerHTML = [
+        tile(
+            t('latestTotalAssets'),
+            formatCurrency(latestValue, masked),
+            '',
+            escapeHtml(t('validAccountsTotal'))
+        ),
+        tile(
+            t('periodPnl'),
+            portfolio ? formatSignedCurrency(portfolio.periodProfitLoss, masked) : '-',
+            signedClass(portfolio?.periodProfitLoss),
+            `${escapeHtml(t('cumulativePnl'))} ${formatSignedCurrency(profitLoss, masked)}`
+        ),
+        tile(
+            t('periodReturn'),
+            portfolio ? formatPercent(portfolio.periodReturn) : '-',
+            signedClass(portfolio?.periodReturn),
+            best
+                ? `${escapeHtml(t('bestInPeriod'))} ${escapeHtml(best.account.name)} ${formatPercent(best.periodReturn)}`
+                : escapeHtml(t('waitingValidSnapshot'))
+        ),
+        tile(
+            t('dataStatus'),
+            `${valid.length}/${state.accounts.length}`,
+            laggedCount > 0 ? 'warning' : '',
+            latestDate
+                ? `${syncedCount}/${valid.length} ${escapeHtml(t('updatedTo'))} ${escapeHtml(latestDate)}${laggedCount > 0 ? `, ${laggedCount} ${escapeHtml(t('lagged'))}` : ''}`
+                : escapeHtml(t('computableAllAccounts'))
+        )
+    ].join('');
 }
 
 export function renderAccountComparison(metrics) {
     const wrap = document.getElementById('accountComparison');
-    const periodLabel = document.getElementById('comparisonPeriodLabel');
+    const periodLabelEl = document.getElementById('comparisonPeriodLabel');
     if (!wrap) return;
-    if (periodLabel) periodLabel.textContent = currentPeriodLabel();
+    if (periodLabelEl) periodLabelEl.textContent = currentPeriodLabel();
 
     // Same empty-state shape as 资产配置 and 风险敞口: a message and one action that goes to 账户管理.
     if (state.accounts.length === 0) {
@@ -235,10 +257,6 @@ function formatSignedCurrency(value, masked) {
     return `${num > 0 ? '+' : ''}${formatCurrency(num)}`;
 }
 
-function card(label, value, note, className = '', noteIsHtml = false) {
-    return `<div class="overview-card management-overview-card"><span>${label}</span><strong class="${className}">${value}</strong><small>${noteIsHtml ? note : escapeHtml(note)}</small></div>`;
-}
-
 function renderComparisonAccountHeader(metric) {
     const active = state.selectedHighlightAccountId === metric.account.id;
     return `
@@ -251,7 +269,7 @@ function renderComparisonAccountHeader(metric) {
 
 function renderComparisonMetricRow(key, label, metrics, renderValue) {
     return `
-        <tr class="comparison-metric-row">
+        <tr>
             <th data-comparison-sort="${key}"><button type="button">${label}${sortIcon(key)}</button></th>
             ${metrics.map(metric => renderComparisonMetricCell(metric, renderValue)).join('')}
         </tr>

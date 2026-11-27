@@ -120,7 +120,7 @@ PAM
 /pam/
 ├─ Header: product name, description, demo/import/export, amount privacy, language toggle, theme toggle
 ├─ Unified module navigation: 账户收益 / 账户管理 / future modules
-├─ 账户收益: overview cards, performance chart, sortable account comparison table
+├─ 账户收益: summary stats, performance chart, sortable account comparison table
 └─ 账户管理: account cards, context action menu, snapshot/holding/generate dialogs, account trend (chart/list), holdings table, asset records, add-account dialog
 ```
 
@@ -133,7 +133,7 @@ UI direction:
 - Use short operational copy. Explanations should be one-line hints unless they prevent financial misunderstanding.
 - Use a sortable comparison table instead of per-account metric cards for cross-account performance review on desktop. On phones (≤720px) `账户收益` is portfolio-first and kept short:
   - The period chips move out of the chart head into a bar pinned under the header, because the period drives the summary, chart, and ranking together and should stay reachable while scrolling.
-  - One summary card in the `账户管理` account-summary style replaces the four overview cards: total assets, period P/L, and period return in a divided row. Snapshot dates and data freshness are not shown on this view.
+  - The summary is a four-tile row in the `资产配置` stat style: latest total assets, period P/L, period return, and data status. The tile hints carry cumulative P/L, the best account, and the latest snapshot date. The phone layout keeps the same four tiles in two columns, under the sticky period bar.
   - The returns chart is folded under its title by default; tapping the title opens it, and the choice is saved as a preference. The title carries the same accent bar as the other panel titles. The full-screen button stays on the title row, so full screen can be opened while folded. Open, it follows the `账户管理` account trend chart: one portfolio line in the theme's primary color with a light area fill and high/low/latest labels, no legend, benchmark, zoom slider, or description. The latest label opens to the left of the last point so it never covers the right-hand axis labels, and a high or low label too close to it is dropped.
   - The `账户对比` head shows no period badge; the sticky period bar already names the period.
   - The comparison list becomes a ranking ordered by the shared comparison sort (period return by default; period P/L is an extra phone sort key). Each row shows the account's line-color dot, name, latest assets, a diverging bar of its period return scaled to the largest absolute return in the list, and the period return with period P/L. A tap expands the row in place to annualized return, max drawdown, volatility, Calmar ratio, cumulative P/L, and a `去账户管理` link that selects the account in `账户管理`.

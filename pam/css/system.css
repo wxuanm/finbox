@@ -1,18 +1,14 @@
-
-
 /* 账户管理 on phones (<=720px). The account bar sticks under the header like the returns view's period bar
    and picks the account for the whole view, so the trend, holdings, and record heads drop their account badge.
    The trend and record panels fold under their titles like the returns chart. Desktop is unchanged. */
 .account-switch-bar {
     display: none;
 }
-
 @media (max-width: 720px) {
-    #assetDataView.workspace-view.active {
+#assetDataView.workspace-view.active {
         padding-top: 0;
     }
-
-    .account-switch-bar {
+.account-switch-bar {
         position: sticky;
         top: var(--pam-header-height, 0px);
         z-index: 20;
@@ -26,9 +22,8 @@
         -webkit-backdrop-filter: blur(18px);
         backdrop-filter: blur(18px);
     }
-
-    /* Few accounts share the bar evenly; more scroll sideways. */
-    .account-switch-bar .account-switch {
+/* Few accounts share the bar evenly; more scroll sideways. */
+.account-switch-bar .account-switch {
         display: flex;
         flex-wrap: nowrap;
         gap: 2px;
@@ -40,12 +35,10 @@
         border-radius: 12px;
         scrollbar-width: none;
     }
-
-    .account-switch-bar .account-switch::-webkit-scrollbar {
+.account-switch-bar .account-switch::-webkit-scrollbar {
         display: none;
     }
-
-    .account-switch-bar .period-chip {
+.account-switch-bar .period-chip {
         flex: 1 0 auto;
         max-width: 64vw;
         min-height: 32px;
@@ -59,32 +52,26 @@
         white-space: nowrap;
         -webkit-tap-highlight-color: transparent;
     }
-
-    .account-switch-bar .period-chip:not(.active) {
+.account-switch-bar .period-chip:not(.active) {
         background: transparent;
     }
-
-    .account-switch-bar .period-chip.active {
+.account-switch-bar .period-chip.active {
         box-shadow: none;
     }
-
-    .account-switch-bar .period-chip:focus-visible {
+.account-switch-bar .period-chip:focus-visible {
         outline: 2px solid var(--primary-color);
         outline-offset: -2px;
     }
-
-    .asset-data-view .management-panel .title-account-badge {
+.asset-data-view .management-panel .title-account-badge {
         display: none !important;
     }
-
-    /* Holdings: no filter-count line and no success notices; errors still show. */
-    .asset-holdings-panel .panel-head p,
-    #holdingMessage:not(.error) {
+/* Holdings: no filter-count line and no success notices; errors still show. */
+.asset-holdings-panel .panel-head p,
+#holdingMessage:not(.error) {
         display: none;
     }
-
-    /* Fold toggles carry the same accent bar as the panel titles. */
-    .panel-collapse-btn::before {
+/* Fold toggles carry the same accent bar as the panel titles. */
+.panel-collapse-btn::before {
         content: "";
         flex: 0 0 auto;
         width: 7px;
@@ -93,60 +80,47 @@
         border-radius: 999px;
         background: linear-gradient(180deg, var(--primary-color), var(--accent-color));
     }
-
-    /* Same head as the returns chart toggle: one row, title toggle left. */
-    .asset-data-view .account-trend-panel .split-head,
-    .asset-data-view .table-panel .split-head {
+/* Same head as the returns chart toggle: one row, title toggle left. */
+.asset-data-view .account-trend-panel .split-head,
+.asset-data-view .table-panel .split-head {
         padding: 8px 14px;
     }
-
-    .asset-data-view .table-panel .split-head {
+.asset-data-view .table-panel .split-head {
         flex-direction: row;
         align-items: center;
     }
-
-    .account-trend-panel .split-head > div:first-child,
-    .table-panel .split-head > div:first-child {
+.account-trend-panel .split-head > div:first-child,
+.table-panel .split-head > div:first-child {
         display: none;
     }
-
-    .account-trend-panel .panel-collapse-btn {
+.account-trend-panel .panel-collapse-btn {
         grid-column: 1;
         grid-row: 1;
     }
-
-    .account-trend-panel.is-collapsed .account-trend-toolbar > *,
-    .account-trend-panel.is-collapsed .chart-message,
-    .account-trend-panel.is-collapsed .account-trend-chart,
-    .account-trend-panel.is-collapsed .account-trend-list,
-    .table-panel.is-collapsed .snapshot-table-wrap {
+.account-trend-panel.is-collapsed .account-trend-toolbar > *,
+.account-trend-panel.is-collapsed .chart-message,
+.account-trend-panel.is-collapsed .account-trend-chart,
+.account-trend-panel.is-collapsed .account-trend-list,
+.table-panel.is-collapsed .snapshot-table-wrap {
         display: none;
     }
-
-    .account-trend-panel.is-collapsed .split-head,
-    .table-panel.is-collapsed .split-head {
+.account-trend-panel.is-collapsed .split-head,
+.table-panel.is-collapsed .split-head {
         border-bottom: 0;
     }
-
-    /* The returns comparison already follows the sticky period bar, so its head drops the period badge. */
-    .comparison-panel .title-period-badge {
-        display: none !important;
-    }
+/* The returns comparison already follows the sticky period bar, so its head drops the period badge. */
 }
-
 /* Desktop folds (above 720px). The phone fold toggle's look on desktop: the chevron sits right after the panel
    title, muted, with no border, and points up while open. The title and chevron together toggle the panel; the
    description stays. Phones keep their own fold toggle, so the button and the fold class do nothing there. */
 .desktop-fold-title {
     display: contents;
 }
-
 .desktop-fold-btn {
     display: none;
 }
-
 @media (min-width: 721px) {
-    .desktop-fold-title {
+.desktop-fold-title {
         display: inline-flex;
         gap: 6px;
         align-items: center;
@@ -154,12 +128,10 @@
         cursor: pointer;
         user-select: none;
     }
-
-    .desktop-fold-title h2 {
+.desktop-fold-title h2 {
         margin: 0;
     }
-
-    .desktop-fold-btn {
+.desktop-fold-btn {
         display: inline-grid;
         flex: 0 0 auto;
         place-items: center;
@@ -172,39 +144,31 @@
         background: none;
         cursor: pointer;
     }
-
-    .desktop-fold-btn svg {
+.desktop-fold-btn svg {
         transition: transform 0.16s ease;
     }
-
-    .desktop-fold-btn[aria-expanded="true"] svg {
+.desktop-fold-btn[aria-expanded="true"] svg {
         transform: rotate(180deg);
     }
-
-    .desktop-fold-title:hover .desktop-fold-btn {
+.desktop-fold-title:hover .desktop-fold-btn {
         color: var(--primary-color);
     }
-
-    .desktop-fold-btn:focus-visible {
+.desktop-fold-btn:focus-visible {
         outline: 2px solid var(--primary-color);
         outline-offset: 2px;
     }
-
-    .panel.is-desktop-folded .desktop-fold-body {
+.panel.is-desktop-folded .desktop-fold-body {
         display: none;
     }
-
-    .panel.is-desktop-folded .split-head {
+.panel.is-desktop-folded .split-head {
         border-bottom: 0;
     }
-
-    /* The returns chart keeps its period chips; the account trend keeps its chips and view switch. Holdings and
+/* The returns chart keeps its period chips; the account trend keeps its chips and view switch. Holdings and
        records have nothing to act on while folded, so their head controls go with the body. */
-    .asset-holdings-panel.is-desktop-folded .holding-summary {
+.asset-holdings-panel.is-desktop-folded .holding-summary {
         display: none;
     }
 }
-
 /* ==========================================================================
    Phone type scale (<=720px). One scale for every phone screen, set last so it wins over the per-panel sizes
    above. Figures lead and labels step back by colour, not weight; weights stay within what Inter loads
@@ -213,8 +177,8 @@
    Form fields keep the 16px iOS anti-zoom rule above.
    ========================================================================== */
 @media (max-width: 720px) {
-    .app-shell,
-    .asset-dialog {
+.app-shell,
+.asset-dialog {
         --type-display: 19px;
         --type-title: 16px;
         --type-figure: 15px;
@@ -223,214 +187,188 @@
         --type-caption: 12px;
         font-variant-numeric: tabular-nums;
     }
-
-    /* Page title in the header. */
-    html body .app-shell .brand-copy h1 {
+/* Page title in the header. */
+html body .app-shell .brand-copy h1 {
         font-size: 18px;
         font-weight: 700;
         letter-spacing: 0;
     }
-
-    /* Title: every panel title, fold toggle, and dialog title. */
-    html body .app-shell .panel h2,
-    html body .app-shell .panel-collapse-btn,
-    html body .app-shell .panel-collapse-btn > span,
-    html body .asset-dialog .asset-dialog-header h2 {
+/* Title: every panel title, fold toggle, and dialog title. */
+html body .app-shell .panel h2,
+html body .app-shell .panel-collapse-btn,
+html body .app-shell .panel-collapse-btn > span,
+html body .asset-dialog .asset-dialog-header h2 {
         font-size: var(--type-title);
         font-weight: 700;
         line-height: 1.3;
         letter-spacing: 0;
     }
-
-    /* Section heads inside a panel or dialog, one step under a title. */
-    html body .app-shell .alloc-section-title,
-    html body .asset-dialog .form-card-head h3 {
+/* Section heads inside a panel or dialog, one step under a title. */
+html body .app-shell .alloc-section-title,
+html body .asset-dialog .form-card-head h3 {
         font-size: var(--type-figure);
         font-weight: 700;
         letter-spacing: 0;
     }
-
-    /* Badges beside titles. */
-    html body .app-shell .title-account-badge,
-    html body .app-shell .title-period-badge {
+/* Badges beside titles. */
+html body .app-shell .title-account-badge,
+html body .app-shell .title-period-badge {
         font-size: var(--type-caption) !important;
         font-weight: 600 !important;
     }
-
-    /* Body: descriptions, notices, footnotes, empty states, dialog copy. */
-    html body .app-shell .panel p,
-    html body .app-shell .alloc-notice p,
-    html body .app-shell .alloc-footnote,
-    html body .app-shell .alloc-target-prompt p,
-    html body .app-shell .empty-state,
-    html body .app-shell .form-message,
-    html body .app-shell .chart-message,
-    html body .asset-dialog p {
+/* Body: descriptions, notices, footnotes, empty states, dialog copy. */
+html body .app-shell .panel p,
+html body .app-shell .alloc-notice p,
+html body .app-shell .alloc-footnote,
+html body .app-shell .alloc-target-prompt p,
+html body .app-shell .empty-state,
+html body .app-shell .form-message,
+html body .app-shell .chart-message,
+html body .asset-dialog p {
         font-size: var(--type-body);
         font-weight: 400;
         line-height: 1.5;
     }
-
-    html body .app-shell .alloc-notice p strong {
+html body .app-shell .alloc-notice p strong {
         font-weight: 600;
     }
-
-    /* Display: the hero row and the allocation headline stats. The three-figure hero rows share one line, so
+/* Display: the hero row and the allocation headline stats. The three-figure hero rows share one line, so
        their size follows the card width (cqi): about 16px on a 360px phone, up to 19px. That keeps a 7-digit
        total whole at 360px; the card is a size container, so long figures can never widen the page. The
        ellipsis stays only as a last resort. */
-    html body .app-shell .alloc-stats dd strong {
+html body .app-shell .alloc-stats dd strong {
         font-size: var(--type-display);
         font-weight: 700;
         line-height: 1.2;
         letter-spacing: 0;
     }
-
-    html body .app-shell .returns-hero,
-    html body .app-shell .account-summary-mobile {
+html body .app-shell .account-summary-mobile {
         container-type: inline-size;
     }
-
-    html body .app-shell .returns-summary-stats > div,
-    html body .app-shell .account-summary-stats > div {
+html body .app-shell .account-summary-stats > div {
         padding-right: 8px;
         padding-left: 10px;
     }
-
-    html body .app-shell .returns-summary-stats dd,
-    html body .app-shell .account-summary-stats dd {
+html body .app-shell .account-summary-stats dd {
         font-size: clamp(14px, 5cqi, var(--type-display));
         font-weight: 700;
         line-height: 1.2;
         letter-spacing: 0;
     }
-
-    /* Figure: row names and primary figures, holdings summary values. */
-    html body .app-shell .cmp-row-name strong,
-    html body .app-shell .cmp-row-figures strong,
-    html body .app-shell .holding-row-name strong,
-    html body .app-shell .holding-row-figures strong,
-    html body .app-shell .snapshot-row-value,
-    html body .app-shell .alloc-class-name,
-    html body .app-shell .alloc-class-figures strong,
-    html body .app-shell .holding-summary dd,
-    html body .app-shell .account-summary-head strong {
+/* Figure: row names and primary figures, holdings summary values. */
+html body .app-shell .cmp-row-name strong,
+html body .app-shell .cmp-row-figures strong,
+html body .app-shell .holding-row-name strong,
+html body .app-shell .holding-row-figures strong,
+html body .app-shell .snapshot-row-value,
+html body .app-shell .alloc-class-name,
+html body .app-shell .alloc-class-figures strong,
+html body .app-shell .holding-summary dd,
+html body .app-shell .account-summary-head strong {
         font-size: var(--type-figure);
         font-weight: 700;
         letter-spacing: 0;
     }
-
-    html body .app-shell .cmp-row-figures strong span {
+html body .app-shell .cmp-row-figures strong span {
         font-size: inherit;
         font-weight: inherit;
     }
-
-    /* Secondary figures in expanded rows and tables. */
-    html body .app-shell .cmp-row-details dd,
-    html body .app-shell .cmp-row-details dd span,
-    html body .app-shell .holding-row-details dd,
-    html body .app-shell .alloc-table td,
-    html body .app-shell .alloc-table tbody th,
-    html body .app-shell .alloc-cell,
-    html body .app-shell .account-trend-table td,
-    html body .app-shell .snapshot-row-date {
+/* Secondary figures in expanded rows and tables. */
+html body .app-shell .cmp-row-details dd,
+html body .app-shell .cmp-row-details dd span,
+html body .app-shell .holding-row-details dd,
+html body .app-shell .alloc-table td,
+html body .app-shell .alloc-table tbody th,
+html body .app-shell .alloc-cell,
+html body .app-shell .account-trend-table td,
+html body .app-shell .snapshot-row-date {
         font-size: var(--type-body);
         font-weight: 600;
         letter-spacing: 0;
     }
-
-    html body .app-shell .alloc-table td.alloc-muted,
-    html body .app-shell .snapshot-row-date {
+html body .app-shell .alloc-table td.alloc-muted,
+html body .app-shell .snapshot-row-date {
         font-weight: 500;
     }
-
-    /* Caption: labels, row sub-lines, dates, secondary amounts. Muted colour carries the hierarchy. */
-    html body .app-shell .returns-summary-stats dt,
-    html body .app-shell .account-summary-stats dt,
-    html body .app-shell .alloc-stats dt,
-    html body .app-shell .holding-summary dt,
-    html body .app-shell .cmp-row-details dt,
-    html body .app-shell .holding-row-details dt,
-    html body .app-shell .alloc-table thead th,
-    html body .app-shell .account-trend-table th,
-    html body .app-shell .cmp-row-name small,
-    html body .app-shell .cmp-row-figures small,
-    html body .app-shell .cmp-row-foot,
-    html body .app-shell .cmp-row-foot span,
-    html body .app-shell .holding-row-name small,
-    html body .app-shell .holding-row-figures small,
-    html body .app-shell .snapshot-row-meta,
-    html body .app-shell .snapshot-row-note,
-    html body .app-shell .alloc-class-name small,
-    html body .app-shell .alloc-class-figures small,
-    html body .app-shell .alloc-notice-names,
-    html body .app-shell .alloc-notice-names small,
-    html body .app-shell .account-summary-head small,
-    html body .app-shell .list-pager,
-    html body .app-shell .list-pager > span,
-    html body .app-shell .comparison-sort-select > span,
-    html body .asset-dialog .form-guide,
-    html body .asset-dialog small {
+/* Caption: labels, row sub-lines, dates, secondary amounts. Muted colour carries the hierarchy. */
+html body .app-shell .account-summary-stats dt,
+html body .app-shell .alloc-stats dt,
+html body .app-shell .holding-summary dt,
+html body .app-shell .cmp-row-details dt,
+html body .app-shell .holding-row-details dt,
+html body .app-shell .alloc-table thead th,
+html body .app-shell .account-trend-table th,
+html body .app-shell .cmp-row-name small,
+html body .app-shell .cmp-row-figures small,
+html body .app-shell .cmp-row-foot,
+html body .app-shell .cmp-row-foot span,
+html body .app-shell .holding-row-name small,
+html body .app-shell .holding-row-figures small,
+html body .app-shell .snapshot-row-meta,
+html body .app-shell .snapshot-row-note,
+html body .app-shell .alloc-class-name small,
+html body .app-shell .alloc-class-figures small,
+html body .app-shell .alloc-notice-names,
+html body .app-shell .alloc-notice-names small,
+html body .app-shell .account-summary-head small,
+html body .app-shell .list-pager,
+html body .app-shell .list-pager > span,
+html body .app-shell .comparison-sort-select > span,
+html body .asset-dialog .form-guide,
+html body .asset-dialog small {
         font-size: var(--type-caption) !important;
         font-weight: 500 !important;
         letter-spacing: 0;
     }
-
-    html body .app-shell .returns-summary-stats dt,
-    html body .app-shell .account-summary-stats dt,
-    html body .app-shell .alloc-stats dt,
-    html body .app-shell .holding-summary dt,
-    html body .app-shell .cmp-row-details dt,
-    html body .app-shell .holding-row-details dt,
-    html body .app-shell .alloc-table thead th,
-    html body .app-shell .account-trend-table th {
+html body .app-shell .account-summary-stats dt,
+html body .app-shell .alloc-stats dt,
+html body .app-shell .holding-summary dt,
+html body .app-shell .cmp-row-details dt,
+html body .app-shell .holding-row-details dt,
+html body .app-shell .alloc-table thead th,
+html body .app-shell .account-trend-table th {
         color: var(--muted-text);
     }
-
-    /* Signed secondary amounts keep their rise/fall colour and a step more weight. */
-    html body .app-shell .cmp-row-foot .positive,
-    html body .app-shell .cmp-row-foot .negative,
-    html body .app-shell .cmp-row-figures small.positive,
-    html body .app-shell .cmp-row-figures small.negative,
-    html body .app-shell .holding-row-figures small.positive,
-    html body .app-shell .holding-row-figures small.negative {
+/* Signed secondary amounts keep their rise/fall colour and a step more weight. */
+html body .app-shell .cmp-row-foot .positive,
+html body .app-shell .cmp-row-foot .negative,
+html body .app-shell .cmp-row-figures small.positive,
+html body .app-shell .cmp-row-figures small.negative,
+html body .app-shell .holding-row-figures small.positive,
+html body .app-shell .holding-row-figures small.negative {
         font-weight: 600 !important;
     }
-
-    /* Control: chips, tabs, sort controls, action buttons, menus. */
-    html body .app-shell .period-chip,
-    html body .app-shell .module-tab,
-    html body .app-shell .comparison-sort-direction,
-    html body .app-shell .ghost-btn,
-    html body .app-shell .ghost-btn span,
-    html body .app-shell .cmp-row-goto,
-    html body .app-shell .header-action-menu button,
-    html body .app-shell .header-action-menu button span,
-    html body .app-shell .account-card-menu button,
-    html body .app-shell .list-pager button,
-    html body .app-shell .context-action,
-    html body .asset-dialog .primary-btn,
-    html body .asset-dialog .ghost-btn {
+/* Control: chips, tabs, sort controls, action buttons, menus. */
+html body .app-shell .period-chip,
+html body .app-shell .module-tab,
+html body .app-shell .comparison-sort-direction,
+html body .app-shell .ghost-btn,
+html body .app-shell .ghost-btn span,
+html body .app-shell .cmp-row-goto,
+html body .app-shell .header-action-menu button,
+html body .app-shell .header-action-menu button span,
+html body .app-shell .account-card-menu button,
+html body .app-shell .list-pager button,
+html body .app-shell .context-action,
+html body .asset-dialog .primary-btn,
+html body .asset-dialog .ghost-btn {
         font-size: var(--type-control) !important;
         font-weight: 600 !important;
         letter-spacing: 0;
     }
-
-    html body .app-shell .period-chip.active,
-    html body .app-shell .module-tab.active {
+html body .app-shell .period-chip.active,
+html body .app-shell .module-tab.active {
         font-weight: 700 !important;
     }
-
-    /* Form labels, step numbers, and the eyebrow in dialogs. */
-    html body .asset-dialog label > span,
-    html body .asset-dialog .form-card-head > span,
-    html body .asset-dialog .dialog-eyebrow {
+/* Form labels, step numbers, and the eyebrow in dialogs. */
+html body .asset-dialog label > span,
+html body .asset-dialog .form-card-head > span,
+html body .asset-dialog .dialog-eyebrow {
         font-size: var(--type-caption) !important;
         font-weight: 600 !important;
         letter-spacing: 0;
     }
 }
-
 /* ==========================================================================
    Desktop design system (>=721px). One type scale and one set of component sizes for every desktop screen and
    dialog, set last so it wins over the per-panel values above. It mirrors the phone scale one step larger:
@@ -441,8 +379,8 @@
    Phones use the scale above and are not affected.
    ========================================================================== */
 @media (min-width: 721px) {
-    .app-shell,
-    .asset-dialog {
+.app-shell,
+.asset-dialog {
         --d-display: 28px;
         --d-title: 18px;
         --d-section: 15px;
@@ -458,322 +396,282 @@
         --d-panel-radius: 24px;
         font-variant-numeric: tabular-nums;
     }
-
-    /* ---- Headings ---- */
-    /* The global heading rule sets 900 with negative tracking; desktop now uses 700 like phones. */
-    .brand-copy h1,
-    .hero h1,
-    .panel h2,
-    .asset-dialog-header h2,
-    .account-card-heading strong,
-    .overview-card strong,
-    .form-card-head h3,
-    .confirm-dialog-copy strong {
+/* ---- Headings ---- */
+/* The global heading rule sets 900 with negative tracking; desktop now uses 700 like phones. */
+.brand-copy h1,
+.hero h1,
+.panel h2,
+.asset-dialog-header h2,
+.account-card-heading strong,
+.form-card-head h3,
+.confirm-dialog-copy strong {
         font-weight: 700 !important;
         letter-spacing: -0.01em !important;
     }
-
-    html body .app-shell .panel h2,
-    html body .asset-dialog .asset-dialog-header h2 {
+html body .app-shell .panel h2,
+html body .asset-dialog .asset-dialog-header h2 {
         font-size: var(--d-title);
         line-height: 1.3;
     }
-
-    html body .app-shell .alloc-section-title,
-    html body .app-shell .panel h3,
-    html body .asset-dialog .form-card-head h3 {
+html body .app-shell .alloc-section-title,
+html body .app-shell .panel h3,
+html body .asset-dialog .form-card-head h3 {
         font-size: var(--d-section);
         font-weight: 700;
         letter-spacing: 0;
     }
-
-    /* ---- Body copy ---- */
-    html body .app-shell .brand-copy p,
-    html body .app-shell .panel p,
-    html body .app-shell .alloc-notice p,
-    html body .app-shell .alloc-footnote,
-    html body .app-shell .alloc-target-prompt p,
-    html body .app-shell .empty-state,
-    html body .app-shell .form-message,
-    html body .app-shell .chart-message,
-    html body .asset-dialog p {
+/* ---- Body copy ---- */
+html body .app-shell .brand-copy p,
+html body .app-shell .panel p,
+html body .app-shell .alloc-notice p,
+html body .app-shell .alloc-footnote,
+html body .app-shell .alloc-target-prompt p,
+html body .app-shell .empty-state,
+html body .app-shell .form-message,
+html body .app-shell .chart-message,
+html body .asset-dialog p {
         font-size: var(--d-body);
         font-weight: 400;
         line-height: 1.55;
         letter-spacing: 0;
     }
-
-    html body .app-shell .alloc-notice p strong {
+html body .app-shell .alloc-notice p strong {
         font-weight: 600;
     }
-
-    /* ---- Display figures: one size for every headline figure ---- */
-    html body .app-shell .overview-card strong,
-    html body .app-shell .alloc-stats dd strong,
-    html body .app-shell .holding-summary dd,
-    html body .app-shell .holding-chart-stats dd strong {
+/* ---- Display figures: one size for every headline figure ---- */
+html body .app-shell .alloc-stats dd strong,
+html body .app-shell .holding-summary dd,
+html body .app-shell .holding-chart-stats dd strong {
         font-size: var(--d-display);
         font-weight: 700;
         line-height: 1.15;
         letter-spacing: -0.01em;
     }
-
-    /* Several account cards sit side by side, so their figures use the section size: 15px keeps a 7-digit
+/* Several account cards sit side by side, so their figures use the section size: 15px keeps a 7-digit
        total whole in a card's three columns. */
-    html body .app-shell .account-card-metrics strong {
+html body .app-shell .account-card-metrics strong {
         font-size: var(--d-section);
         font-weight: 700;
         letter-spacing: 0;
     }
-
-    html body .app-shell .account-card-heading strong {
+html body .app-shell .account-card-heading strong {
         font-size: var(--d-section);
     }
-
-    /* ---- Figures in rows and tables ---- */
-    html body .app-shell .comparison-table td,
-    html body .app-shell .holding-table td,
-    html body .app-shell .snapshot-table td,
-    html body .app-shell .alloc-table td,
-    html body .app-shell .alloc-table tbody th,
-    html body .app-shell .account-trend-table td,
-    html body .app-shell .alloc-class-figures strong,
-    html body .app-shell .alloc-class-name,
-    html body .app-shell .holding-value-main,
-    html body .app-shell .holding-asset-cell strong {
+/* ---- Figures in rows and tables ---- */
+html body .app-shell .comparison-table td,
+html body .app-shell .holding-table td,
+html body .app-shell .snapshot-table td,
+html body .app-shell .alloc-table td,
+html body .app-shell .alloc-table tbody th,
+html body .app-shell .account-trend-table td,
+html body .app-shell .alloc-class-figures strong,
+html body .app-shell .alloc-class-name,
+html body .app-shell .holding-value-main,
+html body .app-shell .holding-asset-cell strong {
         font-size: var(--d-figure);
         font-weight: 600;
         letter-spacing: 0;
     }
-
-    html body .app-shell .comparison-table td:first-child,
-    html body .app-shell .comparison-table th:first-child {
+html body .app-shell .comparison-table td:first-child,
+html body .app-shell .comparison-table th:first-child {
         font-weight: 600;
     }
-
-    html body .app-shell .alloc-table td.alloc-muted {
+html body .app-shell .alloc-table td.alloc-muted {
         font-weight: 400;
     }
-
-    /* ---- Captions: labels, table heads, sub-lines, badges ---- */
-    html body .app-shell .overview-card span,
-    html body .app-shell .overview-card small,
-    html body .app-shell .alloc-stats dt,
-    html body .app-shell .holding-summary dt,
-    html body .app-shell .holding-chart-stats dt,
-    html body .app-shell .holding-chart-stats small,
-    html body .app-shell .account-card-metrics span,
-    html body .app-shell .account-card-heading span,
-    html body .app-shell .account-card-heading small,
-    html body .app-shell .comparison-table th,
-    html body .app-shell .holding-table th,
-    html body .app-shell .snapshot-table th,
-    html body .app-shell .alloc-table thead th,
-    html body .app-shell .account-trend-table th,
-    html body .app-shell .alloc-class-name small,
-    html body .app-shell .alloc-class-figures small,
-    html body .app-shell .alloc-notice-names,
-    html body .app-shell .alloc-notice-names small,
-    html body .app-shell .holding-value-stack small,
-    html body .app-shell .holding-asset-cell small,
-    html body .app-shell .price-pair,
-    html body .app-shell .price-pair small,
-    html body .app-shell .list-pager > span,
-    html body .app-shell .valuation-status,
-    html body .app-shell .holding-weight,
-    html body .app-shell .holding-weight span,
-    html body .asset-dialog label > span,
-    html body .asset-dialog small,
-    html body .asset-dialog .form-guide {
+/* ---- Captions: labels, table heads, sub-lines, badges ---- */
+html body .app-shell .alloc-stats dt,
+html body .app-shell .holding-summary dt,
+html body .app-shell .holding-chart-stats dt,
+html body .app-shell .holding-chart-stats small,
+html body .app-shell .account-card-metrics span,
+html body .app-shell .account-card-heading span,
+html body .app-shell .account-card-heading small,
+html body .app-shell .comparison-table th,
+html body .app-shell .holding-table th,
+html body .app-shell .snapshot-table th,
+html body .app-shell .alloc-table thead th,
+html body .app-shell .account-trend-table th,
+html body .app-shell .alloc-class-name small,
+html body .app-shell .alloc-class-figures small,
+html body .app-shell .alloc-notice-names,
+html body .app-shell .alloc-notice-names small,
+html body .app-shell .holding-value-stack small,
+html body .app-shell .holding-asset-cell small,
+html body .app-shell .price-pair,
+html body .app-shell .price-pair small,
+html body .app-shell .list-pager > span,
+html body .app-shell .valuation-status,
+html body .app-shell .holding-weight,
+html body .app-shell .holding-weight span,
+html body .asset-dialog label > span,
+html body .asset-dialog small,
+html body .asset-dialog .form-guide {
         font-size: var(--d-caption) !important;
         font-weight: 500 !important;
         letter-spacing: 0 !important;
         text-transform: none;
     }
-
-    html body .app-shell .overview-card span,
-    html body .app-shell .alloc-stats dt,
-    html body .app-shell .holding-summary dt,
-    html body .app-shell .holding-chart-stats dt,
-    html body .app-shell .account-card-metrics span,
-    html body .app-shell .comparison-table th,
-    html body .app-shell .holding-table th,
-    html body .app-shell .snapshot-table th,
-    html body .app-shell .alloc-table thead th,
-    html body .app-shell .account-trend-table th {
+html body .app-shell .alloc-stats dt,
+html body .app-shell .holding-summary dt,
+html body .app-shell .holding-chart-stats dt,
+html body .app-shell .account-card-metrics span,
+html body .app-shell .comparison-table th,
+html body .app-shell .holding-table th,
+html body .app-shell .snapshot-table th,
+html body .app-shell .alloc-table thead th,
+html body .app-shell .account-trend-table th {
         color: var(--muted-text);
     }
-
-    /* Signed figures in captions keep their rise/fall colour and a step more weight. */
-    html body .app-shell .price-pair .positive,
-    html body .app-shell .price-pair .negative,
-    html body .app-shell .holding-value-stack .positive,
-    html body .app-shell .holding-value-stack .negative {
+/* Signed figures in captions keep their rise/fall colour and a step more weight. */
+html body .app-shell .price-pair .positive,
+html body .app-shell .price-pair .negative,
+html body .app-shell .holding-value-stack .positive,
+html body .app-shell .holding-value-stack .negative {
         font-weight: 600 !important;
     }
-
-    /* Badges beside titles, the sync pill, and the header eyebrow. */
-    html body .app-shell .title-account-badge,
-    html body .app-shell .title-period-badge,
-    html body .app-shell .cloud-sync-status,
-    html body .app-shell .hero-badge,
-    html body .asset-dialog .dialog-eyebrow,
-    html body .asset-dialog .form-card-head > span {
+/* Badges beside titles, the sync pill, and the header eyebrow. */
+html body .app-shell .title-account-badge,
+html body .app-shell .title-period-badge,
+html body .app-shell .cloud-sync-status,
+html body .app-shell .hero-badge,
+html body .asset-dialog .dialog-eyebrow,
+html body .asset-dialog .form-card-head > span {
         font-size: var(--d-caption) !important;
         font-weight: 600 !important;
         letter-spacing: 0 !important;
     }
-
-    /* ---- Controls: one type style, three heights, one radius ---- */
-    html body .app-shell .module-tab,
-    html body .app-shell .period-chip,
-    html body .app-shell .context-action,
-    html body .app-shell .ghost-btn,
-    html body .app-shell .primary-btn,
-    html body .app-shell .mini-btn,
-    html body .app-shell select,
-    html body .app-shell .account-card-menu summary,
-    html body .app-shell .account-card-menu button,
-    html body .app-shell .icon-btn,
-    html body .asset-dialog .primary-btn,
-    html body .asset-dialog .ghost-btn,
-    html body .asset-dialog .asset-dialog-close {
+/* ---- Controls: one type style, three heights, one radius ---- */
+html body .app-shell .module-tab,
+html body .app-shell .period-chip,
+html body .app-shell .context-action,
+html body .app-shell .ghost-btn,
+html body .app-shell .primary-btn,
+html body .app-shell .mini-btn,
+html body .app-shell select,
+html body .app-shell .account-card-menu summary,
+html body .app-shell .account-card-menu button,
+html body .app-shell .icon-btn,
+html body .asset-dialog .primary-btn,
+html body .asset-dialog .ghost-btn,
+html body .asset-dialog .asset-dialog-close {
         font-size: var(--d-control);
         /* The global control rule sets 800 !important. */
         font-weight: 600 !important;
         letter-spacing: 0;
         border-radius: var(--d-control-radius);
     }
-
-    html body .app-shell .module-tab.active,
-    html body .app-shell .period-chip.active {
+html body .app-shell .module-tab.active,
+html body .app-shell .period-chip.active {
         font-weight: 700 !important;
     }
-
-    /* Form fields: values at figure weight, numbers one step bolder. */
-    html body .asset-dialog input:not([type="checkbox"]):not([type="radio"]),
-    html body .asset-dialog select,
-    html body .asset-dialog textarea {
+/* Form fields: values at figure weight, numbers one step bolder. */
+html body .asset-dialog input:not([type="checkbox"]):not([type="radio"]),
+html body .asset-dialog select,
+html body .asset-dialog textarea {
         font-size: var(--d-figure);
         font-weight: 500;
     }
-
-    html body .asset-dialog input[type="number"],
-    html body .asset-dialog .metric-input input {
+html body .asset-dialog input[type="number"],
+html body .asset-dialog .metric-input input {
         font-size: 15px;
         font-weight: 600;
         letter-spacing: 0;
     }
-
-    /* Text inside controls follows the control instead of setting its own weight. */
-    html body .app-shell .ghost-btn > span,
-    html body .app-shell .context-action > span,
-    html body .app-shell .icon-btn > span {
+/* Text inside controls follows the control instead of setting its own weight. */
+html body .app-shell .ghost-btn > span,
+html body .app-shell .context-action > span,
+html body .app-shell .icon-btn > span {
         font-size: inherit;
         font-weight: inherit;
     }
-
-    /* Sortable table heads are captions that can be clicked; the account column heads are figures. */
-    html body .app-shell .comparison-table th button,
-    html body .app-shell .holding-table th button {
+/* Sortable table heads are captions that can be clicked; the account column heads are figures. */
+html body .app-shell .comparison-table th button,
+html body .app-shell .holding-table th button {
         font-size: var(--d-caption);
         font-weight: 600;
         letter-spacing: 0;
     }
-
-    html body .app-shell .comparison-account-heading strong,
-    html body .app-shell .alloc-cell,
-    html body .app-shell .price-pair > span,
-    html body .app-shell .holding-asset-mark {
+html body .app-shell .comparison-account-heading strong,
+html body .app-shell .alloc-cell,
+html body .app-shell .price-pair > span,
+html body .app-shell .holding-asset-mark {
         font-size: var(--d-figure);
         font-weight: 600;
         letter-spacing: 0;
     }
-
-    html body .app-shell .price-pair > span {
+html body .app-shell .price-pair > span {
         font-size: var(--d-caption) !important;
     }
-
-    html body .app-shell .holding-asset-mark {
+html body .app-shell .holding-asset-mark {
         font-size: var(--d-caption);
     }
-
-    /* Standard (36): header icon buttons, chips, toolbar actions, selects. */
-    html body .app-shell .hero-actions .icon-btn,
-    html body .app-shell .period-chip,
-    html body .app-shell .context-actions:not(.account-context-actions) .context-action,
-    html body .app-shell .ghost-btn,
-    html body .app-shell .panel select,
-    html body .asset-dialog .asset-dialog-close {
+/* Standard (36): header icon buttons, chips, toolbar actions, selects. */
+html body .app-shell .hero-actions .icon-btn,
+html body .app-shell .period-chip,
+html body .app-shell .context-actions:not(.account-context-actions) .context-action,
+html body .app-shell .ghost-btn,
+html body .app-shell .panel select,
+html body .asset-dialog .asset-dialog-close {
         min-height: var(--d-control-md);
     }
-
-    html body .app-shell .hero-actions .icon-btn,
-    html body .asset-dialog .asset-dialog-close {
+html body .app-shell .hero-actions .icon-btn,
+html body .asset-dialog .asset-dialog-close {
         width: var(--d-control-md);
         height: var(--d-control-md);
         min-width: var(--d-control-md);
     }
-
-    /* The sync pill is a status, not a button: it shares the header row height. */
-    html body .app-shell .cloud-sync-status {
+/* The sync pill is a status, not a button: it shares the header row height. */
+html body .app-shell .cloud-sync-status {
         min-height: var(--d-control-md);
         border-radius: 999px;
     }
-
-    /* Compact (32): row actions, pager, card menus. */
-    html body .app-shell .mini-btn,
-    html body .app-shell .row-actions .icon-btn,
-    html body .app-shell .account-card-menu summary {
+/* Compact (32): row actions, pager, card menus. */
+html body .app-shell .mini-btn,
+html body .app-shell .row-actions .icon-btn,
+html body .app-shell .account-card-menu summary {
         width: var(--d-control-sm);
         height: var(--d-control-sm);
         min-width: var(--d-control-sm);
         min-height: var(--d-control-sm);
     }
-
-    html body .app-shell .list-pager .mini-btn {
+html body .app-shell .list-pager .mini-btn {
         width: auto;
         min-width: var(--d-control-sm);
         padding-right: 10px;
         padding-left: 10px;
     }
-
-    html body .app-shell .account-card-menu button {
+html body .app-shell .account-card-menu button {
         height: var(--d-control-sm);
         min-height: var(--d-control-sm);
         padding-top: 0;
         padding-bottom: 0;
     }
-
-    /* Primary (40): module tabs and the main submit buttons. */
-    html body .app-shell .module-tab,
-    html body .asset-dialog .primary-btn {
+/* Primary (40): module tabs and the main submit buttons. */
+html body .app-shell .module-tab,
+html body .asset-dialog .primary-btn {
         min-height: var(--d-control-lg);
     }
-
-    /* ---- Surfaces: panels 24, cards 18, inner boxes 14 ---- */
-    html body .app-shell .panel,
-    html body .app-shell .overview-grid,
-    html body .app-shell .account-card-strip-panel {
+/* ---- Surfaces: panels 24, cards 18, inner boxes 14 ---- */
+html body .app-shell .panel,
+html body .app-shell .account-card-strip-panel {
         border-radius: var(--d-panel-radius);
     }
-
-    /* ---- Tables: one style ---- */
-    html body .app-shell .comparison-table th,
-    html body .app-shell .holding-table th,
-    html body .app-shell .snapshot-table th,
-    html body .app-shell .alloc-table th,
-    html body .app-shell .account-trend-table th,
-    html body .app-shell .comparison-table td,
-    html body .app-shell .holding-table td,
-    html body .app-shell .snapshot-table td,
-    html body .app-shell .alloc-table td,
-    html body .app-shell .account-trend-table td {
+/* ---- Tables: one style ---- */
+html body .app-shell .comparison-table th,
+html body .app-shell .holding-table th,
+html body .app-shell .snapshot-table th,
+html body .app-shell .alloc-table th,
+html body .app-shell .account-trend-table th,
+html body .app-shell .comparison-table td,
+html body .app-shell .holding-table td,
+html body .app-shell .snapshot-table td,
+html body .app-shell .alloc-table td,
+html body .app-shell .account-trend-table td {
         padding-top: 10px;
         padding-bottom: 10px;
     }
 }
-
 /* ==========================================================================
    Desktop surfaces (>=721px), aligned with the Backtest tool. Set last so it wins over the layered glass,
    gradient, and inset-highlight treatments above. The page is a flat background; the header and tab row sit
@@ -782,26 +680,22 @@
    Phones are not affected.
    ========================================================================== */
 @media (min-width: 721px) {
-    body {
+body {
         background: var(--background-color) !important;
     }
-
-    body::before,
-    html body .app-shell .workspace::before,
-    html body .app-shell .module-tabs::before,
-    html body .app-shell .overview-card::after,
-    html body .app-shell .panel h2::before,
-    html body .asset-dialog .asset-dialog-header h2::before {
+body::before,
+html body .app-shell .workspace::before,
+html body .app-shell .module-tabs::before,
+html body .app-shell .panel h2::before,
+html body .asset-dialog .asset-dialog-header h2::before {
         content: none !important;
         display: none !important;
     }
-
-    html body .app-shell {
+html body .app-shell {
         padding: 24px 24px 48px;
     }
-
-    /* ---- Header: on the page, not in a card ---- */
-    html body .app-shell .global-header {
+/* ---- Header: on the page, not in a card ---- */
+html body .app-shell .global-header {
         margin-bottom: 20px;
         padding: 0;
         border: 0;
@@ -810,8 +704,7 @@
         box-shadow: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .global-header .brand-mark {
+html body .app-shell .global-header .brand-mark {
         width: 42px;
         height: 42px;
         border: 0;
@@ -819,28 +712,23 @@
         background: linear-gradient(135deg, var(--chart-series-1), var(--primary-color)) !important;
         box-shadow: var(--shadow-sm) !important;
     }
-
-    html body .app-shell .brand-copy h1 {
+html body .app-shell .brand-copy h1 {
         font-size: 22px;
         line-height: 1.25;
     }
-
-    html body .app-shell .brand-copy p {
+html body .app-shell .brand-copy p {
         margin-top: 4px;
     }
-
-    html body .app-shell .hero-badge {
+html body .app-shell .hero-badge {
         padding: 1px 8px;
         border: 0;
         box-shadow: none !important;
     }
-
-    html body .app-shell .hero-badge::before {
+html body .app-shell .hero-badge::before {
         box-shadow: none !important;
     }
-
-    /* ---- Tab row: a segmented control on the page ---- */
-    html body .app-shell .module-tabs {
+/* ---- Tab row: a segmented control on the page ---- */
+html body .app-shell .module-tabs {
         margin-bottom: 20px;
         padding: 0;
         border: 0;
@@ -849,8 +737,7 @@
         box-shadow: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .module-tab-list {
+html body .app-shell .module-tab-list {
         gap: 2px;
         padding: 3px;
         border: 1px solid var(--border-color);
@@ -858,8 +745,7 @@
         background: var(--surface-color);
         box-shadow: var(--shadow-sm);
     }
-
-    html body .app-shell .module-tab {
+html body .app-shell .module-tab {
         min-height: 34px;
         padding: 6px 16px;
         border: 0;
@@ -868,19 +754,16 @@
         background: transparent !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .module-tab.active {
+html body .app-shell .module-tab.active {
         color: var(--primary-color);
         background: var(--primary-soft) !important;
     }
-
-    html body .app-shell .module-tab:not(.active):not(:disabled):hover {
+html body .app-shell .module-tab:not(.active):not(:disabled):hover {
         color: var(--heading-color);
         background: var(--surface-muted) !important;
     }
-
-    /* ---- Workspace: a plain stack of panels ---- */
-    html body .app-shell .workspace {
+/* ---- Workspace: a plain stack of panels ---- */
+html body .app-shell .workspace {
         overflow: visible;
         border: 0;
         border-radius: 0;
@@ -888,139 +771,102 @@
         box-shadow: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .workspace-view.active {
+html body .app-shell .workspace-view.active {
         gap: 20px;
         padding: 0;
     }
-
-    /* ---- Panels: one surface each ---- */
-    html body .app-shell .panel,
-    html body .app-shell .management-panel,
-    html body .app-shell .account-card-strip-panel {
+/* ---- Panels: one surface each ---- */
+html body .app-shell .panel,
+html body .app-shell .management-panel,
+html body .app-shell .account-card-strip-panel {
         border: 1px solid var(--border-color) !important;
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
         box-shadow: var(--shadow-md) !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .management-panel .panel-head {
+html body .app-shell .management-panel .panel-head {
         padding: 16px 18px 12px;
         border-bottom-color: var(--border-color);
         background: none !important;
     }
-
-    html body .app-shell .panel h2 {
+html body .app-shell .panel h2 {
         font-size: 16px;
     }
-
-    /* Overview figures: the grid is just layout; each card is its own surface. */
-    html body .app-shell .overview-grid {
-        padding: 0;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: none !important;
-        box-shadow: none !important;
-        backdrop-filter: none !important;
-    }
-
-    html body .app-shell .overview-card,
-    html body .app-shell .account-item,
-    html body .app-shell .alloc-stats > div {
+/* Overview figures: the grid is just layout; each card is its own surface. */
+html body .app-shell .account-item,
+html body .app-shell .alloc-stats > div {
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
         box-shadow: var(--shadow-sm) !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .overview-card {
-        min-height: 0;
-        box-shadow: var(--shadow-md) !important;
-    }
-
-    /* Cards inside a panel step down to the muted surface, like Backtest's portfolio cards. */
-    html body .app-shell .account-item,
-    html body .app-shell .alloc-stats > div,
-    html body .app-shell .management-panel .overview-card {
+/* Cards inside a panel step down to the muted surface, like Backtest's portfolio cards. */
+html body .app-shell .account-item,
+html body .app-shell .alloc-stats > div {
         background: var(--surface-muted) !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .overview-card:hover {
-        transform: none;
-        border-color: var(--border-strong);
-    }
-
-    html body .app-shell .account-item.active {
+html body .app-shell .account-item.active {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 3px var(--primary-soft) !important;
     }
-
-    /* ---- Tables: a bordered box with a muted head row ---- */
-    html body .app-shell .comparison-table-wrap,
-    html body .app-shell .holding-table-wrap,
-    html body .app-shell .snapshot-table-wrap {
+/* ---- Tables: a bordered box with a muted head row ---- */
+html body .app-shell .comparison-table-wrap,
+html body .app-shell .holding-table-wrap,
+html body .app-shell .snapshot-table-wrap {
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md) !important;
         background: var(--surface-color) !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell th {
+html body .app-shell th {
         background-image: none !important;
         box-shadow: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell thead th {
+html body .app-shell thead th {
         background-color: var(--surface-muted) !important;
     }
-
-    /* ---- Controls: flat, bordered, no shadow ---- */
-    html body .app-shell .icon-btn,
-    html body .app-shell .context-action,
-    html body .app-shell .ghost-btn,
-    html body .app-shell .mini-btn,
-    html body .app-shell .cloud-sync-status,
-    html body .app-shell .asset-tool-bar,
-    html body .app-shell .desktop-fold-btn {
+/* ---- Controls: flat, bordered, no shadow ---- */
+html body .app-shell .icon-btn,
+html body .app-shell .context-action,
+html body .app-shell .ghost-btn,
+html body .app-shell .mini-btn,
+html body .app-shell .cloud-sync-status,
+html body .app-shell .asset-tool-bar,
+html body .app-shell .desktop-fold-btn {
         background-image: none !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .icon-btn,
-    html body .app-shell .context-action,
-    html body .app-shell .ghost-btn,
-    html body .app-shell .mini-btn {
+html body .app-shell .icon-btn,
+html body .app-shell .context-action,
+html body .app-shell .ghost-btn,
+html body .app-shell .mini-btn {
         background-color: var(--surface-color) !important;
     }
-
-    html body .app-shell .icon-btn:hover:not(:disabled),
-    html body .app-shell .ghost-btn:hover:not(:disabled),
-    html body .app-shell .mini-btn:hover:not(:disabled),
-    html body .app-shell .context-actions:not(.account-context-actions) .context-action:hover:not(:disabled) {
+html body .app-shell .icon-btn:hover:not(:disabled),
+html body .app-shell .ghost-btn:hover:not(:disabled),
+html body .app-shell .mini-btn:hover:not(:disabled),
+html body .app-shell .context-actions:not(.account-context-actions) .context-action:hover:not(:disabled) {
         color: var(--primary-color);
         border-color: var(--primary-color);
         background-color: var(--surface-color) !important;
     }
-
-    html body .app-shell .privacy-toggle[aria-pressed="true"] {
+html body .app-shell .privacy-toggle[aria-pressed="true"] {
         color: var(--primary-color);
         border-color: var(--primary-color);
         background-color: var(--primary-soft) !important;
     }
-
-    /* Period and view switches: chip rows like Backtest's presets. */
-    html body .app-shell .period-switch {
+/* Period and view switches: chip rows like Backtest's presets. */
+html body .app-shell .period-switch {
         padding: 0;
         border: 0;
         background: none !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .period-chip {
+html body .app-shell .period-chip {
         min-height: 32px;
         padding: 4px 12px;
         border: 1px solid var(--border-color);
@@ -1029,98 +875,84 @@
         background: var(--surface-muted) !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .period-chip:not(.active):hover {
+html body .app-shell .period-chip:not(.active):hover {
         color: var(--primary-color);
         border-color: var(--primary-color);
     }
-
-    html body .app-shell .period-chip.active {
+html body .app-shell .period-chip.active {
         color: var(--primary-color);
         border-color: var(--primary-color);
         background: var(--primary-soft) !important;
     }
-
-    /* Small marks: flat tint instead of gradient tiles. */
-    html body .app-shell .holding-asset-mark,
-    html body .app-shell .account-card-mark {
+/* Small marks: flat tint instead of gradient tiles. */
+html body .app-shell .holding-asset-mark,
+html body .app-shell .account-card-mark {
         border: 0;
         color: var(--primary-color);
         background: var(--primary-soft) !important;
         box-shadow: none !important;
     }
-
-    /* Floating add button: solid primary, one shadow. */
-    html body .app-shell .account-floating-toggle {
+/* Floating add button: solid primary, one shadow. */
+html body .app-shell .account-floating-toggle {
         background: var(--primary-color) !important;
         box-shadow: var(--shadow-md) !important;
     }
-
-    /* Floating menu items: white tiles with primary text and a border, replacing the white-on-gradient tiles. */
-    html body .app-shell .account-context-actions .context-action {
+/* Floating menu items: white tiles with primary text and a border, replacing the white-on-gradient tiles. */
+html body .app-shell .account-context-actions .context-action {
         border: 1px solid var(--border-color) !important;
         color: var(--primary-color) !important;
         background: var(--surface-color) !important;
         box-shadow: var(--shadow-md) !important;
     }
-
-    html body .app-shell .account-context-actions .context-action:hover:not(:disabled) {
+html body .app-shell .account-context-actions .context-action:hover:not(:disabled) {
         transform: none;
         border-color: var(--primary-color) !important;
         background: var(--primary-soft) !important;
     }
-
-    html body .app-shell .account-context-actions .context-action::after {
+html body .app-shell .account-context-actions .context-action::after {
         content: none !important;
     }
-
-    html body .app-shell .primary-btn,
-    html body .asset-dialog .primary-btn {
+html body .app-shell .primary-btn,
+html body .asset-dialog .primary-btn {
         background: var(--primary-color) !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .primary-btn:hover:not(:disabled),
-    html body .asset-dialog .primary-btn:hover:not(:disabled) {
+html body .app-shell .primary-btn:hover:not(:disabled),
+html body .asset-dialog .primary-btn:hover:not(:disabled) {
         background: var(--primary-hover) !important;
     }
-
-    [data-theme="dark"] body .app-shell .primary-btn,
-    [data-theme="dark"] body .asset-dialog .primary-btn,
-    [data-theme="dark"] body .app-shell .account-floating-toggle {
+[data-theme="dark"] body .app-shell .primary-btn,
+[data-theme="dark"] body .asset-dialog .primary-btn,
+[data-theme="dark"] body .app-shell .account-floating-toggle {
         color: #0b0d1f;
     }
-
-    /* ---- Dialogs: one surface, same as panels ---- */
-    html body .asset-dialog,
-    html body .app-message-card {
+/* ---- Dialogs: one surface, same as panels ---- */
+html body .asset-dialog,
+html body .app-message-card {
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
         box-shadow: var(--shadow-md) !important;
         backdrop-filter: none !important;
     }
-
-    html body .asset-dialog .asset-dialog-header,
-    html body .asset-dialog .form-card,
-    html body .asset-dialog .form-card-head,
-    html body .asset-dialog .asset-dialog-body,
-    html body .asset-dialog input,
-    html body .asset-dialog select,
-    html body .asset-dialog textarea {
+html body .asset-dialog .asset-dialog-header,
+html body .asset-dialog .form-card,
+html body .asset-dialog .form-card-head,
+html body .asset-dialog .asset-dialog-body,
+html body .asset-dialog input,
+html body .asset-dialog select,
+html body .asset-dialog textarea {
         background-image: none !important;
         box-shadow: none !important;
     }
-
-    /* The eyebrow is a tag that hugs its text, like Backtest's hero badge. */
-    html body .asset-dialog .dialog-eyebrow {
+/* The eyebrow is a tag that hugs its text, like Backtest's hero badge. */
+html body .asset-dialog .dialog-eyebrow {
         display: inline-block;
         width: fit-content;
         padding: 1px 8px;
         border-radius: 999px;
     }
 }
-
 /* ==========================================================================
    Phone surfaces (<=720px), aligned with the Backtest tool and the desktop surfaces above. Set last so it wins
    over the layered glass, gradient, and inset-highlight treatments in the phone blocks above. Layout,
@@ -1130,62 +962,54 @@
    gradient. Desktop is not affected.
    ========================================================================== */
 @media (max-width: 720px) {
-    body {
+body {
         background: var(--background-color) !important;
     }
-
-    body::before,
-    html body .app-shell .workspace::before,
-    html body .app-shell .module-tabs::before,
-    html body .app-shell .overview-card::after,
-    html body .app-shell .panel h2::before,
-    html body .app-shell .context-action::after,
-    html body .app-shell .panel-collapse-btn::before,
-    html body .app-shell .holding-table tr::before,
-    html body .asset-dialog .asset-dialog-header h2::before {
+body::before,
+html body .app-shell .workspace::before,
+html body .app-shell .module-tabs::before,
+html body .app-shell .panel h2::before,
+html body .app-shell .context-action::after,
+html body .app-shell .panel-collapse-btn::before,
+html body .app-shell .holding-table tr::before,
+html body .asset-dialog .asset-dialog-header h2::before {
         content: none !important;
         display: none !important;
     }
-
-    /* ---- Header, sticky bars, bottom tabs: solid, one hairline ---- */
-    html body .app-shell .global-header,
-    html body .app-shell .returns-period-bar,
-    html body .app-shell .account-switch-bar {
+/* ---- Header, sticky bars, bottom tabs: solid, one hairline ---- */
+html body .app-shell .global-header,
+html body .app-shell .returns-period-bar,
+html body .app-shell .account-switch-bar {
         background: var(--surface-color) !important;
         box-shadow: none !important;
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .module-tabs {
+html body .app-shell .module-tabs {
         background: var(--surface-color) !important;
         box-shadow: 0 -1px 0 var(--border-color), 0 -8px 20px -16px rgb(15 23 42 / 0.3) !important;
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .global-header .brand-mark {
+html body .app-shell .global-header .brand-mark {
         border: 0;
         border-radius: var(--radius-md);
         background: linear-gradient(135deg, var(--chart-series-1), var(--primary-color)) !important;
         box-shadow: none !important;
     }
-
-    /* Bottom tabs: the active tab is a tint with primary text, like the desktop segmented control. */
-    html body .app-shell .module-tab {
+/* Bottom tabs: the active tab is a tint with primary text, like the desktop segmented control. */
+html body .app-shell .module-tab {
         border: 0;
         border-radius: var(--radius-md);
         background: transparent !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .module-tab.active {
+html body .app-shell .module-tab.active {
         color: var(--primary-color) !important;
         background: var(--primary-soft) !important;
     }
-
-    /* ---- Workspace: the page itself, not a card around the panels ---- */
-    html body .app-shell .workspace {
+/* ---- Workspace: the page itself, not a card around the panels ---- */
+html body .app-shell .workspace {
         border: 0;
         border-radius: 0;
         background: none !important;
@@ -1193,23 +1017,20 @@
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
-
-    /* The view keeps no side padding: the 12px shell gutter is the page margin, and the sticky bars bleed
+/* The view keeps no side padding: the 12px shell gutter is the page margin, and the sticky bars bleed
        past it to the screen edge. */
-    html body .app-shell .workspace-view.active {
+html body .app-shell .workspace-view.active {
         padding-right: 0;
         padding-left: 0;
     }
-
-    html body .app-shell .returns-period-bar,
-    html body .app-shell .account-switch-bar {
+html body .app-shell .returns-period-bar,
+html body .app-shell .account-switch-bar {
         border-bottom: 1px solid var(--border-color);
     }
-
-    /* ---- Panels: one surface each ---- */
-    html body .app-shell .panel,
-    html body .app-shell .management-panel,
-    html body .app-shell .account-card-strip-panel {
+/* ---- Panels: one surface each ---- */
+html body .app-shell .panel,
+html body .app-shell .management-panel,
+html body .app-shell .account-card-strip-panel {
         border: 1px solid var(--border-color) !important;
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
@@ -1217,200 +1038,163 @@
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
-
-    /* Full screen fills the viewport edge to edge, as before. */
-    html body .app-shell .chart-panel.is-fullscreen {
+/* Full screen fills the viewport edge to edge, as before. */
+html body .app-shell .chart-panel.is-fullscreen {
         border: 0 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .management-panel .panel-head,
-    html body .app-shell .panel-head {
+html body .app-shell .management-panel .panel-head,
+html body .app-shell .panel-head {
         background: none !important;
     }
-
-    html body .app-shell .overview-grid {
-        border: 0 !important;
-        background: none !important;
-        box-shadow: none !important;
-        -webkit-backdrop-filter: none !important;
-        backdrop-filter: none !important;
-    }
-
-    html body .app-shell .overview-card,
-    html body .app-shell .alloc-stats > div,
-    html body .app-shell .account-item {
+html body .app-shell .alloc-stats > div,
+html body .app-shell .account-item {
         border: 1px solid var(--border-color);
         background: var(--surface-muted) !important;
         box-shadow: none !important;
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell .account-item.active {
+html body .app-shell .account-item.active {
         border-color: var(--border-color);
     }
-
-    /* ---- Tables and lists: flat boxes with a muted head row ---- */
-    html body .app-shell th {
+/* ---- Tables and lists: flat boxes with a muted head row ---- */
+html body .app-shell th {
         background-image: none !important;
         box-shadow: none !important;
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .app-shell thead th {
+html body .app-shell thead th {
         background-color: var(--surface-muted) !important;
     }
-
-    /* ---- Controls: flat, bordered, no shadow ---- */
-    html body .app-shell .icon-btn,
-    html body .app-shell .context-action,
-    html body .app-shell .ghost-btn,
-    html body .app-shell .mini-btn,
-    html body .app-shell select,
-    html body .app-shell .panel-collapse-btn,
-    html body .app-shell .cloud-sync-status {
+/* ---- Controls: flat, bordered, no shadow ---- */
+html body .app-shell .icon-btn,
+html body .app-shell .context-action,
+html body .app-shell .ghost-btn,
+html body .app-shell .mini-btn,
+html body .app-shell select,
+html body .app-shell .panel-collapse-btn,
+html body .app-shell .cloud-sync-status {
         background-image: none !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .icon-btn,
-    html body .app-shell .ghost-btn,
-    html body .app-shell .mini-btn,
-    html body .app-shell .panel select {
+html body .app-shell .icon-btn,
+html body .app-shell .ghost-btn,
+html body .app-shell .mini-btn,
+html body .app-shell .panel select {
         background-color: var(--surface-color) !important;
     }
-
-    html body .app-shell .panel-collapse-btn {
+html body .app-shell .panel-collapse-btn {
         background-color: transparent !important;
     }
-
-    html body .app-shell .privacy-toggle[aria-pressed="true"] {
+html body .app-shell .privacy-toggle[aria-pressed="true"] {
         color: var(--primary-color);
         border-color: var(--primary-color);
         background-color: var(--primary-soft) !important;
     }
-
-    /* Segmented switches (period bar, account bar, chart and holdings view switches): a muted track, and the
+/* Segmented switches (period bar, account bar, chart and holdings view switches): a muted track, and the
        selected segment is a white tile with primary text instead of a gradient. */
-    html body .app-shell .period-switch {
+html body .app-shell .period-switch {
         border: 1px solid var(--border-color);
         background: var(--surface-muted) !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .period-chip {
+html body .app-shell .period-chip {
         border-color: transparent !important;
         background: transparent !important;
         box-shadow: none !important;
     }
-
-    /* The holdings filter row is a plain row of selects, not a framed box. */
-    html body .app-shell .asset-tool-bar {
+/* The holdings filter row is a plain row of selects, not a framed box. */
+html body .app-shell .asset-tool-bar {
         padding: 0;
         border: 0;
         background: none !important;
         box-shadow: none !important;
     }
-
-    html body .app-shell .period-chip.active {
+html body .app-shell .period-chip.active {
         color: var(--primary-color) !important;
         border-color: var(--border-color) !important;
         background: var(--surface-color) !important;
         box-shadow: var(--shadow-sm) !important;
     }
-
-    /* Small marks: flat tint instead of gradient tiles. */
-    html body .app-shell .holding-asset-mark,
-    html body .app-shell .account-card-mark {
+/* Small marks: flat tint instead of gradient tiles. */
+html body .app-shell .holding-asset-mark,
+html body .app-shell .account-card-mark {
         border: 0;
         color: var(--primary-color);
         background: var(--primary-soft) !important;
         box-shadow: none !important;
     }
-
-    /* Floating add button and its menu: solid primary, flat menu items. */
-    html body .app-shell .account-floating-toggle {
+/* Floating add button and its menu: solid primary, flat menu items. */
+html body .app-shell .account-floating-toggle {
         background: var(--primary-color) !important;
         box-shadow: var(--shadow-md) !important;
     }
-
-    /* Floating menu items: white tiles with primary text and a border, replacing the white-on-gradient tiles. */
-    html body .app-shell .account-context-actions .context-action {
+/* Floating menu items: white tiles with primary text and a border, replacing the white-on-gradient tiles. */
+html body .app-shell .account-context-actions .context-action {
         border: 1px solid var(--border-color) !important;
         color: var(--primary-color) !important;
         background: var(--surface-color) !important;
         box-shadow: var(--shadow-md) !important;
     }
-
-    html body .app-shell .account-context-actions .context-action:hover:not(:disabled) {
+html body .app-shell .account-context-actions .context-action:hover:not(:disabled) {
         transform: none;
         border-color: var(--primary-color) !important;
         background: var(--primary-soft) !important;
     }
-
-    html body .app-shell .account-context-actions .context-action::after {
+html body .app-shell .account-context-actions .context-action::after {
         content: none !important;
     }
-
-    html body .app-shell .primary-btn,
-    html body .asset-dialog .primary-btn {
+html body .app-shell .primary-btn,
+html body .asset-dialog .primary-btn {
         background: var(--primary-color) !important;
         box-shadow: none !important;
     }
-
-    [data-theme="dark"] body .app-shell .primary-btn,
-    [data-theme="dark"] body .asset-dialog .primary-btn,
-    [data-theme="dark"] body .app-shell .account-floating-toggle {
+[data-theme="dark"] body .app-shell .primary-btn,
+[data-theme="dark"] body .asset-dialog .primary-btn,
+[data-theme="dark"] body .app-shell .account-floating-toggle {
         color: #0b0d1f;
     }
-
-    /* ---- Dialogs and the header menu: one surface ---- */
-    html body .asset-dialog,
-    html body .app-message-card,
-    html body .app-shell .header-action-menu {
+/* ---- Dialogs and the header menu: one surface ---- */
+html body .asset-dialog,
+html body .app-message-card,
+html body .app-shell .header-action-menu {
         background: var(--surface-color) !important;
         box-shadow: var(--shadow-md) !important;
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
-
-    html body .asset-dialog .asset-dialog-header,
-    html body .asset-dialog .asset-dialog-body,
-    html body .asset-dialog .form-card,
-    html body .asset-dialog .form-card-head,
-    html body .asset-dialog input,
-    html body .asset-dialog select,
-    html body .asset-dialog textarea {
+html body .asset-dialog .asset-dialog-header,
+html body .asset-dialog .asset-dialog-body,
+html body .asset-dialog .form-card,
+html body .asset-dialog .form-card-head,
+html body .asset-dialog input,
+html body .asset-dialog select,
+html body .asset-dialog textarea {
         background-image: none !important;
         box-shadow: none !important;
     }
-
-    html body .asset-dialog .dialog-eyebrow {
+html body .asset-dialog .dialog-eyebrow {
         display: inline-block;
         width: fit-content;
         padding: 1px 8px;
         border-radius: 999px;
     }
 }
-
 /* ---- Phone summaries: the 资产配置 stat-card grid ----
    The returns hero and the 账户管理 summary used divided rows. They now use the same bordered cards as
    资产配置 and 风险敞口 (.alloc-stats): the total spans the first row, the other two share the next.
    The figure size still follows the card width (cqi), so a 7-digit total stays whole at 360px. */
 @media (max-width: 720px) {
-    .returns-summary-stats,
-    .account-summary-stats {
+.account-summary-stats {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
         margin: 0;
     }
-
-    .returns-summary-stats > div,
-    .account-summary-stats > div {
+.account-summary-stats > div {
         display: grid;
         gap: 4px;
         min-width: 0;
@@ -1419,27 +1203,20 @@
         border-radius: var(--radius-lg);
         background: var(--surface-muted);
     }
-
-    .returns-summary-stats > div:first-child,
-    .account-summary-stats > div:first-child {
+.account-summary-stats > div:first-child {
         grid-column: 1 / -1;
     }
-
-    .returns-summary-stats dt,
-    .account-summary-stats dt {
+.account-summary-stats dt {
         font-size: 11px;
         font-weight: 800;
         white-space: normal;
     }
-
-    .returns-summary-stats dd,
-    .account-summary-stats dd {
+.account-summary-stats dd {
         overflow: visible;
         text-overflow: clip;
         white-space: normal;
     }
 }
-
 /* ---- Account list: one panel, not a panel inside a panel ----
    The account strip now sits under its own 账户列表 panel head (generate and refresh live there), so the
    inner strip drops its border, gradient, and padding and only holds the cards. */
@@ -1451,17 +1228,14 @@ html body .app-shell .account-strip-body > .account-card-strip-panel {
     background: transparent !important;
     box-shadow: none !important;
 }
-
 .account-strip-body > .account-card-strip-panel > .account-card-strip {
     padding: 16px 20px 20px;
 }
-
 @media (max-width: 720px) {
-    .account-strip-body > .account-card-strip-panel > .account-card-strip {
+.account-strip-body > .account-card-strip-panel > .account-card-strip {
         padding: 12px 14px 14px;
     }
 }
-
 /* ---- Page surfaces: one panel per module, like 资产配置 ----
    Returns and accounts were a stack of separate cards. Each module's sections now sit inside one .page-surface
    (one border, one radius, one shadow, as 资产配置 does). Sections inside it keep their panel classes and ids,
@@ -1477,77 +1251,32 @@ html body .app-shell .page-surface {
     background: var(--surface-color);
     box-shadow: var(--shadow-md);
 }
-
 html body .app-shell .page-surface > .panel,
 html body .app-shell .page-surface > .panel.management-panel,
-html body .app-shell .page-surface > .overview-grid,
-html body .app-shell .page-surface > .returns-hero,
 html body .app-shell .page-surface > .account-switch-bar {
     border: 0 !important;
     border-radius: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
 }
-
 /* Sections divide with a hairline instead of a gap. */
-html body .app-shell .page-surface > .panel + .panel,
-html body .app-shell .page-surface > .returns-hero + .overview-grid,
-html body .app-shell .page-surface > .overview-grid + .panel,
-html body .app-shell .page-surface > .returns-hero + .panel,
-html body .app-shell .page-surface > .panel + .returns-hero {
+html body .app-shell .page-surface > .panel + .panel {
     border-top: 1px solid var(--border-color);
 }
-
 /* Section titles on the same level: the fold title and the rest of the head share one row. */
 html body .app-shell .page-surface .panel-head {
     padding: 18px 22px 12px;
 }
-
-html body .app-shell .page-surface .overview-card,
-html body .app-shell .page-surface .returns-summary-stats > div,
 html body .app-shell .page-surface .account-summary-stats > div {
     box-shadow: none !important;
 }
-
 /* Summary figures and the comparison table sit inside the page surface like the 资产配置 stats and tables:
    figures divide with hairlines, tables keep only their header tint and no frame of their own. */
-html body .app-shell .returns-surface > .overview-grid {
-    gap: 0;
-    padding: 0;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-html body .app-shell .returns-surface > .overview-grid > .overview-card {
-    min-height: 0;
-    padding: 18px 22px;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-}
-
-html body .app-shell .returns-surface > .overview-grid > .overview-card + .overview-card {
-    border-left: 1px solid var(--border-color) !important;
-}
-
 /* The table keeps the section's inset so it lines up with the section title. */
-html body .app-shell .returns-surface .comparison-table-wrap {
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    margin: 0 22px 18px;
-    overflow-x: auto;
-}
-
 html body .app-shell .page-surface > .panel + .panel,
-html body .app-shell .page-surface > .returns-hero + .overview-grid,
-html body .app-shell .page-surface > .overview-grid + .panel,
-html body .app-shell .page-surface > .returns-hero + .panel,
-html body .app-shell .page-surface > .panel + .returns-hero,
 html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     border-top: 1px solid var(--border-color) !important;
 }
-
 /* ==========================================================================
    账户收益 and 账户管理, styled like 资产配置 on desktop.
    Each page is one .page-surface with the 资产配置 frame: a flat --surface-color panel, --radius-lg and
@@ -1557,9 +1286,7 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
    Desktop rules sit in one (min-width: 721px) block so phones keep their existing layout. Every rule is scoped
    to #analysisView or #assetDataView, and no rule sets a state class (.active, .expanded, [hidden], :hover).
    ========================================================================== */
-
 /* ---- Shared page surface ---- */
-#analysisView .returns-surface,
 #assetDataView .assets-surface {
     display: grid;
     gap: 0;
@@ -1570,14 +1297,11 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     background: var(--surface-color);
     box-shadow: var(--shadow-md);
 }
-
 #analysisView .returns-period-bar,
 #assetDataView .account-switch-bar {
     margin-bottom: 14px;
 }
-
 /* Sections: flat blocks, a hairline above every section after the first. */
-#analysisView .returns-surface > .panel,
 #assetDataView .assets-surface > .panel {
     border: 0;
     border-radius: 0;
@@ -1585,15 +1309,10 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     box-shadow: none;
     overflow: visible;
 }
-
-#analysisView .returns-surface > .panel + .panel,
-#analysisView .returns-surface > .overview-grid + .panel,
 #assetDataView .assets-surface > .panel + .panel {
     border-top: 0;
 }
-
 /* Section heads: the 资产配置 head padding, title and description on the left, actions on the right. */
-#analysisView .returns-surface .panel-head,
 #assetDataView .assets-surface .panel-head {
     display: flex;
     flex-wrap: wrap;
@@ -1604,13 +1323,9 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     background: transparent;
     border-bottom: 0;
 }
-
-#analysisView .returns-surface .panel-head > div:first-child,
 #assetDataView .assets-surface .panel-head > div:first-child {
     min-width: 0;
 }
-
-#analysisView .returns-surface .panel h2,
 #assetDataView .assets-surface .panel h2 {
     margin: 0;
     color: var(--heading-color);
@@ -1618,22 +1333,16 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     font-weight: 850;
     letter-spacing: -0.01em;
 }
-
-#analysisView .returns-surface .panel p,
 #assetDataView .assets-surface .panel p {
     margin: 4px 0 0;
     color: var(--muted-text);
     font-size: 13px;
     line-height: 1.5;
 }
-
-#analysisView .returns-surface .panel-head .alloc-head-actions,
 #assetDataView .assets-surface .panel-head .alloc-head-actions {
     margin-left: auto;
 }
-
 /* ---- Tables and lists: bordered, muted head row ---- */
-#analysisView .returns-surface .comparison-table-wrap,
 #assetDataView .assets-surface .holding-table-wrap,
 #assetDataView .assets-surface .snapshot-table-wrap {
     margin: 0 22px 18px;
@@ -1643,16 +1352,11 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     box-shadow: none;
     overflow-x: auto;
 }
-
-#analysisView .returns-surface .comparison-table,
 #assetDataView .assets-surface .holding-table,
 #assetDataView .assets-surface .snapshot-table {
     width: 100%;
     border-collapse: collapse;
 }
-
-#analysisView .returns-surface .comparison-table th,
-#analysisView .returns-surface .comparison-table td,
 #assetDataView .assets-surface .holding-table th,
 #assetDataView .assets-surface .holding-table td,
 #assetDataView .assets-surface .snapshot-table th,
@@ -1661,8 +1365,6 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     border-bottom: 1px solid var(--border-color);
     font-size: 13px;
 }
-
-#analysisView .returns-surface .comparison-table thead th,
 #assetDataView .assets-surface .holding-table thead th,
 #assetDataView .assets-surface .snapshot-table thead th {
     background: var(--surface-muted);
@@ -1670,23 +1372,19 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     font-size: 12px;
     font-weight: 800;
 }
-
-#analysisView .returns-surface .comparison-table tbody tr:last-child > *,
 #assetDataView .assets-surface .holding-table tbody tr:last-child > *,
 #assetDataView .assets-surface .snapshot-table tbody tr:last-child > * {
     border-bottom: 0;
 }
-
 /* ---- 账户管理: account cards on the desktop strip ---- */
 @media (min-width: 721px) {
-    #assetDataView .account-card-strip {
+#assetDataView .account-card-strip {
         display: flex;
         gap: 10px;
         padding: 0;
         overflow-x: auto;
     }
 }
-
 #assetDataView .account-strip-body,
 #assetDataView .account-card-strip-panel {
     padding: 0;
@@ -1695,7 +1393,6 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     background: transparent;
     box-shadow: none;
 }
-
 #assetDataView .account-card-strip .account-item {
     flex: 0 0 auto;
     min-width: 300px;
@@ -1706,33 +1403,27 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
     background: var(--surface-color);
     box-shadow: none;
 }
-
 #assetDataView .account-card-strip .account-item.active {
     border-color: var(--primary-color);
     background: var(--primary-soft);
     box-shadow: none;
 }
-
 #assetDataView .account-card-strip .account-item:hover {
     transform: none;
     border-color: var(--border-strong);
     box-shadow: none;
 }
-
 /* ---- Folds: a collapsed desktop section hides its body. Phone folds keep main.css's behaviour. ---- */
-#analysisView .returns-surface .is-desktop-folded .desktop-fold-body,
 #assetDataView .assets-surface .is-desktop-folded .desktop-fold-body {
     display: none;
 }
-
 /* ---- Desktop: the 资产配置 frame and tiles ----
    Placed after the base rules so it wins by order. The !important declarations are needed only where main.css's
    page-surface reset (flat summary cells and frameless table) sets !important, which this block replaces. */
 @media (min-width: 721px) {
-    /* Surface: a flat --surface-color panel, as main.css's desktop surfaces block draws .management-panel
+/* Surface: a flat --surface-color panel, as main.css's desktop surfaces block draws .management-panel
        (allocation). Its gradient is cleared there with !important, so the page surface matches it. */
-    #analysisView .returns-surface,
-    #assetDataView .assets-surface {
+#assetDataView .assets-surface {
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
         background: var(--surface-color);
@@ -1741,121 +1432,45 @@ html body .app-shell .page-surface > .panel + .panel.account-strip-section {
         gap: 18px;
         padding: 16px 20px 22px;
     }
-
-    /* One layout, as 资产配置: the surface holds every section on the .alloc-content grid (18px gap, 16px/20px
+/* One layout, as 资产配置: the surface holds every section on the .alloc-content grid (18px gap, 16px/20px
        padding). Sections drop their own frames, which main.css's desktop block gives every .management-panel. */
-
-    #analysisView .returns-surface > .panel,
-    #analysisView .returns-surface > .overview-grid,
-    #assetDataView .assets-surface > .panel {
+#assetDataView .assets-surface > .panel {
         border: 0 !important;
         border-radius: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
     }
-
-    /* Section heads and titles: the 资产配置 head padding and 18px title with its accent bar. */
-    #analysisView .returns-surface .panel-head,
-    #assetDataView .assets-surface .panel-head {
+/* Section heads and titles: the 资产配置 head padding and 18px title with its accent bar. */
+#assetDataView .assets-surface .panel-head {
         padding: 0 0 10px;
     }
-
-    #analysisView .returns-surface .panel h2,
-    #assetDataView .assets-surface .panel h2 {
+#assetDataView .assets-surface .panel h2 {
         font-size: 18px;
     }
-
-    /* Summary figures: bordered tiles in a 4-column row, like the 资产配置 stats. Spacing comes from the surface grid. */
-    #analysisView .returns-surface > .overview-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-        padding: 0;
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card {
-        display: grid;
-        gap: 4px;
-        min-height: 0;
-        padding: 12px 14px;
-        border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
-        border-radius: var(--radius-lg) !important;
-        background: var(--surface-color) !important;
-        box-shadow: none;
-    }
-
-    /* main.css draws a decorative circle on .overview-card; the allocation stats have none. */
-    #analysisView .returns-surface > .overview-grid > .overview-card::before,
-    #analysisView .returns-surface > .overview-grid > .overview-card::after {
-        content: none;
-        display: none;
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card span {
-        color: var(--muted-text);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0;
-        text-transform: none;
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card strong {
-        margin-top: 0;
-        color: var(--heading-color);
-        font-size: 22px;
-        font-weight: 900;
-        font-variant-numeric: tabular-nums;
-        letter-spacing: -0.01em;
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card small {
-        color: var(--muted-text);
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    #analysisView .returns-surface > .overview-grid > .overview-card + .overview-card {
-        border-left: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
-    }
-
-    /* Tables: bordered with a muted head, on the section inset, like the 资产配置 table. */
-    #analysisView .returns-surface .comparison-table-wrap,
-    #assetDataView .assets-surface .holding-table-wrap,
-    #assetDataView .assets-surface .snapshot-table-wrap {
+/* Summary figures: bordered tiles in a 4-column row, like the 资产配置 stats. Spacing comes from the surface grid. */
+/* main.css draws a decorative circle on .overview-card; the allocation stats have none. */
+/* Tables: bordered with a muted head, on the section inset, like the 资产配置 table. */
+#assetDataView .assets-surface .holding-table-wrap,
+#assetDataView .assets-surface .snapshot-table-wrap {
         margin: 0;
         border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent) !important;
         border-radius: var(--radius-lg) !important;
         background: var(--surface-color) !important;
     }
 }
-
 /* ---- Phones ----
    The summary hero is the one phone summary. The four overview cards stay hidden on phones, as main.css
    intends; without this they show beside the hero with cut-off figures. The account summary and the card
    list keep main.css's phone layout, and only spacing and table margins tighten here. */
 @media (max-width: 720px) {
-    #analysisView .returns-surface > .overview-grid {
-        display: none;
-    }
-
-    #analysisView .returns-surface .panel-head,
-    #assetDataView .assets-surface .panel-head {
+#assetDataView .assets-surface .panel-head {
         padding: 14px 16px 10px;
     }
-
-    #analysisView .returns-surface .comparison-table-wrap,
-    #assetDataView .assets-surface .holding-table-wrap,
-    #assetDataView .assets-surface .snapshot-table-wrap {
+#assetDataView .assets-surface .holding-table-wrap,
+#assetDataView .assets-surface .snapshot-table-wrap {
         margin: 0 14px 14px;
     }
-
-    #analysisView .returns-surface .comparison-table th,
-    #analysisView .returns-surface .comparison-table td {
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-
-    #assetDataView .account-card-strip .account-item {
+#assetDataView .account-card-strip .account-item {
         min-width: 0;
     }
 }

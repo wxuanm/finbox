@@ -8,7 +8,7 @@ import { renderAccountList, bindAccountList, scrollAccountCardIntoView } from '.
 import { getLaterSnapshotAdjustments, readSnapshotForm, renderSnapshotForm, resetSnapshotForm, shouldAdjustLaterSnapshots, showFormMessage, syncSnapshotAdjustLater } from './modules/accountPerformance/snapshotForm.js';
 import { bindPeriodSwitch, renderPerformanceChart, renderPeriodSwitch, resizeChart } from './modules/accountPerformance/performanceChart.js';
 import { bindChartFullscreen, renderChartFullscreenButton } from './modules/accountPerformance/chartFullscreen.js';
-import { bindAccountComparison, renderAccountComparison, renderOverviewCards, renderReturnsHero } from './modules/accountPerformance/metricsPanel.js';
+import { bindAccountComparison, renderAccountComparison, renderReturnsSummary } from './modules/accountPerformance/metricsPanel.js';
 import { bindSnapshotTable, bindSnapshotTableAccountSwitch, renderSnapshotTable, resizeSnapshotTable } from './modules/accountPerformance/snapshotTable.js';
 import { ACCOUNT_TREND_VIEWS, bindAccountTrend, renderAccountTrend, resizeAccountTrendChart } from './modules/accountPerformance/accountTrend.js';
 import { loadHoldings, saveHoldings } from './modules/holdings/storage.js';
@@ -658,7 +658,7 @@ function renderDesktopFolds() {
         const fold = DESKTOP_FOLDS[button.dataset.desktopFold];
         if (!fold) return;
         const open = !state.desktopFolded.includes(button.dataset.desktopFold);
-        button.closest('.panel')?.classList.toggle('is-desktop-folded', !open);
+        button.closest('.returns-section, .panel')?.classList.toggle('is-desktop-folded', !open);
         button.setAttribute('aria-expanded', String(open));
         const label = t(open ? fold.collapseKey : fold.expandKey);
         button.setAttribute('aria-label', label);
@@ -810,8 +810,7 @@ function renderApp() {
     const holdingsMetrics = buildHoldingsMetrics(state.holdings, state.accounts, state.holdingFilters);
     renderActiveView();
     renderAmountPrivacyToggle();
-    renderReturnsHero(portfolio);
-    renderOverviewCards(metrics);
+    renderReturnsSummary(metrics, portfolio);
     renderAccountList(metrics);
     renderSnapshotForm();
     renderPeriodSwitch();
