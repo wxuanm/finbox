@@ -317,6 +317,14 @@ html body .app-shell #assetDataView .account-card-menu > div button:hover {
         border-radius: 0 0 var(--radius-md) var(--radius-md);
     }
 
+    /* Holdings: the view switch and filters are the open body's first row, inside the same frame, with a hairline
+       under them before the table. They take the body's inset, not the 12px margin they had. */
+    #assetDataView .asset-holdings-panel:not(.is-desktop-folded) > .desktop-fold-body > .holding-toolbar {
+        margin: 0 0 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
     #assetDataView .accounts-section:not(.is-desktop-folded) > .desktop-fold-body .holding-table-wrap,
     #assetDataView .accounts-section:not(.is-desktop-folded) > .desktop-fold-body .snapshot-table-wrap {
         margin: 0;
